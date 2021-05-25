@@ -25,7 +25,7 @@ from repanier.const import (
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
@@ -290,7 +290,7 @@ class Producer(models.Model):
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
 
         result_set = (
-            OfferItemWoReceiver.objects.filter(
+            OfferItemReadOnly.objects.filter(
                 permanence_id=permanence_id,
                 producer_id=self.id,
                 price_list_multiplier__lt=1,
@@ -314,7 +314,7 @@ class Producer(models.Model):
         )
 
         result_set = (
-            OfferItemWoReceiver.objects.filter(
+            OfferItemReadOnly.objects.filter(
                 permanence_id=permanence_id,
                 producer_id=self.id,
                 price_list_multiplier__gte=1,
@@ -461,6 +461,15 @@ class Producer(models.Model):
         self.offer_uuid = uuid.uuid1()
         self.is_anonymized = True
         self.save()
+
+    def get_filter_display(self, permanence_id):
+        pi = ProducerInvoice.objects.filter(
+            producer_id=self.id, permanence_id=permanence_id
+        ).first()
+        if pi is not None:
+            return "{} ({})".format(self.short_profile_name, pi.total_price_with_tax)
+        else:
+            return self.short_profile_name
 
     def __str__(self):
         if self.producer_price_are_wo_vat:

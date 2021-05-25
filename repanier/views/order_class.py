@@ -9,7 +9,7 @@ from repanier.models import CustomerInvoice
 from repanier.models.box import BoxContent
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DepartmentForCustomer
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.staff import Staff
@@ -129,7 +129,7 @@ class OrderView(ListView):
                     .distinct("id", "tree_id", "lft")
                 )
             context["department_set"] = department_set
-            context["box_set"] = OfferItemWoReceiver.objects.filter(
+            context["box_set"] = OfferItemReadOnly.objects.filter(
                 permanence_id=self.permanence.id,
                 is_box=True,
                 is_active=True,
@@ -145,7 +145,7 @@ class OrderView(ListView):
         context["box_id"] = str(self.box_id)
         context["is_box"] = "yes" if self.is_box else EMPTY_STRING
         if self.is_box:
-            offer_item = get_object_or_404(OfferItemWoReceiver, id=self.box_id)
+            offer_item = get_object_or_404(OfferItemReadOnly, id=self.box_id)
             context["box_description"] = html_box_content(offer_item, self.user)
         if self.is_basket:
             context["is_basket"] = "yes"
@@ -204,10 +204,10 @@ class OrderView(ListView):
             or self.is_basket
             or self.is_like
         ):
-            return OfferItemWoReceiver.objects.none()
+            return OfferItemReadOnly.objects.none()
         if self.is_box:
             offer_item = (
-                OfferItemWoReceiver.objects.filter(
+                OfferItemReadOnly.objects.filter(
                     id=self.box_id, permanence_id=self.permanence.id, may_order=True
                 )
                 .only("product_id")
@@ -217,9 +217,9 @@ class OrderView(ListView):
                 box_id = offer_item.product_id
             else:
                 # A bot is back
-                return OfferItemWoReceiver.objects.none()
+                return OfferItemReadOnly.objects.none()
             product_ids = BoxContent.objects.filter(box_id=box_id).only("product_id")
-            qs = OfferItemWoReceiver.objects.filter(
+            qs = OfferItemReadOnly.objects.filter(
                 Q(
                     permanence_id=self.permanence.id,
                     may_order=True,
@@ -233,7 +233,7 @@ class OrderView(ListView):
             )
         else:
             if self.is_basket:
-                qs = OfferItemWoReceiver.objects.filter(
+                qs = OfferItemReadOnly.objects.filter(
                     permanence_id=self.permanence.id,
                     may_order=True,  # Don't display technical products.
                     purchase__customer__user=self.user,
@@ -241,7 +241,7 @@ class OrderView(ListView):
                     # is_box=False,
                 )
             else:
-                qs = OfferItemWoReceiver.objects.filter(
+                qs = OfferItemReadOnly.objects.filter(
                     Q(
                         permanence_id=self.permanence.id,
                         is_active=True,

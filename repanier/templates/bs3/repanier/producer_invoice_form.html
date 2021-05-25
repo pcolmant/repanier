@@ -115,7 +115,7 @@
                             {{ offer_item.get_long_name_with_producer_price }}
                         </td>
                         <td align="right">
-                            {{ offer_item.get_producer_qty_invoiced }}
+                            {{ offer_item.quantity_invoiced }}
                         </td>
                         <td align="right">
                             {{ offer_item.get_producer_unit_price_invoiced }}{% if offer_item.unit_deposit != 0 %}, ♻ {{ offer_item.unit_deposit }}{% endif %}

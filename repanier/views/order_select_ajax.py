@@ -15,7 +15,7 @@ from repanier.const import (
 )
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import sint, get_html_selected_value
 
@@ -35,7 +35,7 @@ def order_select_ajax(request):
     translation.activate(customer.language)
     offer_item_id = sint(request.GET.get("offer_item", 0))
     offer_item = (
-        OfferItemWoReceiver.objects.filter(id=offer_item_id).order_by("?").first()
+        OfferItemReadOnly.objects.filter(id=offer_item_id).order_by("?").first()
     )
     if offer_item is None:
         raise Http404

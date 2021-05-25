@@ -69,7 +69,7 @@ class DeliveryBoard(TranslatableModel):
     def get_delivery_display(self, color=False):
         short_name = self.delivery_point.short_name_v2
         comment = self.delivery_comment_v2
-        label = " ".join(comment, short_name)
+        label = " ".join((comment, short_name,))
         if color:
             label = mark_safe(
                 '<font color="green">{}</font>'.format(label)

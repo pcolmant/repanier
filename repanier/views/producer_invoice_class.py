@@ -5,7 +5,7 @@ from django.views.generic import DetailView
 from repanier.const import DECIMAL_ZERO
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.producer import Producer
 from repanier.tools import get_repanier_template_name
 
@@ -35,7 +35,7 @@ class ProducerInvoiceView(DetailView):
             ).order_by("operation_date")
             context["bank_account_set"] = bank_account_set
             offer_item_set = (
-                OfferItemWoReceiver.objects.filter(
+                OfferItemReadOnly.objects.filter(
                     permanence_id=producer_invoice.permanence_id,
                     producer_id=producer_invoice.producer_id,
                 )

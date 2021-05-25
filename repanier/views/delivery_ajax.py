@@ -71,14 +71,14 @@ def delivery_ajax(request):
                     delivery_point__group__isnull=True,
                     status=PERMANENCE_OPENED,
                 )
-            ).order_by("?")
+            )
         else:
             qs = DeliveryBoard.objects.filter(
                 id=delivery_id,
                 permanence_id=permanence_id,
                 delivery_point__group__isnull=True,
                 status=PERMANENCE_OPENED,
-            ).order_by("?")
+            )
         delivery = qs.first()
         if delivery is None:
             raise Http404

@@ -2,7 +2,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from repanier.const import PERMANENCE_OPENED
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from rest_framework import serializers
 
@@ -36,7 +36,7 @@ def permanences_rest(request):
 
 class OfferItemSerializer(serializers.Serializer):
     class Meta:
-        model = OfferItemWoReceiver
+        model = OfferItemReadOnly
         fields = (
             "reference",
             "get_long_name_with_customer_price",
@@ -48,7 +48,7 @@ class OfferItemSerializer(serializers.Serializer):
 @csrf_exempt
 @require_GET
 def permanence_producer_rest(request, permanence_id, producer_name):
-    offer_item = OfferItemWoReceiver.objects.filter(
+    offer_item = OfferItemReadOnly.objects.filter(
         permanence_id=permanence_id,
         producer__short_profile_name=producer_name.decode("unicode-escape"),
         status=PERMANENCE_OPENED,
@@ -64,7 +64,7 @@ def permanence_producer_product_rest(request, permanence_id, producer_name, refe
     Retrieve, update or delete a code snippet.
     """
     if request.method == "GET":
-        offer_item = OfferItemWoReceiver.objects.filter(
+        offer_item = OfferItemReadOnly.objects.filter(
             permanence_id=permanence_id,
             producer__short_profile_name=producer_name.decode("unicode-escape"),
             reference=reference.decode("unicode-escape"),

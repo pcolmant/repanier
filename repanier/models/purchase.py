@@ -268,7 +268,6 @@ class Purchase(models.Model):
                     permanence_id=self.permanence_id, customer_id=self.customer_id
                 )
                 .only("id")
-                .order_by("?")
                 .first()
             )
             if customer_invoice is None:
@@ -321,7 +320,7 @@ class Purchase(models.Model):
         if self.offer_item.is_box:
             for content in BoxContent.objects.filter(
                 box_id=self.offer_item.product_id
-            ).order_by("?"):
+            ):
                 content_offer_item = content.product.get_or_create_offer_item(
                     self.permanence
                 )
@@ -332,7 +331,6 @@ class Purchase(models.Model):
                         offer_item_id=content_offer_item.id,
                         is_box_content=True,
                     )
-                    .order_by("?")
                     .first()
                 )
                 if content_purchase is None:
@@ -360,8 +358,9 @@ class Purchase(models.Model):
                 content_purchase.permanence.producers.add(content_offer_item.producer)
 
     def __str__(self):
+        return "{} > {} > {}".format(self.permanence, self.customer, self.offer_item.get_long_name_with_customer_price())
         # Use to not display label (inline_admin_form.original) into the inline form (tabular.html)
-        return EMPTY_STRING
+        # return EMPTY_STRING
 
     objects = PurchaseManager()
 

@@ -10,7 +10,7 @@ from repanier.const import EMPTY_STRING
 from repanier.models import Customer
 from repanier.models import Permanence
 from repanier.models.lut import LUT_DepartmentForCustomer
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.producer import Producer
 from repanier.tools import permanence_ok_or_404, get_repanier_template_name
 
@@ -61,7 +61,7 @@ def order_filter_view(request, permanence_id):
     if producer_id != "all":
         department_set = department_set.filter(offeritem__producer_id=producer_id)
 
-    box_set = OfferItemWoReceiver.objects.filter(
+    box_set = OfferItemReadOnly.objects.filter(
         permanence_id=permanence_id,
         is_box=True,
         is_active=True,

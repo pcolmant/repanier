@@ -28,12 +28,11 @@ from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheM
 from repanier.admin.tools import (
     check_cancel_in_post,
     check_permanence,
-    get_query_filters,
-    add_filter,
 )
 from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
+from repanier.middleware import get_query_filters, add_filter
 from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
@@ -209,7 +208,6 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
         "permanence_date",
         "id",
     )
-    # autocomplete_fields = ["producers", "boxes"]
 
     def has_delete_permission(self, request, obj=None):
         user = request.user

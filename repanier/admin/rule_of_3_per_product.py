@@ -1,27 +1,84 @@
+from admin_auto_filters.filters import AutocompleteFilter
+from admin_auto_filters.views import AutocompleteJsonView
 from django import forms
 from django.contrib import admin
 from django.db import transaction
 from django.forms import BaseInlineFormSet
-from django.urls import path
+from django.urls import path, reverse
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
 from repanier.admin.admin_filter import (
-    AdminFilterProducerOfPermanence,
     AdminFilterQuantityInvoiced,
-    AdminFilterPermanenceSend,
     AdminFilterDepartment,
-    AdminFilterPermanenceSendSearchView,
 )
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
-from repanier.models import LUT_DepartmentForCustomer
+from repanier.middleware import get_request_params
+from repanier.models import LUT_DepartmentForCustomer, Producer
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
 from repanier.tools import rule_of_3_reload_purchase
+
+
+class AdminFilterPermanenceSendSearchView(AutocompleteJsonView):
+    model_admin = None
+
+    def get_queryset(self):
+        queryset = Permanence.objects.filter(status=PERMANENCE_SEND).order_by(
+            "permanence_date",
+            "id",
+        )
+        return queryset
+
+
+class AdminFilterPermanenceSend(AutocompleteFilter):
+    title = _("Permanences")
+    field_name = "permanence"  # name of the foreign key field
+    parameter_name = "permanence"
+
+    def get_autocomplete_url(self, request, model_admin):
+        return reverse("admin:offeritemsend-admin-permanence-send")
+
+
+class AdminFilterProducerOfPermanenceSearchView(AutocompleteJsonView):
+    model_admin = None
+
+    @staticmethod
+    def display_text(obj):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        return obj.get_filter_display(permanence_id)
+
+    def get_queryset(self):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        queryset = Producer.objects.filter(producerinvoice__permanence_id=permanence_id)
+        return queryset
+
+
+class AdminFilterProducerOfPermanenceChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        return obj.get_filter_display(permanence_id)
+
+
+class AdminFilterProducerOfPermanence(AutocompleteFilter):
+    title = _("Producers")
+    field_name = "producer"  # name of the foreign key field
+    parameter_name = "producer"
+    form_field = AdminFilterProducerOfPermanenceChoiceField
+
+    def get_autocomplete_url(self, request, model_admin):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        return reverse(
+            "admin:offeritemsend-admin-producer-of-permanence", args=(permanence_id,)
+        )
 
 
 class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
@@ -207,7 +264,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         "producer",
         "department_for_customer",
         "get_long_name_with_producer_price",
-        "get_html_producer_qty_stock_invoiced",
+        "get_quantity_invoiced",
         "get_html_producer_price_purchased",
     ]
     list_display_links = ("get_long_name_with_producer_price",)
@@ -216,13 +273,15 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         AdminFilterPermanenceSend,
         AdminFilterQuantityInvoiced,
         AdminFilterDepartment,
-
     )
     list_select_related = ("producer", "department_for_customer")
     list_per_page = 16
     list_max_show_all = 16
-    ordering = ("department_for_customer", "long_name_v2",)
-    readonly_fields = ("get_html_producer_qty_stock_invoiced", "get_vat_level")
+    ordering = (
+        "department_for_customer",
+        "long_name_v2",
+    )
+    readonly_fields = ("get_quantity_invoiced",)
 
     def get_fieldsets(self, request, product=None):
         prices = ("producer_unit_price", "unit_deposit")
@@ -236,7 +295,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                     "permanence",
                     "department_for_customer",
                     "product",
-                    "get_vat_level",
                 ),
                 prices,
                 (
@@ -250,7 +308,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                     "permanence",
                     "department_for_customer",
                     "product",
-                    "get_vat_level",
                 ),
                 prices,
                 ("offer_purchase_price",),
@@ -308,11 +365,18 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "afcs_offer_item_send_permanence/",
+                "afcs_permanence_send/",
                 self.admin_site.admin_view(
                     AdminFilterPermanenceSendSearchView.as_view(model_admin=self)
                 ),
-                name="afcs_offer_item_send_permanence",
+                name="offeritemsend-admin-permanence-send",
+            ),
+            path(
+                "producer_of_permanence/<int:permanence>/",
+                self.admin_site.admin_view(
+                    AdminFilterProducerOfPermanenceSearchView.as_view(model_admin=self)
+                ),
+                name="offeritemsend-admin-producer-of-permanence",
             ),
         ]
         return custom_urls + urls

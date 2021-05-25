@@ -12,6 +12,9 @@ class LUTAdmin(DjangoMpttAdmin):
     mptt_indent_field = "__str__"
     mptt_level_limit = None
 
+    # def has_module_permission(self, request):
+    #     return False
+
     def has_delete_permission(self, request, obj=None):
         user = request.user
         if user.is_order_manager or user.is_invoice_manager:

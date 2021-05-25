@@ -101,57 +101,17 @@ class OfferItem(Item):
     may_order = models.BooleanField(_("May order"), default=True)
     manage_production = models.BooleanField(default=False)
 
-    def get_vat_level(self):
-        return self.get_vat_level_display()
+    def get_quantity_invoiced(self):
+        if self.quantity_invoiced != 0:
+            return mark_safe(
+                _("%(qty)s") % {"qty": number_format(self.quantity_invoiced, 2)}
+            )
+        return EMPTY_STRING
 
-    get_vat_level.short_description = _("VAT rate")
-    get_vat_level.admin_order_field = "vat_level"
-
-    def get_producer_qty_stock_invoiced(self):
-        # Return quantity to buy to the producer and stock used to deliver the invoiced quantity
-        if self.quantity_invoiced > DECIMAL_ZERO:
-            return self.quantity_invoiced, DECIMAL_ZERO, self.quantity_invoiced
-        return DECIMAL_ZERO, DECIMAL_ZERO, DECIMAL_ZERO
-
-    def get_html_producer_qty_stock_invoiced(self):
-        (
-            invoiced_qty,
-            taken_from_stock,
-            customer_qty,
-        ) = self.get_producer_qty_stock_invoiced()
-        if invoiced_qty == DECIMAL_ZERO:
-            if taken_from_stock == DECIMAL_ZERO:
-                return EMPTY_STRING
-            else:
-                return mark_safe(
-                    _("stock %(stock)s") % {"stock": number_format(taken_from_stock, 4)}
-                )
-        else:
-            if taken_from_stock == DECIMAL_ZERO:
-                return mark_safe(
-                    _("<b>%(qty)s</b>") % {"qty": number_format(invoiced_qty, 4)}
-                )
-            else:
-                return mark_safe(
-                    _("<b>%(qty)s</b> + stock %(stock)s")
-                    % {
-                        "qty": number_format(invoiced_qty, 4),
-                        "stock": number_format(taken_from_stock, 4),
-                    }
-                )
-
-    get_html_producer_qty_stock_invoiced.short_description = _(
-        "Qty invoiced by the producer"
+    get_quantity_invoiced.short_description = _(
+        "Quantity sold"
     )
-    get_html_producer_qty_stock_invoiced.admin_order_field = "quantity_invoiced"
-
-    def get_producer_qty_invoiced(self):
-        (
-            invoiced_qty,
-            taken_from_stock,
-            customer_qty,
-        ) = self.get_producer_qty_stock_invoiced()
-        return invoiced_qty
+    get_quantity_invoiced.admin_order_field = "quantity_invoiced"
 
     def get_producer_unit_price_invoiced(self):
         if self.producer_unit_price.amount > self.customer_unit_price.amount:
@@ -226,21 +186,6 @@ class OfferItem(Item):
                 )
         return qty_display
 
-    # def get_long_name(self, customer_price=True, is_html=False):
-    #     return super().get_long_name(customer_price=customer_price)
-
-    # def get_html_long_name(self):
-    #     return mark_safe(self.get_long_name(is_html=True))
-
-    # def get_long_name_with_producer(self, is_html=False):
-    #     return super().get_long_name_with_producer()
-
-    # def get_html_long_name_with_producer(self):
-    #     return mark_safe(self.get_long_name_with_producer_price())
-    #
-    # get_html_long_name_with_producer.short_description = _("Offer items")
-    # get_html_long_name_with_producer.admin_order_field = "long_name_v2"
-
     def __str__(self):
         return self.get_long_name_with_producer_price()
 
@@ -253,7 +198,7 @@ class OfferItem(Item):
         # ]
 
 
-class OfferItemWoReceiver(OfferItem):
+class OfferItemReadOnly(OfferItem):
     def __str__(self):
         return self.get_long_name_with_producer_price()
 
@@ -273,7 +218,7 @@ class OfferItemSend(OfferItem):
         verbose_name_plural = _("Offer items")
 
 
-class OfferItemClosed(OfferItem):
+class OfferItemOpen(OfferItem):
     def __str__(self):
         return self.get_long_name_with_producer_price()
 

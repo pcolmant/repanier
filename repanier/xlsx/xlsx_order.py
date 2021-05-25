@@ -5,7 +5,7 @@ from repanier.const import *
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
@@ -694,7 +694,7 @@ def export_preparation_for_a_delivery(
             else:
                 # Using quantity_for_preparation_sort_order the order is by customer__short_basket_name if the product
                 # is to be distributed by piece, otherwise by lower qty first.
-                for offer_item in OfferItemWoReceiver.objects.filter(
+                for offer_item in OfferItemReadOnly.objects.filter(
                     permanence_id=permanence.id,
                     producer_id=producer.id,
                 ).order_by("preparation_sort_order_v2"):
@@ -905,7 +905,7 @@ def export_producer_by_product(permanence, producer, wb=None):
     hide_column_unit_deposit = True
     formula_main_total = []
     offer_items = (
-        OfferItemWoReceiver.objects.filter(
+        OfferItemReadOnly.objects.filter(
             permanence_id=permanence.id,
             producer_id=producer.id,
             quantity_invoiced__gt=DECIMAL_ZERO,
@@ -1070,11 +1070,7 @@ def export_producer_by_product(permanence, producer, wb=None):
 
                             row_num += 1
                 else:
-                    (
-                        qty,
-                        taken_from_stock,
-                        customer_qty,
-                    ) = offer_item.get_producer_qty_stock_invoiced()
+                    qty = offer_item.quantity_invoiced
                     if qty != DECIMAL_ZERO:
                         # Important : in this case, the qty comes from offer item.
                         # Offer item contains weight, not pieces

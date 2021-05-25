@@ -137,9 +137,9 @@ class Item(TranslatableModel):
     )
 
     stock = models.DecimalField(
-        _("Inventory"),
+        _("Maximum quantity"),
         help_text=_("0 mean : do not limit the quantity on sale."),
-        default=DECIMAL_MAX_STOCK,
+        default=DECIMAL_ZERO,
         max_digits=9,
         decimal_places=3,
         validators=[MinValueValidator(0)],

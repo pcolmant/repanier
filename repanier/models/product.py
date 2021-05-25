@@ -39,14 +39,14 @@ class Product(Item):
     @transaction.atomic()
     def get_or_create_offer_item(self, permanence):
 
-        from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
+        from repanier.models.offeritem import OfferItem, OfferItemReadOnly
         from repanier.models.box import BoxContent
 
         offer_item_qs = OfferItem.objects.filter(
             permanence_id=permanence.id, product_id=self.id
         ).order_by("?")
         if not offer_item_qs.exists():
-            OfferItemWoReceiver.objects.create(
+            OfferItemReadOnly.objects.create(
                 permanence_id=permanence.id,
                 product_id=self.id,
                 producer_id=self.producer_id,
@@ -59,7 +59,7 @@ class Product(Item):
                     permanence_id=permanence.id, product_id=box_content.product_id
                 ).order_by("?")
                 if not box_offer_item_qs.exists():
-                    OfferItemWoReceiver.objects.create(
+                    OfferItemReadOnly.objects.create(
                         permanence_id=permanence.id,
                         product_id=box_content.product_id,
                         producer_id=box_content.product.producer_id,

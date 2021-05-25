@@ -24,6 +24,6 @@ from .box import BoxContent
 
 # proxies
 from .invoice import CustomerSend
-from .offeritem import OfferItemSend, OfferItemClosed, OfferItemWoReceiver
+from .offeritem import OfferItemSend, OfferItemOpen, OfferItemReadOnly
 from .permanence import PermanenceInPreparation, PermanenceDone
 from .purchase import PurchaseWoReceiver

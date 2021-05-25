@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from repanier.apps import REPANIER_SETTINGS_CURRENCY_XLSX
 from repanier.const import *
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.purchase import Purchase
 from repanier.packages.openpyxl import load_workbook
 from repanier.packages.openpyxl.style import Fill
@@ -555,7 +555,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                         error_msg = _("Row %(row_num)d : The given permanence doesn't own the given purchase id.") % {
                             'row_num': row_num + 1}
                         break
-                    offer_item = OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).order_by('?').first()
+                    offer_item = OfferItemReadOnly.objects.filter(id=purchase.offer_item_id).order_by('?').first()
                     if offer_item is None:
                         error = True
                         error_msg = _("Row %(row_num)d : No offer_item corresponding to the given purchase id.") % {

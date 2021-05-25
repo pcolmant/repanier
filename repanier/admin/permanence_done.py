@@ -29,13 +29,12 @@ from repanier.admin.tools import (
     check_permanence,
     check_cancel_in_post,
     check_done_in_post,
-    get_query_filters,
-    add_filter,
 )
 from repanier.const import *
 from repanier.email import email_invoice
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
+from repanier.middleware import get_query_filters, add_filter
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice

@@ -16,8 +16,9 @@ from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import CharWidget
 from repanier.admin.forms import ImportStockForm
-from repanier.admin.tools import check_cancel_in_post, get_query_filters
+from repanier.admin.tools import check_cancel_in_post
 from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
+from repanier.middleware import get_query_filters
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
@@ -325,7 +326,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
             response["Content-Disposition"] = "attachment; filename={0}.xlsx".format(
-                _("Inventory")
+                _("Maximum quantity")
             )
             wb.save(response)
             return response

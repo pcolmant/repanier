@@ -1,5 +1,5 @@
 import threading
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl, urlunparse
 
 from django.http import QueryDict
 from django.utils.http import urlencode
@@ -13,6 +13,18 @@ def _set_request(request):
 
 def get_request():
     return getattr(threading_local, "repanier_request", None)
+
+
+def set_threading_local(name, value):
+    repanier_local = getattr(threading_local, "repanier_local", None)
+    if repanier_local is None:
+        threading_local.repanier_local = {}
+    threading_local.repanier_local[name] = value
+
+
+def get_threading_local(name, default_value= None):
+    repanier_local = getattr(threading_local, "repanier_local", {})
+    return repanier_local.get(name, default_value)
 
 
 def _set_filters(request):
@@ -40,12 +52,30 @@ def _get_filters():
     return getattr(threading_local, "repanier_filters", "")
 
 
-def get_query_preserved_filters():
+def get_preserved_filters():
     """
     Return the admin preserved filters querystring.
     """
     filters = _get_filters()
-    return "?{}".format(urlencode({"_changelist_filters": filters})) if filters else ""
+    return urlencode({"_changelist_filters": filters}) if filters else ""
+
+def get_preserved_filters_as_dict():
+    filters_as_dict = QueryDict(_get_filters(), mutable=True)
+    return filters_as_dict
+
+def get_preserved_filters_from_dict(filters_as_dict):
+    """
+        Return the admin preserved filters querystring from a dictionary.
+        """
+    return urlencode({"_changelist_filters": filters_as_dict.urlencode()}) if filters_as_dict else ""
+
+
+def get_query_preserved_filters():
+    """
+    Return the admin preserved filters querystring.
+    """
+    filters = get_preserved_filters()
+    return "?{}".format(filters) if filters else ""
 
 
 def get_query_filters():
@@ -62,17 +92,18 @@ def add_filter(path):
 
 def get_request_params():
     """
-    Return the params present in the querystring as a dict
+    Return the params present in the querystring and in the url as a dict
     """
-    filters = _get_filters()
-    return dict(parse_qsl(filters))
-
+    params_inside_filters = dict(parse_qsl(_get_filters()))
+    params_inside_url = get_request().resolver_match.kwargs
+    params = params_inside_filters | params_inside_url
+    return params
 
 def is_ajax():
     request = get_request()
     # See : https://docs.djangoproject.com/en/3.1/releases/3.1/
     # The HttpRequest.is_ajax() method is deprecated as it relied on a jQuery-specific way of signifying AJAX calls
-    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+    return request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
 
 
 def admin_filter_middleware(get_response):
@@ -81,7 +112,6 @@ def admin_filter_middleware(get_response):
     def middleware(request):
         # Code to be executed for each request before
         # the view (and later middleware) are called.
-
         _set_request(request)
         user = getattr(request, "user", None)
         if user is not None and user.is_staff:

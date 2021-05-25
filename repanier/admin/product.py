@@ -20,8 +20,7 @@ from repanier.admin.admin_filter import (
     AdminFilterProducer,
     AdminFilterDepartment,
 )
-from repanier.admin.tools import check_cancel_in_post, check_product, add_filter
-from repanier.admin.tools import get_query_filters
+from repanier.admin.tools import check_cancel_in_post, check_product
 from repanier.const import (
     LUT_ALL_VAT,
     LUT_ALL_VAT_REVERSE,
@@ -42,7 +41,7 @@ from repanier.const import (
     LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL,
     LUT_PRODUCT_ORDER_UNIT_ALL,
 )
-from repanier.middleware import get_request_params
+from repanier.middleware import get_request_params, get_query_filters, add_filter
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
 from repanier.models.product import Product

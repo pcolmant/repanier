@@ -194,7 +194,6 @@ def payment_message(customer, permanence):
         CustomerInvoice.objects.filter(
             customer_id=customer.id, permanence_id=permanence.id
         )
-        .order_by("?")
         .first()
     )
 
@@ -357,7 +356,6 @@ def create_or_update_one_purchase(
             offer_item_id=offer_item.id,
             is_box_content=is_box_content,
         )
-        .order_by("?")
         .first()
     )
     if batch_job:
@@ -384,6 +382,8 @@ def create_or_update_one_purchase(
             else:
                 purchase.quantity_invoiced = q_order
             purchase.save()
+            # if offer_item.is_box:
+            #     purchase.save_box()
         return purchase, True
     else:
         permanence_is_opened = (
@@ -392,7 +392,6 @@ def create_or_update_one_purchase(
                 customer_id=customer_id,
                 status=status,
             )
-            .order_by("?")
             .exists()
         )
         if permanence_is_opened:
@@ -412,7 +411,6 @@ def create_or_update_one_purchase(
                             offer_item_id=offer_item.id,
                             is_box_content=False,
                         )
-                        .order_by("?")
                         .first()
                     )
                     if non_box_purchase is not None:
@@ -470,7 +468,6 @@ def create_or_update_one_cart_item(
     offer_item = (
         OfferItem.objects.select_for_update(nowait=False)
         .filter(id=offer_item_id, is_active=True, may_order=True)
-        .order_by("?")
         .select_related("producer")
         .first()
     )
@@ -507,7 +504,6 @@ def create_or_update_one_cart_item(
                     offer_item_id=offer_item.id,
                     is_box_content=False,
                 )
-                .order_by("?")
                 .first()
             )
             if purchase is not None:
@@ -520,14 +516,12 @@ def create_or_update_one_cart_item(
                 for content in (
                     BoxContent.objects.filter(box=offer_item.product_id)
                     .only("product_id", "content_quantity")
-                    .order_by("?")
                 ):
                     box_offer_item = (
                         OfferItem.objects.filter(
                             product_id=content.product_id,
                             permanence_id=offer_item.permanence_id,
                         )
-                        .order_by("?")
                         .select_related("producer")
                         .first()
                     )
@@ -539,7 +533,6 @@ def create_or_update_one_cart_item(
                                 offer_item_id=box_offer_item.id,
                                 is_box_content=True,
                             )
-                            .order_by("?")
                             .first()
                         )
                         if purchase is not None:
@@ -586,7 +579,6 @@ def create_or_update_one_cart_item(
                     offer_item_id=offer_item.id,
                     is_box_content=False,
                 )
-                .order_by("?")
                 .first()
             )
             return purchase, False
@@ -723,13 +715,13 @@ def reorder_purchases(permanence_id):
 
 
 def reorder_offer_items(permanence_id):
-    from repanier.models.offeritem import OfferItemWoReceiver
+    from repanier.models.offeritem import OfferItemReadOnly
 
     # calculate the sort order of the order display screen
     cur_language = translation.get_language()
-    offer_item_qs = OfferItemWoReceiver.objects.filter(
+    offer_item_qs = OfferItemReadOnly.objects.filter(
         permanence_id=permanence_id
-    ).order_by("?")
+    )
 
     i = 0
     reorder_queryset = offer_item_qs.filter(is_box=False,).order_by(
@@ -791,11 +783,11 @@ def update_offer_item(product_id=None, producer_id=None):
         if producer_id is None:
             offer_item_qs = OfferItem.objects.filter(
                 permanence_id=permanence.id, product_id=product_id
-            ).order_by("?")
+            )
         else:
             offer_item_qs = OfferItem.objects.filter(
                 permanence_id=permanence.id, producer_id=producer_id
-            ).order_by("?")
+            )
         clean_offer_item(permanence, offer_item_qs)
         permanence.recalculate_order_amount(offer_item_qs=offer_item_qs)
     cache.clear()
@@ -866,17 +858,16 @@ def get_html_basket_message(customer, permanence, status):
 
 def html_box_content(offer_item, user):
     from repanier.models.box import BoxContent
-    from repanier.models.offeritem import OfferItemWoReceiver
+    from repanier.models.offeritem import OfferItemReadOnly
 
     box_id = offer_item.product_id
     box_products = list(
         BoxContent.objects.filter(box_id=box_id)
         .values_list("product_id", flat=True)
-        .order_by("?")
     )
     if len(box_products) > 0:
         box_offer_items_qs = (
-            OfferItemWoReceiver.objects.filter(
+            OfferItemReadOnly.objects.filter(
                 permanence_id=offer_item.permanence_id,
                 product_id__in=box_products,
             )
@@ -894,7 +885,6 @@ def html_box_content(offer_item, user):
                                 box_id=box_id, product_id=box_offer_item.product_id
                             )
                             .only("content_quantity")
-                            .order_by("?")
                             .first()
                             .content_quantity,
                             order_unit=box_offer_item.order_unit,
@@ -924,7 +914,6 @@ def rule_of_3_reload_purchase(
         Purchase.objects.filter(
             customer_id=customer.id, offer_item_id=offer_item.id, is_box_content=False
         )
-        .order_by("?")
         .first()
     )
     if purchase is None:

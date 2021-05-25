@@ -4,7 +4,7 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.tools import sint
 
 
@@ -16,7 +16,7 @@ def like_ajax(request):
     if user.is_authenticated:
         offer_item_id = sint(request.GET.get("offer_item", 0))
         offer_item = (
-            OfferItemWoReceiver.objects.filter(id=offer_item_id)
+            OfferItemReadOnly.objects.filter(id=offer_item_id)
             .order_by("?")
             .first()
         )

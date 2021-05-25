@@ -16,6 +16,7 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields
 from repanier.const import *
+from repanier.middleware import add_filter
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
@@ -24,7 +25,7 @@ from repanier.models.invoice import (
     CustomerProducerInvoice,
     ProducerInvoice,
 )
-from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
+from repanier.models.offeritem import OfferItem, OfferItemReadOnly
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -150,8 +151,6 @@ class Permanence(TranslatableModel):
     get_producers_without_download.short_description = _("Offers from")
 
     def get_producers(self, with_download):
-        from repanier.admin.tools import add_filter
-
         if self.status == PERMANENCE_PLANNED:
             download_url = add_filter(
                 reverse("admin:permanence-export-offer", args=[self.id])
@@ -175,8 +174,8 @@ class Permanence(TranslatableModel):
                         )
                     )
         elif self.status == PERMANENCE_OPENED:
-            close_offeritem_changelist_url = reverse(
-                "admin:repanier_offeritemclosed_changelist"
+            offeritemopen_changelist_url = reverse(
+                "admin:repanier_offeritemopen_changelist"
             )
             download_url = add_filter(
                 reverse("admin:permanence-export-producer-opened-order", args=[self.id])
@@ -189,34 +188,14 @@ class Permanence(TranslatableModel):
 
             producers = []
             producers_html = []
-            for p in self.producers.all().only("id"):
-                pi = ProducerInvoice.objects.filter(
-                    producer_id=p.id, permanence_id=self.id
-                ).first()
-                if pi is not None:
-                    if pi.status == PERMANENCE_OPENED:
-                        label = (
-                            "{} ({}) ".format(
-                                p.short_profile_name, pi.get_total_price_with_tax()
-                            )
-                        ).replace(" ", "&nbsp;")
-                        offeritem_changelist_url = close_offeritem_changelist_url
-                    else:
-                        label = (
-                            "{} ({}) {}".format(
-                                p.short_profile_name,
-                                pi.get_total_price_with_tax(),
-                                settings.LOCK_UNICODE,
-                            )
-                        ).replace(" ", "&nbsp;")
-                        offeritem_changelist_url = close_offeritem_changelist_url
-                else:
-                    label = ("{} ".format(p.short_profile_name)).replace(" ", "&nbsp;")
-                    offeritem_changelist_url = close_offeritem_changelist_url
+            for p in self.producers.all():
                 producers.append(p.short_profile_name)
                 producers_html.append(
                     '<a href="{}?permanence={}&producer={}">{}</a>'.format(
-                        offeritem_changelist_url, self.id, p.id, label
+                        offeritemopen_changelist_url,
+                        self.id,
+                        p.id,
+                        p.get_filter_display(self.id).replace(" ", "&nbsp;"),
                     )
                 )
 
@@ -368,8 +347,7 @@ class Permanence(TranslatableModel):
     get_customers_without_download.short_description = _("Orders from")
 
     def get_customers(self, with_download):
-        from repanier.admin.tools import add_filter
-
+        button_add = EMPTY_STRING
         if self.status in [PERMANENCE_OPENED, PERMANENCE_SEND]:
             changelist_url = reverse("admin:repanier_purchase_changelist")
             if self.status == PERMANENCE_OPENED:
@@ -388,6 +366,14 @@ class Permanence(TranslatableModel):
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span> ',
                 download_url,
                 _("Export"),
+            )
+            add_url = "{}?permanence={}".format(
+                reverse("admin:repanier_purchase_add"), self.id
+            )
+            button_add = format_html(
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-edit"></i></a></span> ',
+                add_url,
+                _("Edit purchases"),
             )
             customers = []
             customers_html = []
@@ -494,13 +480,13 @@ class Permanence(TranslatableModel):
                 display_customers = "block"
                 hide_customers = "none"
             msg_html = """
-    <div id="id_hide_customers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}
+    <div id="id_hide_customers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}{button_add}
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_show}"
                 onclick="document.getElementById('id_show_customers_{id}').style.display = 'block'; document.getElementById('id_hide_customers_{id}').style.display = 'none'; return false;">
             <i
                     class="far fa-eye"></i> {len_customers}</a></span>
     </div>
-    <div id="id_show_customers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}
+    <div id="id_show_customers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}{button_add}
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_hide}"
                 onclick="document.getElementById('id_show_customers_{id}').style.display = 'none'; document.getElementById('id_hide_customers_{id}').style.display = 'block'; return false;">
             <i
@@ -510,6 +496,7 @@ class Permanence(TranslatableModel):
             """.format(
                 id=self.id,
                 button_download=button_download,
+                button_add=button_add,
                 msg_show=msg_show,
                 msg_hide=msg_hide,
                 display_producers=display_customers,
@@ -519,7 +506,18 @@ class Permanence(TranslatableModel):
             )
             return mark_safe(msg_html)
         else:
-            return mark_safe('<div class="wrap-text">{}</div>'.format(_("No purchase")))
+            if button_add:
+                return mark_safe(
+                    '<div class="repanier-button-row">{button_add}</div><p></p><div class="wrap-text">{no_purchase}</div>'.format(
+                        button_add=button_add, no_purchase=_("No purchase")
+                    )
+                )
+            else:
+                return mark_safe(
+                    '<div class="wrap-text">{no_purchase}</div>'.format(
+                        no_purchase=_("No purchase")
+                    )
+                )
 
     get_customers.short_description = _("Purchases by")
 
@@ -536,8 +534,6 @@ class Permanence(TranslatableModel):
 
     @cached_property
     def get_board(self):
-        from repanier.admin.tools import add_filter
-
         permanenceboard_set = PermanenceBoard.objects.filter(
             permanence=self, permanence_role__rght=F("permanence_role__lft") + 1
         ).order_by("permanence_role__tree_id", "permanence_role__lft")
@@ -687,14 +683,12 @@ class Permanence(TranslatableModel):
     def back_to_scheduled(self):
         self.producers.clear()
         for offer_item in (
-            OfferItemWoReceiver.objects.filter(permanence_id=self.id, may_order=True)
+            OfferItemReadOnly.objects.filter(permanence_id=self.id, may_order=True)
             .order_by("producer_id")
             .distinct("producer_id")
         ):
             self.producers.add(offer_item.producer_id)
-        OfferItemWoReceiver.objects.filter(permanence_id=self.id).update(
-            may_order=False
-        )
+        OfferItemReadOnly.objects.filter(permanence_id=self.id).update(may_order=False)
 
     @transaction.atomic
     def close_order(self, everything, deliveries_id=(), send_mail=True):
@@ -895,7 +889,7 @@ class Permanence(TranslatableModel):
                 producer_id__in=producers_to_move
                 # Redundant : customer_id__in=customers_to_move
             ).update(permanence_id=new_permanence.id)
-            OfferItemWoReceiver.objects.filter(
+            OfferItemReadOnly.objects.filter(
                 permanence_id=self.id, producer_id__in=producers_to_move
             ).update(permanence_id=new_permanence.id)
 
@@ -1584,7 +1578,7 @@ class Permanence(TranslatableModel):
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO,
             )
-            OfferItemWoReceiver.objects.filter(permanence_id=self.id).order_by(
+            OfferItemReadOnly.objects.filter(permanence_id=self.id).order_by(
                 "?"
             ).update(
                 quantity_invoiced=DECIMAL_ZERO,
@@ -1621,7 +1615,7 @@ class Permanence(TranslatableModel):
             a_purchase.save()
 
         if send_to_producer:
-            OfferItemWoReceiver.objects.filter(
+            OfferItemReadOnly.objects.filter(
                 permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_PC_KG
             ).update(use_order_unit_converted=True)
         self.save()
@@ -1632,7 +1626,7 @@ class Permanence(TranslatableModel):
         result = []
         for a_producer in self.producers.all():
             current_products = list(
-                OfferItemWoReceiver.objects.filter(
+                OfferItemReadOnly.objects.filter(
                     is_active=True,
                     may_order=True,
                     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
@@ -1652,7 +1646,7 @@ class Permanence(TranslatableModel):
             )
             if previous_permanence is not None:
                 previous_products = list(
-                    OfferItemWoReceiver.objects.filter(
+                    OfferItemReadOnly.objects.filter(
                         is_active=True,
                         may_order=True,
                         order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
@@ -1666,7 +1660,7 @@ class Permanence(TranslatableModel):
             else:
                 new_products = current_products
 
-            qs = OfferItemWoReceiver.objects.filter(
+            qs = OfferItemReadOnly.objects.filter(
                 permanence_id=self.id,
                 product__in=new_products,
             ).order_by("order_sort_order_v2")
@@ -1707,9 +1701,7 @@ class Permanence(TranslatableModel):
                     status_counter += 1
                     status = delivery.status
                     if self.status <= delivery.status:
-                        status_list.append(
-                            "<b>{}</b>".format(delivery.get_status_display())
-                        )
+                        status_list.append("{}".format(delivery.get_status_display()))
                     else:
                         status_list.append(
                             "<b>{}</b>".format(_("Error, call helpdesk"))
@@ -1719,7 +1711,7 @@ class Permanence(TranslatableModel):
                 )
             message = "<br>".join(status_list)
         else:
-            message = self.get_status_display()
+            message = "{}".format(self.get_status_display())
         if need_to_refresh_status:
             url = reverse("repanier:display_status", args=(self.id,))
             if force_refresh:

@@ -40,10 +40,10 @@ admin.site.register(LUT_ProductionMode, LUTProductionModeAdmin)
 admin.site.register(LUT_PermanenceRole, LUTPermanenceRoleAdmin)
 admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)
 admin.site.register(LUT_DeliveryPoint, LUTDeliveryPointAdmin)
-from repanier.models.offeritem import OfferItemClosed
-from repanier.admin.offeritem import OfferItemClosedAdmin
+from repanier.models.offeritem import OfferItemOpen
+from repanier.admin.offeritem import OfferItemOpenAdmin
 
-admin.site.register(OfferItemClosed, OfferItemClosedAdmin)
+admin.site.register(OfferItemOpen, OfferItemOpenAdmin)
 from repanier.models.offeritem import OfferItemSend
 from repanier.admin.rule_of_3_per_product import OfferItemSendAdmin
 

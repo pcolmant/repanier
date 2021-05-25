@@ -9,7 +9,7 @@ from repanier.email import email_offer
 from repanier.email import email_order
 from repanier.models.box import Box
 from repanier.models.deliveryboard import DeliveryBoard
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
@@ -69,7 +69,7 @@ def open_order(permanence_id, send_mail=True):
     # 3 - Keep only producer with offer items which can be ordered
     permanence.producers.clear()
     for offer_item in (
-        OfferItemWoReceiver.objects.filter(permanence_id=permanence.id, may_order=True)
+        OfferItemReadOnly.objects.filter(permanence_id=permanence.id, may_order=True)
         .order_by("producer_id")
         .distinct("producer_id")
     ):

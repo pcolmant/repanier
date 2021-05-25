@@ -1,6 +1,5 @@
 from django.conf import settings
-
-from repanier.admin.tools import get_query_preserved_filters, get_query_filters
+from repanier.middleware import get_query_preserved_filters, get_query_filters
 
 
 def repanier_settings(request):

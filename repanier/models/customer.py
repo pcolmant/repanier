@@ -607,6 +607,22 @@ class Customer(models.Model):
         self.subscribe_to_email = False
         self.save()
 
+    def get_filter_display(self, permanence_id):
+        ci = CustomerInvoice.objects.filter(
+            customer_id=self.id, permanence_id=permanence_id
+        ).first()
+        if ci is not None:
+            if ci.is_order_confirm_send:
+                return "{} {} ({})".format(
+                    settings.LOCK_UNICODE,
+                    self.short_basket_name,
+                    ci.total_price_with_tax,
+                )
+            else:
+                return "{} ({})".format(self.short_basket_name, ci.total_price_with_tax)
+        else:
+            return self.short_basket_name
+
     def __str__(self):
         if self.group is None:
             return self.short_basket_name

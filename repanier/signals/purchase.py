@@ -13,7 +13,7 @@ from repanier.const import (
 )
 from repanier.models import (
     Purchase,
-    OfferItemWoReceiver,
+    OfferItemReadOnly,
     CustomerInvoice,
     CustomerProducerInvoice,
     ProducerInvoice,
@@ -70,7 +70,7 @@ def purchase_pre_save(sender, **kwargs):
     purchase.set_customer_price_list_multiplier()
     if purchase.is_box_content:
         if delta_quantity != DECIMAL_ZERO:
-            OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(
+            OfferItemReadOnly.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F("quantity_invoiced") + delta_quantity
             )
     else:
@@ -112,7 +112,7 @@ def purchase_pre_save(sender, **kwargs):
             )
             delta_deposit = purchase.deposit.amount - purchase.previous_deposit
 
-            OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(
+            OfferItemReadOnly.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F("quantity_invoiced") + delta_quantity,
                 total_purchase_with_tax=F("total_purchase_with_tax")
                 + delta_purchase_price,
@@ -120,7 +120,7 @@ def purchase_pre_save(sender, **kwargs):
                 + delta_selling_price,
             )
             purchase.offer_item = (
-                OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id)
+                OfferItemReadOnly.objects.filter(id=purchase.offer_item_id)
                 .order_by("?")
                 .first()
             )

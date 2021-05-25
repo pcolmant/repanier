@@ -10,7 +10,7 @@ from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.box import BoxContent
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
@@ -60,7 +60,7 @@ def order_ajax(request):
                 batch_job=False,
                 comment=EMPTY_STRING,
             )
-            offer_item = OfferItemWoReceiver.objects.filter(id=offer_item_id).first()
+            offer_item = OfferItemReadOnly.objects.filter(id=offer_item_id).first()
             if purchase is None:
                 json_dict[
                     "#offer_item{}".format(offer_item.id)
@@ -76,7 +76,7 @@ def order_ajax(request):
                 for content in BoxContent.objects.filter(
                     box=offer_item.product_id
                 ).only("product_id"):
-                    box_offer_item = OfferItemWoReceiver.objects.filter(
+                    box_offer_item = OfferItemReadOnly.objects.filter(
                         product_id=content.product_id,
                         permanence_id=offer_item.permanence_id,
                     ).first()

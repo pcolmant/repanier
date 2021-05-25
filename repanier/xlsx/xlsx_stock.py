@@ -2,7 +2,7 @@ import repanier.apps
 from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.product import Product
 from repanier.packages.openpyxl import load_workbook
 from repanier.packages.openpyxl.style import Fill
@@ -43,7 +43,7 @@ def export_permanence_stock(
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
         ]
         offer_items = (
-            OfferItemWoReceiver.objects.filter(
+            OfferItemReadOnly.objects.filter(
                 permanence_id=permanence.id,
                 manage_production=True,
             )
@@ -348,12 +348,12 @@ def export_producer_stock(producers, customer_price=False, wb=None):
         (_("Product"), 60),
         (_("Customer unit price") if customer_price else _("Producer unit price"), 10),
         (_("Deposit"), 10),
-        (_("Inventory"), 10),
+        (_("Maximum quantity"), 10),
         (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
     ]
     producers = producers.iterator()
     producer = next_row(producers)
-    wb, ws = new_landscape_a4_sheet(wb, _("Inventory"), _("Inventory"), header)
+    wb, ws = new_landscape_a4_sheet(wb, _("Maximum quantity"), _("Maximum quantity"), header)
     show_column_reference = False
     row_num = 1
     while producer is not None:
@@ -484,8 +484,8 @@ def import_producer_stock(worksheet):
                 if product_id is not None:
                     stock = (
                         DECIMAL_ZERO
-                        if row[_("Inventory")] is None
-                        else Decimal(row[_("Inventory")]).quantize(THREE_DECIMALS)
+                        if row[_("Maximum quantity")] is None
+                        else Decimal(row[_("Maximum quantity")]).quantize(THREE_DECIMALS)
                     )
                     stock = stock if stock >= DECIMAL_ZERO else DECIMAL_ZERO
                     Product.objects.filter(id=product_id).update(stock=stock)
@@ -512,9 +512,9 @@ def handle_uploaded_stock(request, producers, file_to_import, *args):
     error_msg = None
     wb = load_workbook(file_to_import)
     if wb is not None:
-        ws = wb.get_sheet_by_name(format_worksheet_title(_("Inventory")))
+        ws = wb.get_sheet_by_name(format_worksheet_title(_("Maximum quantity")))
         if ws is not None:
             error, error_msg = import_producer_stock(ws, producers=producers)
             if error:
-                error_msg = format_worksheet_title(_("Inventory")) + " > " + error_msg
+                error_msg = format_worksheet_title(_("Maximum quantity")) + " > " + error_msg
     return error, error_msg

@@ -19,7 +19,7 @@ from repanier.const import (
 from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.middleware import get_request_params
 from repanier.models.box import BoxContent, Box
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.product import Product
 from repanier.task import task_box
 from repanier.tools import update_offer_item, get_repanier_template_name
@@ -78,7 +78,7 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                 parent_object = Box.objects.filter(id=object_id).only("id").first()
                 if (
                     parent_object is not None
-                    and OfferItemWoReceiver.objects.filter(
+                    and OfferItemReadOnly.objects.filter(
                         product=parent_object.id,
                         permanence__status__gt=PERMANENCE_PLANNED,
                     ).exists()

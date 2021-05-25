@@ -8,7 +8,7 @@ from django.template import Template, Context as TemplateContext
 from repanier.const import PRODUCT_ORDER_UNIT_DEPOSIT
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
-from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from repanier.models.staff import Staff
 from repanier.tools import *
@@ -38,7 +38,7 @@ def send_open_order(permanence_id):
     offer_producer = ", ".join(
         [p.short_profile_name for p in permanence.producers.all()]
     )
-    qs = OfferItemWoReceiver.objects.filter(
+    qs = OfferItemReadOnly.objects.filter(
         permanence_id=permanence_id,
         is_active=True,
         order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
