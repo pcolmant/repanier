@@ -43,27 +43,21 @@ def configuration_post_save(sender, **kwargs):
     if config.id is not None:
         apps.REPANIER_SETTINGS_CONFIG = config
         if config.name == PERMANENCE_NAME_PERMANENCE:
-            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence of ")
         elif config.name == PERMANENCE_NAME_CLOSURE:
-            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Closure")
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Closures")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Closure of ")
         elif config.name == PERMANENCE_NAME_DELIVERY:
-            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Delivery")
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Deliveries")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Delivery of ")
         elif config.name == PERMANENCE_NAME_ORDER:
-            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Order")
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Orders")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Order of ")
         elif config.name == PERMANENCE_NAME_OPENING:
-            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Opening")
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Openings")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Opening of ")
         else:
-            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Distribution")
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
         apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = (

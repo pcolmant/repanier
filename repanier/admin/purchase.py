@@ -52,10 +52,10 @@ class AdminFilterProducerOfPermanenceSearchView(AutocompleteJsonView):
 
 
 class AdminFilterProducerOfPermanenceChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
+    def label_from_instance(self, selected_item):
         param = get_request_params()
         permanence_id = param.get("permanence", 0)
-        return obj.get_filter_display(permanence_id)
+        return selected_item.get_filter_display(permanence_id)
 
 
 class AdminFilterProducerOfPermanence(AutocompleteFilter):
@@ -491,11 +491,11 @@ class PurchaseAdmin(admin.ModelAdmin):
         # Add extra context data to pass to change list template
         # extra_context = extra_context or {}
         # extra_context['my_store_data'] = {'onsale': ['Item 1', 'Item 2']}
-        changelist_view = super().changelist_view(request, extra_context)
-        filtered_queryset = changelist_view.context_data["cl"].queryset
+        view = super().changelist_view(request, extra_context)
+        filtered_queryset = view.context_data["cl"].queryset
         first_purchase = filtered_queryset.first()
-        self.update_extra_context(changelist_view, first_purchase)
-        return changelist_view
+        self.update_extra_context(view, first_purchase)
+        return view
 
     def update_extra_context(self, view, purchase):
         if purchase is None:

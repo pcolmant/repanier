@@ -16,7 +16,7 @@ class PermanenceBoard(models.Model):
     )
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME,
+        verbose_name=_("Order"),
         on_delete=models.CASCADE,
     )
     # permanence_date duplicated to quickly calculate # participation of lasts 12 months

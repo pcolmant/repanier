@@ -1,5 +1,6 @@
 from admin_auto_filters.filters import AutocompleteFilter
 from admin_auto_filters.views import AutocompleteJsonView
+from dal import autocomplete, forward
 from django import forms
 from django.contrib import admin
 from django.db import transaction
@@ -9,39 +10,42 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
 from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
-    AdminFilterDepartment,
 )
-from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.middleware import get_request_params
-from repanier.models import LUT_DepartmentForCustomer, Producer
+from repanier.models import Producer
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItem
 from repanier.models.permanence import Permanence
-from repanier.models.product import Product
 from repanier.models.purchase import Purchase
 from repanier.tools import rule_of_3_reload_purchase
 
 
-class AdminFilterPermanenceSendSearchView(AutocompleteJsonView):
-    model_admin = None
-
+class CustomerAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        queryset = Permanence.objects.filter(status=PERMANENCE_SEND).order_by(
-            "permanence_date",
-            "id",
+        # Don't forget to filter out results depending on the visitor !
+        # permanence_id = self.forwarded.get("permanence", None)
+        # producer_id = self.forwarded.get("producer", None)
+        qs = Customer.objects.filter(
+            may_order=True,
         )
-        return queryset
+
+        if self.q:
+            qs = qs.filter(short_basket_name__icontains=self.q)
+
+        return qs
+
+    def get_result_label(self, item):
+        permanence_id = self.forwarded.get("permanence", 0)
+        return item.get_filter_display(permanence_id)
 
 
-class AdminFilterPermanenceSend(AutocompleteFilter):
-    title = _("Permanences")
-    field_name = "permanence"  # name of the foreign key field
-    parameter_name = "permanence"
-
-    def get_autocomplete_url(self, request, model_admin):
-        return reverse("admin:offeritemsend-admin-permanence-send")
+class CustomerAutocompleteCustomerChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, selected_item):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        return selected_item.get_filter_display(permanence_id)
 
 
 class AdminFilterProducerOfPermanenceSearchView(AutocompleteJsonView):
@@ -77,7 +81,8 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
         param = get_request_params()
         permanence_id = param.get("permanence", 0)
         return reverse(
-            "admin:offeritemsend-admin-producer-of-permanence", args=(permanence_id,)
+            "admin:offer-item-send-admin-producer-of-permanence-filter",
+            args=(permanence_id,),
         )
 
 
@@ -113,6 +118,20 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
         initial=REPANIER_MONEY_ZERO,
     )
     previous_customer = forms.ModelChoiceField(Customer.objects.none(), required=False)
+    customer = CustomerAutocompleteCustomerChoiceField(
+        label=_("Customer"),
+        queryset=Customer.objects.all(),
+        required=True,
+        widget=autocomplete.ModelSelect2(
+            url="admin:offer-item-send-admin-customer-autocomplete",
+            forward=(forward.Field("permanence"),),
+            attrs={
+                "data-dropdown-auto-width": "true",
+                "data-width": "100%",
+                "data-html": True,
+            },
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -133,7 +152,7 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
         widgets = {"customer": Select2(select2attrs={"width": "450px"})}
 
 
-class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline):
+class OfferItemPurchaseSendInline(admin.TabularInline):
     form = OfferItemPurchaseSendInlineForm
     formset = OfferItemPurchaseSendInlineFormSet
     model = Purchase
@@ -161,7 +180,7 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
         return qs.filter(is_box_content=False)
 
 
-class OfferItemSendDataForm(forms.ModelForm):
+class OfferItemSendForm(forms.ModelForm):
     offer_purchase_price = FormMoneyField(
         label=_("Producer amount invoiced"),
         max_digits=8,
@@ -219,11 +238,24 @@ class OfferItemSendDataForm(forms.ModelForm):
                 "Producer amount invoiced wo VAT"
             )
 
+        permanence_field = self.fields["permanence"]
+        permanence_field.widget.can_add_related = False
+        permanence_field.widget.can_delete_related = False
+        permanence_field.widget.can_change_related = False
+        permanence_field.widget.can_view_related = False
+        permanence_field.disabled = True
+        permanence_field.empty_label = None
+        permanence_field.queryset = Permanence.objects.filter(
+            id=offer_item.permanence_id
+        )
+        permanence_field.widget = forms.HiddenInput()
+
     def get_readonly_fields(self, request, obj=None):
         if obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
-            return ["product"]
-        else:
-            return ["offer_purchase_price", "product"]
+            return []
+        return [
+            "offer_purchase_price",
+        ]
 
     def save(self, *args, **kwargs):
         offer_item = super().save(*args, **kwargs)
@@ -257,7 +289,7 @@ class OfferItemSendDataForm(forms.ModelForm):
 
 
 class OfferItemSendAdmin(admin.ModelAdmin):
-    form = OfferItemSendDataForm
+    form = OfferItemSendForm
     inlines = [OfferItemPurchaseSendInline]
     search_fields = ("long_name_v2",)
     list_display = [
@@ -270,9 +302,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     list_display_links = ("get_long_name_with_producer_price",)
     list_filter = (
         AdminFilterProducerOfPermanence,
-        AdminFilterPermanenceSend,
         AdminFilterQuantityInvoiced,
-        AdminFilterDepartment,
     )
     list_select_related = ("producer", "department_for_customer")
     list_per_page = 16
@@ -293,8 +323,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             fields_basic = (
                 (
                     "permanence",
-                    "department_for_customer",
-                    "product",
                 ),
                 prices,
                 (
@@ -306,48 +334,12 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             fields_basic = (
                 (
                     "permanence",
-                    "department_for_customer",
-                    "product",
                 ),
                 prices,
                 ("offer_purchase_price",),
             )
         fieldsets = ((None, {"fields": fields_basic}),)
         return fieldsets
-
-    def get_form(self, request, obj=None, **kwargs):
-
-        form = super().get_form(request, obj, **kwargs)
-
-        permanence_field = form.base_fields["permanence"]
-        department_for_customer_field = form.base_fields["department_for_customer"]
-        product_field = form.base_fields["product"]
-
-        permanence_field.widget.can_add_related = False
-        department_for_customer_field.widget.can_add_related = False
-        product_field.widget.can_add_related = False
-        permanence_field.widget.can_delete_related = False
-        department_for_customer_field.widget.can_delete_related = False
-        product_field.widget.can_delete_related = False
-        permanence_field.empty_label = None
-        department_for_customer_field.empty_label = None
-        product_field.empty_label = None
-
-        if obj is not None:
-            permanence_field.queryset = Permanence.objects.filter(id=obj.permanence_id)
-            department_for_customer_field.queryset = (
-                LUT_DepartmentForCustomer.objects.filter(
-                    id=obj.department_for_customer_id
-                )
-            )
-            product_field.queryset = Product.objects.filter(id=obj.product_id)
-        else:
-            permanence_field.queryset = Permanence.objects.none()
-            department_for_customer_field.queryset = (
-                LUT_DepartmentForCustomer.objects.none()
-            )
-            product_field.queryset = Product.objects.none()
-        return form
 
     def has_add_permission(self, request):
         return False
@@ -365,21 +357,37 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "afcs_permanence_send/",
-                self.admin_site.admin_view(
-                    AdminFilterPermanenceSendSearchView.as_view(model_admin=self)
-                ),
-                name="offeritemsend-admin-permanence-send",
-            ),
-            path(
                 "producer_of_permanence/<int:permanence>/",
                 self.admin_site.admin_view(
                     AdminFilterProducerOfPermanenceSearchView.as_view(model_admin=self)
                 ),
-                name="offeritemsend-admin-producer-of-permanence",
+                name="offer-item-send-admin-producer-of-permanence-filter",
+            ),
+            path(
+                "offer_item_autocomplete/",
+                CustomerAutocomplete.as_view(),
+                name="offer-item-send-admin-customer-autocomplete",
             ),
         ]
         return custom_urls + urls
+
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+        # obj is the edited offer_item
+        if obj is None:
+            permanence = None
+            offer_item = None
+        else:
+            permanence = obj.permanence.get_permanence_display()
+            offer_item = obj.get_long_name_with_customer_price()
+        extra_context = {
+            "PERMANENCE": permanence,
+            "DELIVERY_POINT": EMPTY_STRING,  # TODO
+            "OFFER_ITEM": offer_item,
+        }
+        context.update(extra_context)
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     def get_actions(self, request):
         actions = super().get_actions(request)

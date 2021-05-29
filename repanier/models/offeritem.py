@@ -7,11 +7,9 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatedFields
 
-from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
-    BOX_UNICODE,
     PRODUCT_ORDER_UNIT_KG,
 )
 from repanier.fields.RepanierMoneyField import ModelMoneyField
@@ -45,7 +43,7 @@ class OfferItem(Item):
     producer_sort_order_v2 = models.IntegerField(default=0, db_index=True)
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
+        verbose_name=_("Order"),
         on_delete=models.PROTECT,
         db_index=True,
     )

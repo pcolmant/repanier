@@ -1,19 +1,103 @@
+from admin_auto_filters.filters import AutocompleteFilter
+from admin_auto_filters.views import AutocompleteJsonView
+from dal import autocomplete, forward
 from django import forms
 from django.contrib import admin
 from django.db import transaction
 from django.forms import BaseInlineFormSet
+from django.urls import path, reverse
 from django.utils.translation import ugettext_lazy as _
-from easy_select2 import Select2
-
-from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
-from repanier.models.customer import Customer
+from repanier.middleware import get_request_params
 from repanier.models.offeritem import OfferItemSend, OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
 from repanier.tools import rule_of_3_reload_purchase
+
+
+class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        permanence_id = self.forwarded.get("permanence", None)
+        producer_id = self.forwarded.get("producer", None)
+        qs = OfferItem.objects.filter(
+            permanence_id=permanence_id,
+            producer_id=producer_id,
+            is_box_content=False,
+        ).order_by("department_for_customer", "long_name_v2")
+
+        if self.q:
+            qs = qs.filter(long_name_v2__icontains=self.q)
+
+        return qs
+
+    def get_result_label(self, item):
+        if item.department_for_customer is None:
+            return "{} - {}".format(
+                item.producer,
+                item.get_long_name_with_customer_price(),
+            )
+        else:
+            return "{} - {} - {}".format(
+                item.department_for_customer,
+                item.producer,
+                item.get_long_name_with_customer_price(),
+            )
+
+
+class OfferItemAutocompleteOfferItemChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, selected_item):
+        if selected_item.department_for_customer is None:
+            return "{} - {}".format(
+                selected_item.producer,
+                selected_item.get_long_name_with_customer_price(),
+            )
+        else:
+            return "{} - {} - {}".format(
+                selected_item.department_for_customer,
+                selected_item.producer,
+                selected_item.get_long_name_with_customer_price(),
+            )
+
+
+class AdminFilterProducerOfPermanenceSearchView(AutocompleteJsonView):
+    model_admin = None
+
+    @staticmethod
+    def display_text(obj):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        return obj.get_filter_display(permanence_id)
+
+    def get_queryset(self):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        queryset = Producer.objects.filter(producerinvoice__permanence_id=permanence_id)
+        return queryset
+
+
+class AdminFilterProducerOfPermanenceChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        return obj.get_filter_display(permanence_id)
+
+
+class AdminFilterProducerOfPermanence(AutocompleteFilter):
+    title = _("Producers")
+    field_name = "producer"  # name of the foreign key field
+    parameter_name = "producer"
+    form_field = AdminFilterProducerOfPermanenceChoiceField
+
+    def get_autocomplete_url(self, request, model_admin):
+        param = get_request_params()
+        permanence_id = param.get("permanence", 0)
+        return reverse(
+            "admin:customer-purchase-send-admin-producer-of-permanence-filter",
+            args=(permanence_id,),
+        )
 
 
 class CustomerPurchaseSendInlineFormSet(BaseInlineFormSet):
@@ -42,6 +126,24 @@ class CustomerPurchaseSendInlineForm(forms.ModelForm):
     previous_offer_item = forms.ModelChoiceField(
         OfferItemSend.objects.none(), required=False
     )
+    offer_item = OfferItemAutocompleteOfferItemChoiceField(
+        label=_("Offer item"),
+        queryset=OfferItem.objects.all(),
+        required=True,
+        widget=autocomplete.ModelSelect2(
+            url="admin:customer-purchase-send-admin-offer-item-autocomplete",
+            forward=(
+                # forward.Const(42, 'permanence') ??
+                forward.Field("permanence"),
+                forward.Field("producer"),
+            ),
+            attrs={
+                "data-dropdown-auto-width": "true",
+                "data-width": "100%",
+                "data-html": True,
+            },
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -53,11 +155,8 @@ class CustomerPurchaseSendInlineForm(forms.ModelForm):
             offer_item = None
         self.fields["previous_offer_item"].initial = offer_item
 
-    class Meta:
-        widgets = {"offer_item": Select2(select2attrs={"width": "450px"})}
 
-
-class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline):
+class CustomerPurchaseSendInline(admin.TabularInline):
     form = CustomerPurchaseSendInlineForm
     formset = CustomerPurchaseSendInlineFormSet
     model = Purchase
@@ -121,7 +220,7 @@ class CustomerSendForm(forms.ModelForm):
         label=_("Invoiced to the customer including VAT"),
         max_digits=8,
         decimal_places=2,
-        required=False,
+        required=True,
         initial=REPANIER_MONEY_ZERO,
     )
     rule_of_3 = forms.BooleanField(
@@ -142,11 +241,38 @@ class CustomerSendForm(forms.ModelForm):
         else:
             self.fields["offer_purchase_price"].widget = forms.HiddenInput()
 
+        permanence_field = self.fields["permanence"]
+        producer_field = self.fields["producer"]
+
+        permanence_field.widget.can_add_related = False
+        producer_field.widget.can_add_related = False
+        permanence_field.widget.can_delete_related = False
+        producer_field.widget.can_delete_related = False
+        permanence_field.widget.can_change_related = False
+        producer_field.widget.can_change_related = False
+        permanence_field.widget.can_view_related = False
+        producer_field.widget.can_view_related = False
+        permanence_field.disabled = True
+        producer_field.disabled = True
+        permanence_field.empty_label = None
+        producer_field.empty_label = None
+        permanence_field.queryset = Permanence.objects.filter(
+            id=customer_producer_invoice.permanence_id
+        )
+        producer_field.queryset = Producer.objects.filter(
+            id=customer_producer_invoice.producer_id
+        )
+        permanence_field.widget = forms.HiddenInput()
+        producer_field.widget = forms.HiddenInput()
+
 
 class CustomerSendAdmin(admin.ModelAdmin):
     form = CustomerSendForm
     fields = (
-        ("permanence", "customer", "producer"),
+        (
+            "permanence",
+            "producer",
+        ),
         ("offer_purchase_price", "offer_selling_price", "rule_of_3"),
     )
     list_per_page = 16
@@ -154,36 +280,9 @@ class CustomerSendAdmin(admin.ModelAdmin):
     inlines = [CustomerPurchaseSendInline]
     list_display = ["producer", "customer", "get_html_producer_price_purchased"]
     list_display_links = ("customer",)
+    list_filter = (AdminFilterProducerOfPermanence,)
     search_fields = ("customer__short_basket_name",)
     ordering = ("customer",)
-
-    def get_form(self, request, obj=None, **kwargs):
-
-        form = super().get_form(request, obj, **kwargs)
-
-        permanence_field = form.base_fields["permanence"]
-        customer_field = form.base_fields["customer"]
-        producer_field = form.base_fields["producer"]
-
-        permanence_field.widget.can_add_related = False
-        customer_field.widget.can_add_related = False
-        producer_field.widget.can_add_related = False
-        permanence_field.widget.can_delete_related = False
-        customer_field.widget.can_delete_related = False
-        producer_field.widget.can_delete_related = False
-        permanence_field.empty_label = None
-        customer_field.empty_label = None
-        producer_field.empty_label = None
-
-        if obj is not None:
-            permanence_field.queryset = Permanence.objects.filter(id=obj.permanence_id)
-            customer_field.queryset = Customer.objects.filter(id=obj.customer_id)
-            producer_field.queryset = Producer.objects.filter(id=obj.producer_id)
-        else:
-            permanence_field.queryset = Permanence.objects.none()
-            customer_field.queryset = Customer.objects.none()
-            producer_field.queryset = Producer.objects.none()
-        return form
 
     def has_add_permission(self, request):
         return False
@@ -196,6 +295,42 @@ class CustomerSendAdmin(admin.ModelAdmin):
         if user.is_repanier_staff:
             return True
         return False
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path(
+                "producer_of_permanence/<int:permanence>/",
+                self.admin_site.admin_view(
+                    AdminFilterProducerOfPermanenceSearchView.as_view(model_admin=self)
+                ),
+                name="customer-purchase-send-admin-producer-of-permanence-filter",
+            ),
+            path(
+                "offer_item_autocomplete/",
+                OfferItemAutocomplete.as_view(),
+                name="customer-purchase-send-admin-offer-item-autocomplete",
+            ),
+        ]
+        return my_urls + urls
+
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+        # obj is the edited customer_producer_invoice
+        if obj is None:
+            permanence = None
+            customer_producer_invoice = None
+        else:
+            permanence = str(obj.permanence)
+            customer_producer_invoice = str(obj)
+        extra_context = {
+            "PERMANENCE": permanence,
+            "DELIVERY_POINT": EMPTY_STRING,  # TODO
+            "CUSTOMER_PRODUCER_INVOICE": customer_producer_invoice,
+        }
+        context.update(extra_context)
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -234,15 +369,11 @@ class CustomerSendAdmin(admin.ModelAdmin):
                 and previous_offer_item != purchase.offer_item
             ):
                 # Delete the purchase because the offer_item has changed
-                purchase = (
-                    Purchase.objects.filter(
-                        customer_id=customer.id,
-                        offer_item_id=previous_offer_item.id,
-                        is_box_content=False,
-                    )
-                    .order_by("?")
-                    .first()
-                )
+                purchase = Purchase.objects.filter(
+                    customer_id=customer.id,
+                    offer_item_id=previous_offer_item.id,
+                    is_box_content=False,
+                ).first()
                 if purchase is not None:
                     purchase.quantity_invoiced = DECIMAL_ZERO
                     purchase.save()
@@ -263,10 +394,10 @@ class CustomerSendAdmin(admin.ModelAdmin):
                     "previous_purchase_price"
                 ].initial
                 if purchase.purchase_price != previous_purchase_price:
-                    if purchase.get_producer_unit_price() != DECIMAL_ZERO:
+                    producer_unit_price = purchase.get_producer_unit_price()
+                    if producer_unit_price != DECIMAL_ZERO:
                         purchase.quantity_invoiced = (
-                            purchase.purchase_price.amount
-                            / purchase.get_producer_unit_price()
+                            purchase.purchase_price.amount / producer_unit_price
                         ).quantize(FOUR_DECIMALS)
                     else:
                         purchase.quantity_invoiced = DECIMAL_ZERO

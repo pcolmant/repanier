@@ -155,9 +155,9 @@ class ProducerDataForm(forms.ModelForm):
 
     permanences = forms.ModelMultipleChoiceField(
         Permanence.objects.filter(status=PERMANENCE_PLANNED),
-        label="{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
+        label=_("Orders"),
         widget=FilteredSelectMultiple(
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False
+            _("Orders"), False
         ),
         required=False,
     )

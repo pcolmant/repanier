@@ -851,6 +851,16 @@ class CustomerInvoice(Invoice):
                     ),
                 )
 
+    def get_delivery_display(self):
+        if (
+            self is not None
+            and self.delivery is not None
+        ):
+            return self.delivery.get_delivery_display()
+        return None
+
+    get_delivery_display.short_description = _("Delivery point")
+
     def __str__(self):
         return "{}, {}".format(self.customer, self.permanence)
 

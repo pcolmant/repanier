@@ -43,7 +43,7 @@ class PurchaseManager(models.Manager):
 class Purchase(models.Model):
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME,
+        verbose_name=_("Order"),
         on_delete=models.PROTECT,
         db_index=True,
     )
@@ -218,11 +218,8 @@ class Purchase(models.Model):
     get_permanence_display.short_description = _("Permanence")
 
     def get_delivery_display(self):
-        if (
-            self.customer_invoice is not None
-            and self.customer_invoice.delivery is not None
-        ):
-            return self.customer_invoice.delivery.get_delivery_display()
+        if self.customer_invoice is not None:
+            return self.customer_invoice.get_delivery_display()
         return None
 
     get_delivery_display.short_description = _("Delivery point")

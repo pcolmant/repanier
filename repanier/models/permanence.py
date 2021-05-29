@@ -213,11 +213,11 @@ class Permanence(TranslatableModel):
                 )
             else:
                 button_download = EMPTY_STRING
-            send_offeritem_changelist_url = reverse(
-                "admin:repanier_offeritemsend_changelist"
+            send_offeritem_changelist_url = "{}?is_filled_exact=1&".format(
+                reverse("admin:repanier_offeritemsend_changelist")
             )
-            send_customer_changelist_url = reverse(
-                "admin:repanier_customersend_changelist"
+            send_customer_changelist_url = "{}?".format(
+                reverse("admin:repanier_customersend_changelist")
             )
             producers = []
             producers_html = []
@@ -237,7 +237,7 @@ class Permanence(TranslatableModel):
                     )
                     producers.append(label)
                     producers_html.append(
-                        '<a href="{}?is_filled_exact=1&permanence={}&producer={}">&nbsp;{}</a>'.format(
+                        '<a href="{}permanence={}&producer={}">&nbsp;{}</a>'.format(
                             changelist_url,
                             self.id,
                             pi.producer_id,
