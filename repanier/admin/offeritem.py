@@ -47,7 +47,7 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
 
 class OfferItemOpenAdmin(admin.ModelAdmin):
     fields = None
-    readonly_fields = None
+    # readonly_fields = None
     search_fields = ("long_name_v2",)
     list_display = (
         "producer",
