@@ -247,11 +247,13 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 
     def get_form(self, request, permanence=None, **kwargs):
         form = super().get_form(request, permanence, **kwargs)
-        producer_field = form.base_fields["producers"]
-        producer_field.widget.can_add_related = False
+        if "producers" in form.base_fields:
+            producer_field = form.base_fields["producers"]
+            producer_field.widget.can_add_related = False
         if settings.REPANIER_SETTINGS_BOX:
-            boxes_field = form.base_fields["boxes"]
-            boxes_field.widget.can_add_related = False
+            if "boxes" in form.base_fields:
+                boxes_field = form.base_fields["boxes"]
+                boxes_field.widget.can_add_related = False
         return form
 
     def get_formsets_with_inlines(self, request, obj=None):
