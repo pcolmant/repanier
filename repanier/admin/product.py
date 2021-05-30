@@ -657,7 +657,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_row_actions(self, product):
         return format_html(
             '<div class="repanier-button-row">'
-            '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span>'
+            '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a>'
             "{}"
             "</div>",
             add_filter(reverse("admin:duplicate-product", args=[product.pk])),

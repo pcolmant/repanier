@@ -746,10 +746,10 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 return format_html(
                     '<div class="repanier-button-row">'
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>'
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-upload"></i></a></span>'
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span>'
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a></span>'
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a> '
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-upload"></i></a> '
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a>'
                     "</div>",
                     add_filter(
                         reverse("admin:permanence-export-invoice", args=[permanence.pk])
@@ -774,8 +774,8 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             else:
                 return format_html(
                     '<div class="repanier-button-row">'
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span>'
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a></span>'
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> '
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a>'
                     "</div>",
                     add_filter(
                         reverse(
@@ -799,7 +799,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                 # This is the latest invoiced permanence
                 # Invoicing can be cancelled
                 cancel_invoice = format_html(
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span> ',
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> ',
                     add_filter(
                         reverse(
                             "admin:permanence-cancel-invoicing", args=[permanence.pk]
@@ -812,8 +812,8 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 
             return format_html(
                 '<div class="repanier-button-row">'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-file-invoice-dollar"></i></a></span>'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-envelope-open-text"></i></a></span>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-file-invoice-dollar"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-envelope-open-text"></i></a>'
                 "{}"
                 "</div>",
                 add_filter(
@@ -830,7 +830,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
         elif permanence.status == PERMANENCE_ARCHIVED:
             return format_html(
                 '<div class="repanier-button-row">'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a>'
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-cancel-archiving", args=[permanence.pk])
@@ -841,7 +841,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
         elif permanence.status == PERMANENCE_CANCELLED:
             return format_html(
                 '<div class="repanier-button-row">'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a>'
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-restore-delivery", args=[permanence.pk])

@@ -56,35 +56,44 @@ div.repanier-button-row {
     align-items: baseline;
 }
 
-a.repanier-a-info {
-    border-radius: var(--border-radius);
+a.repanier-a-info:link,  a.repanier-a-info:link:visited {
     background-color: var(--info-background-color);
-    padding: 6px 20px !important;
-    cursor: pointer;
-    white-space: nowrap;
-    border: var(--border-height) solid var(--info-border-color);
     color: var(--info-text-color);
-}
-
-a.repanier-a-info:hover {
-    background-color: var(--info-hover-border-color);
-    color: var(--info-hover-text-color) !important;
-}
-
-a.repanier-a-info-selected {
+    border: var(--border-height) solid var(--info-border-color);
+    padding: 6px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
     border-radius: var(--border-radius);
-    background-color: var(--info-hover-border-color);
-    padding: 6px 20px !important;
-    cursor: pointer;
     white-space: nowrap;
-    border: var(--border-height) solid var(--info-hover-border-color);
-    color: var(--info-hover-text-color) !important;
 }
 
-span.repanier-a-container {
-    width: 100%;
-    clear: both;
+a.repanier-a-info:hover, a.repanier-a-info:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
 }
+
+a.repanier-a-info-selected:link,  a.repanier-a-info-selected:visited{
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+    border: var(--border-height) solid var(--info-hover-border-color);
+    padding: 6px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+}
+
+a.repanier-a-info-selected:hover, a.repanier-a-info-selected:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+}
+
+/*span.repanier-a-container {*/
+/*    width: 100%;*/
+/*    clear: both;*/
+/*}*/
 
 /*tooltip css inspired by : https://designshack.net/articles/css/html5-css3-anchor-link-tooltips/ */
 

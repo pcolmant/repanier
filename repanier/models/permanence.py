@@ -156,7 +156,7 @@ class Permanence(TranslatableModel):
                 reverse("admin:permanence-export-offer", args=[self.id])
             )
             button_download = format_html(
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a>',
                 download_url,
                 _("Export"),
             )
@@ -181,7 +181,7 @@ class Permanence(TranslatableModel):
                 reverse("admin:permanence-export-producer-opened-order", args=[self.id])
             )
             button_download = format_html(
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a>',
                 download_url,
                 _("Export"),
             )
@@ -207,7 +207,7 @@ class Permanence(TranslatableModel):
                     )
                 )
                 button_download = format_html(
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a>',
                     download_url,
                     _("Export"),
                 )
@@ -308,16 +308,16 @@ class Permanence(TranslatableModel):
                 hide_producers = "none"
             msg_html = """
     <div id="id_hide_producers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_show}"
+        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_show}"
                 onclick="document.getElementById('id_show_producers_{id}').style.display = 'block'; document.getElementById('id_hide_producers_{id}').style.display = 'none'; return false;">
             <i
-                    class="far fa-eye"></i> {len_producer}</a></span>
+                    class="far fa-eye"></i> {len_producer}</a>
     </div>
     <div id="id_show_producers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_hide}"
+        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_hide}"
                 onclick="document.getElementById('id_show_producers_{id}').style.display = 'none'; document.getElementById('id_hide_producers_{id}').style.display = 'block'; return false;">
             <i
-                    class="far fa-eye-slash"></i></a></span>
+                    class="far fa-eye-slash"></i></a>
         <p></p><div class="wrap-text">{msg_producers_html}</div>
     </div>
             """.format(
@@ -363,7 +363,7 @@ class Permanence(TranslatableModel):
                     )
                 )
             button_download = format_html(
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span> ',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a> ',
                 download_url,
                 _("Export"),
             )
@@ -371,7 +371,7 @@ class Permanence(TranslatableModel):
                 reverse("admin:repanier_purchase_add"), self.id
             )
             button_add = format_html(
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-edit"></i></a></span> ',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-edit"></i></a> ',
                 add_url,
                 _("Edit purchases"),
             )
@@ -481,16 +481,16 @@ class Permanence(TranslatableModel):
                 hide_customers = "none"
             msg_html = """
     <div id="id_hide_customers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}{button_add}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_show}"
+        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_show}"
                 onclick="document.getElementById('id_show_customers_{id}').style.display = 'block'; document.getElementById('id_hide_customers_{id}').style.display = 'none'; return false;">
             <i
-                    class="far fa-eye"></i> {len_customers}</a></span>
+                    class="far fa-eye"></i> {len_customers}</a>
     </div>
     <div id="id_show_customers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}{button_add}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_hide}"
+        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_hide}"
                 onclick="document.getElementById('id_show_customers_{id}').style.display = 'none'; document.getElementById('id_hide_customers_{id}').style.display = 'block'; return false;">
             <i
-                    class="far fa-eye-slash"></i></a></span>
+                    class="far fa-eye-slash"></i></a>
         <p></p><div class="wrap-text">{msg_producers_html}</div>
     </div>
             """.format(
@@ -586,16 +586,16 @@ class Permanence(TranslatableModel):
                 msg_len = "{} / {}".format(len_board, max_board_entry)
             msg_html = """
     <div id="id_hide_board_{id}" style="display:block;" class="repanier-button-row">
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_show}"
+        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_show}"
                 onclick="document.getElementById('id_show_board_{id}').style.display = 'block'; document.getElementById('id_hide_board_{id}').style.display = 'none'; return false;">
             <i
-                    class="far fa-eye"></i> {msg_len}</a></span>
+                    class="far fa-eye"></i> {msg_len}</a>
     </div>
     <div id="id_show_board_{id}" style="display:none;" class="repanier-button-row">
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_hide}"
+        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_hide}"
                 onclick="document.getElementById('id_show_board_{id}').style.display = 'none'; document.getElementById('id_hide_board_{id}').style.display = 'block'; return false;">
             <i
-                    class="far fa-eye-slash"></i></a></span>
+                    class="far fa-eye-slash"></i></a>
         <p></p><div class="wrap-text">{msg_board_html}</div>
     </div>
             """.format(

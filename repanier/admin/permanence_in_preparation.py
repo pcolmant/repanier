@@ -813,8 +813,8 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
         if permanence.status == PERMANENCE_PLANNED:
             return format_html(
                 '<div class="repanier-button-row">'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span>'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a></span>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a>'
                 "</div>",
                 add_filter(reverse("admin:generate-permanence", args=[permanence.pk])),
                 _("Duplicate"),
@@ -826,8 +826,8 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
         elif permanence.status == PERMANENCE_OPENED:
             return format_html(
                 '<div class="repanier-button-row">'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a></span>'
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a></span>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a>'
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-back-to-scheduled", args=[permanence.pk])
