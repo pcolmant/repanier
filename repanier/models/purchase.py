@@ -43,7 +43,7 @@ class PurchaseManager(models.Manager):
 class Purchase(models.Model):
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=_("Order"),
+        verbose_name=_("Sale"),
         on_delete=models.PROTECT,
         db_index=True,
     )

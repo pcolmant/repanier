@@ -335,6 +335,19 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         qs = qs.filter(is_group=True)
         return qs
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions
+
     def save_model(self, request, group, form, change):
         group.user = form.user
         form.user.is_staff = False

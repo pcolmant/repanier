@@ -12,8 +12,8 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{% translate "Please make the following payments." %}</h4>
-            <h4>{% translate "The corresponding account transactions have been generated." %}</h4>
+            <h3>{% translate "Please make the following payments" %}</h3>
+            <h3>{% translate "The corresponding account transactions have been generated" %}</h3>
             <p>&nbsp;</p>
             <button type="submit" class="repanier-submit-info" name="done" value="done" class="default">{% translate "Done" %}</button>
         </div>

@@ -42,7 +42,7 @@ class Customer(models.Model):
         _("Long name"), max_length=100, blank=True, default=EMPTY_STRING
     )
     email2 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
+        _("Second email address"), null=True, blank=True, default=EMPTY_STRING
     )
     language = models.CharField(
         max_length=5,

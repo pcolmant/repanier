@@ -2,14 +2,9 @@ import logging
 import threading
 
 import repanier.apps
-from dal import autocomplete
-from django import forms
 from django.conf.urls import url
-from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
-from django.db import transaction
-from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
@@ -24,7 +19,11 @@ from repanier.admin.forms import (
     CloseAndSendOrderForm,
     GeneratePermanenceForm,
 )
-from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
+from repanier.admin.sale import (
+    ProducerAutocomplete,
+    BoxesAutocomplete,
+    SaleAdmin,
+)
 from repanier.admin.tools import (
     check_cancel_in_post,
     check_permanence,
@@ -32,12 +31,8 @@ from repanier.admin.tools import (
 from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.middleware import get_query_filters, add_filter
-from repanier.models.box import Box
-from repanier.models.customer import Customer
+from repanier.middleware import add_filter
 from repanier.models.deliveryboard import DeliveryBoard
-from repanier.models.lut import LUT_PermanenceRole, LUT_DeliveryPoint
-from repanier.models.permanence import PermanenceInPreparation
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -51,226 +46,33 @@ from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_x
 logger = logging.getLogger(__name__)
 
 
-class PermanenceInPreparationInlineMixin(InlineForeignKeyCacheMixin):
-    _has_add_or_delete_permission = None
+class PermanenceInPreparationAdmin(SaleAdmin):
 
-    def has_delete_permission(self, request, obj=None):
-        if self._has_add_or_delete_permission is None:
-            object_id = request.resolver_match.kwargs.get("object_id", None)
-            if object_id:
-                # Update
-                parent_object = (
-                    PermanenceInPreparation.objects.filter(id=object_id)
-                    .only("status")
-                    .first()
-                )
-                if (
-                    parent_object is not None
-                    and parent_object.status == PERMANENCE_PLANNED
-                ):
-                    self._has_add_or_delete_permission = True
-                else:
-                    self._has_add_or_delete_permission = False
-            else:
-                # Create
-                self._has_add_or_delete_permission = True
-        return self._has_add_or_delete_permission
-
-    def has_add_permission(self, request, obj):
-        return self.has_delete_permission(request)
-
-    def has_change_permission(self, request, obj=None):
-        return self.has_delete_permission(request)
-
-
-class PermanenceBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInline):
-    model = PermanenceBoard
-    ordering = ("permanence_role__tree_id", "permanence_role__lft")
-    fields = ["permanence_role", "customer"]
-    extra = 0
-
-    def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-        form = formset.form
-        widget = form.base_fields["permanence_role"].widget
-        widget.can_add_related = True
-        widget.can_change_related = True
-        widget.can_delete_related = False
-        widget = form.base_fields["customer"].widget
-        widget.can_add_related = False
-        widget.can_change_related = False
-        widget.can_delete_related = False
-        return formset
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "customer":
-            kwargs["queryset"] = Customer.objects.filter(may_order=True)
-        if db_field.name == "permanence_role":
-            kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
-                is_active=True, rght=F("lft") + 1
-            ).order_by("tree_id", "lft")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
-class DeliveryBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInline):
-    model = DeliveryBoard
-    ordering = ("id",)
-    fields = ["delivery_comment_v2", "delivery_point", "status"]
-    extra = 0
-    readonly_fields = ["status"]
-
-    def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-        form = formset.form
-        widget = form.base_fields["delivery_comment_v2"].widget
-        widget.attrs["size"] = "100%"
-        widget = form.base_fields["delivery_point"].widget
-        widget.can_add_related = False
-        widget.can_change_related = False
-        widget.can_delete_related = False
-        return formset
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "delivery_point":
-            kwargs["queryset"] = LUT_DeliveryPoint.objects.filter(
-                is_active=True, rght=F("lft") + 1
-            ).order_by("tree_id", "lft")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
-class ProducerAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        qs = Producer.objects.filter(is_active=True)
-
-        if self.q:
-            qs = qs.filter(short_profile_name__istartswith=self.q)
-
-        return qs
-
-
-class BoxesAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        qs = Box.objects.filter(is_box=True, is_into_offer=True)
-
-        if self.q:
-            qs = qs.filter(long_name_v2__istartswith=self.q)
-
-        return qs
-
-
-class PermanenceInPreparationForm(forms.ModelForm):
-    short_name_v2 = forms.CharField(
-        label=_("Offer name"),
-        widget=forms.TextInput(attrs={"style": "width:100% !important"}),
-        required=False,
-    )
-
-    class Meta:
-        model = PermanenceInPreparation
-        fields = "__all__"
-        widgets = {
-            "producers": autocomplete.ModelSelect2Multiple(
-                url="admin:producer-autocomplete",
-                attrs={"data-dropdown-auto-width": "true", "data-width": "100%"},
-            ),
-            "boxes": autocomplete.ModelSelect2Multiple(
-                url="admin:boxes-autocomplete",
-                attrs={"data-dropdown-auto-width": "true", "data-width": "100%"},
-            ),
-        }
-
-
-class PermanenceInPreparationAdmin(admin.ModelAdmin):
-    form = PermanenceInPreparationForm
     change_list_url = reverse_lazy("admin:repanier_permanenceinpreparation_changelist")
-
-    list_per_page = 20
-    list_max_show_all = 20
-    filter_horizontal = ("producers", "boxes")
-    inlines = [DeliveryBoardInline, PermanenceBoardInline]
-    date_hierarchy = "permanence_date"
-    list_display = (
-        "get_permanence_admin_display",
-        "get_row_actions",
-        "get_producers_with_download",
-        "get_customers_with_download",
-        "get_board",
-        "get_html_status_display",
-    )
-    list_display_links = ("get_permanence_admin_display",)
-    search_fields = [
-        "producers__short_profile_name",
-        "permanenceboard__customer__short_basket_name",
-        "customerinvoice__customer__short_basket_name",
-    ]
+    description = "offer_description_v2"
     list_filter = (AdminFilterPermanenceInPreparationStatus,)
     ordering = (
+        "invoice_sort_order",
+        "canceled_invoice_sort_order",
         "permanence_date",
         "id",
     )
 
     def has_delete_permission(self, request, obj=None):
-        user = request.user
-        if user.is_order_manager:
-            return True
+        if obj is None:
+            return False
+        if request.user.is_order_manager:
+            if obj.highest_status == PERMANENCE_PLANNED:
+                return True
         return False
 
     def has_add_permission(self, request):
-        return self.has_delete_permission(request)
+        return request.user.is_order_manager
 
     def has_change_permission(self, request, obj=None):
-        return self.has_delete_permission(request)
-
-    def get_redirect_to_change_list_url(self):
-        return "{}{}".format(self.change_list_url, get_query_filters())
-
-    def get_fields(self, request, permanence=None):
-        fields = [
-            ("permanence_date", "picture"),
-            "automatically_closed",
-            "short_name_v2",
-            "offer_description_v2",
-            "producers",
-        ]
-
-        if settings.REPANIER_SETTINGS_BOX:
-            fields.append("boxes")
-        return fields
-
-    def get_readonly_fields(self, request, permanence=None):
-        if permanence is not None and permanence.status > PERMANENCE_PLANNED:
-            readonly_fields = ["status", "producers"]
-            if settings.REPANIER_SETTINGS_BOX:
-                readonly_fields += ["boxes"]
-            return readonly_fields
-        return ["status"]
-
-    def get_form(self, request, permanence=None, **kwargs):
-        form = super().get_form(request, permanence, **kwargs)
-        if "producers" in form.base_fields:
-            producer_field = form.base_fields["producers"]
-            producer_field.widget.can_add_related = False
-        if settings.REPANIER_SETTINGS_BOX:
-            if "boxes" in form.base_fields:
-                boxes_field = form.base_fields["boxes"]
-                boxes_field.widget.can_add_related = False
-        return form
-
-    def get_formsets_with_inlines(self, request, obj=None):
-        for inline in self.get_inline_instances(request, obj):
-            # hide DeliveryBoardInline if no delivery point
-            if (
-                isinstance(inline, DeliveryBoardInline)
-                and not LUT_DeliveryPoint.objects.filter(is_active=True).exists()
-            ):
-                continue
-            # hide DeliveryBoardInline if no permanence role
-            if (
-                isinstance(inline, PermanenceBoardInline)
-                and not LUT_PermanenceRole.objects.filter(is_active=True).exists()
-            ):
-                continue
-            yield inline.get_formset(request, obj), inline
+        if obj is None:
+            return False
+        return request.user.is_order_manager
 
     def get_urls(self):
         urls = super().get_urls()
@@ -844,29 +646,6 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 
     get_row_actions.short_description = EMPTY_STRING
 
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == "producers":
-            kwargs["queryset"] = Producer.objects.filter(is_active=True)
-        if db_field.name == "boxes":
-            kwargs["queryset"] = Box.objects.filter(is_box=True, is_into_offer=True)
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
-
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(status__lte=PERMANENCE_SEND)
-
-    @transaction.atomic
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
-        permanence = form.instance
-        permanence.with_delivery_point = DeliveryBoard.objects.filter(
-            permanence_id=permanence.id
-        ).exists()
-        form.instance.save(update_fields=["with_delivery_point"])
-
-    def save_model(self, request, permanence, form, change):
-        if change and ("permanence_date" in form.changed_data):
-            PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
-                permanence_date=permanence.permanence_date
-            )
-        super().save_model(request, permanence, form, change)

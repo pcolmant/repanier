@@ -19,3 +19,16 @@ class NotificationAdmin(admin.ModelAdmin):
 
     def get_fields(self, request, obj=None):
         return ["notification_v2"]
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions

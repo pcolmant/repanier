@@ -43,7 +43,7 @@ class OfferItem(Item):
     producer_sort_order_v2 = models.IntegerField(default=0, db_index=True)
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=_("Order"),
+        verbose_name=_("Sale"),
         on_delete=models.PROTECT,
         db_index=True,
     )

@@ -155,10 +155,8 @@ class ProducerDataForm(forms.ModelForm):
 
     permanences = forms.ModelMultipleChoiceField(
         Permanence.objects.filter(status=PERMANENCE_PLANNED),
-        label=_("Orders"),
-        widget=FilteredSelectMultiple(
-            _("Orders"), False
-        ),
+        label=_("Sales"),
+        widget=FilteredSelectMultiple(_("Sales"), False),
         required=False,
     )
     reference_site = forms.URLField(
@@ -346,17 +344,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             form_klass=ImportStockForm,
         )
 
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        this_year = timezone.now().year
-        actions.update(
-            OrderedDict(
-                create__producer_action(y)
-                for y in [this_year, this_year - 1, this_year - 2]
-            )
-        )
-        return actions
-
     def get_list_display(self, request):
         list_display = ["__str__", "get_products"]
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
@@ -446,6 +433,26 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.filter(is_active=True)
         return qs
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        this_year = timezone.now().year
+        actions.update(
+            OrderedDict(
+                create__producer_action(y)
+                for y in [this_year, this_year - 1, this_year - 2]
+            )
+        )
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions
 
     def save_model(self, request, producer, form, change):
         producer.web_services_activated, _, _ = web_services_activated(

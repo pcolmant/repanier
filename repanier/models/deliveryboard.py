@@ -30,7 +30,7 @@ class DeliveryBoard(TranslatableModel):
     )
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=_("Order"),
+        verbose_name=_("Sale"),
         on_delete=models.CASCADE,
     )
 

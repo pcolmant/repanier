@@ -294,41 +294,15 @@ class Permanence(TranslatableModel):
         if len_producer > 0:
             if not with_download:
                 button_download = EMPTY_STRING
-            # msg_producers = cap(" ".join(producers), 50)
             msg_producers_html = ", ".join(producers_html)
-            msg_show = _("Show")
-            msg_hide = _("Hide")
-
-            if len_producer > 0:
-                # Do not display the producers by default if more than 0 producers
-                display_producers = "none"
-                hide_producers = "block"
-            else:
-                display_producers = "block"
-                hide_producers = "none"
             msg_html = """
-    <div id="id_hide_producers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}
-        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_show}"
-                onclick="document.getElementById('id_show_producers_{id}').style.display = 'block'; document.getElementById('id_hide_producers_{id}').style.display = 'none'; return false;">
-            <i
-                    class="far fa-eye"></i> {len_producer}</a>
-    </div>
-    <div id="id_show_producers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}
-        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_hide}"
-                onclick="document.getElementById('id_show_producers_{id}').style.display = 'none'; document.getElementById('id_hide_producers_{id}').style.display = 'block'; return false;">
-            <i
-                    class="far fa-eye-slash"></i></a>
+    <div id="id_show_producers_{id}" style="display:block;" class="repanier-button-row">{button_download}
         <p></p><div class="wrap-text">{msg_producers_html}</div>
     </div>
             """.format(
                 id=self.id,
                 button_download=button_download,
-                msg_show=msg_show,
-                msg_hide=msg_hide,
-                display_producers=display_producers,
-                hide_producers=hide_producers,
                 msg_producers_html=msg_producers_html,
-                len_producer=len_producer,
             )
             return mark_safe(msg_html)
         else:
@@ -475,7 +449,7 @@ class Permanence(TranslatableModel):
             if len_customers > 0:
                 # Do not display the customers by default if more than 0 customers
                 display_customers = "none"
-                hide_customers = "block"
+                hide_customers = ""
             else:
                 display_customers = "block"
                 hide_customers = "none"
@@ -488,7 +462,7 @@ class Permanence(TranslatableModel):
     </div>
     <div id="id_show_customers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}{button_add}
         <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_hide}"
-                onclick="document.getElementById('id_show_customers_{id}').style.display = 'none'; document.getElementById('id_hide_customers_{id}').style.display = 'block'; return false;">
+                onclick="document.getElementById('id_show_customers_{id}').style.display = 'none'; document.getElementById('id_hide_customers_{id}').style.display = ''; return false;">
             <i
                     class="far fa-eye-slash"></i></a>
         <p></p><div class="wrap-text">{msg_producers_html}</div>
@@ -1765,7 +1739,7 @@ class Permanence(TranslatableModel):
     def get_permanence_admin_display(self):
         return self.get_permanence_display()
 
-    get_permanence_admin_display.short_description = _("Offers")
+    get_permanence_admin_display.short_description = _("Sales")
 
     def get_html_permanence_title_display(self):
         return self.get_html_permanence_display(align="vertical-align: bottom; ")
@@ -1828,8 +1802,8 @@ class Permanence(TranslatableModel):
         return self.get_permanence_display()
 
     class Meta:
-        verbose_name = _("Order")
-        verbose_name_plural = _("Orders")
+        verbose_name = _("Sale")
+        verbose_name_plural = _("Sales")
         index_together = [["permanence_date"]]
 
 

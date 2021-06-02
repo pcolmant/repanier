@@ -2,12 +2,10 @@ import logging
 import threading
 
 import repanier.apps
-from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
-from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
@@ -24,7 +22,7 @@ from repanier.admin.forms import (
     ImportPurchasesForm,
     ImportInvoiceForm,
 )
-from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
+from repanier.admin.sale import SaleAdmin
 from repanier.admin.tools import (
     check_permanence,
     check_cancel_in_post,
@@ -34,13 +32,9 @@ from repanier.const import *
 from repanier.email import email_invoice
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.middleware import get_query_filters, add_filter
+from repanier.middleware import add_filter
 from repanier.models.bankaccount import BankAccount
-from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.lut import LUT_PermanenceRole
-from repanier.models.permanence import PermanenceDone
-from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
 from repanier.tools import get_repanier_template_name
 from repanier.xlsx.views import import_xslx_view
@@ -55,58 +49,10 @@ from repanier.xlsx.xlsx_stock import export_permanence_stock
 logger = logging.getLogger(__name__)
 
 
-class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
-    model = PermanenceBoard
-    ordering = ("permanence_role__tree_id", "permanence_role__lft")
-    fields = ["permanence_role", "customer"]
-    extra = 1
+class PermanenceDoneAdmin(SaleAdmin):
 
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_add_permission(self, request, obj):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "customer":
-            kwargs["queryset"] = Customer.objects.filter(may_order=True)
-        if db_field.name == "permanence_role":
-            kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
-                is_active=True, rght=F("lft") + 1
-            ).order_by("tree_id", "lft")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
-class PermanenceDoneForm(forms.ModelForm):
-    short_name_v2 = forms.CharField(
-        label=_("Offer name"),
-        widget=forms.TextInput(attrs={"style": "width:100% !important"}),
-    )
-
-    class Meta:
-        model = PermanenceDone
-        fields = "__all__"
-
-
-class PermanenceDoneAdmin(admin.ModelAdmin):
-    form = PermanenceDoneForm
     change_list_url = reverse_lazy("admin:repanier_permanencedone_changelist")
-
-    fields = ("permanence_date", "short_name_v2", "invoice_description_v2")
-    readonly_fields = ("status", "automatically_closed")
-    list_per_page = 20
-    list_max_show_all = 20
-    inlines = [PermanenceBoardInline]
-    date_hierarchy = "permanence_date"
-    list_display = ("get_permanence_admin_display",)
-    list_display_links = ("get_permanence_admin_display",)
-    search_fields = [
-        "producerinvoice__producer__short_profile_name",
-        "customerinvoice__customer__short_basket_name",
-    ]
+    description = "invoice_description_v2"
     list_filter = (AdminFilterPermanenceDoneStatus,)
     ordering = (
         "-invoice_sort_order",
@@ -122,24 +68,9 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        user = request.user
-        if user.is_invoice_manager:
-            return True
-        return False
-
-    def get_redirect_to_change_list_url(self):
-        return "{}{}".format(self.change_list_url, get_query_filters())
-
-    def get_list_display(self, request):
-        list_display = [
-            "get_permanence_admin_display",
-            "get_row_actions",
-            "get_producers_without_download",
-            "get_customers_without_download",
-            "get_board",
-            "get_html_status_display",
-        ]
-        return list_display
+        if obj is None:
+            return False
+        return request.user.is_invoice_manager
 
     def get_urls(self):
         urls = super().get_urls()
@@ -748,7 +679,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                     '<div class="repanier-button-row">'
                     '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a> '
                     '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-upload"></i></a> '
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
+                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
                     '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a>'
                     "</div>",
                     add_filter(
@@ -774,7 +705,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             else:
                 return format_html(
                     '<div class="repanier-button-row">'
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> '
+                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> '
                     '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a>'
                     "</div>",
                     add_filter(
@@ -790,16 +721,13 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                 )
 
         elif permanence.status == PERMANENCE_INVOICED:
-            if (
-                BankAccount.objects.filter(
-                    operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
-                )
-                .exists()
-            ):
+            if BankAccount.objects.filter(
+                operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
+            ).exists():
                 # This is the latest invoiced permanence
                 # Invoicing can be cancelled
                 cancel_invoice = format_html(
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> ',
+                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> ',
                     add_filter(
                         reverse(
                             "admin:permanence-cancel-invoicing", args=[permanence.pk]
@@ -853,42 +781,6 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 
     get_row_actions.short_description = EMPTY_STRING
 
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        if "delete_selected" in actions:
-            del actions["delete_selected"]
-
-        if not actions:
-            try:
-                self.list_display.remove("action_checkbox")
-            except ValueError:
-                pass
-            except AttributeError:
-                pass
-        return actions
-
-    def changelist_view(self, request, extra_context=None):
-        # Important : Linked to the use of lambda in model verbose_name
-        extra_context = extra_context or {}
-        # extra_context['module_name'] = "{}".format(self.model._meta.verbose_name_plural())
-        # Finally I found the use of EMPTY_STRING nicer on the UI
-        extra_context["module_name"] = EMPTY_STRING
-        return super().changelist_view(request, extra_context=extra_context)
-
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(status__gte=PERMANENCE_SEND)
-
-    def save_model(self, request, permanence, form, change):
-        if change and ("permanence_date" in form.changed_data):
-            PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
-                permanence_date=permanence.permanence_date
-            )
-        super().save_model(request, permanence, form, change)
-
-    # class Media:
-    #     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-    #         js = (
-    #             "admin/js/jquery.init.js",
-    #             get_repanier_static_name("js/import_invoice.js"),
-    #         )

@@ -13,7 +13,7 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{% translate "Please confirm your close order request." %}</h4>
+            <h3>{% translate "Please confirm your close order request." %}</h3>
             <p>&nbsp;</p>
             <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
             <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}
@@ -26,7 +26,7 @@
         {% if permanence.with_delivery_point %}
             <div class="form-row">
                 <p>&nbsp;</p>
-                <h4>{% translate "Please indicate the deviveries points you wish to close." %}</h4>
+                <h3>{% translate "Please indicate the deviveries points you wish to close" %}</h3>
                 <p>&nbsp;</p>
                 <ul class="repanier-flex-ul">
                     <li class="repanier-flex-ul-li">
@@ -34,7 +34,7 @@
                                onClick="toggle_all('all-deliveries', 'deliverie_form');"
                                autocomplete="off" type="checkbox" checked>
                         <label for="all-deliveries">
-                            {% translate "Select all deliveries." %}
+                            {% translate "Select all deliveries" %}
                         </label>
                     </li>
                 </ul>
@@ -57,7 +57,7 @@
         {% endif %}
         {% if form.template_order_customer_mail.value %}
             <div class="form-row">
-                <div><h4>{% translate "Order mail to customers" %}</h4>
+                <div><h3>{% translate "Order mail to customers" %}</h3>
                     <p>&nbsp;</p>{{ order_customer_email_will_be_sent_to }}<p>&nbsp;</p>
                 </div>
                 <div class="fieldBox">
@@ -90,7 +90,7 @@
         {% endif %}
         {% if form.template_order_producer_mail.value %}
             <div class="form-row">
-                <div><h4>{% translate "Order mail to producers" %}</h4>
+                <div><h3>{% translate "Order mail to producers" %}</h3>
                     <p>&nbsp;</p>{{ order_producer_email_will_be_sent_to }}<p>&nbsp;</p>
                 </div>
                 <div class="fieldBox">
@@ -123,7 +123,7 @@
         {% endif %}
         {% if form.template_order_producer_mail.value %}
             <div class="form-row">
-                <div><h4>{% translate "Order mail to board" %}</h4>
+                <div><h3>{% translate "Order mail to board" %}</h3>
                     <p>&nbsp;</p>{{ order_board_email_will_be_sent_to }}<p>&nbsp;</p>
                 </div>
                 <div class="fieldBox">

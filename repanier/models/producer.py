@@ -45,10 +45,10 @@ class Producer(models.Model):
     )
     email = models.EmailField(_("Email"), null=True, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
+        _("Second email address"), null=True, blank=True, default=EMPTY_STRING
     )
     email3 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
+        _("Third email address"), null=True, blank=True, default=EMPTY_STRING
     )
     language = models.CharField(
         max_length=5,

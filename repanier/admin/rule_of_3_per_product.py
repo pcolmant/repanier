@@ -534,5 +534,5 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
         # Important : linked with ^^^^^
         offer_item.permanence.recalculate_order_amount(
-            offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by("?")
+            offer_item_qs=OfferItem.objects.filter(id=offer_item.id)
         )

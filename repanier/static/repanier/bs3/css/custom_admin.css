@@ -52,8 +52,8 @@ div.repanier-submit-row {
 
 div.repanier-button-row {
     display: flex;
-    grid-column-gap: 10px;
-    align-items: baseline;
+    /*grid-column-gap: 10px;*/
+    /*align-items: baseline;*/
 }
 
 a.repanier-a-info:link,  a.repanier-a-info:link:visited {
@@ -86,6 +86,40 @@ a.repanier-a-info-selected:link,  a.repanier-a-info-selected:visited{
 }
 
 a.repanier-a-info-selected:hover, a.repanier-a-info-selected:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+}
+
+a.repanier-a-cancel:link,  a.repanier-a-cancel:link:visited {
+    background-color: var(--info-background-color);
+    color: var(--info-text-color);
+    border: var(--border-height) solid var(--info-border-color);
+    padding: 1px 11px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+}
+
+a.repanier-a-cancel:hover, a.repanier-a-cancel:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+}
+
+a.repanier-a-cancel-selected:link,  a.repanier-a-cancel-selected:visited{
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+    border: var(--border-height) solid var(--info-hover-border-color);
+    padding: 1px 11px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+}
+
+a.repanier-a-cancel-selected:hover, a.repanier-a-cancel-selected:active {
     background-color: var(--info-hover-border-color);
     color: var(--info-hover-text-color);
 }
@@ -154,13 +188,13 @@ a.repanier-a-tooltip:hover:before {
 input[type="submit"].repanier-submit-info,
 button[type="submit"].repanier-submit-info {
     border-radius: var(--border-radius);
-    background-color: var(--cms-blue-color) !important;
-    padding: 6px 20px !important;
-    font-size: 1rem !important;
+    /*background-color: var(--cms-blue-color) !important;*/
+    padding: 6px 20px;
+    font-size: 1rem;
     cursor: pointer;
     white-space: nowrap;
-    border: var(--border-height) solid var(--cms-blue-color) !important;
-    color: var(--cms-white-color) !important;
+    /*border: var(--border-height) solid var(--cms-blue-color) !important;*/
+    /*color: var(--cms-white-color) !important;*/
     height: var(--input-height);
 }
 
@@ -168,8 +202,8 @@ input[type="submit"].repanier-submit-info:hover,
 input[type="submit"].repanier-submit-info:active,
 button[type="submit"].repanier-submit-info:hover,
 button[type="submit"].repanier-submit-info:active {
-    background-color: var(--cms-blue-hover-color) !important;
-    color: var(--cms-white-color) !important;
+    background-color: var(--cms-blue-hover-color);
+    color: var(--cms-white-color);
 }
 
 div.repanier-objects-tools {
@@ -203,17 +237,18 @@ div.repanier-objects-tools {
 }
 
 .repanier-flex-ul-li {
-    border-top: solid 0 !important;
-    padding: 0 !important;
-    font-weight: 400 !important;
+    border-top: solid 0;
+    padding: 0;
+    font-weight: 400;
+    list-style-type: none;
 }
 
 .repanier-flex-ul {
     list-style: none;
     display: flex;
     align-items: baseline;
-    border-bottom: solid 0 !important;
-    margin: 0 !important;
+    border-bottom: solid 0;
+    margin: 0;
 }
 
 /*** custom checkboxes ***/

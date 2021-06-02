@@ -11,7 +11,7 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 class BankAccount(models.Model):
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=_("Order"),
+        verbose_name=_("Sale"),
         on_delete=models.PROTECT,
         blank=True,
         null=True,

@@ -88,9 +88,9 @@ def repanier_permanences(*args, **kwargs):
         """.format(
             card_title=("No offer to display")
             if len(permanences_cards) == 0
-            else _("Offer")
+            else _("Sale")
             if len(permanences_cards) == 1
-            else _("Offers"),
+            else _("Sales"),
             html='<div class="dropdown-divider"></div>'.join(permanences_cards),
         )
     )

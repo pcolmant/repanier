@@ -17,7 +17,7 @@ def is_into_offer(request, product_id):
     user = request.user
     if user.is_order_manager:
         product_id = sint(product_id)
-        product = Product.objects.filter(id=product_id).order_by("?").first()
+        product = Product.objects.filter(id=product_id).first()
         if product is not None:
             product.is_into_offer = not product.is_into_offer
             product.save(update_fields=["is_into_offer"])

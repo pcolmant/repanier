@@ -27,7 +27,7 @@
             {% if forloop.first %}{{ point|verbose_name_plural }} : {% endif %}{{ point.delivery_point }}{% if not forloop.last %}, {% endif %}
         {% endfor %}</p>
         <div class="form-row">
-            <h4>{% translate "On what dates do you want to generate permanence(s) based on the model of this one?" %}</h4>
+            <h3>{% translate "On what dates do you want to generate permanence(s) based on the model of this one?" %}</h3>
             <p>&nbsp;</p>
             <button type="submit" class="repanier-submit-info" name="cancel"
                     value="cancel">{% translate "No, cancel the action" %}</button>

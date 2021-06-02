@@ -319,8 +319,18 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     form = CustomerWithUserDataForm
     resource_class = CustomerResource
     list_display = ("short_basket_name",)
-    search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2", )
-    list_filter = ("may_order", "subscribe_to_email", "valid_email", "is_active", )
+    search_fields = (
+        "short_basket_name",
+        "long_basket_name",
+        "user__email",
+        "email2",
+    )
+    list_filter = (
+        "may_order",
+        "subscribe_to_email",
+        "valid_email",
+        "is_active",
+    )
     list_per_page = 16
     list_max_show_all = 16
     autocomplete_fields = ["group"]
@@ -354,17 +364,6 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     get_last_login.short_description = _("Last sign in")
     get_last_login.admin_order_field = "user__last_login"
-
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        this_year = timezone.now().year
-        actions.update(
-            OrderedDict(
-                create__customer_action(y)
-                for y in [this_year, this_year - 1, this_year - 2]
-            )
-        )
-        return actions
 
     def get_list_display(self, request):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
@@ -496,6 +495,26 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         qs = super().get_queryset(request)
         qs = qs.filter(is_group=False, is_active=True)
         return qs
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        this_year = timezone.now().year
+        actions.update(
+            OrderedDict(
+                create__customer_action(y)
+                for y in [this_year, this_year - 1, this_year - 2]
+            )
+        )
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions
 
     def save_model(self, request, customer, form, change):
         customer.user = form.user

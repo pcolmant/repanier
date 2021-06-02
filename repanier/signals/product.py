@@ -95,6 +95,8 @@ def product_pre_save(sender, **kwargs):
     if not product.reference:
         product.reference = uuid.uuid1()
 
+    product.long_name_v2 = capfirst(product.long_name_v2)
+
 
 @receiver(post_save, sender=Product)
 def product_post_save(sender, **kwargs):
@@ -106,9 +108,3 @@ def product_post_save(sender, **kwargs):
         * product.customer_unit_price.amount,
         calculated_content_deposit=F("content_quantity") * product.unit_deposit.amount,
     )
-
-
-@receiver(pre_save, sender=Product_Translation)
-def product_translation_pre_save(sender, **kwargs):
-    translation = kwargs["instance"]
-    translation.long_name = capfirst(translation.long_name)

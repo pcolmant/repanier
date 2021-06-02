@@ -16,7 +16,7 @@ class PermanenceBoard(models.Model):
     )
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=_("Order"),
+        verbose_name=_("Sale"),
         on_delete=models.CASCADE,
     )
     # permanence_date duplicated to quickly calculate # participation of lasts 12 months

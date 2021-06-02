@@ -13,7 +13,7 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{% translate "Please confirm your open order request." %}</h4>
+            <h3>{% translate "Please confirm your open order request" %}</h3>
             <p>&nbsp;</p>
             <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
             <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}
@@ -25,7 +25,7 @@
         </div>
         {% if form.template_offer_customer_mail.value %}
             <div class="form-row">
-                <div><h4>{% translate "Contents of the order opening email sent to consumers authorized to order" %}</h4>
+                <div><h3>{% translate "Contents of the order opening email sent to consumers authorized to order" %}</h3>
                     <p>&nbsp;</p>{{ email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>
@@ -60,7 +60,7 @@
         {% if form.template_cancel_order_customer_mail.value %}
             <div class="form-row">
                 <div>
-                    <h4>{% translate "Content of the email in case of cancellation of the order sent to the consumers concerned" %}</h4>
+                    <h3>{% translate "Content of the email in case of cancellation of the order sent to the consumers concerned" %}</h3>
                     <p>&nbsp;</p>{{ email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>

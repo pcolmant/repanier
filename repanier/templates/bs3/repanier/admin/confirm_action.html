@@ -15,7 +15,7 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{{ sub_title }}</h4>
+            <h3>{{ sub_title }}</h3>
             <p>&nbsp;</p>
             <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
             <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}

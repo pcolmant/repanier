@@ -536,32 +536,22 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         return fieldsets
 
     def get_form(self, request, product=None, **kwargs):
-        department_for_customer_id = None
-        is_active_value = None
-        is_into_offer_value = None
-        producer_queryset = Producer.objects.none()
+
         if product is not None:
             producer_queryset = Producer.objects.filter(id=product.producer_id)
         else:
             producer_queryset = Producer.objects.none()
             query_params = get_request_params()
-            if "producer" in query_params:
-                producer_id = query_params["producer"]
-                if producer_id:
-                    producer_queryset = Producer.objects.filter(id=producer_id)
-            if "department" in query_params:
-                department_for_customer_id = query_params["department"]
-            if "is_active__exact" in query_params:
-                is_active_value = query_params["is_active__exact"]
-            if "is_into_offer__exact" in query_params:
-                is_into_offer_value = query_params["is_into_offer__exact"]
+            producer_id = query_params.get("producer", 0)
+            if producer_id > 0:
+                producer_queryset = Producer.objects.filter(id=producer_id)
+
 
         producer = producer_queryset.first()
 
         form = super().get_form(request, product, **kwargs)
 
         producer_field = form.base_fields["producer"]
-        # department_for_customer_field = form.base_fields["department_for_customer"]
 
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
@@ -571,7 +561,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         producer_field.widget.can_add_related = False
         producer_field.widget.can_delete_related = False
         producer_field.widget.attrs["readonly"] = True
-        # department_for_customer_field.widget.can_delete_related = False
 
         production_mode_field = form.base_fields.get("production_mode")
 
@@ -589,12 +578,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         if product is not None:
             producer_field.empty_label = None
             producer_field.queryset = producer_queryset
-            # department_for_customer_field.queryset = (
-            #     LUT_DepartmentForCustomer.objects.filter(
-            #         rght=F("lft") + 1,
-            #         is_active=True,
-            #     ).order_by("short_name_v2")
-            # )
             if production_mode_field is not None:
                 production_mode_field.empty_label = None
         else:
@@ -611,36 +594,18 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
                     )
                 ]
                 producer_field.disabled = True
-            # if department_for_customer_id is not None:
-            #     department_for_customer_field.queryset = (
-            #         LUT_DepartmentForCustomer.objects.filter(
-            #             id=department_for_customer_id
-            #         )
-            #     )
-            # else:
-            #     department_for_customer_field.queryset = (
-            #         LUT_DepartmentForCustomer.objects.filter(
-            #             rght=F("lft") + 1,
-            #             is_active=True,
-            #         ).order_by("short_name_v2")
-            #     )
-            if is_active_value:
-                is_active_field = form.base_fields["is_active"]
-                if is_active_value == "0":
-                    is_active_field.initial = False
-                else:
-                    is_active_field.initial = True
-            if is_into_offer_value:
-                is_into_offer_field = form.base_fields["is_into_offer"]
-                if is_into_offer_value == "0":
-                    is_into_offer_field.initial = False
-                else:
-                    is_into_offer_field.initial = True
-        # if production_mode_field is not None:
-        #     production_mode_field.queryset = LUT_ProductionMode.objects.filter(
-        #         rght=F("lft") + 1,
-        #         is_active=True,
-        #     ).order_by("short_name_v2")
+            is_active_value = query_params.get("is_active__exact", False)
+            is_active_field = form.base_fields["is_active"]
+            if is_active_value == "0":
+                is_active_field.initial = False
+            else:
+                is_active_field.initial = True
+            is_into_offer_value = query_params.get("is_into_offer__exact", False)
+            is_into_offer_field = form.base_fields["is_into_offer"]
+            if is_into_offer_value == "0":
+                is_into_offer_field.initial = False
+            else:
+                is_into_offer_field.initial = True
         return form
 
     def get_urls(self):
@@ -668,6 +633,19 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
     get_row_actions.short_description = EMPTY_STRING
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions
+
     def save_model(self, request, product, form, change):
         super().save_model(request, product, form, change)
         update_offer_item(product_id=product.id)
@@ -675,7 +653,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = qs.filter(is_box=False)
-        # ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
         return qs
 
     def get_import_formats(self):

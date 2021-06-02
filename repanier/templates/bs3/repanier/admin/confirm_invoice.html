@@ -17,7 +17,7 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{% translate "Please confirm your invoice calculation request." %}</h4>
+            <h3>{% translate "Please confirm your invoice calculation request" %}</h3>
             <p>&nbsp;</p>
             <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
             <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">
@@ -44,7 +44,7 @@
         </div>
         <div class="form-row">
             <p>&nbsp;</p>
-            <h4>{% translate "Please indicate the producers you wish to pay." %}</h4>
+            <h3>{% translate "Please indicate the producers you wish to pay" %}</h3>
             <p>&nbsp;</p>
             <ul class="repanier-flex-ul">
                 <li class="repanier-flex-ul-li">

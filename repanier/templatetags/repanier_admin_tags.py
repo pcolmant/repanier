@@ -20,7 +20,7 @@ def repanier_admin_paginator_number(cl, i):
         if i == cl.page_num:
             # return format_html('<span class="this-page">{}</span> ', i + 1)
             return format_html(
-                '<a class="repanier-a-info-selected" href="{}"{}>{}</a> ',
+                '<a class="repanier-a-cancel-selected" href="{}"{}>{}</a> ',
                 cl.get_query_string({PAGE_VAR: i}),
                 mark_safe(' class="end"' if i == cl.paginator.num_pages - 1 else ''),
                 i,
@@ -28,7 +28,7 @@ def repanier_admin_paginator_number(cl, i):
         else:
             return format_html(
                 # '<a href="{}"{}>{}</a> ',
-                '<a class="repanier-a-info" href="{}"{}>{}</a> ',
+                '<a class="repanier-a-cancel" href="{}"{}>{}</a> ',
                 cl.get_query_string({PAGE_VAR: i}),
                 mark_safe(' class="end"' if i == cl.paginator.num_pages - 1 else ''),
                 i,

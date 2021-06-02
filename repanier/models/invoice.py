@@ -17,7 +17,7 @@ from repanier.tools import create_or_update_one_cart_item, round_gov_be
 
 class Invoice(models.Model):
     permanence = models.ForeignKey(
-        "Permanence", verbose_name=_("Order"), on_delete=models.PROTECT, db_index=True
+        "Permanence", verbose_name=_("Sale"), on_delete=models.PROTECT, db_index=True
     )
     status = models.CharField(
         max_length=3,
@@ -981,7 +981,7 @@ class CustomerProducerInvoice(models.Model):
         "Producer", verbose_name=_("Producer"), on_delete=models.PROTECT
     )
     permanence = models.ForeignKey(
-        "Permanence", verbose_name=_("Order"), on_delete=models.PROTECT, db_index=True
+        "Permanence", verbose_name=_("Sale"), on_delete=models.PROTECT, db_index=True
     )
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
