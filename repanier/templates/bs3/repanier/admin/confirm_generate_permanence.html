@@ -1,4 +1,4 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/change_form.html" %}
 {% load cms_tags menu_tags i18n l10n static repanier_admin_tags %}
 
 {% block extrahead %}
@@ -18,13 +18,13 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <p>{% for producer in permanence.producers.all %}
-            {% if forloop.first %}{{ producer|verbose_name_plural }} : {% endif %}{{ producer }}{% if not forloop.last %}, {% endif %}
+            {% if forloop.first %}<b>{{ producer|verbose_name_plural }} :</b> {% endif %}{{ producer }}{% if not forloop.last %}, {% endif %}
         {% endfor %}</p>
         <p>{% for role in permanenceboard %}
-            {% if forloop.first %}{{ role|verbose_name_plural }} : {% endif %}{{ role.permanence_role }}{% if not forloop.last %}, {% endif %}
+            {% if forloop.first %}<b>{{ role|verbose_name_plural }} :</b> {% endif %}{{ role.permanence_role }}{% if not forloop.last %}, {% endif %}
         {% endfor %}</p>
         <p>{% for point in deliverypoint %}
-            {% if forloop.first %}{{ point|verbose_name_plural }} : {% endif %}{{ point.delivery_point }}{% if not forloop.last %}, {% endif %}
+            {% if forloop.first %}<b>{{ point|verbose_name_plural }} :</b> {% endif %}{{ point.delivery_point }}{% if not forloop.last %}, {% endif %}
         {% endfor %}</p>
         <div class="form-row">
             <h3>{% translate "On what dates do you want to generate permanence(s) based on the model of this one?" %}</h3>
@@ -39,7 +39,12 @@
             <div class="fieldBox">
                 <div class="fieldWrapper">
                     {{ form.recurrences.errors }}
-                    {{ form.recurrences.label_tag }} {{ form.recurrences }}
+                    <p></p>
+                    <p></p>
+                    {{ form.recurrences.label_tag }}
+                    <p></p>
+                    <p></p>
+                    {{ form.recurrences }}
                     {% if form.recurrences.help_text %}
                         <p class="help">{{ form.recurrences.help_text|safe }}</p>
                     {% endif %}

@@ -1,32 +1,22 @@
 import logging
 
-from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMultiAlternatives
-from django.db.models import Q, F
+from django.db.models import Q
 from django.template import loader
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
-from djangocms_text_ckeditor.widgets import TextEditorWidget
 from repanier.const import (
     DECIMAL_ONE,
     DECIMAL_ZERO,
-    LUT_PRODUCER_PRODUCT_ORDER_UNIT,
     EMPTY_STRING,
-    LUT_VAT,
 )
 from repanier.email.email import RepanierEmail
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
-from repanier.models.lut import LUT_ProductionMode
-from repanier.picture.const import SIZE_M
 from repanier.tools import get_repanier_template_name
-from repanier.widget.picture import RepanierPictureWidget
-from repanier.widget.select_bootstrap import SelectBootstrapWidget
-from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
 
 logger = logging.getLogger(__name__)
 
@@ -142,63 +132,3 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
                 html_email_template_name=None,
             )
         return self.user
-
-
-# class RepanierForm(Bootstrap3Form):
-#     form_name = 'repanier_form'
-#     required_css_class = 'djng-field-required'
-#
-#     class Media:
-#         js = (
-#             'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js',
-#             'djng/js/django-angular.js'
-#         )
-
-
-class ProducerProductForm(forms.Form):
-    long_name = forms.CharField(label=_("Long name"))
-    order_unit = forms.ChoiceField(
-        label=_("Order unit"),
-        choices=LUT_PRODUCER_PRODUCT_ORDER_UNIT,
-        widget=SelectProducerOrderUnitWidget,
-        required=True,
-    )
-
-    production_mode = forms.ModelChoiceField(
-        LUT_ProductionMode.objects.filter(
-            rght=F("lft") + 1,
-            is_active=True,
-        ).order_by("short_name_v2"),
-        label=_("Production mode"),
-        widget=SelectBootstrapWidget,
-        required=False,
-    )
-
-    customer_increment_order_quantity = forms.DecimalField(
-        max_digits=4, decimal_places=1
-    )
-    order_average_weight = forms.DecimalField(max_digits=4, decimal_places=1)
-    producer_unit_price = forms.DecimalField(
-        label=_("Producer unit price"), max_digits=8, decimal_places=2
-    )
-    unit_deposit = forms.DecimalField(
-        label=_("Deposit"), max_digits=8, decimal_places=2
-    )
-    stock = forms.DecimalField(label=_("Stock"), max_digits=7, decimal_places=1)
-    vat_level = forms.ChoiceField(
-        label=_("VAT rate"),
-        choices=LUT_VAT,
-        widget=SelectBootstrapWidget,
-        required=True,
-    )
-    picture = forms.CharField(
-        label=_("Picture"),
-        widget=RepanierPictureWidget(upload_to="product", size=SIZE_M, bootstrap=True),
-        required=False,
-    )
-    offer_description_v2 = forms.CharField(
-        label=_("Offer description"), widget=TextEditorWidget, required=False
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)

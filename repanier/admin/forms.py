@@ -79,10 +79,15 @@ class PermanenceInvoicedForm(forms.Form):
     class Media:
         # Needed for AdminDateWidget
         js = (
-            # "admin/js/vendor/jquery/jquery.min.js",
-            # "admin/js/jquery.init.js",
+            "admin/js/vendor/jquery/jquery.min.js",
+            "admin/js/jquery.init.js",
             "admin/js/core.js",
         )
+        css = {
+            'all': (
+                'admin/css/forms.css',
+            )
+        }
 
 
 class ImportStockForm(forms.Form):
@@ -112,7 +117,7 @@ class ImportInvoiceForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields["invoice_reference"].widget.attrs[
             "style"
-        ] = "width:450px !important"
+        ] = "width:450px"
 
 
 class ProducerInvoicedForm(forms.Form):
@@ -146,10 +151,10 @@ class ProducerInvoicedForm(forms.Form):
         # self.fields["id"].widget.attrs["hidden"] = True
         self.fields["to_be_invoiced_balance"].widget.attrs[
             "style"
-        ] = "width:100px !important"
+        ] = "width:100px"
         self.fields["invoice_reference"].widget.attrs[
             "style"
-        ] = "width:250px !important"
+        ] = "width:250px"
         self.fields["calculated_invoiced_balance"].widget.attrs["readonly"] = True
         # self.fields["calculated_invoiced_balance"].widget.attrs['style'] = "width:100px"
 
