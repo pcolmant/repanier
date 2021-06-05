@@ -356,57 +356,61 @@ class PermanenceDoneAdmin(SaleAdmin):
                             self.get_redirect_to_change_list_url()
                         )
         else:
-            producers_invoiced = []
-            for producer_invoice in (
-                ProducerInvoice.objects.filter(
-                    permanence_id=permanence_id, invoice_sort_order__isnull=True
-                )
-                .order_by("producer")
-                .select_related("producer")
-            ):
-                producer = producer_invoice.producer
-                if not producer.represent_this_buyinggroup:
-                    # We have already pay to much (look at the bank movements).
-                    # So we do not need to pay anything
-                    producer_invoice.calculated_invoiced_balance.amount = (
-                        producer.get_calculated_invoiced_balance(permanence_id)
-                    )
-                else:
-                    producer_invoice.calculated_invoiced_balance.amount = RepanierMoney(
-                        producer_invoice.get_total_price_with_tax().amount
-                    )
-                # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
-                producer_invoice.to_be_invoiced_balance = (
-                    producer_invoice.calculated_invoiced_balance
-                )
-                producer_invoice.save(
-                    update_fields=[
-                        "calculated_invoiced_balance",
-                        "to_be_invoiced_balance",
-                    ]
-                )
-                producers_invoiced.append(
-                    {
-                        "id": producer_invoice.producer_id,
-                        "selected": True,
-                        "short_profile_name": producer_invoice.producer.short_profile_name,
-                        "calculated_invoiced_balance": producer_invoice.calculated_invoiced_balance,
-                        "to_be_invoiced_balance": producer_invoice.to_be_invoiced_balance,
-                        "invoice_reference": producer_invoice.invoice_reference,
-                        "producer_price_are_wo_vat": producer_invoice.producer.producer_price_are_wo_vat,
-                    }
-                )
             if permanence.payment_date is not None:
                 # In this case we the permanence has already been invoiced in the past
                 # and the invoice has been cancelled
                 payment_date = permanence.payment_date
+                if payment_date < min_payment_date or payment_date > max_payment_date:
+                    payment_date = min_payment_date
             else:
-                payment_date = max_payment_date
+                payment_date = min_payment_date
             permanence_form = PermanenceInvoicedForm(payment_date=payment_date)
 
-            producer_invoiced_formset = ProducerInvoicedFormSet(
-                initial=producers_invoiced
+        producers_invoiced = []
+        for producer_invoice in (
+            ProducerInvoice.objects.filter(
+                permanence_id=permanence_id, invoice_sort_order__isnull=True
             )
+            .order_by("producer")
+            .select_related("producer")
+        ):
+            producer = producer_invoice.producer
+            if not producer.represent_this_buyinggroup:
+                # We have already pay to much (look at the bank movements).
+                # So we do not need to pay anything
+                producer_invoice.calculated_invoiced_balance.amount = (
+                    producer.get_calculated_invoiced_balance(permanence_id)
+                )
+            else:
+                producer_invoice.calculated_invoiced_balance.amount = RepanierMoney(
+                    producer_invoice.get_total_price_with_tax().amount
+                )
+            # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
+            producer_invoice.to_be_invoiced_balance = (
+                producer_invoice.calculated_invoiced_balance
+            )
+            producer_invoice.save(
+                update_fields=[
+                    "calculated_invoiced_balance",
+                    "to_be_invoiced_balance",
+                ]
+            )
+            producers_invoiced.append(
+                {
+                    "id": producer_invoice.producer_id,
+                    "selected": True,
+                    "short_profile_name": producer_invoice.producer.short_profile_name,
+                    "calculated_invoiced_balance": producer_invoice.calculated_invoiced_balance,
+                    "to_be_invoiced_balance": producer_invoice.to_be_invoiced_balance,
+                    "invoice_reference": producer_invoice.invoice_reference,
+                    "producer_price_are_wo_vat": producer_invoice.producer.producer_price_are_wo_vat,
+                }
+            )
+
+
+        producer_invoiced_formset = ProducerInvoicedFormSet(
+            initial=producers_invoiced
+        )
 
         template_name = get_repanier_template_name("admin/confirm_invoice.html")
         return render(
