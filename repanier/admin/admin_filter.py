@@ -22,7 +22,7 @@ class AdminFilterQuantityInvoiced(SimpleListFilter):
     parameter_name = "is_filled_exact"
 
     def lookups(self, request, model_admin):
-        return [(1, _("Only invoiced"))]
+        return [(1, _("Only recorded"))]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -37,7 +37,7 @@ class AdminFilterBankAccountStatus(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (1, _("Not invoiced")),
+            (1, _("Not booked")),
             (2, _("Balance")),
             (3, _("Loses and profits")),
         ]

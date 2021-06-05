@@ -907,7 +907,7 @@ class ProducerInvoice(Invoice):
     )
 
     to_be_paid = models.BooleanField(
-        _("To be paid"), choices=LUT_BANK_NOTE, default=False
+        _("To be booked"), choices=LUT_BANK_NOTE, default=False
     )
     calculated_invoiced_balance = ModelMoneyField(
         _("Amount due to the producer as calculated by Repanier"),
@@ -985,7 +985,7 @@ class CustomerProducerInvoice(models.Model):
     )
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
-        _("Producer amount invoiced"),
+        _("Producer amount booked"),
         help_text=_("Total selling amount vat included"),
         default=DECIMAL_ZERO,
         max_digits=8,
@@ -1005,7 +1005,7 @@ class CustomerProducerInvoice(models.Model):
             return format_html("<b>{}</b>", self.total_purchase_with_tax)
         return EMPTY_STRING
 
-    get_html_producer_price_purchased.short_description = _("Producer amount invoiced")
+    get_html_producer_price_purchased.short_description = _("Producer amount booked")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     def __str__(self):

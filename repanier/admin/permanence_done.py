@@ -703,7 +703,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                     add_filter(
                         reverse("admin:permanence-invoice", args=[permanence.pk])
                     ),
-                    _("To invoice"),
+                    _("Book"),
                 )
 
             else:

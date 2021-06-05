@@ -182,7 +182,7 @@ class OfferItemPurchaseSendInline(admin.TabularInline):
 
 class OfferItemSendForm(forms.ModelForm):
     offer_purchase_price = FormMoneyField(
-        label=_("Producer amount invoiced"),
+        label=_("Producer amount booked"),
         max_digits=8,
         decimal_places=2,
         required=False,
@@ -235,7 +235,7 @@ class OfferItemSendForm(forms.ModelForm):
             self.fields["offer_purchase_price"].disabled = True
         if offer_item.producer_price_are_wo_vat:
             self.fields["offer_purchase_price"].label = _(
-                "Producer amount invoiced wo VAT"
+                "Producer amount booked wo VAT"
             )
 
         permanence_field = self.fields["permanence"]
