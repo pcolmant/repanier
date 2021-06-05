@@ -1,11 +1,12 @@
+from dal import autocomplete
 from django import forms
 from django.contrib import admin
+from django.db.models import Q
+from django.urls import path
 from django.utils.translation import ugettext_lazy as _
-from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
-
 from repanier.admin.admin_filter import AdminFilterBankAccountStatus
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
@@ -167,6 +168,53 @@ class BankAccountResource(resources.ModelResource):
         use_transactions = False
 
 
+class CustomerAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        # if not self.request.user.is_staff:
+        #     return OfferItem.objects.none()
+        qs = Customer.objects.filter(is_active=True)
+
+        if self.q:
+            qs = qs.filter(
+                Q(short_basket_name__icontains=self.q)
+                | Q(long_basket_name__icontains=self.q)
+                | Q(user__email__icontains=self.q)
+                | Q(bank_account1__icontains=self.q)
+                | Q(bank_account2__icontains=self.q)
+                # | Q(email2__icontains=self.q)
+            )
+        return qs
+
+    def get_result_label(self, item):
+        result = item.short_basket_name
+
+        return result
+
+
+class ProducerAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        # if not self.request.user.is_staff:
+        #     return OfferItem.objects.none()
+        qs = Producer.objects.filter(is_active=True)
+
+        if self.q:
+            qs = qs.filter(
+                Q(short_profile_name=self.q)
+                | Q(long_profile_name__icontains=self.q)
+                | Q(user__email__icontains=self.q)
+                | Q(bank_account__icontains=self.q)
+                # | Q(email2__icontains=self.q)
+            )
+        return qs
+
+    def get_result_label(self, item):
+        result = item.short_profile_name
+
+        return result
+
+
 class CustomerModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         # Important "if obj.bank_account" and not "if obj.bank_account is not None"
@@ -190,19 +238,33 @@ class ProducerModelChoiceField(forms.ModelChoiceField):
 
 
 class BankAccountDataForm(forms.ModelForm):
-    customer = CustomerModelChoiceField(
-        queryset=Customer.objects.filter(is_active=True),
+    customer = forms.ModelChoiceField(
         label=_("Customer"),
+        queryset=Customer.objects.filter(is_active=True),
         required=False,
-        widget=apply_select2(forms.Select),
+        widget=autocomplete.ModelSelect2(
+            url="admin:bankaccount-admin-customer-autocomplete",
+            # forward=(forward.Field("permanence"),),
+            attrs={
+                "data-dropdown-auto-width": "true",
+                "data-width": "40%",
+            },
+        ),
     )
-    producer = ProducerModelChoiceField(
+    producer = forms.ModelChoiceField(
+        label=_("Producer"),
         queryset=Producer.objects.filter(
             represent_this_buyinggroup=False, is_active=True
         ),
-        label=_("Producer"),
         required=False,
-        widget=apply_select2(forms.Select),
+        widget=autocomplete.ModelSelect2(
+            url="admin:bankaccount-admin-producer-autocomplete",
+            # forward=(forward.Field("permanence"),),
+            attrs={
+                "data-dropdown-auto-width": "true",
+                "data-width": "40%",
+            },
+        ),
     )
 
     bank_amount_in = FormMoneyField(
@@ -379,6 +441,23 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def has_change_permission(self, request, bank_account=None):
         return self.has_add_permission(request)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path(
+                "customer_autocomplete/",
+                CustomerAutocomplete.as_view(),
+                name="bankaccount-admin-customer-autocomplete",
+            ),
+            path(
+                "producer_autocomplete/",
+                ProducerAutocomplete.as_view(),
+                name="bankaccount-admin-producer-autocomplete",
+            ),
+        ]
+        return my_urls + urls
+
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = ["is_updated_on", "customer_invoice", "producer_invoice"]
