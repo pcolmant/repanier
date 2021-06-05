@@ -639,5 +639,12 @@ class PurchaseAdmin(admin.ModelAdmin):
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             js = (
                 "admin/js/jquery.init.js",
-                get_repanier_static_name("js/is_order_confirm_send.js"),
+                get_repanier_static_name("js/admin/confirm_purchase.js"),
+                get_repanier_static_name("js/admin/reset_purchase.js"),
             )
+        else:
+            js = (
+                "admin/js/jquery.init.js",
+                get_repanier_static_name("js/admin/reset_purchase.js"),
+            )
+

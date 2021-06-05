@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-06-04 08:28+0200\n"
-"PO-Revision-Date: 2021-06-05 10:11+0200\n"
+"PO-Revision-Date: 2021-06-05 11:23+0200\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -3042,7 +3042,7 @@ msgstr "Stock"
 
 #: templates/bs3/admin/repanier/purchase/submit_line.html:5
 msgid "Save and continue editing"
-msgstr "Enregistrer"
+msgstr "Enregistrer et continuer"
 
 #: templates/bs3/admin/repanier/purchase/submit_line.html:5
 msgid "Save and view"

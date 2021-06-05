@@ -1,9 +1,6 @@
 (function ($) {
     $(document).ready(function ($) {
-        if (location.pathname.indexOf('change') <= -1) {
-            // List form
-            $(".object-tools").append('<li><a href="./is_order_confirm_send/' + location.search + '">&nbsp;&nbsp;' + gettext('✓🔐') + '&nbsp;&nbsp;</a></li>');
-        } else {
+        if (location.pathname.indexOf('change') > -1) {
             // Change form
             // See : https://django-autocomplete-light.readthedocs.io/en/master/tutorial.html#clearing-autocomplete-on-forward-field-change
             $(document).ready(function () {
