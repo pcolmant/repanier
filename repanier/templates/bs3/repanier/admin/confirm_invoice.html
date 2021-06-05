@@ -19,10 +19,14 @@
         <div class="form-row">
             <h3>{% translate "Please confirm your invoice calculation request" %}</h3>
             <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">
-                {% translate "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}
-            </button>
+            <div id="myDIV">
+                <button type="submit" class="repanier-submit-info" name="cancel"
+                        value="cancel">{% translate "No, cancel the action" %}</button>
+                <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default"
+                        onclick="document.getElementById('myDIV').style.display = 'none';">
+                    {% translate "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}
+                </button>
+            </div>
             {{ producer_invoiced_formset.management_form }}
         </div>
         <div class="form-row">
