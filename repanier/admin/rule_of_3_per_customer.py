@@ -5,6 +5,7 @@ from django import forms
 from django.contrib import admin
 from django.db import transaction
 from django.forms import BaseInlineFormSet
+from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
@@ -313,6 +314,23 @@ class CustomerSendAdmin(admin.ModelAdmin):
             ),
         ]
         return my_urls + urls
+
+    def changelist_view(self, request, extra_context=None):
+        param = get_request_params()
+        producer_id = param.get("producer", None)
+        if Producer.objects.filter(id=producer_id, invoice_by_basket=False).exists():
+            # Goto rule_of_3_per_product
+            send_offeritem_changelist_url = "{}?is_filled_exact=1&".format(
+                reverse("admin:repanier_offeritemsend_changelist")
+            )
+            permanence_id = param.get("permanence", None)
+            changelist_url = "{}permanence={}&producer={}".format(
+                send_offeritem_changelist_url,
+                permanence_id,
+                producer_id,
+            )
+            return HttpResponseRedirect(changelist_url)
+        return super().changelist_view(request, extra_context)
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
