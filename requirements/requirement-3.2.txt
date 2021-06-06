@@ -1,7 +1,7 @@
 asgiref==3.3.4
 defusedxml==0.7.1
 diff-match-patch==20200713
-Django==3.2.3
+Django==3.2.4
 django-classy-tags==2.0.0
 # django-cms==3.8.0
 https://github.com/pcolmant/django-cms/archive/refs/heads/develop.zip
