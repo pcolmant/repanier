@@ -157,6 +157,7 @@ class OfferItemPurchaseSendInline(admin.TabularInline):
     formset = OfferItemPurchaseSendInlineFormSet
     model = Purchase
     fields = ["customer", "quantity_invoiced", "purchase_price", "comment"]
+    ordering = ("quantity_for_preparation_sort_order", "customer__short_basket_name")
     extra = 0
     fk_name = "offer_item"
 
@@ -321,9 +322,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             PRODUCT_ORDER_UNIT_PC_KG,
         ]:
             fields_basic = (
-                (
-                    "permanence",
-                ),
+                ("permanence",),
                 prices,
                 (
                     "offer_purchase_price",
@@ -332,9 +331,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             )
         else:
             fields_basic = (
-                (
-                    "permanence",
-                ),
+                ("permanence",),
                 prices,
                 ("offer_purchase_price",),
             )
