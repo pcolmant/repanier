@@ -44,7 +44,7 @@ class Product(Item):
 
         offer_item_qs = OfferItem.objects.filter(
             permanence_id=permanence.id, product_id=self.id
-        ).order_by("?")
+        )
         if not offer_item_qs.exists():
             OfferItemReadOnly.objects.create(
                 permanence_id=permanence.id,

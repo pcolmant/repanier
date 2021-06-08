@@ -18,7 +18,7 @@ from repanier.tools import (
     get_reverse_invoice_unit,
     create_or_update_one_purchase,
     reorder_offer_items,
-    reorder_purchases,
+    reorder_purchases, round_tva,
 )
 from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, get_header, get_row
@@ -542,19 +542,21 @@ def import_invoice_sheet(
         lut_reverse_vat = dict(LUT_ALL_VAT_REVERSE)
         import_counter = 0
         row_num = 1
+        column_name = EMPTY_STRING
         sid = transaction.savepoint()
         try:
 
             permanence = Permanence.objects.create(
                 permanence_date=now,
-                short_name=invoice_reference,
+                short_name_v2=invoice_reference,
                 status=PERMANENCE_SEND,
                 highest_status=PERMANENCE_SEND,
             )
             permanence.producers.add(producer)
             row = get_row(worksheet, header, row_num)
             while row and not error:
-                customer_name = row[_("Customer")]
+                column_name = _("Customer")
+                customer_name = row[column_name]
                 if customer_name:
                     if customer_name in customer_2_id_dict:
                         customer_id = customer_2_id_dict[customer_name]
@@ -564,47 +566,57 @@ def import_invoice_sheet(
                             "row_num": row_num + 1
                         }
                         break
-                    product_reference = row[_("Reference")] or EMPTY_STRING
-                    unit = row[_("Unit")]
+                    column_name = _("Reference")
+                    product_reference = row[column_name] or EMPTY_STRING
+                    column_name = _("Unit")
+                    unit = row[column_name]
                     order_unit = get_reverse_invoice_unit(unit)
-                    vat = row[_("VAT rate")]
-                    vat_level = lut_reverse_vat[vat]
+                    column_name = _("VAT rate")
+                    vat = row[column_name]
+                    vat_level = lut_reverse_vat[round_tva(Decimal(vat))]
                     product = (
                         Product.objects.filter(
                             producer_id=producer.id, reference=product_reference
                         )
-                        .order_by("?")
                         .first()
                     )
                     if product is None:
                         product = Product.objects.create(
                             producer=producer, reference=product_reference
                         )
-                    long_name = row[_("Product")]
+                    column_name = _("Product")
+                    long_name = row[column_name]
                     # The producer unit price is the imported customer unit price
                     # If the group get a reduction, this one must be mentioned into the producer admin screen
                     # into the "price_list_multiplier" field
-                    product.producer_unit_price = row[_("Customer unit price")]
-                    product.unit_deposit = row[_("Deposit")]
+                    column_name = _("Customer unit price")
+                    product.producer_unit_price = row[column_name]
+                    column_name = _("Deposit")
+                    product.unit_deposit = row[column_name]
                     product.order_unit = order_unit
                     product.vat_level = vat_level
-                    product.wrapped = row[_("Wrapped")]
+                    column_name = _("Wrapped")
+                    product.wrapped = row[column_name]
                     qty_and_price_display = product.get_qty_and_price_display(
                         customer_price=False
-                    )
+                    ).lstrip()
                     if long_name.endswith(qty_and_price_display):
                         long_name = long_name[: -len(qty_and_price_display)]
-                    product.long_name = long_name[:100]
+                    product.long_name_v2 = long_name[:100]
                     product.save()
                     offer_item = product.get_or_create_offer_item(permanence)
+                    column_name = _("Quantity")
+                    qty = row[column_name]
+                    column_name = _("Comment")
+                    comment = row[column_name]
                     create_or_update_one_purchase(
                         customer_id=customer_id,
                         offer_item=offer_item,
                         status=PERMANENCE_SEND,
-                        q_order=Decimal(row[_("Quantity")]),
+                        q_order=Decimal(qty),
                         batch_job=True,
                         is_box_content=False,
-                        comment=row[_("Comment")] or EMPTY_STRING,
+                        comment=comment or EMPTY_STRING,
                     )
                     import_counter += 1
 
@@ -617,8 +629,8 @@ def import_invoice_sheet(
             # Missing field
             error = True
             error_msg = _(
-                "Row %(row_num)d : A required column is missing %(error_msg)s."
-            ) % {"row_num": row_num + 1, "error_msg": str(e)}
+                "Row %(row_num)d : A required column %(column_name)s is missing %(error_msg)s."
+            ) % {"row_num": row_num + 1, "column_name": column_name, "error_msg": str(e)}
         except Exception as e:
             error = True
             error_msg = _("Row %(row_num)d : %(error_msg)s.") % {

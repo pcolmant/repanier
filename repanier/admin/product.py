@@ -504,8 +504,8 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
     duplicate_product.short_description = _("Duplicate")
 
-    def get_fieldsets(self, request, product=None):
-        fields_basic = [
+    def get_fields(self, request, product=None):
+        return [
             "producer",
             "department_for_customer",
             "long_name_v2",
@@ -516,24 +516,16 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
                 "customer_minimum_order_quantity",
                 "customer_increment_order_quantity",
             ),
-            ("stock",),
+            "stock",
             "wrapped",
             "is_into_offer",
             "placement",
             "offer_description_v2",
             "production_mode",
+            "reference",
+            "vat_level",
+            "is_active"
         ]
-
-        fields_advanced_options = ["reference", "vat_level", "is_active"]
-
-        fieldsets = (
-            (None, {"fields": fields_basic}),
-            (
-                _("Advanced options"),
-                {"classes": ("collapse",), "fields": fields_advanced_options},
-            ),
-        )
-        return fieldsets
 
     def get_form(self, request, product=None, **kwargs):
 

@@ -112,6 +112,10 @@ class Producer(models.Model):
         blank=True,
         validators=[MinValueValidator(0)],
     )
+    # TODO NEXT
+    # is_resale_price_fixed = models.BooleanField(
+    #     _("The resale price is fixed"), default=False
+    # )
     minimum_order_value = ModelMoneyField(
         _("Minimum order value"),
         help_text=_("0 mean : no minimum order value."),

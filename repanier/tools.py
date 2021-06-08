@@ -660,7 +660,7 @@ def clean_offer_item(permanence, queryset):
         # Those offer_items not subjects to price modifications
         # product.is_box or product.is_box_content or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
         offer_item.is_resale_price_fixed = (
-            product.is_box or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
+            product.is_box or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT # TODO NEXT : or producer.is_resale_price_fixed
         )
         offer_item.price_list_multiplier = (
             const.DECIMAL_ONE
@@ -960,3 +960,6 @@ def round_gov_be(number):
     return (number / const.DECIMAL_0_05).quantize(
         const.DECIMAL_ONE, rounding=const.ROUND_HALF_UP
     ) * const.DECIMAL_0_05
+
+def round_tva(number):
+    return number.quantize(const.THREE_DECIMALS)
