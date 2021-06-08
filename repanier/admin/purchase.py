@@ -40,21 +40,21 @@ class AdminFilterProducerOfPermanenceSearchView(AutocompleteJsonView):
 
     @staticmethod
     def display_text(obj):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return obj.get_filter_display(permanence_id)
 
     def get_queryset(self):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         queryset = Producer.objects.filter(producerinvoice__permanence_id=permanence_id)
         return queryset
 
 
 class AdminFilterProducerOfPermanenceChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, selected_item):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return selected_item.get_filter_display(permanence_id)
 
 
@@ -65,8 +65,8 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
     form_field = AdminFilterProducerOfPermanenceChoiceField
 
     def get_autocomplete_url(self, request, model_admin):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return reverse(
             "admin:purchase-admin-producer-of-permanence", args=(permanence_id,)
         )
@@ -76,21 +76,21 @@ class AdminFilterCustomerOfPermanenceSearchView(AutocompleteJsonView):
 
     @staticmethod
     def display_text(obj):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return obj.get_filter_display(permanence_id)
 
     def get_queryset(self):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         queryset = Customer.objects.filter(customerinvoice__permanence_id=permanence_id)
         return queryset
 
 
 class AdminFilterCustomerOfPermanenceChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return obj.get_filter_display(permanence_id)
 
 
@@ -101,8 +101,8 @@ class AdminFilterCustomerOfPermanence(AutocompleteFilter):
     form_field = AdminFilterCustomerOfPermanenceChoiceField
 
     def get_autocomplete_url(self, request, model_admin):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return reverse(
             "admin:purchase-admin-customer-of-permanence", args=(permanence_id,)
         )
@@ -314,10 +314,10 @@ class PurchaseForm(forms.ModelForm):
 
         if purchase.id is None:
             # Add new purchase
-            param = get_request_params()
-            permanence_id = param.get("permanence", None)
+            query_params = get_request_params()
+            permanence_id = query_params.get("permanence", None)
             permanence_field.initial = permanence_id
-            customer_id = param.get("customer", None)
+            customer_id = query_params.get("customer", None)
             customer_field.initial = customer_id
             delivery_point_id = None
         else:
@@ -395,8 +395,8 @@ class PurchaseAdmin(admin.ModelAdmin):
     get_long_name_with_customer_price.admin_order_field = "offer_item__long_name_v2"
 
     def get_queryset(self, request):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return (
             super()
             .get_queryset(request)
@@ -410,8 +410,8 @@ class PurchaseAdmin(admin.ModelAdmin):
         return False
 
     def has_add_permission(self, request):
-        param = get_request_params()
-        permanence_id = param.get("permanence", None)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", None)
         if permanence_id is not None:
             if Permanence.objects.filter(
                 id=permanence_id, status__gt=PERMANENCE_SEND
@@ -423,8 +423,8 @@ class PurchaseAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, purchase=None):
-        param = get_request_params()
-        permanence_id = param.get("permanence", None)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", None)
         if permanence_id is not None:
             if purchase is not None and purchase.status > PERMANENCE_SEND:
                 return False
@@ -502,12 +502,7 @@ class PurchaseAdmin(admin.ModelAdmin):
             delivery_point = None
             permanence = None
         else:
-            param = get_request_params()
-            customer_id = param.get("customer", None)
-            if customer_id is None:
-                delivery_point = None
-            else:
-                delivery_point = purchase.get_delivery_display()
+            delivery_point = purchase.get_delivery_display()
             permanence = purchase.get_permanence_display()
         extra_context = {
             "PERMANENCE": permanence,
@@ -516,35 +511,34 @@ class PurchaseAdmin(admin.ModelAdmin):
         view.context_data.update(extra_context)
 
     def is_order_confirm_send(self, request):
-        param = get_request_params()
-        permanence_id = param.get("permanence", None)
-        customer_id = param.get("customer", None)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
+        customer_id = query_params.get("customer", "0")
         user_message_level = messages.ERROR
         user_message = _("Action canceled by the system.")
-        if permanence_id is not None and customer_id is not None:
-            customer = Customer.objects.filter(id=customer_id).first()
-            permanence = Permanence.objects.filter(id=permanence_id).first()
-            if permanence is not None and customer is not None:
-                customer_invoice = CustomerInvoice.objects.filter(
-                    customer_id=customer_id, permanence_id=permanence_id
-                ).first()
-                if customer_invoice is not None:
-                    if (
-                        customer_invoice.status == PERMANENCE_OPENED
-                        and not customer_invoice.is_order_confirm_send
-                    ):
-                        filename = "{}-{}.xlsx".format(_("Order"), permanence)
-                        export_order_2_1_customer(customer, filename, permanence)
-                        user_message_level = messages.INFO
-                        user_message = customer.my_order_confirmation_email_send_to()
-                    else:
-                        user_message_level = messages.INFO
-                        user_message = _("Order confirmed")
-                    customer_invoice.confirm_order()
-                    customer_invoice.save()
+        customer = Customer.objects.filter(id=customer_id).first()
+        permanence = Permanence.objects.filter(id=permanence_id).first()
+        if permanence is not None and customer is not None:
+            customer_invoice = CustomerInvoice.objects.filter(
+                customer_id=customer_id, permanence_id=permanence_id
+            ).first()
+            if customer_invoice is not None:
+                if (
+                    customer_invoice.status == PERMANENCE_OPENED
+                    and not customer_invoice.is_order_confirm_send
+                ):
+                    filename = "{}-{}.xlsx".format(_("Order"), permanence)
+                    export_order_2_1_customer(customer, filename, permanence)
+                    user_message_level = messages.INFO
+                    user_message = customer.my_order_confirmation_email_send_to()
                 else:
                     user_message_level = messages.INFO
-                    user_message = _("Nothing to confirm.")
+                    user_message = _("Order confirmed")
+                customer_invoice.confirm_order()
+                customer_invoice.save()
+            else:
+                user_message_level = messages.INFO
+                user_message = _("Nothing to confirm.")
 
             redirect_to = "{}?permanence={}&customer={}".format(
                 reverse("admin:repanier_purchase_changelist"),

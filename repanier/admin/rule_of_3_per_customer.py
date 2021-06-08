@@ -68,21 +68,21 @@ class AdminFilterProducerOfPermanenceSearchView(AutocompleteJsonView):
 
     @staticmethod
     def display_text(obj):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return obj.get_filter_display(permanence_id)
 
     def get_queryset(self):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         queryset = Producer.objects.filter(producerinvoice__permanence_id=permanence_id)
         return queryset
 
 
 class AdminFilterProducerOfPermanenceChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return obj.get_filter_display(permanence_id)
 
 
@@ -93,8 +93,8 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
     form_field = AdminFilterProducerOfPermanenceChoiceField
 
     def get_autocomplete_url(self, request, model_admin):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return reverse(
             "admin:customer-purchase-send-admin-producer-of-permanence-filter",
             args=(permanence_id,),
@@ -316,14 +316,14 @@ class CustomerSendAdmin(admin.ModelAdmin):
         return my_urls + urls
 
     def changelist_view(self, request, extra_context=None):
-        param = get_request_params()
-        producer_id = param.get("producer", None)
+        query_params = get_request_params()
+        producer_id = query_params.get("producer", "0")
         if Producer.objects.filter(id=producer_id, invoice_by_basket=False).exists():
             # Goto rule_of_3_per_product
             send_offeritem_changelist_url = "{}?is_filled_exact=1&".format(
                 reverse("admin:repanier_offeritemsend_changelist")
             )
-            permanence_id = param.get("permanence", None)
+            permanence_id = query_params.get("permanence", "0")
             changelist_url = "{}permanence={}&producer={}".format(
                 send_offeritem_changelist_url,
                 permanence_id,

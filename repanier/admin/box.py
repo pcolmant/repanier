@@ -270,21 +270,19 @@ class BoxAdmin(admin.ModelAdmin):
             picture_field.widget.upload_to = "box"
 
         if box is None:
-            param = get_request_params()
-            if "is_active__exact" in param:
-                is_active_value = param["is_active__exact"]
-                is_active_field = form.base_fields["is_active"]
-                if is_active_value == "0":
-                    is_active_field.initial = False
-                else:
-                    is_active_field.initial = True
-            if "is_into_offer__exact" in param:
-                is_into_offer_value = param["is_into_offer__exact"]
-                is_into_offer_field = form.base_fields["is_into_offer"]
-                if is_into_offer_value == "0":
-                    is_into_offer_field.initial = False
-                else:
-                    is_into_offer_field.initial = True
+            query_params = get_request_params()
+            is_active_value = query_params.get("is_active__exact","0")
+            is_active_field = form.base_fields["is_active"]
+            if is_active_value == "0":
+                is_active_field.initial = False
+            else:
+                is_active_field.initial = True
+            is_into_offer_value = query_params.get("is_into_offer__exact", "0")
+            is_into_offer_field = form.base_fields["is_into_offer"]
+            if is_into_offer_value == "0":
+                is_into_offer_field.initial = False
+            else:
+                is_into_offer_field.initial = True
         return form
 
     def get_html_is_into_offer(self, product):

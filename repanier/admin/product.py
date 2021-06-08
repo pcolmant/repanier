@@ -540,11 +540,9 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         if product is not None:
             producer_queryset = Producer.objects.filter(id=product.producer_id)
         else:
-            producer_queryset = Producer.objects.none()
             query_params = get_request_params()
-            producer_id = query_params.get("producer", 0)
-            if producer_id > 0:
-                producer_queryset = Producer.objects.filter(id=producer_id)
+            producer_id = query_params.get("producer", "0")
+            producer_queryset = Producer.objects.filter(id=producer_id)
 
 
         producer = producer_queryset.first()

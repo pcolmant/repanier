@@ -13,21 +13,21 @@ class AdminFilterProducerOfPermanenceSearchView(AutocompleteJsonView):
 
     @staticmethod
     def display_text(obj):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return obj.get_filter_display(permanence_id)
 
     def get_queryset(self):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         queryset = Producer.objects.filter(producerinvoice__permanence_id=permanence_id)
         return queryset
 
 
 class AdminFilterProducerOfPermanenceChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return obj.get_filter_display(permanence_id)
 
 
@@ -38,8 +38,8 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
     form_field = AdminFilterProducerOfPermanenceChoiceField
 
     def get_autocomplete_url(self, request, model_admin):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return reverse(
             "admin:offeritemopen-admin-producer-of-permanence", args=(permanence_id,)
         )
@@ -82,8 +82,8 @@ class OfferItemOpenAdmin(admin.ModelAdmin):
         return my_urls + urls
 
     def get_queryset(self, request):
-        param = get_request_params()
-        permanence_id = param.get("permanence", 0)
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
         return (
             super()
             .get_queryset(request)
