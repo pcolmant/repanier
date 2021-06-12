@@ -451,6 +451,9 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     autocomplete_fields = ["department_for_customer", "production_mode"]
 
+    def has_module_permission(self, request):
+        return False
+
     def has_delete_permission(self, request, obj=None):
         user = request.user
         if user.is_repanier_staff:

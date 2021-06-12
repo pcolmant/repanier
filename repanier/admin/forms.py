@@ -83,11 +83,7 @@ class PermanenceInvoicedForm(forms.Form):
             "admin/js/jquery.init.js",
             "admin/js/core.js",
         )
-        css = {
-            'all': (
-                'admin/css/forms.css',
-            )
-        }
+        css = {"all": ("admin/css/forms.css",)}
 
 
 class ImportStockForm(forms.Form):
@@ -115,9 +111,7 @@ class ImportInvoiceForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["invoice_reference"].widget.attrs[
-            "style"
-        ] = "width:450px"
+        self.fields["invoice_reference"].widget.attrs["style"] = "width:450px"
 
 
 class ProducerInvoicedForm(forms.Form):
@@ -148,13 +142,8 @@ class ProducerInvoicedForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["id"].widget.attrs["readonly"] = True
-        # self.fields["id"].widget.attrs["hidden"] = True
-        self.fields["to_be_invoiced_balance"].widget.attrs[
-            "style"
-        ] = "width:100px"
-        self.fields["invoice_reference"].widget.attrs[
-            "style"
-        ] = "width:250px"
+        self.fields["to_be_invoiced_balance"].widget.attrs["style"] = "width:100px"
+        self.fields["invoice_reference"].widget.attrs["style"] = "width:250px"
         self.fields["calculated_invoiced_balance"].widget.attrs["readonly"] = True
         # self.fields["calculated_invoiced_balance"].widget.attrs['style'] = "width:100px"
 

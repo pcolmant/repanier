@@ -339,6 +339,9 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         fieldsets = ((None, {"fields": fields_basic}),)
         return fieldsets
 
+    def has_module_permission(self, request):
+        return False
+
     def has_add_permission(self, request):
         return False
 
@@ -384,6 +387,14 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 producer_id,
             )
             return HttpResponseRedirect(changelist_url)
+        permanence_id = query_params.get("permanence", "0")
+        permanence = Permanence.objects.filter(id=permanence_id).first()
+        extra_context = extra_context or {}
+        extra_context.update(
+            {
+                "PERMANENCE": permanence,
+            }
+        )
         return super().changelist_view(request, extra_context)
 
     def render_change_form(
@@ -391,6 +402,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     ):
         # obj is the edited offer_item
         if obj is None:
+            # Adding is not allowed in the administration interface but you never know
             permanence = None
             offer_item = None
         else:

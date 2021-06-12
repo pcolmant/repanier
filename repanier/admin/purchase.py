@@ -71,6 +71,7 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
             "admin:purchase-admin-producer-of-permanence", args=(permanence_id,)
         )
 
+
 class AdminFilterCustomerOfPermanenceSearchView(AutocompleteJsonView):
     model_admin = None
 
@@ -106,6 +107,7 @@ class AdminFilterCustomerOfPermanence(AutocompleteFilter):
         return reverse(
             "admin:purchase-admin-customer-of-permanence", args=(permanence_id,)
         )
+
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -238,17 +240,6 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class PurchaseForm(forms.ModelForm):
-    permanence = forms.ModelChoiceField(
-        label=_("Permanence"),
-        queryset=Permanence.objects.all(),
-        required=True,
-        widget=autocomplete.ModelSelect2(
-            attrs={
-                "data-dropdown-auto-width": "true",
-                "data-width": "80%",
-            },
-        ),
-    )
     customer = forms.ModelChoiceField(
         label=_("Customer"),
         queryset=Customer.objects.all(),
@@ -330,6 +321,7 @@ class PurchaseForm(forms.ModelForm):
             permanence_id = purchase.permanence_id
             delivery_point_id = purchase.customer_invoice.delivery
 
+        permanence_field.widget = forms.HiddenInput()
         permanence_field.widget.attrs["readonly"] = True
         permanence_field.disabled = True
 
@@ -405,6 +397,9 @@ class PurchaseAdmin(admin.ModelAdmin):
                 is_box_content=False,
             )
         )
+
+    def has_module_permission(self, request):
+        return False
 
     def has_delete_permission(self, request, purchase=None):
         return False
@@ -509,6 +504,20 @@ class PurchaseAdmin(admin.ModelAdmin):
             "DELIVERY_POINT": delivery_point,
         }
         view.context_data.update(extra_context)
+
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+        query_params = get_request_params()
+        permanence_id = query_params.get("permanence", "0")
+        permanence = Permanence.objects.filter(id=permanence_id).first()
+        context = context or {}
+        context.update(
+            {
+                "PERMANENCE": permanence,
+            }
+        )
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     def is_order_confirm_send(self, request):
         query_params = get_request_params()
@@ -641,4 +650,3 @@ class PurchaseAdmin(admin.ModelAdmin):
                 "admin/js/jquery.init.js",
                 get_repanier_static_name("js/admin/reset_purchase.js"),
             )
-

@@ -285,6 +285,9 @@ class CustomerSendAdmin(admin.ModelAdmin):
     search_fields = ("customer__short_basket_name",)
     ordering = ("customer",)
 
+    def has_module_permission(self, request):
+        return False
+
     def has_add_permission(self, request):
         return False
 
@@ -330,6 +333,14 @@ class CustomerSendAdmin(admin.ModelAdmin):
                 producer_id,
             )
             return HttpResponseRedirect(changelist_url)
+        permanence_id = query_params.get("permanence", "0")
+        permanence = Permanence.objects.filter(id=permanence_id).first()
+        extra_context = extra_context or {}
+        extra_context.update(
+            {
+                "PERMANENCE": permanence,
+            }
+        )
         return super().changelist_view(request, extra_context)
 
     def render_change_form(
@@ -337,6 +348,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     ):
         # obj is the edited customer_producer_invoice
         if obj is None:
+            # Adding is not allowed in the administration interface but you never know
             permanence = None
             customer_producer_invoice = None
         else:

@@ -57,9 +57,7 @@ class OfferItemOpenAdmin(admin.ModelAdmin):
     )
     list_display_links = None
     list_editable = ("stock",)
-    list_filter = (
-        AdminFilterProducerOfPermanence,
-    )
+    list_filter = (AdminFilterProducerOfPermanence,)
     list_select_related = ("producer", "department_for_customer")
     list_per_page = 13
     list_max_show_all = 13
@@ -92,6 +90,9 @@ class OfferItemOpenAdmin(admin.ModelAdmin):
                 is_box_content=False,
             )
         )
+
+    def has_module_permission(self, request):
+        return False
 
     def has_add_permission(self, request):
         return False
