@@ -1,6 +1,6 @@
 import repanier.apps
 from django.forms import NumberInput
-from repanier.tools import get_repanier_template_name
+from repanier.tools import get_repanier_template_name, get_repanier_static_name
 
 
 class MoneyWidget(NumberInput):
@@ -21,7 +21,10 @@ class MoneyWidget(NumberInput):
         )
         return context
 
-    # class Media:
+    class Media:
     #     css = {
     #         'all': ('css/checkbox.css',)
     #     }
+        js = (get_repanier_static_name("js/admin/calculator-parser.js"),)
+
+

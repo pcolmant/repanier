@@ -18,6 +18,49 @@ class RepanierMoney(object):
         self.rounding = Decimal("10") ** -self.decimal_places  # 2 places --> '0.01'
         self.amount = amount.quantize(self.rounding, ROUND_HALF_UP)
 
+    def get_as_str(self, with_currency=True):
+        negative, digits, e = self.amount.as_tuple()
+        result = []
+        digits = list(map(str, digits))
+        build, next = result.append, digits.pop
+
+        # Suffix currency
+        if with_currency:
+            if repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
+                build(" {}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
+
+        # Decimals
+        for i in range(self.decimal_places):  # noqa
+            build(next() if digits else "0")
+
+        # Decimal points
+        if self.decimal_places:
+            build(settings.DECIMAL_SEPARATOR)
+
+        # Grouped number
+        if not digits:
+            build("0")
+        else:
+            i = 0
+            while digits:
+                build(next())
+                i += 1
+                if i == settings.NUMBER_GROUPING and digits:
+                    i = 0
+                    build(settings.THOUSAND_SEPARATOR)
+
+        # Prefix sign
+        if negative:
+            build("- ")
+
+        # Prefix currency
+        if with_currency:
+            if not repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
+                build("{}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
+
+        return "".join(reversed(result))
+
+
     def __float__(self):
         return float(self.amount)
 
@@ -129,43 +172,7 @@ class RepanierMoney(object):
         return self.amount > other or self == other
 
     def __str__(self):
-        negative, digits, e = self.amount.as_tuple()
-        result = []
-        digits = list(map(str, digits))
-        build, next = result.append, digits.pop
-
-        # Suffix currency
-        if repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            build(" {}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
-
-        # Decimals
-        for i in range(self.decimal_places):  # noqa
-            build(next() if digits else "0")
-
-        # Decimal points
-        if self.decimal_places:
-            build(settings.DECIMAL_SEPARATOR)
-
-        # Grouped number
-        if not digits:
-            build("0")
-        else:
-            i = 0
-            while digits:
-                build(next())
-                i += 1
-                if i == settings.NUMBER_GROUPING and digits:
-                    i = 0
-                    build(settings.THOUSAND_SEPARATOR)
-
-        # Prefix sign
-        if negative:
-            build("- ")
-
-        # Prefix currency
-        if not repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            build("{}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
-        return "".join(reversed(result))
+        return self.get_as_str()
 
     def as_tuple(self):
         # Important : used by /django/core/validators.py
@@ -240,6 +247,11 @@ class ModelMoneyField(models.DecimalField):
 
 class FormMoneyField(DecimalField):
     widget = MoneyWidget
+
+    def __init__(self, *, max_value=None, min_value=None, max_digits=None, decimal_places=None, **kwargs):
+        # Important : add "localize"
+        super().__init__(max_value=max_value, min_value=min_value, max_digits=max_digits, decimal_places=decimal_places,
+                         localize=True, **kwargs)
 
     def to_python(self, value):
         # Important : Do not validate if self.disabled

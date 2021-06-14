@@ -1,12 +1,4 @@
 {% load i18n %}
-{#{% load static i18n %}#}
-{#<link href="{% static "easy_select2/vendor/select2/css/select2.min.css" %}" type="text/css" media="screen" rel="stylesheet" />#}
-{#<link href="{% static "easy_select2/css/easy_select2.css" %}" type="text/css" media="screen" rel="stylesheet" />#}
-{#<script>var go_from_select = function(opt) { window.location = window.location.pathname + opt };</script>#}
-{#<script src="{% static "easy_select2/js/init.js" %}"></script>#}
-{#<script src="{% static "easy_select2/js/easy_select2.js" %}"></script>#}
-{#<script src="{% static "easy_select2/js/lookup_override.1.8.js" %}"></script>#}
-{#<script src="{% static "easy_select2/vendor/select2/js/select2.min.js" %}"></script>#}
 <div class="actions">
 {% with choices=action_form.fields.action.choices %}
     <label>{{ action_form.fields.action.label }}
@@ -17,13 +9,7 @@
     </select>
     </label>
     {{ action_from.fields.select_across }}
-{#    <div class="field-easy-select2" style="display:none" id="id_filter_admin_actions"></div>#}
 {% endwith %}
-{#</label>#}
-{#    {{ action_form.select_across }}#}
-{#    {% for field in action_form %}{% if field.label %}<label>{{ field.label }} {% endif %}#}
-{#    {{ field }}#}
-{#    {% if field.label %}</label>{% endif %}{% endfor %}#}
     <button type="submit" class="button" title="{% translate "Run the selected action" %}" name="index" value="{{ action_index|default:0 }}">{% translate "Send" %}</button>
     {% if actions_selection_counter %}
 <span style="display: inherit">

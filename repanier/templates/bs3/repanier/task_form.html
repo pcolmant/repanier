@@ -6,8 +6,6 @@
             {% block permanenceboard %}{% spaceless %}
                 {% addtoblock "jshead" %}
                     <script src="{{ STATIC_URL }}repanier/bs3/waypoints/jquery.waypoints.min.js"></script>
-                {% endaddtoblock %}
-                {% addtoblock "jshead" %}
                     <script src="{{ STATIC_URL }}repanier/bs3/waypoints/shortcuts/infinite.min.js"></script>
                 {% endaddtoblock %}
                 {% if permanenceboard_list %}

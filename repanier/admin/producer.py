@@ -471,9 +471,3 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         Returns available export formats.
         """
         return [f for f in (XLSX, CSV) if f().can_export()]
-
-    # class Media:
-    #     js = (
-    #         "admin/js/jquery.init.js",
-    #         get_repanier_static_name("js/export_import_stock.js"),
-    #     )

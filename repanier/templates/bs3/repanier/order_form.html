@@ -8,8 +8,10 @@
 {% block product_filter %}{% if not page_obj.has_previous %}<div class="hidden-xs">{{ block.super }}</div>{% endif %}{% endblock product_filter %}
 {% block product_list %}{% spaceless %}
     {% if may_order or display_anonymous_order_form %}
-        {% addtoblock "jshead" %}<script src="{{ STATIC_URL}}repanier/bs3/waypoints/jquery.waypoints.min.js"></script>{% endaddtoblock %}
-        {% addtoblock "jshead" %}<script src="{{ STATIC_URL}}repanier/bs3/waypoints/shortcuts/infinite.min.js"></script>{% endaddtoblock %}
+        {% addtoblock "jshead" %}
+            <script src="{{ STATIC_URL}}repanier/bs3/waypoints/jquery.waypoints.min.js"></script>
+            <script src="{{ STATIC_URL}}repanier/bs3/waypoints/shortcuts/infinite.min.js"></script>
+        {% endaddtoblock %}
         {% if offeritem_list %}
             <div class="infinite-container">
             {% for offer in offeritem_list %}

@@ -452,6 +452,3 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         Returns available export formats.
         """
         return [f for f in (XLSX, CSV) if f().can_export()]
-
-    # class Media:
-    #     js = ('js/expenses_to_be_apportioned.js',)

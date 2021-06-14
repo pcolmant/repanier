@@ -260,11 +260,3 @@ class SaleAdmin(admin.ModelAdmin):
                 permanence_date=permanence.permanence_date
             )
         super().save_model(request, permanence, form, change)
-
-
-# class Media:
-#     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-#         js = (
-#             "admin/js/jquery.init.js",
-#             # get_repanier_static_name("js/import_invoice.js"),
-#         )
