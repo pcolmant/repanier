@@ -228,7 +228,6 @@ div.repanier-objects-tools {
     width: 90px;
     text-align: right;
     padding: 10px;
-    outline: none;
     border: var(--border-height) solid var(--info-hover-border-color);
 }
 
