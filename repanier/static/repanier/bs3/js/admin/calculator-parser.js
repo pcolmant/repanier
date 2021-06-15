@@ -25,15 +25,18 @@ function tokenize(code) {
         results.push(m[1]);
     return results;
 }
+
 // Here are a few helper functions for working with tokens. To keep things
 // simple, a number is any sequence of digits.
 function isNumber(token) {
     return token !== undefined && token.match(/^[0-9.]+$/) !== null;
 }
+
 // And a *name*, or identifier, is any sequence of letters.
 function isName(token) {
     return token !== undefined && token.match(/^[A-Za-z]+$/) !== null;
 }
+
 // ## Part Two – The parser
 // The parser’s job is to decode the input and build a collection of objects
 // that represent the code.
@@ -49,14 +52,17 @@ function parse(code) {
     // backtracking. `position` is the index of the next token. Start at
     // 0. We’ll increment this as we go.
     var position = 0;
+
     // `peek()` returns the next token without advancing `position`.
     function peek() {
         return tokens[position];
     }
+
     // `consume(token)` consumes one token, moving `position` to point to the next one.
     function consume(token) {
         position++;
     }
+
     // Now we have the functions that are actually responsible for parsing.
     // This is the cool part. Each group of syntax rules is translated to one
     // function.
@@ -120,13 +126,14 @@ function parse(code) {
 
     return result;
 }
+
 // ## Part Three – The evaluation
 function evaluateAsFloat(code) {
     // If code end with "="
-    if(code.slice(-1) === "=") {
+    if (code.includes("=")) {
         // Take the content of code but last character which is "="
         // and replace all , with .
-        code = code.slice(0, -1).replaceAll(",",".");
+
         function evaluate(obj) {
             switch (obj.type) {
                 case "number":
@@ -142,8 +149,8 @@ function evaluateAsFloat(code) {
             }
         }
 
-        return evaluate(parse(code)).toFixed(2).toString().replaceAll(".",",");
-    } else {
-        return code
+        var before_equal = code.split('=', 1)[0].replaceAll(",", ".");
+        return evaluate(parse(before_equal)).toFixed(2).toString().replaceAll(".", ",");
     }
+    return code
 }
