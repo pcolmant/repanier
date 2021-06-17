@@ -15,17 +15,21 @@
         <div class="form-row">
             <h3>{% translate "Please confirm your open order request" %}</h3>
             <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}
-            </button>
+            <button type="submit" class="repanier-submit-info" name="cancel"
+                    value="cancel">{% translate "No, cancel the action" %}</button>
             {% if email_will_be_sent %}
-                <button type="submit" class="repanier-submit-info" name="apply-wo-mail" value="apply-wo-mail">
-                    {% translate "Yes, I'm sure but do not send any mail" %}</button>
+                <button type="submit" class="repanier-submit-info" name="apply" value="apply"
+                        class="default">{% translate "Yes, I'm sure" %}
+                </button>
             {% endif %}
+            <button type="submit" class="repanier-submit-info" name="apply-wo-mail" value="apply-wo-mail">
+                {% translate "Yes, I'm sure but do not send any mail" %}</button>
+
         </div>
         {% if form.template_offer_customer_mail.value %}
             <div class="form-row">
-                <div><h3>{% translate "Contents of the order opening email sent to consumers authorized to order" %}</h3>
+                <div>
+                    <h3>{% translate "Contents of the order opening email sent to consumers authorized to order" %}</h3>
                     <p>&nbsp;</p>{{ email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>
