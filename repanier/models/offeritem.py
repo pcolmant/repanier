@@ -214,13 +214,3 @@ class OfferItemSend(OfferItem):
         proxy = True
         verbose_name = _("Offer item")
         verbose_name_plural = _("Offer items")
-
-
-class OfferItemOpen(OfferItem):
-    def __str__(self):
-        return self.get_long_name_with_producer_price()
-
-    class Meta:
-        proxy = True
-        verbose_name = _("Offer item")
-        verbose_name_plural = _("Offer items")

@@ -174,9 +174,7 @@ class Permanence(TranslatableModel):
                         )
                     )
         elif self.status == PERMANENCE_OPENED:
-            offeritemopen_changelist_url = reverse(
-                "admin:repanier_offeritemopen_changelist"
-            )
+            changelist_url = reverse("admin:repanier_product_changelist")
             download_url = add_filter(
                 reverse("admin:permanence-export-producer-opened-order", args=[self.id])
             )
@@ -191,8 +189,8 @@ class Permanence(TranslatableModel):
             for p in self.producers.all():
                 producers.append(p.short_profile_name)
                 producers_html.append(
-                    '<a href="{}?permanence={}&producer={}">{}</a>'.format(
-                        offeritemopen_changelist_url,
+                    '<a href="{}?permanences={}&producer={}">{}</a>'.format(
+                        changelist_url,
                         self.id,
                         p.id,
                         p.get_filter_display(self.id).replace(" ", "&nbsp;"),

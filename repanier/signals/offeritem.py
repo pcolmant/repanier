@@ -1,7 +1,7 @@
 from django.db.models.signals import pre_save, post_init
 from django.dispatch import receiver
 from repanier.const import DECIMAL_ZERO
-from repanier.models import OfferItem, OfferItemSend, OfferItemOpen
+from repanier.models import OfferItem, OfferItemSend
 
 
 @receiver(post_init, sender=OfferItem)

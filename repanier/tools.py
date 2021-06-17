@@ -280,7 +280,7 @@ def payment_message(customer, permanence):
 
 
 def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
-    if offer_item is not None and offer_item.may_order:
+    if offer_item is not None:
         if quantity_ordered <= const.DECIMAL_ZERO:
             if is_open:
                 if offer_item.is_box:
@@ -471,117 +471,118 @@ def create_or_update_one_cart_item(
         .select_related("producer")
         .first()
     )
-    if offer_item is not None:
-        if q_order is None:
-            # Transform value_id into a q_order.
-            # This is done here and not in the order_ajax to avoid to access twice to offer_item
-            q_min = offer_item.customer_minimum_order_quantity
-            q_step = offer_item.customer_increment_order_quantity
-            if value_id <= 0:
-                q_order = const.DECIMAL_ZERO
-            elif value_id == 1:
-                q_order = q_min
-            else:
-                if q_min < q_step:
-                    # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
-                    # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
-                    if value_id == 2:
-                        q_order = q_step
-                    else:
-                        q_order = q_step * (value_id - 1)
-                else:
-                    # 1; 2; 3; 4 ... q_min = 1; q_step = 1
-                    # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
-                    q_order = q_min + q_step * (value_id - 1)
-        if q_order < const.DECIMAL_ZERO:
+    if offer_item is None:
+        return None, False
+    if q_order is None:
+        # Transform value_id into a q_order.
+        # This is done here and not in the order_ajax to avoid to access twice to offer_item
+        q_min = offer_item.customer_minimum_order_quantity
+        q_step = offer_item.customer_increment_order_quantity
+        if value_id <= 0:
             q_order = const.DECIMAL_ZERO
-        is_box_updated = True
-        if offer_item.is_box:
-            # Select one purchase
-            purchase = (
-                Purchase.objects.filter(
-                    customer_id=customer.id,
-                    offer_item_id=offer_item.id,
-                    is_box_content=False,
-                )
-                .first()
-            )
-            if purchase is not None:
-                delta_q_order = q_order - purchase.quantity_ordered
+        elif value_id == 1:
+            q_order = q_min
+        else:
+            if q_min < q_step:
+                # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
+                # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
+                if value_id == 2:
+                    q_order = q_step
+                else:
+                    q_order = q_step * (value_id - 1)
             else:
-                delta_q_order = q_order
-            with transaction.atomic():
-                sid = transaction.savepoint()
-                # This code executes inside a transaction.
-                for content in (
-                    BoxContent.objects.filter(box=offer_item.product_id)
-                    .only("product_id", "content_quantity")
-                ):
-                    box_offer_item = (
-                        OfferItem.objects.filter(
-                            product_id=content.product_id,
-                            permanence_id=offer_item.permanence_id,
+                # 1; 2; 3; 4 ... q_min = 1; q_step = 1
+                # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
+                q_order = q_min + q_step * (value_id - 1)
+    if q_order < const.DECIMAL_ZERO:
+        q_order = const.DECIMAL_ZERO
+    is_box_updated = True
+    if offer_item.is_box:
+        # Select one purchase
+        purchase = (
+            Purchase.objects.filter(
+                customer_id=customer.id,
+                offer_item_id=offer_item.id,
+                is_box_content=False,
+            )
+            .first()
+        )
+        if purchase is not None:
+            delta_q_order = q_order - purchase.quantity_ordered
+        else:
+            delta_q_order = q_order
+        with transaction.atomic():
+            sid = transaction.savepoint()
+            # This code executes inside a transaction.
+            for content in (
+                BoxContent.objects.filter(box=offer_item.product_id)
+                .only("product_id", "content_quantity")
+            ):
+                box_offer_item = (
+                    OfferItem.objects.filter(
+                        product_id=content.product_id,
+                        permanence_id=offer_item.permanence_id,
+                    )
+                    .select_related("producer")
+                    .first()
+                )
+                if box_offer_item is not None:
+                    # Select one purchase
+                    purchase = (
+                        Purchase.objects.filter(
+                            customer_id=customer.id,
+                            offer_item_id=box_offer_item.id,
+                            is_box_content=True,
                         )
-                        .select_related("producer")
                         .first()
                     )
-                    if box_offer_item is not None:
-                        # Select one purchase
-                        purchase = (
-                            Purchase.objects.filter(
-                                customer_id=customer.id,
-                                offer_item_id=box_offer_item.id,
-                                is_box_content=True,
-                            )
-                            .first()
-                        )
-                        if purchase is not None:
-                            quantity_ordered = (
-                                purchase.quantity_ordered
-                                + delta_q_order * content.content_quantity
-                            )
-                        else:
-                            quantity_ordered = delta_q_order * content.content_quantity
-                        if quantity_ordered < const.DECIMAL_ZERO:
-                            quantity_ordered = const.DECIMAL_ZERO
-                        purchase, is_box_updated = create_or_update_one_purchase(
-                            customer_id=customer.id,
-                            offer_item=box_offer_item,
-                            status=const.PERMANENCE_OPENED,
-                            q_order=quantity_ordered,
-                            batch_job=batch_job,
-                            is_box_content=True,
-                            comment=const.EMPTY_STRING,
+                    if purchase is not None:
+                        quantity_ordered = (
+                            purchase.quantity_ordered
+                            + delta_q_order * content.content_quantity
                         )
                     else:
-                        is_box_updated = False
-                    if not is_box_updated:
-                        break
-                if is_box_updated:
-                    transaction.savepoint_commit(sid)
+                        quantity_ordered = delta_q_order * content.content_quantity
+                    if quantity_ordered < const.DECIMAL_ZERO:
+                        quantity_ordered = const.DECIMAL_ZERO
+                    purchase, is_box_updated = create_or_update_one_purchase(
+                        customer_id=customer.id,
+                        offer_item=box_offer_item,
+                        status=const.PERMANENCE_OPENED,
+                        q_order=quantity_ordered,
+                        batch_job=batch_job,
+                        is_box_content=True,
+                        comment=const.EMPTY_STRING,
+                    )
                 else:
-                    transaction.savepoint_rollback(sid)
-        if not offer_item.is_box or is_box_updated:
-            return create_or_update_one_purchase(
+                    is_box_updated = False
+                if not is_box_updated:
+                    break
+            if is_box_updated:
+                transaction.savepoint_commit(sid)
+            else:
+                transaction.savepoint_rollback(sid)
+    if not offer_item.is_box or is_box_updated:
+        return create_or_update_one_purchase(
+            customer_id=customer.id,
+            offer_item=offer_item,
+            status=const.PERMANENCE_OPENED,
+            q_order=q_order,
+            batch_job=batch_job,
+            is_box_content=False,
+            comment=comment,
+        )
+    elif not batch_job:
+        # Select one purchase
+        purchase = (
+            Purchase.objects.filter(
                 customer_id=customer.id,
-                offer_item=offer_item,
-                status=const.PERMANENCE_OPENED,
-                q_order=q_order,
-                batch_job=batch_job,
+                offer_item_id=offer_item.id,
                 is_box_content=False,
-                comment=comment,
             )
-        elif not batch_job:
-            # Select one purchase
-            purchase = (
-                Purchase.objects.filter(
-                    customer_id=customer.id,
-                    offer_item_id=offer_item.id,
-                    is_box_content=False,
-                )
-                .first()
-            )
-            return purchase, False
+            .first()
+        )
+        return purchase, False
 
 
 def my_basket(is_order_confirm_send, order_amount):

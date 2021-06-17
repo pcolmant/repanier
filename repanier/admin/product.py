@@ -532,10 +532,10 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_form(self, request, product=None, **kwargs):
 
+        query_params = get_request_params()
         if product is not None:
             producer_queryset = Producer.objects.filter(id=product.producer_id)
         else:
-            query_params = get_request_params()
             producer_id = query_params.get("producer", "0")
             producer_queryset = Producer.objects.filter(id=producer_id)
 

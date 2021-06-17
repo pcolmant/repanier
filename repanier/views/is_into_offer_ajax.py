@@ -6,7 +6,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.models.product import Product
-from repanier.tools import sint
+from repanier.tools import sint, update_offer_item
 
 
 @never_cache
@@ -21,5 +21,6 @@ def is_into_offer(request, product_id):
         if product is not None:
             product.is_into_offer = not product.is_into_offer
             product.save(update_fields=["is_into_offer"])
+            update_offer_item(product_id=product.id)
             return HttpResponse(product.get_html_is_into_offer())
     raise Http404
