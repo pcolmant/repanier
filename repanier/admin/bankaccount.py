@@ -229,7 +229,7 @@ class BankAccountDataForm(forms.ModelForm):
         queryset=Customer.objects.filter(is_active=True),
         required=False,
         widget=autocomplete.ModelSelect2(
-            url="admin:bankaccount-admin-customer-autocomplete",
+            url="admin:repanier_bankaccount_form_customer",
             # forward=(forward.Field("permanence"),),
             attrs={
                 "data-dropdown-auto-width": "true",
@@ -244,7 +244,7 @@ class BankAccountDataForm(forms.ModelForm):
         ),
         required=False,
         widget=autocomplete.ModelSelect2(
-            url="admin:bankaccount-admin-producer-autocomplete",
+            url="admin:repanier_bankaccount_form_producer",
             # forward=(forward.Field("permanence"),),
             attrs={
                 "data-dropdown-auto-width": "true",
@@ -414,12 +414,12 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
             path(
                 "customer_autocomplete/",
                 CustomerAutocomplete.as_view(),
-                name="bankaccount-admin-customer-autocomplete",
+                name="repanier_bankaccount_form_customer",
             ),
             path(
                 "producer_autocomplete/",
                 ProducerAutocomplete.as_view(),
-                name="bankaccount-admin-producer-autocomplete",
+                name="repanier_bankaccount_form_producer",
             ),
         ]
         return my_urls + urls

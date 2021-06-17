@@ -51,6 +51,14 @@ logger = logging.getLogger(__name__)
 
 class PermanenceDoneAdmin(SaleAdmin):
 
+    list_display = (
+        "get_permanence_admin_display",
+        "get_row_actions",
+        "get_producers_without_download",
+        "get_customers_without_download",
+        "get_board",
+        "get_html_status_display",
+    )
     change_list_url = reverse_lazy("admin:repanier_permanencedone_changelist")
     description = "invoice_description_v2"
     list_filter = (AdminFilterPermanenceDoneStatus,)
@@ -407,10 +415,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                 }
             )
 
-
-        producer_invoiced_formset = ProducerInvoicedFormSet(
-            initial=producers_invoiced
-        )
+        producer_invoiced_formset = ProducerInvoicedFormSet(initial=producers_invoiced)
 
         template_name = get_repanier_template_name("admin/confirm_invoice.html")
         return render(

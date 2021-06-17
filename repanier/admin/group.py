@@ -228,8 +228,13 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         "get_email",
         "is_active",
     )
-    search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2", )
-    list_filter = ("is_active", )
+    search_fields = (
+        "short_basket_name",
+        "long_basket_name",
+        "user__email",
+        "email2",
+    )
+    list_filter = ("is_active",)
     list_per_page = 16
     list_max_show_all = 16
 

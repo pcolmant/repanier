@@ -527,7 +527,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             "production_mode",
             "reference",
             "vat_level",
-            "is_active"
+            "is_active",
         ]
 
     def get_form(self, request, product=None, **kwargs):
@@ -538,7 +538,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             query_params = get_request_params()
             producer_id = query_params.get("producer", "0")
             producer_queryset = Producer.objects.filter(id=producer_id)
-
 
         producer = producer_queryset.first()
 
@@ -661,4 +660,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         return [f for f in (XLSX, CSV) if f().can_export()]
 
     class Media:
-        js = ("admin/js/jquery.init.js", get_repanier_static_name("js/admin/confirm_exit.js"))
+        js = (
+            "admin/js/jquery.init.js",
+            get_repanier_static_name("js/admin/confirm_exit.js"),
+        )

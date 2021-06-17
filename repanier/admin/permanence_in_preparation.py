@@ -48,6 +48,14 @@ logger = logging.getLogger(__name__)
 
 class PermanenceInPreparationAdmin(SaleAdmin):
 
+    list_display = (
+        "get_permanence_admin_display",
+        "get_row_actions",
+        "get_producers_with_download",
+        "get_customers_with_download",
+        "get_board",
+        "get_html_status_display",
+    )
     change_list_url = reverse_lazy("admin:repanier_permanenceinpreparation_changelist")
     description = "offer_description_v2"
     list_filter = (AdminFilterPermanenceInPreparationStatus,)

@@ -160,18 +160,11 @@ class SaleAdmin(admin.ModelAdmin):
 
     change_list_url = EMPTY_STRING
     description = EMPTY_STRING
-    list_per_page = 20
-    list_max_show_all = 20
+    list_per_page = 15
+    list_max_show_all = 15
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = "permanence_date"
-    list_display = (
-        "get_permanence_admin_display",
-        "get_row_actions",
-        "get_producers_with_download",
-        "get_customers_with_download",
-        "get_board",
-        "get_html_status_display",
-    )
+
     list_display_links = ("get_permanence_admin_display",)
     search_fields = [
         "producers__short_profile_name",

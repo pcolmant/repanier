@@ -271,7 +271,7 @@ class BoxAdmin(admin.ModelAdmin):
 
         if box is None:
             query_params = get_request_params()
-            is_active_value = query_params.get("is_active__exact","0")
+            is_active_value = query_params.get("is_active__exact", "0")
             is_active_field = form.base_fields["is_active"]
             if is_active_value == "0":
                 is_active_field.initial = False
@@ -289,6 +289,26 @@ class BoxAdmin(admin.ModelAdmin):
         return product.get_html_admin_is_into_offer()
 
     get_html_is_into_offer.short_description = _("In offer")
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.filter(
+            is_box=True,
+        )
+        return qs
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions
 
     def save_model(self, request, box, form, change):
         super().save_model(request, box, form, change)
@@ -325,10 +345,3 @@ class BoxAdmin(admin.ModelAdmin):
         except IndexError:
             # No formset present in list admin, but well in detail admin
             pass
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = qs.filter(
-            is_box=True,
-        )
-        return qs

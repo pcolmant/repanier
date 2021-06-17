@@ -41,7 +41,7 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
         query_params = get_request_params()
         permanence_id = query_params.get("permanence", "0")
         return reverse(
-            "admin:offeritemopen-admin-producer-of-permanence", args=(permanence_id,)
+            "admin:repanier_offeritemopen_list_producer", args=(permanence_id,)
         )
 
 
@@ -74,7 +74,7 @@ class OfferItemOpenAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(
                     AdminFilterProducerOfPermanenceSearchView.as_view(model_admin=self)
                 ),
-                name="offeritemopen-admin-producer-of-permanence",
+                name="repanier_offeritemopen_list_producer",
             ),
         ]
         return my_urls + urls

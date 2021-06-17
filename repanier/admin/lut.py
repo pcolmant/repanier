@@ -86,9 +86,9 @@ class LUTProductionModeAdmin(LUTAdmin):
         if "/autocomplete/" in request.path:
             # Autocomplete
             qs = LUT_ProductionMode.objects.filter(
-                        rght=F("lft") + 1,
-                        is_active=True,
-                    ).order_by("short_name_v2")
+                rght=F("lft") + 1,
+                is_active=True,
+            ).order_by("short_name_v2")
         else:
             qs = super().get_queryset(request)
         return qs
@@ -124,9 +124,9 @@ class LUTDepartmentForCustomerAdmin(LUTAdmin):
         if "/autocomplete/" in request.path:
             # Autocomplete
             qs = LUT_DepartmentForCustomer.objects.filter(
-                        rght=F("lft") + 1,
-                        is_active=True,
-                    ).order_by("short_name_v2")
+                rght=F("lft") + 1,
+                is_active=True,
+            ).order_by("short_name_v2")
         else:
             qs = super().get_queryset(request)
         return qs

@@ -852,12 +852,9 @@ class CustomerInvoice(Invoice):
                 )
 
     def get_delivery_display(self):
-        if (
-            self is not None
-            and self.delivery is not None
-        ):
-            return self.delivery.get_delivery_display()
-        return None
+        if self.delivery is None:
+            return EMPTY_STRING
+        return self.delivery.get_delivery_display()
 
     get_delivery_display.short_description = _("Delivery point")
 

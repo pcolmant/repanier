@@ -71,7 +71,7 @@ class DeliveryBoard(TranslatableModel):
         label = " ".join((comment, short_name,))
         if color:
             label = mark_safe(
-                '<font color="green">{}</font>'.format(label)
+                '<font color="green">{}</font>'.format(label.replace(" ", "&nbsp;"))
             )
         return label
 

@@ -357,37 +357,38 @@ class Permanence(TranslatableModel):
                 .select_related("customer")
                 .order_by("delivery", "customer")
             ):
-                if delivery_save != ci.delivery:
-                    delivery_save = ci.delivery
-                    if ci.delivery is not None:
-                        customers_html.append(
-                            "<br><b>{}</b>".format(ci.delivery.get_delivery_display())
-                        )
-                    else:
-                        customers_html.append("<br><br>--")
-                total_price_with_tax = ci.get_total_price_with_tax(
-                    customer_charged=True
-                )
-                # if ci.is_order_confirm_send:
-                label = "{}{} ({}) {}{}".format(
-                    "<b><i>" if ci.is_group else EMPTY_STRING,
-                    ci.customer.short_basket_name,
-                    "-"
-                    if ci.is_group or total_price_with_tax == DECIMAL_ZERO
-                    else total_price_with_tax,
-                    ci.get_is_order_confirm_send_display(),
-                    "</i></b>" if ci.is_group else EMPTY_STRING,
-                )
-                # Important : no target="_blank"
-                customers_html.append(
-                    '<a href="{}?permanence={}&customer={}">{}</a>'.format(
-                        changelist_url,
-                        self.id,
-                        ci.customer_id,
-                        label.replace(" ", "&nbsp;"),
+                if not ci.customer.is_group:
+                    if delivery_save != ci.delivery:
+                        delivery_save = ci.delivery
+                        if ci.delivery is not None:
+                            customers_html.append(
+                                "<br><b>{}</b>".format(ci.delivery.get_delivery_display())
+                            )
+                        else:
+                            customers_html.append("<br><br>--")
+                    total_price_with_tax = ci.get_total_price_with_tax(
+                        customer_charged=True
                     )
-                )
-                customers.append(label)
+                    # if ci.is_order_confirm_send:
+                    label = "{}{} ({}) {}{}".format(
+                        "<b><i>" if ci.is_group else EMPTY_STRING,
+                        ci.customer.short_basket_name,
+                        "-"
+                        if ci.is_group or total_price_with_tax == DECIMAL_ZERO
+                        else total_price_with_tax,
+                        ci.get_is_order_confirm_send_display(),
+                        "</i></b>" if ci.is_group else EMPTY_STRING,
+                    )
+                    # Important : no target="_blank"
+                    customers_html.append(
+                        '<a href="{}?permanence={}&customer={}">{}</a>'.format(
+                            changelist_url,
+                            self.id,
+                            ci.customer_id,
+                            label.replace(" ", "&nbsp;"),
+                        )
+                    )
+                    customers.append(label)
         elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             button_download = EMPTY_STRING
             customers = []
@@ -1675,7 +1676,7 @@ class Permanence(TranslatableModel):
                     status_counter += 1
                     status = delivery.status
                     if self.status <= delivery.status:
-                        status_list.append("{}".format(delivery.get_status_display()))
+                        status_list.append("{}".format(delivery.get_status_display().replace(" ", "&nbsp;")))
                     else:
                         status_list.append(
                             "<b>{}</b>".format(_("Error, call helpdesk"))

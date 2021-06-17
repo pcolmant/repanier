@@ -479,7 +479,6 @@ def export_preparation_for_a_delivery(
             c.style.font.bold = True
             c.value = (
                 DeliveryBoard.objects.filter(id=delivery_id)
-                .order_by("?")
                 .first()
                 .get_delivery_display()
             )
@@ -1633,7 +1632,6 @@ def export_customer_for_a_delivery(
             c.style.font.bold = True
             c.value = "{}".format(
                 DeliveryBoard.objects.filter(id=delivery_id)
-                .order_by("?")
                 .first()
                 .get_delivery_display()
             )

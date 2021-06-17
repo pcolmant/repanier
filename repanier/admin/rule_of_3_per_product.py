@@ -82,7 +82,7 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
         query_params = get_request_params()
         permanence_id = query_params.get("permanence", "0")
         return reverse(
-            "admin:offer-item-send-admin-producer-of-permanence-filter",
+            "admin:repanier_offeritemsend_list_producer",
             args=(permanence_id,),
         )
 
@@ -124,7 +124,7 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
         queryset=Customer.objects.all(),
         required=True,
         widget=autocomplete.ModelSelect2(
-            url="admin:offer-item-send-admin-customer-autocomplete",
+            url="admin:repanier_offeritemsend_form_customer",
             forward=(forward.Field("permanence"),),
             attrs={
                 "data-dropdown-auto-width": "true",
@@ -356,18 +356,19 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
+
         custom_urls = [
             path(
                 "producer_of_permanence/<int:permanence>/",
                 self.admin_site.admin_view(
                     AdminFilterProducerOfPermanenceSearchView.as_view(model_admin=self)
                 ),
-                name="offer-item-send-admin-producer-of-permanence-filter",
+                name="repanier_offeritemsend_list_producer",
             ),
             path(
                 "offer_item_autocomplete/",
                 CustomerAutocomplete.as_view(),
-                name="offer-item-send-admin-customer-autocomplete",
+                name="repanier_offeritemsend_form_customer",
             ),
         ]
         return custom_urls + urls

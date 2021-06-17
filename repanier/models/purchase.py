@@ -218,9 +218,9 @@ class Purchase(models.Model):
     get_permanence_display.short_description = _("Permanence")
 
     def get_delivery_display(self):
-        if self.customer_invoice is not None:
-            return self.customer_invoice.get_delivery_display()
-        return None
+        if self.customer_invoice is None:
+            return EMPTY_STRING
+        return self.customer_invoice.get_delivery_display()
 
     get_delivery_display.short_description = _("Delivery point")
 

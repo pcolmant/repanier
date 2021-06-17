@@ -67,9 +67,7 @@ class AdminFilterProducerOfPermanence(AutocompleteFilter):
     def get_autocomplete_url(self, request, model_admin):
         query_params = get_request_params()
         permanence_id = query_params.get("permanence", "0")
-        return reverse(
-            "admin:purchase-admin-producer-of-permanence", args=(permanence_id,)
-        )
+        return reverse("admin:repanier_purchase_list_producer", args=(permanence_id,))
 
 
 class AdminFilterCustomerOfPermanenceSearchView(AutocompleteJsonView):
@@ -104,9 +102,7 @@ class AdminFilterCustomerOfPermanence(AutocompleteFilter):
     def get_autocomplete_url(self, request, model_admin):
         query_params = get_request_params()
         permanence_id = query_params.get("permanence", "0")
-        return reverse(
-            "admin:purchase-admin-customer-of-permanence", args=(permanence_id,)
-        )
+        return reverse("admin:repanier_purchase_list_customer", args=(permanence_id,))
 
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
@@ -188,6 +184,16 @@ class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
 
         return qs
 
+    def get_result_label(self, item):
+        permanence_id = self.forwarded.get("permanence", None)
+        customer_id = self.forwarded.get("customer", None)
+        customer_invoice = CustomerInvoice.objects.filter(
+            permanence_id=permanence_id,
+            customer_id=customer_id,
+        ).only("delivery_id").first()
+        if customer_invoice is not None and customer_invoice.delivery_id == item.id:
+            return mark_safe("<i class='fas fa-shopping-basket'></i> <i class='fas fa-arrow-right'></i> {}".format(item.get_delivery_display()))
+        return item.get_delivery_display()
 
 class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -245,7 +251,7 @@ class PurchaseForm(forms.ModelForm):
         queryset=Customer.objects.all(),
         required=True,
         widget=autocomplete.ModelSelect2(
-            url="admin:purchase-admin-customer-autocomplete",
+            url="admin:repanier_purchase_form_customer",
             forward=(forward.Field("permanence"),),
             attrs={
                 "data-dropdown-auto-width": "true",
@@ -257,7 +263,7 @@ class PurchaseForm(forms.ModelForm):
         label=_("Delivery point"),
         queryset=DeliveryBoard.objects.all(),
         widget=autocomplete.ModelSelect2(
-            url="admin:purchase-admin-delivery-autocomplete",
+            url="admin:repanier_purchase_form_delivery",
             forward=(
                 forward.Field("permanence"),
                 forward.Field("customer"),
@@ -265,6 +271,7 @@ class PurchaseForm(forms.ModelForm):
             attrs={
                 "data-dropdown-auto-width": "true",
                 "data-width": "80%",
+                "data-html": True,
             },
         ),
     )
@@ -273,7 +280,7 @@ class PurchaseForm(forms.ModelForm):
         queryset=OfferItem.objects.all(),
         required=True,
         widget=autocomplete.ModelSelect2(
-            url="admin:purchase-admin-offer-item-autocomplete",
+            url="admin:repanier_purchase_form_offeritem",
             forward=(
                 forward.Field("permanence"),
                 forward.Field("customer"),
@@ -438,31 +445,31 @@ class PurchaseAdmin(admin.ModelAdmin):
             path(
                 "customer_autocomplete/",
                 CustomerAutocomplete.as_view(),
-                name="purchase-admin-customer-autocomplete",
+                name="repanier_purchase_form_customer",
             ),
             path(
                 "delivery_autocomplete/",
                 DeliveryAutocomplete.as_view(),
-                name="purchase-admin-delivery-autocomplete",
+                name="repanier_purchase_form_delivery",
             ),
             path(
                 "offer_item_autocomplete/",
                 OfferItemAutocomplete.as_view(),
-                name="purchase-admin-offer-item-autocomplete",
+                name="repanier_purchase_form_offeritem",
             ),
             path(
                 "producer_of_permanence/<int:permanence>/",
                 self.admin_site.admin_view(
                     AdminFilterProducerOfPermanenceSearchView.as_view(model_admin=self)
                 ),
-                name="purchase-admin-producer-of-permanence",
+                name="repanier_purchase_list_producer",
             ),
             path(
                 "customer_of_permanence/<int:permanence>/",
                 self.admin_site.admin_view(
                     AdminFilterCustomerOfPermanenceSearchView.as_view(model_admin=self)
                 ),
-                name="purchase-admin-customer-of-permanence",
+                name="repanier_purchase_list_customer",
             ),
         ]
         return my_urls + urls

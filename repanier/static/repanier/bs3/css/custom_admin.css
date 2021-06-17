@@ -23,9 +23,9 @@ body {
     margin-top: 30px;
 }
 
-td, th {
-    vertical-align: initial;
-}
+/*td, th {*/
+/*    vertical-align: initial;*/
+/*}*/
 
 #changelist table input {
     width: 90px;
@@ -52,7 +52,7 @@ div.repanier-submit-row {
 
 div.repanier-button-row {
     display: flex;
-    /*grid-column-gap: 10px;*/
+    grid-column-gap: 10px;
     /*align-items: baseline;*/
 }
 
