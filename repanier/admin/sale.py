@@ -194,12 +194,13 @@ class SaleAdmin(admin.ModelAdmin):
         readonly_fields = [
             "status",
         ]
-        if permanence is not None and permanence.status > PERMANENCE_PLANNED:
-            readonly_fields.append("producers")
-            if settings.REPANIER_SETTINGS_BOX:
-                readonly_fields.append("boxes")
-        if permanence.status >= PERMANENCE_CLOSED:
-            readonly_fields.append("automatically_closed")
+        if permanence is not None:
+            if permanence.status > PERMANENCE_PLANNED:
+                readonly_fields.append("producers")
+                if settings.REPANIER_SETTINGS_BOX:
+                    readonly_fields.append("boxes")
+            elif permanence.status >= PERMANENCE_CLOSED:
+                readonly_fields.append("automatically_closed")
         return readonly_fields
 
     def get_formsets_with_inlines(self, request, obj=None):
