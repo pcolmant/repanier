@@ -39,8 +39,6 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         subject = "".join(subject.splitlines())
         body = loader.render_to_string(html_email_template_name, context)
 
-        if settings.REPANIER_SETTINGS_DEMO:
-            to_email = settings.REPANIER_DEMO_EMAIL
         email = RepanierEmail(
             subject,
             html_body=body,

@@ -10,10 +10,6 @@ from repanier.const import *
 @toolbar_pool.register
 class RepanierToolbar(CMSToolbar):
     def populate(self):
-        if settings.REPANIER_SETTINGS_DEMO:
-            self.toolbar.get_or_create_menu(
-                "demo-menu", _("Demo ({})").format(settings.REPANIER_DEMO_EMAIL)
-            )
         user = self.request.user
         if user.is_anonymous:
             return

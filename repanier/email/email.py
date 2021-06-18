@@ -37,15 +37,12 @@ class RepanierEmail(EmailMultiAlternatives):
     def send_email(self):
         self.body = strip_tags(self.html_body)
 
-        if settings.REPANIER_SETTINGS_DEMO:
-            self._send_email_with_unsubscribe(email_to=settings.REPANIER_DEMO_EMAIL)
-        else:
-            # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
-            # for chunk in chunks:
-            # Remove duplicates
-            send_email_to = list(set(self.to + self.cc + self.bcc))
-            for email_to in send_email_to:
-                self._send_email_with_unsubscribe(email_to=email_to.strip())
+        # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
+        # for chunk in chunks:
+        # Remove duplicates
+        send_email_to = list(set(self.to + self.cc + self.bcc))
+        for email_to in send_email_to:
+            self._send_email_with_unsubscribe(email_to=email_to.strip())
 
     # @debug_parameters
     def _send_email_with_unsubscribe(self, email_to=None):
@@ -201,7 +198,6 @@ class RepanierEmail(EmailMultiAlternatives):
                         REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER: {REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER}
                         REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE : {REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE}
                         REPANIER_SETTINGS_DELIVERY_POINT : {REPANIER_SETTINGS_DELIVERY_POINT}
-                        REPANIER_SETTINGS_DEMO : {REPANIER_SETTINGS_DEMO}
                         REPANIER_SETTINGS_MANAGE_ACCOUNTING : {REPANIER_SETTINGS_MANAGE_ACCOUNTING}
                         REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO : {REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO}
                         REPANIER_SETTINGS_ROUND_INVOICES : {REPANIER_SETTINGS_ROUND_INVOICES}
@@ -220,7 +216,6 @@ class RepanierEmail(EmailMultiAlternatives):
                 REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER=settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER,
                 REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE=settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE,
                 REPANIER_SETTINGS_DELIVERY_POINT=settings.REPANIER_SETTINGS_DELIVERY_POINT,
-                REPANIER_SETTINGS_DEMO=settings.REPANIER_SETTINGS_DEMO,
                 REPANIER_SETTINGS_MANAGE_ACCOUNTING=settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
                 REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO=settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO,
                 REPANIER_SETTINGS_ROUND_INVOICES=settings.REPANIER_SETTINGS_ROUND_INVOICES,
@@ -235,13 +230,6 @@ class RepanierEmail(EmailMultiAlternatives):
     @classmethod
     def send_email_to_who(cls, is_email_send=True, board=False):
         if is_email_send or board:
-            if settings.REPANIER_SETTINGS_DEMO:
-                return (
-                    True,
-                    _("This email will be send to : {}").format(
-                        settings.REPANIER_DEMO_EMAIL
-                    ),
-                )
             if settings.DEBUG:
                 if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                     return (

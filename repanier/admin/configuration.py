@@ -38,17 +38,6 @@ class ConfigurationDataForm(forms.ModelForm):
         self.fields["group_name"].widget.attrs["readonly"] = True
         self.fields["email"].widget.attrs["readonly"] = True
 
-    # def clean(self):
-    #     if any(self.errors):
-    #         # Don't bother validating the formset unless each form is valid on its own
-    #         return
-    #     if not settings.REPANIER_SETTINGS_DEMO:
-    #         new_email_host_password = self.cleaned_data["new_email_host_password"]
-    #         if not new_email_host_password:
-    #             self.instance.email_host_password = self.instance.previous_email_host_password
-    #         else:
-    #             self.instance.email_host_password = new_email_host_password
-
     class Meta:
         model = Configuration
         fields = "__all__"

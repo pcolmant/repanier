@@ -140,9 +140,6 @@ REPANIER_SETTINGS_DELIVERY_POINT = config.getboolean(
 if REPANIER_SETTINGS_DELIVERY_POINT:
     REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = True
 
-REPANIER_SETTINGS_DEMO = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_DEMO", fallback=False
-)
 REPANIER_SETTINGS_GROUP = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_GROUP", fallback=False
 )
@@ -179,8 +176,6 @@ REPANIER_SETTINGS_GROUP = REPANIER_SETTINGS_DELIVERY_POINT
 ALLOWED_HOSTS = []
 for name in config.options("ALLOWED_HOSTS"):
     allowed_host = config.get("ALLOWED_HOSTS", name)
-    if allowed_host.startswith("demo"):
-        REPANIER_SETTINGS_DEMO = True
     ALLOWED_HOSTS.append(allowed_host)
 
 print("---- common_settings.py - Settings loaded from: {}".format(conf_file_name))
