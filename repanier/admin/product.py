@@ -425,7 +425,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     list_display = (
         "producer",
         "department_for_customer",
-        "get_long_name_with_producer_price",
+        "get_long_name_with_customer_price",
         "get_row_actions",
         "producer_unit_price",
         "stock",
