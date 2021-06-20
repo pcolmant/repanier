@@ -216,6 +216,10 @@ class ModelRepanierMoneyFieldProxy(object):
                 value = str(value)
             obj.__dict__[self.field.name] = self.field.to_python(value)
 
+class ModelMoneyField(models.DecimalField):
+    # Replaced with ModelRepanierMoneyField
+    pass
+
 
 class ModelRepanierMoneyField(models.DecimalField):
     def formfield(self, **kwargs):
