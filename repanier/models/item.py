@@ -29,7 +29,7 @@ from repanier.const import (
     DECIMAL_MAX_STOCK,
     DICT_VAT_DEFAULT,
 )
-from repanier.fields.RepanierMoneyField import RepanierMoney, ModelMoneyField
+from repanier.fields.RepanierMoneyField import RepanierMoney, ModelRepanierMoneyField
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
 
@@ -71,19 +71,19 @@ class Item(TranslatableModel):
         validators=[MinValueValidator(0)],
     )
 
-    producer_unit_price = ModelMoneyField(
+    producer_unit_price = ModelRepanierMoneyField(
         _("Producer unit price"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
     )
-    customer_unit_price = ModelMoneyField(
+    customer_unit_price = ModelRepanierMoneyField(
         _("Customer unit price"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
     )
-    producer_vat = ModelMoneyField(
+    producer_vat = ModelRepanierMoneyField(
         _("VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=4
     )
-    customer_vat = ModelMoneyField(
+    customer_vat = ModelRepanierMoneyField(
         _("VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=4
     )
-    unit_deposit = ModelMoneyField(
+    unit_deposit = ModelRepanierMoneyField(
         _("Deposit"),
         help_text=_("Deposit to add to the original unit price"),
         default=DECIMAL_ZERO,

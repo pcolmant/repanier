@@ -9,7 +9,7 @@ from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 from repanier.admin.admin_filter import AdminFilterBankAccountStatus
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
@@ -253,7 +253,7 @@ class BankAccountDataForm(forms.ModelForm):
         ),
     )
 
-    bank_amount_in = FormMoneyField(
+    bank_amount_in = FormRepanierMoneyField(
         label=_("Cash in"),
         help_text=_("Payment on the account"),
         max_digits=8,
@@ -261,7 +261,7 @@ class BankAccountDataForm(forms.ModelForm):
         required=False,
         initial=REPANIER_MONEY_ZERO,
     )
-    bank_amount_out = FormMoneyField(
+    bank_amount_out = FormRepanierMoneyField(
         label=_("Cash out"),
         help_text=_("Payment from the account"),
         max_digits=8,

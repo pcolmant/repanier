@@ -3,7 +3,7 @@ from django.forms import NumberInput
 from repanier.tools import get_repanier_template_name, get_repanier_static_name
 
 
-class MoneyWidget(NumberInput):
+class RepanierMoneyWidget(NumberInput):
     template_name = get_repanier_template_name("widgets/money.html")
 
     def __init__(self, attrs=None):

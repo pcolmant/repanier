@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class Configuration(TranslatableModel):
     page_break_on_customer_check = models.BooleanField(
         _("Page break on customer check"), default=False
     )
-    membership_fee = ModelMoneyField(
+    membership_fee = ModelRepanierMoneyField(
         _("Membership fee"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
     )
     membership_fee_duration = models.DecimalField(

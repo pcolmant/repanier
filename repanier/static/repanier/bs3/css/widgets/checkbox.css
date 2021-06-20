@@ -1,10 +1,10 @@
 /* check boxes : http://bootsnipp.com/snippets/featured/animated-radios-amp-checkboxes-nojs */
-.checkbox-repanier label:after {
+.repanier-checkbox label:after {
     content: '';
     display: table;
     clear: both;
 }
-.checkbox-repanier .cr {
+.repanier-checkbox .cr {
     position: relative;
     display: inline-block;
     border: 1px solid #a9a9a9;
@@ -14,26 +14,26 @@
     float: left;
     margin-right: .5em;
 }
-.checkbox-repanier .cr .cr-icon {
+.repanier-checkbox .cr .cr-icon {
     position: absolute;
     font-size: .8em;
     line-height: 0;
     top: 50%;
     left: 20%;
 }
-.checkbox-repanier label input[type="checkbox"] {
+.repanier-checkbox label input[type="checkbox"] {
     display: none;
 }
-.checkbox-repanier label input[type="checkbox"] + .cr > .cr-icon {
+.repanier-checkbox label input[type="checkbox"] + .cr > .cr-icon {
     transform: scale(3) rotateZ(-20deg);
     opacity: 0;
     transition: all .3s ease-in;
 }
 
-.checkbox-repanier label input[type="checkbox"]:checked + .cr > .cr-icon {
+.repanier-checkbox label input[type="checkbox"]:checked + .cr > .cr-icon {
     transform: scale(1) rotateZ(0deg);
     opacity: 1;
 }
-.checkbox-repanier label input[type="checkbox"]:disabled + .cr {
+.repanier-checkbox label input[type="checkbox"]:disabled + .cr {
     opacity: .5;
 }

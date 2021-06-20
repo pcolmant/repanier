@@ -430,7 +430,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         "producer_unit_price",
         "stock",
     )
-    list_display_links = ("get_long_name_with_producer_price",)
+    list_display_links = ("get_long_name_with_customer_price",)
     list_editable = (
         "producer_unit_price",
         "stock",

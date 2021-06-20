@@ -13,7 +13,7 @@ from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
 )
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
 from repanier.models import Producer
 from repanier.models.customer import Customer
@@ -111,7 +111,7 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
 
 
 class OfferItemPurchaseSendInlineForm(forms.ModelForm):
-    previous_purchase_price = FormMoneyField(
+    previous_purchase_price = FormRepanierMoneyField(
         label=_("Purchase price"),
         max_digits=8,
         decimal_places=2,
@@ -183,7 +183,7 @@ class OfferItemPurchaseSendInline(admin.TabularInline):
 
 
 class OfferItemSendForm(forms.ModelForm):
-    offer_purchase_price = FormMoneyField(
+    offer_purchase_price = FormRepanierMoneyField(
         label=_("Producer amount booked"),
         max_digits=8,
         decimal_places=2,
@@ -208,13 +208,13 @@ class OfferItemSendForm(forms.ModelForm):
         required=False,
         initial=0,
     )
-    previous_producer_unit_price = FormMoneyField(
+    previous_producer_unit_price = FormRepanierMoneyField(
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO
     )
-    previous_customer_unit_price = FormMoneyField(
+    previous_customer_unit_price = FormRepanierMoneyField(
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO
     )
-    previous_unit_deposit = FormMoneyField(
+    previous_unit_deposit = FormRepanierMoneyField(
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO
     )
 

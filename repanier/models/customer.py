@@ -12,7 +12,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import CustomerInvoice
 from repanier.picture.const import SIZE_S
@@ -98,11 +98,11 @@ class Customer(models.Model):
         _("Password reset on"), null=True, blank=True, default=None
     )
     date_balance = models.DateField(_("Date balance"), default=datetime.date.today)
-    balance = ModelMoneyField(
+    balance = ModelRepanierMoneyField(
         _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
     # The initial balance is needed to compute the invoice control list
-    initial_balance = ModelMoneyField(
+    initial_balance = ModelRepanierMoneyField(
         _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
     represent_this_buyinggroup = models.BooleanField(

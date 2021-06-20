@@ -22,7 +22,7 @@ from repanier.const import (
     PERMANENCE_OPENED,
     PERMANENCE_SEND,
 )
-from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
@@ -116,7 +116,7 @@ class Producer(models.Model):
     # is_resale_price_fixed = models.BooleanField(
     #     _("The resale price is fixed"), default=False
     # )
-    minimum_order_value = ModelMoneyField(
+    minimum_order_value = ModelRepanierMoneyField(
         _("Minimum order value"),
         help_text=_("0 mean : no minimum order value."),
         max_digits=8,
@@ -126,10 +126,10 @@ class Producer(models.Model):
     )
 
     date_balance = models.DateField(_("Date_balance"), default=datetime.date.today)
-    balance = ModelMoneyField(
+    balance = ModelRepanierMoneyField(
         _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
-    initial_balance = ModelMoneyField(
+    initial_balance = ModelRepanierMoneyField(
         _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
     represent_this_buyinggroup = models.BooleanField(

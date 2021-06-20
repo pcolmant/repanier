@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import EMPTY_STRING, DECIMAL_ONE
 from repanier.const import REPANIER_MONEY_ZERO
-from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.models import Customer
 from repanier.models import LUT_DeliveryPoint
 from repanier.models.group import Group
@@ -159,7 +159,7 @@ class GroupWithUserDataForm(UserDataForm):
     inform_customer_responsible = forms.BooleanField(
         label=_("Inform the group of orders placed by its members"), required=False
     )
-    transport = FormMoneyField(
+    transport = FormRepanierMoneyField(
         label=_("Delivery point shipping cost"),
         # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
         max_digits=5,
@@ -168,7 +168,7 @@ class GroupWithUserDataForm(UserDataForm):
         initial=REPANIER_MONEY_ZERO,
         required=False,
     )
-    min_transport = FormMoneyField(
+    min_transport = FormRepanierMoneyField(
         label=_("Minimum order amount for free shipping cost"),
         # help_text=_("This is the minimum order amount to avoid shipping cost."),
         max_digits=5,

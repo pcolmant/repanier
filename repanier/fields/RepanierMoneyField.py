@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.expressions import BaseExpression, Expression
 from django.forms import DecimalField
-from repanier.widget.money import MoneyWidget
+from repanier.widget.money import RepanierMoneyWidget
 
 DECIMAL_ZERO = Decimal("0")
 
@@ -183,7 +183,7 @@ class RepanierMoney(object):
         return self.amount.is_finite()
 
 
-class MoneyFieldProxy(object):
+class ModelRepanierMoneyFieldProxy(object):
     def __init__(self, field):
         self.field = field
 
@@ -217,9 +217,9 @@ class MoneyFieldProxy(object):
             obj.__dict__[self.field.name] = self.field.to_python(value)
 
 
-class ModelMoneyField(models.DecimalField):
+class ModelRepanierMoneyField(models.DecimalField):
     def formfield(self, **kwargs):
-        kwargs.update({"form_class": FormMoneyField})
+        kwargs.update({"form_class": FormRepanierMoneyField})
         return super().formfield(**kwargs)
 
     def to_python(self, value):
@@ -242,11 +242,11 @@ class ModelMoneyField(models.DecimalField):
         super().contribute_to_class(
             cls, name, private_only=private_only
         )
-        setattr(cls, self.name, MoneyFieldProxy(self))
+        setattr(cls, self.name, ModelRepanierMoneyFieldProxy(self))
 
 
-class FormMoneyField(DecimalField):
-    widget = MoneyWidget
+class FormRepanierMoneyField(DecimalField):
+    widget = RepanierMoneyWidget
 
     def __init__(self, *, max_value=None, min_value=None, max_digits=None, decimal_places=None, **kwargs):
         # Important : add "localize"

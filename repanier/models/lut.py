@@ -8,7 +8,7 @@ from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
 
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.picture.const import SIZE_XS
 from repanier.picture.fields import RepanierPictureField
 
@@ -132,7 +132,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     inform_customer_responsible = models.BooleanField(
         _("Inform the group of orders placed by its members"), default=False
     )
-    transport = ModelMoneyField(
+    transport = ModelRepanierMoneyField(
         _("Delivery point shipping cost"),
         default=DECIMAL_ZERO,
         blank=True,
@@ -140,7 +140,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         decimal_places=2,
         validators=[MinValueValidator(0)],
     )
-    min_transport = ModelMoneyField(
+    min_transport = ModelRepanierMoneyField(
         _("Minimum order amount for free shipping cost"),
         # help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO,

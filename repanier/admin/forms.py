@@ -6,7 +6,7 @@ from djangocms_text_ckeditor.widgets import TextEditorWidget
 from recurrence.forms import RecurrenceField
 
 from repanier.const import REPANIER_MONEY_ZERO, EMPTY_STRING
-from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.models.producer import Producer
 from repanier.tools import get_repanier_template_name
 
@@ -120,14 +120,14 @@ class ProducerInvoicedForm(forms.Form):
     short_profile_name = forms.CharField(
         label=_("Short name"), max_length=25, required=False
     )
-    calculated_invoiced_balance = FormMoneyField(
+    calculated_invoiced_balance = FormRepanierMoneyField(
         label=_("Amount due to the producer as calculated by Repanier"),
         max_digits=8,
         decimal_places=2,
         required=False,
         initial=REPANIER_MONEY_ZERO,
     )
-    to_be_invoiced_balance = FormMoneyField(
+    to_be_invoiced_balance = FormRepanierMoneyField(
         label=_("Amount claimed by the producer"),
         max_digits=8,
         decimal_places=2,

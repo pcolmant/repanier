@@ -10,7 +10,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.tools import create_or_update_one_cart_item, round_gov_be
 
@@ -28,21 +28,21 @@ class Invoice(models.Model):
     date_previous_balance = models.DateField(
         _("Date previous balance"), default=datetime.date.today
     )
-    previous_balance = ModelMoneyField(
+    previous_balance = ModelRepanierMoneyField(
         _("Previous balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
     # Calculated with Purchase
-    total_price_with_tax = ModelMoneyField(
+    total_price_with_tax = ModelRepanierMoneyField(
         _("Invoiced TVAC"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
     )
-    delta_price_with_tax = ModelMoneyField(
+    delta_price_with_tax = ModelRepanierMoneyField(
         _("Total amount"),
         help_text=_("Purchase to add amount w VAT"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
-    delta_transport = ModelMoneyField(
+    delta_transport = ModelRepanierMoneyField(
         _("Delivery point shipping cost"),
         help_text=_("Transport to add"),
         default=DECIMAL_ZERO,
@@ -50,27 +50,27 @@ class Invoice(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0)],
     )
-    total_vat = ModelMoneyField(
+    total_vat = ModelRepanierMoneyField(
         _("VAT"), default=DECIMAL_ZERO, max_digits=9, decimal_places=4
     )
-    delta_vat = ModelMoneyField(
+    delta_vat = ModelRepanierMoneyField(
         _("VAT to add"), default=DECIMAL_ZERO, max_digits=9, decimal_places=4
     )
-    total_deposit = ModelMoneyField(
+    total_deposit = ModelRepanierMoneyField(
         _("Deposit"),
         help_text=_("Surcharge"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
-    bank_amount_in = ModelMoneyField(
+    bank_amount_in = ModelRepanierMoneyField(
         _("Cash in"),
         help_text=_("Payment on the account"),
         max_digits=8,
         decimal_places=2,
         default=DECIMAL_ZERO,
     )
-    bank_amount_out = ModelMoneyField(
+    bank_amount_out = ModelRepanierMoneyField(
         _("Cash out"),
         help_text=_("Payment from the account"),
         max_digits=8,
@@ -78,7 +78,7 @@ class Invoice(models.Model):
         default=DECIMAL_ZERO,
     )
     date_balance = models.DateField(_("Date balance"), default=datetime.date.today)
-    balance = ModelMoneyField(
+    balance = ModelRepanierMoneyField(
         _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
 
@@ -142,7 +142,7 @@ class CustomerInvoice(Invoice):
         blank=True,
         validators=[MinValueValidator(0)],
     )
-    transport = ModelMoneyField(
+    transport = ModelRepanierMoneyField(
         _("Delivery point shipping cost"),
         help_text=_(
             "This amount is added once for groups with entitled customer or at each customer for open groups."
@@ -152,7 +152,7 @@ class CustomerInvoice(Invoice):
         decimal_places=2,
         validators=[MinValueValidator(0)],
     )
-    min_transport = ModelMoneyField(
+    min_transport = ModelRepanierMoneyField(
         _("Minimum order amount for free shipping cost"),
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO,
@@ -875,27 +875,27 @@ class ProducerInvoice(Invoice):
         on_delete=models.PROTECT,
     )
 
-    delta_stock_with_tax = ModelMoneyField(
+    delta_stock_with_tax = ModelRepanierMoneyField(
         _("Amount deducted from the stock"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
 
-    delta_stock_vat = ModelMoneyField(
+    delta_stock_vat = ModelRepanierMoneyField(
         _("Total VAT deducted from the stock"),
         default=DECIMAL_ZERO,
         max_digits=9,
         decimal_places=4,
     )
-    delta_deposit = ModelMoneyField(
+    delta_deposit = ModelRepanierMoneyField(
         _("Deposit"),
         help_text=_("+ Deposit"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
-    delta_stock_deposit = ModelMoneyField(
+    delta_stock_deposit = ModelRepanierMoneyField(
         _("Deposit"),
         help_text=_("+ Deposit"),
         default=DECIMAL_ZERO,
@@ -906,13 +906,13 @@ class ProducerInvoice(Invoice):
     to_be_paid = models.BooleanField(
         _("To be booked"), choices=LUT_BANK_NOTE, default=False
     )
-    calculated_invoiced_balance = ModelMoneyField(
+    calculated_invoiced_balance = ModelRepanierMoneyField(
         _("Amount due to the producer as calculated by Repanier"),
         max_digits=8,
         decimal_places=2,
         default=DECIMAL_ZERO,
     )
-    to_be_invoiced_balance = ModelMoneyField(
+    to_be_invoiced_balance = ModelRepanierMoneyField(
         _("Amount claimed by the producer"),
         max_digits=8,
         decimal_places=2,
@@ -981,7 +981,7 @@ class CustomerProducerInvoice(models.Model):
         "Permanence", verbose_name=_("Sale"), on_delete=models.PROTECT, db_index=True
     )
     # Calculated with Purchase
-    total_purchase_with_tax = ModelMoneyField(
+    total_purchase_with_tax = ModelRepanierMoneyField(
         _("Producer amount booked"),
         help_text=_("Total selling amount vat included"),
         default=DECIMAL_ZERO,
@@ -989,7 +989,7 @@ class CustomerProducerInvoice(models.Model):
         decimal_places=2,
     )
     # Calculated with Purchase
-    total_selling_with_tax = ModelMoneyField(
+    total_selling_with_tax = ModelRepanierMoneyField(
         _("Invoiced to the customer w TVA"),
         help_text=_("Total selling amount vat included"),
         default=DECIMAL_ZERO,

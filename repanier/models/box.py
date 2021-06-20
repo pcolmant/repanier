@@ -4,7 +4,7 @@ from django.db.models import Sum, DecimalField
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.product import Product
 
 
@@ -95,13 +95,13 @@ class BoxContent(models.Model):
         decimal_places=3,
         validators=[MinValueValidator(0)],
     )
-    calculated_customer_content_price = ModelMoneyField(
+    calculated_customer_content_price = ModelRepanierMoneyField(
         _("Calculated customer tariff"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
-    calculated_content_deposit = ModelMoneyField(
+    calculated_content_deposit = ModelRepanierMoneyField(
         _("Content deposit"),
         help_text=_("Surcharge"),
         default=DECIMAL_ZERO,

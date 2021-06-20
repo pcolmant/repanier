@@ -8,7 +8,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.box import BoxContent
 from repanier.models.invoice import (
     CustomerInvoice,
@@ -101,20 +101,20 @@ class Purchase(models.Model):
     quantity_invoiced = models.DecimalField(
         _("Quantity invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )
-    purchase_price = ModelMoneyField(
+    purchase_price = ModelRepanierMoneyField(
         _("Producer row price"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
-    selling_price = ModelMoneyField(
+    selling_price = ModelRepanierMoneyField(
         _("Customer row price"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
 
-    producer_vat = ModelMoneyField(
+    producer_vat = ModelRepanierMoneyField(
         _("VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=4
     )
-    customer_vat = ModelMoneyField(
+    customer_vat = ModelRepanierMoneyField(
         _("VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=4
     )
-    deposit = ModelMoneyField(
+    deposit = ModelRepanierMoneyField(
         _("Deposit"),
         help_text=_("Deposit to add to the original unit price"),
         default=DECIMAL_ZERO,

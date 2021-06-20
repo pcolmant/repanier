@@ -1,14 +1,14 @@
 <span class="repanier-money-input-container">
     {% if not repanier_currency_after %}
-        <span class="repanier-money-input-icon">{{ repanier_currency_str | safe }}</span>{% endif %}
+        <span class="repanier-money-input-icon">{{ repanier_currency_str | safe }}</span>
+    {% endif %}
     {#    {% include "django/forms/widgets/input.html" %}#}
     <input type="text" name="{{ widget.name }}" class="repanier-money-input-field"
            {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
-    {#            {% include "django/forms/widgets/attrs.html" %}#}
-    {% for name, value in widget.attrs.items %}{% if value is not False %}
-        {{ name }}{% if value is not True %}="{{ value|stringformat:'s' }}"{% endif %}{% endif %}{% endfor %}
-    oninput="this.value=evaluateAsFloat(this.value)">
-
+           oninput="this.value=evaluateAsFloat(this.value)"
+            {% include "django/forms/widgets/attrs.html" %}
+    >
     {% if repanier_currency_after %}
-        <span class="repanier-money-input-icon">{{ repanier_currency_str | safe }}</span>{% endif %}
+        <span class="repanier-money-input-icon">{{ repanier_currency_str | safe }}</span>
+    {% endif %}
 </span>

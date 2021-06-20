@@ -16,7 +16,7 @@ from repanier.const import (
     LUT_VAT,
     REPANIER_MONEY_ZERO,
 )
-from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
 from repanier.models.box import BoxContent, Box
 from repanier.models.offeritem import OfferItemReadOnly
@@ -120,14 +120,14 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
 
 
 class BoxForm(forms.ModelForm):
-    calculated_customer_box_price = FormMoneyField(
+    calculated_customer_box_price = FormRepanierMoneyField(
         label=_("Customer rate per unit calculated"),
         max_digits=8,
         decimal_places=2,
         required=False,
         initial=REPANIER_MONEY_ZERO,
     )
-    calculated_box_deposit = FormMoneyField(
+    calculated_box_deposit = FormRepanierMoneyField(
         label=_("Calculated deposit per unit"),
         max_digits=8,
         decimal_places=2,

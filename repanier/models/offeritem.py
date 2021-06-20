@@ -12,7 +12,7 @@ from repanier.const import (
     EMPTY_STRING,
     PRODUCT_ORDER_UNIT_KG,
 )
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.item import Item
 
 
@@ -73,14 +73,14 @@ class OfferItem(Item):
     )
 
     # Calculated with Purchase : Total producer purchase price vat included
-    total_purchase_with_tax = ModelMoneyField(
+    total_purchase_with_tax = ModelRepanierMoneyField(
         _("Producer amount invoiced"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
     # Calculated with Purchase : Total customer selling price vat included
-    total_selling_with_tax = ModelMoneyField(
+    total_selling_with_tax = ModelRepanierMoneyField(
         _("Invoiced to the customer w TVA"),
         default=DECIMAL_ZERO,
         max_digits=8,

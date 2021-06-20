@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 
 
 class BankAccount(models.Model):
@@ -41,7 +41,7 @@ class BankAccount(models.Model):
         verbose_name=_("Account balance status"),
         db_index=True,
     )
-    bank_amount_in = ModelMoneyField(
+    bank_amount_in = ModelRepanierMoneyField(
         _("Cash in"),
         help_text=_("Payment on the account"),
         max_digits=8,
@@ -49,7 +49,7 @@ class BankAccount(models.Model):
         default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)],
     )
-    bank_amount_out = ModelMoneyField(
+    bank_amount_out = ModelRepanierMoneyField(
         _("Cash out"),
         help_text=_("Payment from the account"),
         max_digits=8,

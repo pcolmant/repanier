@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
 from repanier.models.offeritem import OfferItemSend, OfferItem
 from repanier.models.permanence import Permanence
@@ -121,7 +121,7 @@ class CustomerPurchaseSendInlineFormSet(BaseInlineFormSet):
 
 
 class CustomerPurchaseSendInlineForm(forms.ModelForm):
-    previous_purchase_price = FormMoneyField(
+    previous_purchase_price = FormRepanierMoneyField(
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO
     )
     previous_offer_item = forms.ModelChoiceField(
@@ -210,14 +210,14 @@ class CustomerPurchaseSendInline(admin.TabularInline):
 
 
 class CustomerSendForm(forms.ModelForm):
-    offer_purchase_price = FormMoneyField(
+    offer_purchase_price = FormRepanierMoneyField(
         label=_("Producer amount invoiced"),
         max_digits=8,
         decimal_places=2,
         required=False,
         initial=REPANIER_MONEY_ZERO,
     )
-    offer_selling_price = FormMoneyField(
+    offer_selling_price = FormRepanierMoneyField(
         label=_("Invoiced to the customer including VAT"),
         max_digits=8,
         decimal_places=2,
