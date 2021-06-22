@@ -365,23 +365,20 @@ class Customer(models.Model):
         if last_customer_invoice.exists():
             if balance.amount >= 30:
                 return format_html(
-                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
-                    reverse("repanier:customer_invoice_view", args=(0,)),
-                    str(self.id),
+                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
+                    reverse("repanier:customer_invoice_view_with_customer", args=(0, self.id, )),
                     balance,
                 )
             elif balance.amount >= -10:
                 return format_html(
-                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
-                    reverse("repanier:customer_invoice_view", args=(0,)),
-                    str(self.id),
+                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
+                    reverse("repanier:customer_invoice_view_with_customer", args=(0, self.id, )),
                     balance,
                 )
             else:
                 return format_html(
-                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
-                    reverse("repanier:customer_invoice_view", args=(0,)),
-                    str(self.id),
+                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
+                    reverse("repanier:customer_invoice_view_with_customer", args=(0, self.id, )),
                     balance,
                 )
         else:

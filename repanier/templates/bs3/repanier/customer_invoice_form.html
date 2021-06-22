@@ -139,7 +139,7 @@
                     {% if next_customer_invoice_id %}
                         <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id %}"
                            class="btn btn-info btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
-                        <a href="{% url 'repanier:customer_invoice_view' 0 %}?customer={{ object.customer.id }}"
+                        <a href="{% url 'repanier:customer_invoice_view_with_customer' 0 object.customer_id %}"
                            class="btn btn-info btn-disabled"> <span class="glyphicon glyphicon-arrow-right"></span>
                             <span class="glyphicon glyphicon-arrow-right"></span> </a>
                     {% endif %}
@@ -310,10 +310,10 @@
     {% endif %}
 </div>
 {% addtoblock "lastjs" %}
-    {% if not next_customer_invoice_id %}
+    {% if object and not next_customer_invoice_id %}
     <script>
         $(document).ready(function () {
-            var lien = '{% url 'repanier:customer_basket_message_form_ajax' %}';
+            var lien = "{% url 'repanier:customer_basket_message_form_ajax' object.id %}";
             $.ajax({
                 url: lien,
                 cache: false,

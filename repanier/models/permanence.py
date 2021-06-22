@@ -420,9 +420,8 @@ class Permanence(TranslatableModel):
                 # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                 # Such that they can be accessed by the customer and by the staff
                 customers_html.append(
-                    '<a href="{}?customer={}" target="_blank">{}</a>'.format(
-                        reverse("repanier:customer_invoice_view", args=(ci.id,)),
-                        ci.customer_id,
+                    '<a href="{}" target="_blank">{}</a>'.format(
+                        reverse("repanier:customer_invoice_view_with_customer", args=(ci.id, ci.customer_id,)),
                         label.replace(" ", "&nbsp;"),
                     )
                 )

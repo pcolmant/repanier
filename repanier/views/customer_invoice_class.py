@@ -30,9 +30,6 @@ class CustomerInvoiceView(DetailView):
             context["purchase_set"] = purchase_set
             purchase_by_other_set = Purchase.objects.none()
             context["purchase_by_other_set"] = purchase_by_other_set
-            # if self.request.user.is_staff:
-            #     raise Http404
-            # else:
             customer = Customer.objects.filter(id=self.request.user.customer_id)
             context["customer"] = customer
             context["download_invoice"] = False
@@ -55,7 +52,6 @@ class CustomerInvoiceView(DetailView):
             purchase_by_other_set = (
                 Purchase.objects.filter(
                     customer_invoice__customer_charged_id=customer_invoice.customer_id,
-                    # customer_charged_id=customer_invoice.customer_id,
                     permanence_id=customer_invoice.permanence_id,
                 )
                 .exclude(customer_id=customer_invoice.customer_id)
@@ -99,29 +95,31 @@ class CustomerInvoiceView(DetailView):
             if next_customer_invoice is not None:
                 context["next_customer_invoice_id"] = next_customer_invoice.id
             context["customer"] = customer_invoice.customer
-            context["download_invoice"] = (
-                Purchase.objects.filter(
-                    customer_invoice__customer_charged_id=customer_invoice.customer_id,
-                    # customer_charged_id=customer_invoice.customer_id,
-                    permanence_id=customer_invoice.permanence_id,
-                )
-                .order_by("?")
-                .exists()
-            )
+            context["download_invoice"] = Purchase.objects.filter(
+                customer_invoice__customer_charged_id=customer_invoice.customer_id,
+                permanence_id=customer_invoice.permanence_id,
+            ).exists()
         return context
 
     def get_queryset(self):
         pk = self.kwargs.get("pk", 0)
         user = self.request.user
-        if user.is_staff:
-            customer_id = self.request.GET.get("customer", user.customer_id)
+        if user.is_repanier_staff:
+            if pk == 0:
+                customer_id = self.kwargs.get("customer_id", user.customer_id)
+            else:
+                customer_id = (
+                    CustomerInvoice.objects.filter(id=pk)
+                    .only("customer_id")
+                    .first()
+                    .customer_id
+                )
         else:
             customer_id = user.customer_id
         if pk == 0:
             last_customer_invoice = (
                 CustomerInvoice.objects.filter(
-                    customer_id=customer_id,
-                    invoice_sort_order__isnull=False
+                    customer_id=customer_id, invoice_sort_order__isnull=False
                 )
                 .only("id")
                 .order_by("-invoice_sort_order")

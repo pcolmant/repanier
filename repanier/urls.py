@@ -145,7 +145,7 @@ urlpatterns = [
     path("ajax/delivery-select/", delivery_select_ajax, name="delivery_select_ajax"),
     path("ajax/permanence/", task_form_ajax, name="task_form_ajax"),
     path(
-        "ajax/customer-basket-message/",
+        "ajax/customer-basket-message/<int:customer_invoice_id>/",
         customer_basket_message_form_ajax,
         name="customer_basket_message_form_ajax",
     ),
@@ -176,6 +176,11 @@ urlpatterns = [
     path("ajax/is-into-offer/<int:product_id>/", is_into_offer, name="is_into_offer"),
     path("ajax/test-mail-config/", test_mail_config_ajax, name="test_mail_config_ajax"),
     path("permanence/", never_cache(PermanenceView.as_view()), name="permanence_view"),
+    path(
+        "customer-invoice/<int:pk>/<int:customer_id>",
+        login_required(CustomerInvoiceView.as_view()),
+        name="customer_invoice_view_with_customer",
+    ),
     path(
         "customer-invoice/<int:pk>/",
         login_required(CustomerInvoiceView.as_view()),
