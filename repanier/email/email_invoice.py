@@ -24,9 +24,7 @@ def send_invoice(permanence_id):
     if REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER:
         # To the producer we speak of "payment".
         # This is the detail of the payment to the producer, i.e. received products
-        for producer in Producer.objects.filter(permanence_id=permanence.id).order_by(
-            "?"
-        ):
+        for producer in Producer.objects.filter(permanence_id=permanence.id):
             to_email = []
             if producer.email:
                 to_email.append(producer.email)
@@ -35,7 +33,7 @@ def send_invoice(permanence_id):
             if producer.email3:
                 to_email.append(producer.email3)
             if to_email:
-                to_email = list(set(to_email + invoice_responsible["to_email"]))
+                # to_email = list(set(to_email + invoice_responsible["to_email"]))
                 long_profile_name = (
                     producer.long_profile_name
                     if producer.long_profile_name is not None
@@ -45,7 +43,6 @@ def send_invoice(permanence_id):
                     Purchase.objects.filter(
                         permanence_id=permanence.id, producer_id=producer.id
                     )
-                    .order_by("?")
                     .exists()
                 ):
                     invoice_producer_mail = config.invoice_producer_mail_v2
@@ -85,9 +82,9 @@ def send_invoice(permanence_id):
         invoice_description = permanence.invoice_description_v2
         for customer in Customer.objects.filter(
             customerinvoice__permanence_id=permanence.id,
-            customerinvoice__customer_charged_id=F("customer_id"),
+            customerinvoice__customer_charged_id=F("id"),
             represent_this_buyinggroup=False,
-        ).order_by("?"):
+        ):
             long_basket_name = (
                 customer.long_basket_name
                 if customer.long_basket_name is not None
@@ -98,13 +95,12 @@ def send_invoice(permanence_id):
                     permanence_id=permanence.id,
                     customer_invoice__customer_charged_id=customer.id,
                 )
-                .order_by("?")
                 .exists()
             ):
                 to_email = [customer.user.email]
                 if customer.email2:
                     to_email.append(customer.email2)
-                to_email = list(set(to_email + invoice_responsible["to_email"]))
+                # to_email = list(set(to_email + invoice_responsible["to_email"]))
 
                 invoice_customer_mail = config.invoice_customer_mail_v2
                 invoice_customer_mail_subject = "{} - {}".format(

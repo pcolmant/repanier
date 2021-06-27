@@ -41,7 +41,7 @@ def send_mail_to_coordinators_view(request):
             selected_staff_members = form.cleaned_data.get("staff")
             for staff in Staff.objects.filter(
                 is_active=True, can_be_contacted=True, id__in=selected_staff_members
-            ).order_by("?"):
+            ):
                 to_email = list(set(to_email + staff.get_to_email))
 
             email = RepanierEmail(

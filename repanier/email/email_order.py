@@ -68,16 +68,16 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             )
             html_body = template.render(context)
 
+            to_email = []
+
             if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD:
-                to_email = []
                 for permanence_board in PermanenceBoard.objects.filter(
                     permanence_id=permanence.id
                 ):
                     if permanence_board.customer:
                         to_email.append(permanence_board.customer.user.email)
-                to_email = list(set(to_email + order_responsible["to_email"]))
-            else:
-                to_email = list(set(order_responsible["to_email"]))
+
+            to_email = list(set(to_email + order_responsible["to_email"]))
 
             email = RepanierEmail(
                 subject=order_staff_mail_subject,
@@ -256,7 +256,7 @@ def export_order_2_1_group(
         to_email = [group.user.email]
         if group.email2:
             to_email.append(group.email2)
-        to_email = list(set(to_email + order_responsible["to_email"]))
+        # to_email = list(set(to_email + order_responsible["to_email"]))
 
         email = RepanierEmail(
             subject=order_customer_mail_subject,
