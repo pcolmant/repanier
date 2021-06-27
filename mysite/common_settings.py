@@ -44,13 +44,15 @@ DJANGO_SETTINGS_SITE_NAME = PROJECT_DIR.name
 # PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 # PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
-print("---- common_settings.py - Python path is : ", sys.path)
+# print("---- common_settings.py - Python path is : ", sys.path)
 
 conf_file_name = PROJECT_DIR / (DJANGO_SETTINGS_SITE_NAME + ".ini")
-print("---- common_settings.py - conf_file_name : ", conf_file_name)
+
 if not conf_file_name.exists():
-    print("---- common_settings.py - Settings file %s not found", conf_file_name)
+    print("---- common_settings.py - /!\ settings file <{}> not found".format(conf_file_name))
     raise SystemExit(-1)
+else:
+    print("---- common_settings.py - settings file is : <{}>".format(conf_file_name))
 
 config = configparser.ConfigParser()
 config.read(conf_file_name, encoding="utf-8")
@@ -123,7 +125,7 @@ REPANIER_SETTINGS_COORDINATOR_NAME = config.get(
 REPANIER_SETTINGS_COORDINATOR_PHONE = config.get(
     "REPANIER_SETTINGS",
     "REPANIER_SETTINGS_COORDINATOR_PHONE",
-    fallback="+32 499 96 64 32",
+    fallback="+32 475 73 11 35",
 )
 REPANIER_SETTINGS_COUNTRY = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_COUNTRY", fallback="be"
@@ -140,9 +142,6 @@ REPANIER_SETTINGS_DELIVERY_POINT = config.getboolean(
 if REPANIER_SETTINGS_DELIVERY_POINT:
     REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = True
 
-REPANIER_SETTINGS_GROUP = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_GROUP", fallback=False
-)
 REPANIER_SETTINGS_MANAGE_ACCOUNTING = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_MANAGE_ACCOUNTING", fallback=True
 )
@@ -171,15 +170,13 @@ REPANIER_SETTINGS_STOCK = True
 REPANIER_SETTINGS_PRODUCT_LABEL = True
 REPANIER_SETTINGS_IS_MINIMALIST = False
 REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE = True
-REPANIER_SETTINGS_GROUP = REPANIER_SETTINGS_DELIVERY_POINT
 
 ALLOWED_HOSTS = []
 for name in config.options("ALLOWED_HOSTS"):
     allowed_host = config.get("ALLOWED_HOSTS", name)
     ALLOWED_HOSTS.append(allowed_host)
 
-print("---- common_settings.py - Settings loaded from: {}".format(conf_file_name))
-print("---- common_settings.py - Allowed hosts: {}".format(ALLOWED_HOSTS))
+# print("---- common_settings.py - Allowed hosts: {}".format(ALLOWED_HOSTS))
 # REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
 REPANIER_SETTINGS_GROUP_NAME = config.get(
     "REPANIER_SETTINGS",
@@ -200,14 +197,14 @@ STATICFILES_STORAGE = "{}.big_blind_static.BigBlindManifestStaticFilesStorage".f
 
 # Directory where working files, such as media and databases are kept
 MEDIA_DIR = PROJECT_DIR / "media"
-print("---- common_settings.py - media dir : {}".format(MEDIA_DIR))
+# print("---- common_settings.py - media dir : {}".format(MEDIA_DIR))
 MEDIA_PUBLIC_DIR = MEDIA_DIR / "public"
-print("---- common_settings.py - media public dir : {}".format(MEDIA_PUBLIC_DIR))
+# print("---- common_settings.py - media public dir : {}".format(MEDIA_PUBLIC_DIR))
 MEDIA_ROOT = MEDIA_PUBLIC_DIR
 MEDIA_URL = "/media/"
 
 STATIC_DIR = PROJECT_DIR / "collect-static"
-print("---- common_settings.py - static dir : {}".format(STATIC_DIR))
+# print("---- common_settings.py - static dir : {}".format(STATIC_DIR))
 STATIC_ROOT = STATIC_DIR
 STATIC_URL = "/static/"
 
@@ -230,11 +227,11 @@ REPANIER_SETTINGS_BRANDING_CSS_PATH = get_repanier_css_name(
     os.path.join("css", "branding.css")
 )
 
-print(
-    "---- common_settings.py - bootstrap css path : {}".format(
-        REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
-    )
-)
+# print(
+#     "---- common_settings.py - bootstrap css path : {}".format(
+#         REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
+#     )
+# )
 
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
