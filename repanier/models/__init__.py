@@ -14,7 +14,7 @@ from .offeritem import OfferItem
 from .permanence import Permanence
 from .permanenceboard import PermanenceBoard
 from .producer import Producer
-from .product import Product, Product_Translation
+from .product import Product
 from .purchase import Purchase
 from .staff import Staff
 

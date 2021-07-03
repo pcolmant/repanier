@@ -1,6 +1,5 @@
 import logging
 
-import repanier.apps
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -283,7 +282,6 @@ class Purchase(models.Model):
                     permanence_id=self.permanence_id, producer_id=self.producer_id
                 )
                 .only("id")
-                .order_by("?")
                 .first()
             )
             if producer_invoice is None:
@@ -300,7 +298,6 @@ class Purchase(models.Model):
                     producer_id=self.producer_id,
                 )
                 .only("id")
-                .order_by("?")
                 .first()
             )
             if customer_producer_invoice is None:
@@ -315,21 +312,16 @@ class Purchase(models.Model):
     @transaction.atomic
     def save_box(self):
         if self.offer_item.is_box:
-            for content in BoxContent.objects.filter(
-                box_id=self.offer_item.product_id
-            ):
+            for content in BoxContent.objects.filter(box_id=self.offer_item.product_id):
                 content_offer_item = content.product.get_or_create_offer_item(
                     self.permanence
                 )
                 # Select one purchase
-                content_purchase = (
-                    Purchase.objects.filter(
-                        customer_id=self.customer_id,
-                        offer_item_id=content_offer_item.id,
-                        is_box_content=True,
-                    )
-                    .first()
-                )
+                content_purchase = Purchase.objects.filter(
+                    customer_id=self.customer_id,
+                    offer_item_id=content_offer_item.id,
+                    is_box_content=True,
+                ).first()
                 if content_purchase is None:
                     content_purchase = Purchase.objects.create(
                         permanence=self.permanence,
@@ -355,7 +347,11 @@ class Purchase(models.Model):
                 content_purchase.permanence.producers.add(content_offer_item.producer)
 
     def __str__(self):
-        return "{} > {} > {}".format(self.permanence, self.customer, self.offer_item.get_long_name_with_customer_price())
+        return "{} > {} > {}".format(
+            self.permanence,
+            self.customer,
+            self.offer_item.get_long_name_with_customer_price(),
+        )
         # Use to not display label (inline_admin_form.original) into the inline form (tabular.html)
         # return EMPTY_STRING
 

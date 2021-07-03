@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.query import QuerySet
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -6,17 +7,14 @@ from djangocms_text_ckeditor.fields import HTMLField
 from mptt.fields import TreeForeignKey
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel
-from parler.managers import TranslatableQuerySet, TranslatableManager
-from parler.models import TranslatableModel, TranslatedFields
-
 from repanier.const import *
 
 
-class StaffQuerySet(TranslatableQuerySet):
+class StaffQuerySet(QuerySet):
     pass
 
 
-class StaffManager(TreeManager, TranslatableManager):
+class StaffManager(TreeManager):
     queryset_class = StaffQuerySet
 
     def get_queryset(self):
@@ -27,7 +25,7 @@ class StaffManager(TreeManager, TranslatableManager):
         )
 
 
-class Staff(MPTTModel, TranslatableModel):
+class Staff(MPTTModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
     )
@@ -40,22 +38,10 @@ class Staff(MPTTModel, TranslatableModel):
         blank=False,
     )
     login_attempt_counter = models.DecimalField(
-        _("Sign in attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
-    )
-    translations = TranslatedFields(
-        long_name=models.CharField(
-            _("Long name"),
-            max_length=100,
-            db_index=True,
-            blank=True,
-            default=EMPTY_STRING,
-        ),
-        function_description=HTMLField(
-            _("Function description"),
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            blank=True,
-            default=EMPTY_STRING,
-        ),
+        _("Sign in attempt counter"),
+        default=DECIMAL_ZERO,
+        max_digits=2,
+        decimal_places=0,
     )
     long_name_v2 = models.CharField(
         _("Long name"),
@@ -75,7 +61,9 @@ class Staff(MPTTModel, TranslatableModel):
     is_order_manager = models.BooleanField(
         _("Offers in preparation manager"), default=False
     )
-    is_invoice_manager = models.BooleanField(_("Offers in payment manager"), default=False)
+    is_invoice_manager = models.BooleanField(
+        _("Offers in payment manager"), default=False
+    )
     is_webmaster = models.BooleanField(_("Webmaster"), default=False)
     is_other_manager = models.BooleanField(_("Other responsibility"), default=False)
     can_be_contacted = models.BooleanField(_("Can be contacted"), default=True)
@@ -123,9 +111,7 @@ class Staff(MPTTModel, TranslatableModel):
         signature = []
         html_signature = []
         to_email = []
-        order_responsible_qs = cls.objects.filter(
-            is_active=True, is_order_manager=True
-        ).order_by("?")
+        order_responsible_qs = cls.objects.filter(is_active=True, is_order_manager=True)
         if not order_responsible_qs.exists():
             order_responsible = Staff.get_or_create_any_coordinator()
             order_responsible.is_active = True
@@ -153,7 +139,7 @@ class Staff(MPTTModel, TranslatableModel):
         to_email = []
         invoice_responsible_qs = cls.objects.filter(
             is_active=True, is_invoice_manager=True
-        ).order_by("?")
+        )
         if not invoice_responsible_qs.exists():
             invoice_responsible = Staff.get_or_create_any_coordinator()
             invoice_responsible.is_active = True

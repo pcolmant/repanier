@@ -8,21 +8,23 @@ from django.template import Template
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
-from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 
 logger = logging.getLogger(__name__)
 
 
-class Configuration(TranslatableModel):
+class Configuration(models.Model):
     group_name = models.CharField(
         _("Name of the group"),
         max_length=50,
         default=settings.REPANIER_SETTINGS_GROUP_NAME,
     )
     login_attempt_counter = models.DecimalField(
-        _("Sign in attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
+        _("Sign in attempt counter"),
+        default=DECIMAL_ZERO,
+        max_digits=2,
+        decimal_places=0,
     )
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None
@@ -94,84 +96,6 @@ class Configuration(TranslatableModel):
     permanence_of_last_cancelled_invoice = models.ForeignKey(
         "Permanence", on_delete=models.PROTECT, blank=True, null=True
     )
-    translations = TranslatedFields(
-        group_label=models.CharField(
-            _("Label to mention on the invoices of the group"),
-            max_length=100,
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        how_to_register=HTMLField(
-            _("How to register"),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        offer_customer_mail=HTMLField(
-            _(
-                "Contents of the order opening email sent to consumers authorized to order"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        order_customer_mail=HTMLField(
-            _(
-                "Content of the order confirmation email sent to the consumers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        cancel_order_customer_mail=HTMLField(
-            _(
-                "Content of the email in case of cancellation of the order sent to the consumers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        order_staff_mail=HTMLField(
-            _(
-                "Content of the order distribution email sent to the members enrolled to a task"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        order_producer_mail=HTMLField(
-            _(
-                "Content of the order confirmation email sent to the producers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        invoice_customer_mail=HTMLField(
-            _(
-                "Content of the invoice confirmation email sent to the customers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        invoice_producer_mail=HTMLField(
-            _(
-                "Content of the payment confirmation email sent to the producers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-    )
     group_label_v2 = models.CharField(
         _("Label to mention on the invoices of the group"),
         max_length=100,
@@ -241,32 +165,32 @@ class Configuration(TranslatableModel):
 
     def clean(self):
         try:
-            template = Template(self.offer_customer_mail_v2)
+            _ = Template(self.offer_customer_mail_v2)
         except Exception as error_str:
             raise ValidationError(
                 mark_safe("{} : {}".format(self.offer_customer_mail_V2, error_str))
             )
         try:
-            template = Template(self.order_customer_mail_v2)
+            _ = Template(self.order_customer_mail_v2)
         except Exception as error_str:
             raise ValidationError(
                 mark_safe("{} : {}".format(self.order_customer_mail_v2, error_str))
             )
         try:
-            template = Template(self.order_staff_mail_v2)
+            _ = Template(self.order_staff_mail_v2)
         except Exception as error_str:
             raise ValidationError(
                 mark_safe("{} : {}".format(self.order_staff_mail_v2, error_str))
             )
         try:
-            template = Template(self.order_producer_mail_v2)
+            _ = Template(self.order_producer_mail_v2)
         except Exception as error_str:
             raise ValidationError(
                 mark_safe("{} : {}".format(self.order_producer_mail_v2, error_str))
             )
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             try:
-                template = Template(self.invoice_customer_mail_v2)
+                _ = Template(self.invoice_customer_mail_v2)
             except Exception as error_str:
                 raise ValidationError(
                     mark_safe(
@@ -274,7 +198,7 @@ class Configuration(TranslatableModel):
                     )
                 )
             try:
-                template = Template(self.invoice_producer_mail_v2)
+                _ = Template(self.invoice_producer_mail_v2)
             except Exception as error_str:
                 raise ValidationError(
                     mark_safe(
@@ -327,25 +251,21 @@ class Configuration(TranslatableModel):
         )
         if webmaster_group is None:
             webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
-        content_types = (
-            ContentType.objects.exclude(
-                app_label__in=[
-                    "admin",
-                    "auth",
-                    "contenttypes",
-                    "menus",
-                    "recurrence",
-                    "repanier",
-                    "reversion",
-                    "sessions",
-                    "sites",
-                ]
-            )
-            .only("id")
-        )
-        permissions = (
-            Permission.objects.filter(content_type__in=content_types)
-            .only("id")
+        content_types = ContentType.objects.exclude(
+            app_label__in=[
+                "admin",
+                "auth",
+                "contenttypes",
+                "menus",
+                "recurrence",
+                "repanier",
+                "reversion",
+                "sessions",
+                "sites",
+            ]
+        ).only("id")
+        permissions = Permission.objects.filter(content_type__in=content_types).only(
+            "id"
         )
         webmaster_group.permissions.set(permissions)
 
@@ -360,17 +280,13 @@ class Configuration(TranslatableModel):
         )
         if repanier_group is None:
             repanier_group = Group.objects.create(name=REPANIER_GROUP)
-        content_types = (
-            ContentType.objects.filter(
-                app_label__in=[
-                    "repanier",
-                ]
-            )
-                .only("id")
-        )
-        permissions = (
-            Permission.objects.filter(content_type__in=content_types)
-                .only("id")
+        content_types = ContentType.objects.filter(
+            app_label__in=[
+                "repanier",
+            ]
+        ).only("id")
+        permissions = Permission.objects.filter(content_type__in=content_types).only(
+            "id"
         )
         repanier_group.permissions.set(permissions)
 

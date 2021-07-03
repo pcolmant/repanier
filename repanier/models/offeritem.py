@@ -5,7 +5,6 @@ from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
-from parler.models import TranslatedFields
 
 from repanier.const import (
     DECIMAL_ZERO,
@@ -17,29 +16,13 @@ from repanier.models.item import Item
 
 
 class OfferItem(Item):
-    translations = TranslatedFields(
-        long_name=models.CharField(
-            _("Long name"), max_length=100, default=EMPTY_STRING, blank=True
-        ),
-        cache_part_a=HTMLField(default=EMPTY_STRING, blank=True),
-        cache_part_b=HTMLField(default=EMPTY_STRING, blank=True),
-        # Language dependant customer sort order for optimization
-        order_sort_order=models.IntegerField(default=0, db_index=True),
-        # Language dependant preparation sort order for optimization
-        preparation_sort_order=models.IntegerField(default=0, db_index=True),
-        # Language dependant producer sort order for optimization
-        producer_sort_order=models.IntegerField(default=0, db_index=True),
-    )
     long_name_v2 = models.CharField(
         _("Long name"), max_length=100, default=EMPTY_STRING, blank=True
     )
     cache_part_a_v2 = HTMLField(default=EMPTY_STRING, blank=True)
     cache_part_b_v2 = HTMLField(default=EMPTY_STRING, blank=True)
-    # Language dependant customer sort order for optimization
     order_sort_order_v2 = models.IntegerField(default=0, db_index=True)
-    # Language dependant preparation sort order for optimization
     preparation_sort_order_v2 = models.IntegerField(default=0, db_index=True)
-    # Language dependant producer sort order for optimization
     producer_sort_order_v2 = models.IntegerField(default=0, db_index=True)
     permanence = models.ForeignKey(
         "Permanence",
@@ -106,9 +89,7 @@ class OfferItem(Item):
             )
         return EMPTY_STRING
 
-    get_quantity_invoiced.short_description = _(
-        "Quantity sold"
-    )
+    get_quantity_invoiced.short_description = _("Quantity sold")
     get_quantity_invoiced.admin_order_field = "quantity_invoiced"
 
     def get_producer_unit_price_invoiced(self):
@@ -164,7 +145,7 @@ class OfferItem(Item):
     def get_qty_display(self):
         if self.is_box:
             # To avoid unicode error in email_offer.send_open_order
-            qty_display = EMPTY_STRING # BOX_UNICODE
+            qty_display = EMPTY_STRING  # BOX_UNICODE
         else:
             if self.use_order_unit_converted:
                 # The only conversion done in permanence concerns PRODUCT_ORDER_UNIT_PC_KG
@@ -191,9 +172,6 @@ class OfferItem(Item):
         verbose_name = _("Offer item")
         verbose_name_plural = _("Offer items")
         unique_together = ("permanence", "product")
-        # index_together = [
-        #     ["id", "order_unit"]
-        # ]
 
 
 class OfferItemReadOnly(OfferItem):

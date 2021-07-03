@@ -1,9 +1,7 @@
-from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _
-from parler.models import TranslatableModel
 
 from repanier.const import (
     DECIMAL_ZERO,
@@ -26,7 +24,6 @@ from repanier.const import (
     PRODUCT_PLACEMENT_BASKET,
     LUT_ALL_VAT,
     LIMIT_ORDER_QTY_ITEM,
-    DECIMAL_MAX_STOCK,
     DICT_VAT_DEFAULT,
 )
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelRepanierMoneyField
@@ -34,7 +31,7 @@ from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
 
 
-class Item(TranslatableModel):
+class Item(models.Model):
     producer = models.ForeignKey(
         "Producer", verbose_name=_("Producer"), on_delete=models.PROTECT
     )
@@ -233,39 +230,6 @@ class Item(TranslatableModel):
         else:
             return "{}".format(unit_price)
 
-    # def get_reference_price(self, customer_price=True):
-    #     if (
-    #         self.order_average_weight > DECIMAL_ZERO
-    #         and self.order_average_weight != DECIMAL_ONE
-    #     ):
-    #         if self.order_unit in [
-    #             PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-    #             PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-    #             PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-    #         ]:
-    #             if customer_price:
-    #                 reference_price = (
-    #                     self.customer_unit_price.amount / self.order_average_weight
-    #                 )
-    #             else:
-    #                 reference_price = (
-    #                     self.producer_unit_price.amount / self.order_average_weight
-    #                 )
-    #             reference_price = RepanierMoney(
-    #                 reference_price.quantize(TWO_DECIMALS), 2
-    #             )
-    #             if self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
-    #                 reference_unit = _("/ kg")
-    #             elif self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
-    #                 reference_unit = _("/ l")
-    #             else:
-    #                 reference_unit = _("/ pc")
-    #             return "{} {}".format(reference_price, reference_unit)
-    #         else:
-    #             return EMPTY_STRING
-    #     else:
-    #         return EMPTY_STRING
-
     def get_display(
         self,
         qty=0,
@@ -412,7 +376,6 @@ class Item(TranslatableModel):
             price_display = " = {}".format(RepanierMoney(unit_price_amount * qty))
             display = "{}{}".format(unit_display, price_display)
             return display
-
 
     def get_qty_display(self):
         raise NotImplementedError

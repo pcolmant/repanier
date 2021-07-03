@@ -1,23 +1,21 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.query import QuerySet
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel, TreeForeignKey
-from parler.managers import TranslatableManager, TranslatableQuerySet
-from parler.models import TranslatableModel, TranslatedFields
-
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.picture.const import SIZE_XS
 from repanier.picture.fields import RepanierPictureField
 
 
-class LUT_ProductionModeQuerySet(TranslatableQuerySet):
+class LUT_ProductionModeQuerySet(QuerySet):
     pass
 
 
-class LUT_ProductionModeManager(TreeManager, TranslatableManager):
+class LUT_ProductionModeManager(TreeManager):
     queryset_class = LUT_ProductionModeQuerySet
 
     def get_queryset(self):
@@ -28,20 +26,9 @@ class LUT_ProductionModeManager(TreeManager, TranslatableManager):
         )
 
 
-class LUT_ProductionMode(MPTTModel, TranslatableModel):
+class LUT_ProductionMode(MPTTModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
-    )
-    translations = TranslatedFields(
-        short_name=models.CharField(
-            _("Short name"), max_length=50, default=EMPTY_STRING
-        ),
-        description=HTMLField(
-            _("Description"),
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            blank=True,
-            default=EMPTY_STRING,
-        ),
     )
     short_name_v2 = models.CharField(
         _("Short name"), max_length=50, default=EMPTY_STRING
@@ -64,7 +51,6 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        # return self.short_name
         return self.short_name_v2
 
     class Meta:
@@ -72,11 +58,11 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
         verbose_name_plural = _("Production modes")
 
 
-class LUT_DeliveryPointQuerySet(TranslatableQuerySet):
+class LUT_DeliveryPointQuerySet(QuerySet):
     pass
 
 
-class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
+class LUT_DeliveryPointManager(TreeManager):
     queryset_class = LUT_DeliveryPointQuerySet
 
     def get_queryset(self):
@@ -87,20 +73,9 @@ class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
         )
 
 
-class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
+class LUT_DeliveryPoint(MPTTModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
-    )
-    translations = TranslatedFields(
-        short_name=models.CharField(
-            _("Short name"), max_length=50, default=EMPTY_STRING
-        ),
-        description=HTMLField(
-            _("Description"),
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            blank=True,
-            default=EMPTY_STRING,
-        ),
     )
     short_name_v2 = models.CharField(
         _("Short name"), max_length=50, default=EMPTY_STRING
@@ -142,7 +117,6 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     )
     min_transport = ModelRepanierMoneyField(
         _("Minimum order amount for free shipping cost"),
-        # help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO,
         blank=True,
         max_digits=5,
@@ -175,11 +149,11 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         verbose_name_plural = _("Deliveries points")
 
 
-class LUT_DepartmentForCustomerQuerySet(TranslatableQuerySet):
+class LUT_DepartmentForCustomerQuerySet(QuerySet):
     pass
 
 
-class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
+class LUT_DepartmentForCustomerManager(TreeManager):
     queryset_class = LUT_DepartmentForCustomerQuerySet
 
     def get_queryset(self):
@@ -190,22 +164,11 @@ class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
         )
 
 
-class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
+class LUT_DepartmentForCustomer(MPTTModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
     )
     is_active = models.BooleanField(_("Active"), default=True)
-    translations = TranslatedFields(
-        short_name=models.CharField(
-            _("Short name"), max_length=50, default=EMPTY_STRING
-        ),
-        description=HTMLField(
-            _("Description"),
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            blank=True,
-            default=EMPTY_STRING,
-        ),
-    )
     short_name_v2 = models.CharField(
         _("Short name"), max_length=50, default=EMPTY_STRING
     )
@@ -225,11 +188,11 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
         verbose_name_plural = _("Departments")
 
 
-class LUT_PermanenceRoleQuerySet(TranslatableQuerySet):
+class LUT_PermanenceRoleQuerySet(QuerySet):
     pass
 
 
-class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
+class LUT_PermanenceRoleManager(TreeManager):
     queryset_class = LUT_PermanenceRoleQuerySet
 
     def get_queryset(self):
@@ -240,20 +203,9 @@ class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
         )
 
 
-class LUT_PermanenceRole(MPTTModel, TranslatableModel):
+class LUT_PermanenceRole(MPTTModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
-    )
-    translations = TranslatedFields(
-        short_name=models.CharField(
-            _("Short name"), max_length=50, default=EMPTY_STRING
-        ),
-        description=HTMLField(
-            _("Description"),
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            blank=True,
-            default=EMPTY_STRING,
-        ),
     )
     short_name_v2 = models.CharField(
         _("Short name"), max_length=50, default=EMPTY_STRING

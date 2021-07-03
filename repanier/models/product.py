@@ -3,8 +3,6 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
-from parler.fields import TranslatedField
-from parler.models import TranslatedFieldsModel
 
 from repanier.const import *
 from repanier.models.item import Item
@@ -12,8 +10,6 @@ from repanier.tools import clean_offer_item
 
 
 class Product(Item):
-    long_name = TranslatedField()
-    offer_description = TranslatedField()
     long_name_v2 = models.CharField(
         _("Long name"), max_length=100, default=EMPTY_STRING
     )
@@ -114,7 +110,7 @@ class Product(Item):
     def get_qty_display(self):
         if self.is_box:
             # To avoid unicode error in email_offer.send_open_order
-            qty_display = EMPTY_STRING # BOX_UNICODE
+            qty_display = EMPTY_STRING  # BOX_UNICODE
         else:
             qty_display = self.get_display(
                 qty=1,
@@ -131,16 +127,3 @@ class Product(Item):
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
         unique_together = (("producer", "reference"),)
-
-
-class Product_Translation(TranslatedFieldsModel):
-    master = models.ForeignKey(
-        "Product", related_name="translations", null=True, on_delete=models.CASCADE
-    )
-    long_name = models.CharField(_("Long name"), max_length=100)
-    offer_description = HTMLField(
-        _("Offer_description"), configuration="CKEDITOR_SETTINGS_MODEL2", blank=True
-    )
-
-    class Meta:
-        unique_together = ("language_code", "master")

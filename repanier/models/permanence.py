@@ -14,7 +14,6 @@ from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
-from parler.models import TranslatableModel, TranslatedFields
 from repanier.const import *
 from repanier.middleware import add_filter
 from repanier.models.bankaccount import BankAccount
@@ -44,28 +43,7 @@ refresh_status = [
 ]
 
 
-class Permanence(TranslatableModel):
-    translations = TranslatedFields(
-        short_name=models.CharField(_("Offer name"), max_length=50, blank=True),
-        offer_description=HTMLField(
-            _("Offer description"),
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            help_text=_(
-                "This message is send by mail to all customers when opening the order or on top."
-            ),
-            blank=True,
-            default=EMPTY_STRING,
-        ),
-        invoice_description=HTMLField(
-            _("Invoice description"),
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            help_text=_(
-                "This message is send by mail to all customers having bought something when closing the permanence."
-            ),
-            blank=True,
-            default=EMPTY_STRING,
-        ),
-    )
+class Permanence(models.Model):
     short_name_v2 = models.CharField(_("Offer name"), max_length=50, blank=True)
     offer_description_v2 = HTMLField(
         _("Offer description"),

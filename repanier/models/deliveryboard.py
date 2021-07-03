@@ -2,7 +2,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from parler.models import TranslatableModel, TranslatedFields
 
 from repanier.const import (
     LUT_PERMANENCE_STATUS,
@@ -12,12 +11,7 @@ from repanier.const import (
 )
 
 
-class DeliveryBoard(TranslatableModel):
-    translations = TranslatedFields(
-        delivery_comment=models.CharField(
-            _("Comment"), max_length=50, blank=True, default=EMPTY_STRING
-        )
-    )
+class DeliveryBoard(models.Model):
     delivery_comment_v2 = models.CharField(
         _("Comment"), max_length=50, blank=True, default=EMPTY_STRING
     )
@@ -68,7 +62,12 @@ class DeliveryBoard(TranslatableModel):
     def get_delivery_display(self, color=False):
         short_name = self.delivery_point.short_name_v2
         comment = self.delivery_comment_v2
-        label = " ".join((comment, short_name,))
+        label = " ".join(
+            (
+                comment,
+                short_name,
+            )
+        )
         if color:
             label = mark_safe(
                 '<font color="green">{}</font>'.format(label.replace(" ", "&nbsp;"))

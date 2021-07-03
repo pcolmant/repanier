@@ -20,7 +20,7 @@ from repanier.const import (
     LIMIT_ORDER_QTY_ITEM,
     THREE_DECIMALS,
 )
-from repanier.models import Product, Product_Translation
+from repanier.models import Product
 
 
 @receiver(pre_save, sender=Product)
