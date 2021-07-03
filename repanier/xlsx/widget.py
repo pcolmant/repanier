@@ -303,11 +303,11 @@ class DateWidgetExcel(Widget):
 
     def render(self, value, obj=None):
         if not value:
-            return ""
-        try:
-            return value.strftime(self.formats[0])
-        except:
-            return datetime_safe.new_date(value).strftime(self.formats[0])
+            return EMPTY_STRING
+        if isinstance(value, str):
+            value_as_date = datetime.datetime.strptime(value[:10], self.formats[0]).date()
+            return value_as_date.strftime(self.formats[0])
+        return value.strftime(self.formats[0])
 
 
 class HTMLWidget(CharWidget):
