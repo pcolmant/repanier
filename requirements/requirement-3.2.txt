@@ -5,7 +5,7 @@ Django==3.2.5
 django-classy-tags==2.0.0
 django-cms==3.9.0
 # https://github.com/pcolmant/django-cms/archive/refs/heads/develop.zip
-django-admin-autocomplete-filter=0.7
+django-admin-autocomplete-filter==0.7
 django-autocomplete-light==3.8.2
 django-crispy-forms==1.11.2
 django-debug-toolbar==3.2.1
