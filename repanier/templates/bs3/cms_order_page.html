@@ -319,6 +319,9 @@
                         });
                     }
                 }
+                function clear_select_order_list_ajax() {
+                    saved_offer_item_id = -1;
+                }
                 function show_select_order_list_ajax(offer_item_id) {
                     if(saved_offer_item_id !== offer_item_id) {
                         saved_offer_item_id = offer_item_id;
@@ -354,6 +357,9 @@
                             });
                         }
                     });
+                }
+                function clear_select_delivery_list_ajax() {
+                    saved_delivery_id = -1;
                 }
                 function show_select_delivery_list_ajax(delivery_id) {
                     if(saved_delivery_id !== delivery_id) {

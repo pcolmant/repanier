@@ -61,21 +61,16 @@ class BankAccountResource(resources.ModelResource):
                     instance.bank_amount_out is not None
                     and instance.bank_amount_out != DECIMAL_ZERO
                 ):
-                    only_one_target = (
-                        ProducerInvoice.objects.filter(
-                            status=PERMANENCE_SEND,
-                            total_price_with_tax=instance.bank_amount_out,
-                        )
-                        .order_by("?")
-                        .count()
-                    )
+                    only_one_target = ProducerInvoice.objects.filter(
+                        status=PERMANENCE_SEND,
+                        total_price_with_tax=instance.bank_amount_out,
+                    ).count()
                     if only_one_target == 1:
                         instance.producer = (
                             ProducerInvoice.objects.filter(
                                 status=PERMANENCE_SEND,
                                 total_price_with_tax=instance.bank_amount_out,
                             )
-                            .order_by("?")
                             .first()
                             .producer
                         )
@@ -83,21 +78,16 @@ class BankAccountResource(resources.ModelResource):
                     instance.bank_amount_in is not None
                     and instance.bank_amount_in != DECIMAL_ZERO
                 ):
-                    only_one_target = (
-                        CustomerInvoice.objects.filter(
-                            status=PERMANENCE_SEND,
-                            total_price_with_tax=instance.bank_amount_in,
-                        )
-                        .order_by("?")
-                        .count()
-                    )
+                    only_one_target = CustomerInvoice.objects.filter(
+                        status=PERMANENCE_SEND,
+                        total_price_with_tax=instance.bank_amount_in,
+                    ).count()
                     if only_one_target == 1:
                         instance.customer = (
                             CustomerInvoice.objects.filter(
                                 status=PERMANENCE_SEND,
                                 total_price_with_tax=instance.bank_amount_in,
                             )
-                            .order_by("?")
                             .first()
                             .customer
                         )
@@ -316,11 +306,9 @@ class BankAccountDataForm(forms.ModelForm):
                         "producer", _("Either a customer or a producer must be set.")
                     )
             else:
-                bank_account = (
-                    BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
-                    .order_by("?")
-                    .first()
-                )
+                bank_account = BankAccount.objects.filter(
+                    operation_status=BANK_LATEST_TOTAL
+                ).first()
                 if bank_account:
                     # You may only insert the first latest bank total at initialisation of the website
                     self.add_error(
@@ -344,11 +332,9 @@ class BankAccountDataForm(forms.ModelForm):
             self.add_error(
                 "producer", _("Only one customer or one producer must be given.")
             )
-        latest_total = (
-            BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
-            .order_by("?")
-            .first()
-        )
+        latest_total = BankAccount.objects.filter(
+            operation_status=BANK_LATEST_TOTAL
+        ).first()
         if latest_total is not None:
             operation_date = self.cleaned_data.get("operation_date")
             if operation_date < latest_total.operation_date:

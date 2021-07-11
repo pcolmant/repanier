@@ -20,7 +20,7 @@ from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.purchase import Purchase
-from repanier.tools import rule_of_3_reload_purchase
+from repanier.tools import rule_of_3_reload_purchase, update_offer_item
 
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
@@ -221,21 +221,23 @@ class OfferItemSendForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         offer_item = self.instance
+        product = offer_item.product
+        producer = offer_item.producer
         self.fields[
             "previous_producer_unit_price"
-        ].initial = offer_item.producer_unit_price
+        ].initial = product.producer_unit_price
         self.fields[
             "previous_customer_unit_price"
-        ].initial = offer_item.customer_unit_price
-        self.fields["previous_unit_deposit"].initial = offer_item.unit_deposit
+        ].initial = product.customer_unit_price
+        self.fields["previous_unit_deposit"].initial = product.unit_deposit
         self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax
-        if offer_item.wrapped or offer_item.order_unit not in [
+        if product.wrapped or product.order_unit not in [
             PRODUCT_ORDER_UNIT_KG,
             PRODUCT_ORDER_UNIT_PC_KG,
         ]:
             self.fields["offer_purchase_price"].widget.attrs["readonly"] = True
             self.fields["offer_purchase_price"].disabled = True
-        if offer_item.producer_price_are_wo_vat:
+        if producer.producer_price_are_wo_vat:
             self.fields["offer_purchase_price"].label = _(
                 "Producer amount booked wo VAT"
             )
@@ -253,7 +255,7 @@ class OfferItemSendForm(forms.ModelForm):
         permanence_field.widget = forms.HiddenInput()
 
     def get_readonly_fields(self, request, obj=None):
-        if obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
+        if obj.product.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
             return []
         return [
             "offer_purchase_price",
@@ -280,13 +282,18 @@ class OfferItemSendForm(forms.ModelForm):
                 or previous_customer_unit_price != customer_unit_price
                 or previous_unit_deposit != unit_deposit
             ):
-                offer_item.producer_unit_price = producer_unit_price
-                offer_item.customer_unit_price = customer_unit_price
-                offer_item.unit_deposit = unit_deposit
-                # The previous save is called with "commit=False" or we need to update the producer
-                # to recalculate the offer item prices. So a call to self.instance.save() is required
+                # Important : linked with (1*)
+                # Only update the price of the product and the current offer_item
+                product = offer_item.product
+                product.producer_unit_price = producer_unit_price
+                product.customer_unit_price = customer_unit_price
+                product.unit_deposit = unit_deposit
+                product.save()
+                offer_item.producer_unit_price = product.producer_unit_price
+                offer_item.customer_unit_price = product.customer_unit_price
+                offer_item.unit_deposit = product.unit_deposit
                 offer_item.save()
-                # Important : linked with vvvv
+                # Do not : update_offer_item(product_id=product.id, producer_id=None)
         return offer_item
 
 
@@ -440,7 +447,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 formset.changed_objects = []
             if not hasattr(formset, "deleted_objects"):
                 formset.deleted_objects = []
-        offer_item = OfferItem.objects.filter(id=form.instance.id).order_by("?").first()
+        offer_item = OfferItem.objects.filter(id=form.instance.id).first()
         formset = formsets[0]
         for purchase_form in formset:
             purchase = purchase_form.instance
@@ -453,7 +460,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                         offer_item_id=offer_item.id,
                         is_box_content=False,
                     )
-                    .order_by("?")
                     .first()
                 )
                 if purchase is not None:
@@ -560,7 +566,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 purchase_form.instance.save()
                 purchase_form.instance.save_box()
 
-        # Important : linked with ^^^^^
+        # Important : linked with (1*)
         offer_item.permanence.recalculate_order_amount(
             offer_item_qs=OfferItem.objects.filter(id=offer_item.id)
         )

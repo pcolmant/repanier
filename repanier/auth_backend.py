@@ -4,10 +4,15 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
 from django.db.models import F, Q
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE, WEBMASTER_GROUP, REPANIER_GROUP
+from repanier.const import (
+    DECIMAL_ZERO,
+    DECIMAL_ONE,
+    DECIMAL_THREE,
+    WEBMASTER_GROUP,
+    REPANIER_GROUP,
+)
 from repanier.models import Customer, Staff, Configuration
 
 UserModel = get_user_model()
@@ -17,23 +22,18 @@ class RepanierAuthBackend(ModelBackend):
     user = None
 
     def __init__(self, *args, **kwargs):
-        super(RepanierAuthBackend, self).__init__()
+        super().__init__()
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        user_username = (
-            UserModel.objects.filter(
-                Q(last_name__iexact=username[:150]) | Q(email__iexact=username)
-            )
-            .first()
-        )
+        user_username = UserModel.objects.filter(
+            Q(last_name__iexact=username[:150]) | Q(email__iexact=username)
+        ).first()
         is_superuser = False
         customer = None
         login_attempt_counter = DECIMAL_THREE
         if user_username is not None:
             username = user_username.username
-            customer = (
-                Customer.objects.filter(user_id=user_username.id).first()
-            )
+            customer = Customer.objects.filter(user_id=user_username.id).first()
             if customer is None:
                 is_superuser = True
                 login_attempt_counter = (
@@ -45,9 +45,7 @@ class RepanierAuthBackend(ModelBackend):
             else:
                 login_attempt_counter = customer.login_attempt_counter
 
-        user = super(RepanierAuthBackend, self).authenticate(
-            request, username=username, password=password
-        )
+        user = super().authenticate(request, username=username, password=password)
         if user is None:
             # Failed to log in
             if login_attempt_counter < 20:
@@ -100,7 +98,11 @@ class RepanierAuthBackend(ModelBackend):
         if as_staff.is_webmaster:
             group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
             user.groups.add(group_id)
-        if as_staff.is_order_manager or as_staff.is_invoice_manager or as_staff.is_repanier_admin:
+        if (
+            as_staff.is_order_manager
+            or as_staff.is_invoice_manager
+            or as_staff.is_repanier_admin
+        ):
             group_id = Group.objects.filter(name=REPANIER_GROUP).first()
             user.groups.add(group_id)
         user.save()
@@ -113,9 +115,7 @@ class RepanierAuthBackend(ModelBackend):
                 user_id=user.id, as_staff__isnull=False
             ).exists()
             if is_customer_as_staff:
-                Customer.objects.filter(user_id=user.id).update(
-                    as_staff=None
-                )
+                Customer.objects.filter(user_id=user.id).update(as_staff=None)
                 user.is_staff = False
                 user.groups.clear()
                 user.save()
@@ -215,10 +215,7 @@ class RepanierAuthBackend(ModelBackend):
                     user_or_none = None
             else:
                 RepanierAuthBackend.set_user_right(
-                    user=user_or_none,
-                    is_superuser=True,
-                    staff=None,
-                    customer=None
+                    user=user_or_none, is_superuser=True, staff=None, customer=None
                 )
         self.user = user_or_none
         return user_or_none

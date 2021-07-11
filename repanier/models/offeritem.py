@@ -35,22 +35,6 @@ class OfferItem(Item):
     )
     # is a box content
     is_box_content = models.BooleanField(default=False)
-
-    producer_price_are_wo_vat = models.BooleanField(
-        _("Producer price are without vat"), default=False
-    )
-    price_list_multiplier = models.DecimalField(
-        _(
-            "Coefficient applied to the producer tariff to calculate the customer tariff"
-        ),
-        help_text=_(
-            "This multiplier is applied to each price automatically imported/pushed."
-        ),
-        default=DECIMAL_ZERO,
-        max_digits=5,
-        decimal_places=4,
-        validators=[MinValueValidator(0)],
-    )
     is_resale_price_fixed = models.BooleanField(
         _("The resale price is fixed (boxes, deposit)"), default=False
     )
@@ -81,6 +65,11 @@ class OfferItem(Item):
 
     may_order = models.BooleanField(_("May order"), default=True)
     manage_production = models.BooleanField(default=False)
+
+    def get_q_alert(self, q_previous_order=DECIMAL_ZERO):
+        return self.product.get_q_alert(
+            quantity_invoiced=self.quantity_invoiced - q_previous_order
+        )
 
     def get_quantity_invoiced(self):
         if self.quantity_invoiced != 0:

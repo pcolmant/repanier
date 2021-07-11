@@ -52,9 +52,7 @@ def check_permanence(status, status_str):
             # logger.debug("check_permanence, optional arguments are: {}".format(kwargs))
             # args[0] = self
             # args[1] = request
-            permanence_qs = Permanence.objects.filter(
-                id=kwargs["permanence_id"]
-            ).order_by("?")
+            permanence_qs = Permanence.objects.filter(id=kwargs["permanence_id"])
             permanence = permanence_qs.first()
             if permanence is None:
                 user_message = _("Permanence not found.")
@@ -86,7 +84,7 @@ def check_product(func):
             user_message_level = messages.INFO
             args[0].message_user(args[1], user_message, user_message_level)
             return HttpResponseRedirect(args[0].get_redirect_to_change_list_url())
-        product_qs = Product.objects.filter(id=kwargs["product_id"]).order_by("?")
+        product_qs = Product.objects.filter(id=kwargs["product_id"])
         product = product_qs.first()
         if product is None:
             user_message = _("Product not found.")

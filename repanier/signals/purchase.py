@@ -121,7 +121,6 @@ def purchase_pre_save(sender, **kwargs):
             )
             purchase.offer_item = (
                 OfferItemReadOnly.objects.filter(id=purchase.offer_item_id)
-                .order_by("?")
                 .first()
             )
             CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(

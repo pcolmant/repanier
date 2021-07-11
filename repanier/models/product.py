@@ -1,3 +1,5 @@
+from django.core.validators import MinValueValidator
+
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -6,7 +8,6 @@ from djangocms_text_ckeditor.fields import HTMLField
 
 from repanier.const import *
 from repanier.models.item import Item
-from repanier.tools import clean_offer_item
 
 
 class Product(Item):
@@ -21,6 +22,20 @@ class Product(Item):
     )
     permanences = models.ManyToManyField("Permanence", through="OfferItem", blank=True)
     is_into_offer = models.BooleanField(_("In offer"), default=True)
+    customer_minimum_order_quantity = models.DecimalField(
+        _("Minimum order quantity"),
+        default=DECIMAL_ONE,
+        max_digits=6,
+        decimal_places=3,
+        validators=[MinValueValidator(0)],
+    )
+    customer_increment_order_quantity = models.DecimalField(
+        _("Then quantity of"),
+        default=DECIMAL_ONE,
+        max_digits=6,
+        decimal_places=3,
+        validators=[MinValueValidator(0)],
+    )
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="likes")
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, blank=True)
 
@@ -31,6 +46,34 @@ class Product(Item):
         :return: Integer: Likes for the product
         """
         return self.likes.count()
+
+    def get_q_alert(self, quantity_invoiced=DECIMAL_ZERO):
+        if self.stock > DECIMAL_ZERO:
+            available = self.stock - quantity_invoiced
+            if available < DECIMAL_ZERO:
+                available = DECIMAL_ZERO
+            q_alert = min(LIMIT_ORDER_QTY_ITEM, available)
+        else:
+            if self.order_unit not in [
+                PRODUCT_ORDER_UNIT_PC_KG,
+                PRODUCT_ORDER_UNIT_KG,
+                PRODUCT_ORDER_UNIT_LT,
+            ]:
+                if self.order_unit == PRODUCT_ORDER_UNIT_PC:
+                    q_alert = LIMIT_ORDER_QTY_ITEM
+                else:
+                    q_alert = (
+                        self.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM
+                    ).quantize(THREE_DECIMALS)
+            else:
+                q_alert = (
+                    self.customer_minimum_order_quantity
+                    + (
+                        self.customer_increment_order_quantity
+                        * (LIMIT_ORDER_QTY_ITEM - 1)
+                    )
+                ).quantize(THREE_DECIMALS)
+        return q_alert
 
     @transaction.atomic()
     def get_or_create_offer_item(self, permanence):
@@ -47,13 +90,13 @@ class Product(Item):
                 product_id=self.id,
                 producer_id=self.producer_id,
             )
-        clean_offer_item(permanence, offer_item_qs)
+        permanence.clean_offer_item(offer_item_qs=offer_item_qs)
         if self.is_box:
             # Add box products
-            for box_content in BoxContent.objects.filter(box=self.id).order_by("?"):
+            for box_content in BoxContent.objects.filter(box=self.id):
                 box_offer_item_qs = OfferItem.objects.filter(
                     permanence_id=permanence.id, product_id=box_content.product_id
-                ).order_by("?")
+                )
                 if not box_offer_item_qs.exists():
                     OfferItemReadOnly.objects.create(
                         permanence_id=permanence.id,
@@ -65,7 +108,6 @@ class Product(Item):
                     box_offer_item = box_offer_item_qs.first()
                     box_offer_item.is_box_content = True
                     box_offer_item.save(update_fields=["is_box_content"])
-                clean_offer_item(permanence, box_offer_item_qs)
 
         offer_item = offer_item_qs.first()
         return offer_item

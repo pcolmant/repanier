@@ -52,12 +52,12 @@ class DeliveryBoard(models.Model):
         if self.highest_status < new_status:
             self.highest_status = new_status
         self.save(update_fields=["status", "is_updated_on", "highest_status"])
-        CustomerInvoice.objects.filter(delivery_id=self.id).order_by("?").update(
+        CustomerInvoice.objects.filter(delivery_id=self.id).update(
             status=new_status
         )
         PurchaseWoReceiver.objects.filter(
             customer_invoice__delivery_id=self.id
-        ).order_by("?").update(status=new_status)
+        ).update(status=new_status)
 
     def get_delivery_display(self, color=False):
         short_name = self.delivery_point.short_name_v2

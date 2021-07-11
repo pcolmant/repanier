@@ -18,7 +18,8 @@ from repanier.tools import (
     get_reverse_invoice_unit,
     create_or_update_one_purchase,
     reorder_offer_items,
-    reorder_purchases, round_tva,
+    reorder_purchases,
+    round_tva,
 )
 from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, get_header, get_row
@@ -32,13 +33,9 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
     row_num = 0
 
-    bank_account = (
-        BankAccount.objects.filter(
-            permanence_id=permanence.id, customer__isnull=True, producer__isnull=True
-        )
-        .order_by("?")
-        .first()
-    )
+    bank_account = BankAccount.objects.filter(
+        permanence_id=permanence.id, customer__isnull=True, producer__isnull=True
+    ).first()
     if bank_account is None:
         # Permanence not invoiced yet : Nothing to do
         return wb
@@ -49,13 +46,9 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     for customer in customer_set:
         bank_amount_in = bank_amount_out = DECIMAL_ZERO
         prepared = DECIMAL_ZERO
-        customer_invoice = (
-            CustomerInvoice.objects.filter(
-                customer_id=customer.id, permanence_id=permanence.id
-            )
-            .order_by("?")
-            .first()
-        )
+        customer_invoice = CustomerInvoice.objects.filter(
+            customer_id=customer.id, permanence_id=permanence.id
+        ).first()
         if customer_invoice is not None:
             balance_before = customer_invoice.previous_balance.amount
             bank_amount_in = customer_invoice.bank_amount_in.amount
@@ -132,13 +125,9 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     for producer in producer_set:
         bank_amount_in = bank_amount_out = DECIMAL_ZERO
         prepared = DECIMAL_ZERO
-        producer_invoice = (
-            ProducerInvoice.objects.filter(
-                producer_id=producer.id, permanence_id=permanence.id
-            )
-            .order_by("?")
-            .first()
-        )
+        producer_invoice = ProducerInvoice.objects.filter(
+            producer_id=producer.id, permanence_id=permanence.id
+        ).first()
         if producer_invoice is not None:
             balance_before = -producer_invoice.previous_balance.amount
             bank_amount_in = producer_invoice.bank_amount_in.amount
@@ -574,12 +563,9 @@ def import_invoice_sheet(
                     column_name = _("VAT rate")
                     vat = row[column_name]
                     vat_level = lut_reverse_vat[round_tva(Decimal(vat))]
-                    product = (
-                        Product.objects.filter(
-                            producer_id=producer.id, reference=product_reference
-                        )
-                        .first()
-                    )
+                    product = Product.objects.filter(
+                        producer_id=producer.id, reference=product_reference
+                    ).first()
                     if product is None:
                         product = Product.objects.create(
                             producer=producer, reference=product_reference
@@ -630,7 +616,11 @@ def import_invoice_sheet(
             error = True
             error_msg = _(
                 "Row %(row_num)d : A required column %(column_name)s is missing %(error_msg)s."
-            ) % {"row_num": row_num + 1, "column_name": column_name, "error_msg": str(e)}
+            ) % {
+                "row_num": row_num + 1,
+                "column_name": column_name,
+                "error_msg": str(e),
+            }
         except Exception as e:
             error = True
             error_msg = _("Row %(row_num)d : %(error_msg)s.") % {

@@ -138,6 +138,7 @@ class ProducerInvoicedForm(forms.Form):
         label=_("Invoice reference"), max_length=100, required=False
     )
     producer_price_are_wo_vat = forms.BooleanField(required=False)
+    represent_this_buyinggroup = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -72,7 +72,13 @@ def export_offer_row(product, row_num, ws):
             NumberFormat.FORMAT_TEXT,
             False,
         ),
-        (_("Product"), 60, product.get_long_name_with_customer_price(), NumberFormat.FORMAT_TEXT, False),
+        (
+            _("Product"),
+            60,
+            product.get_long_name_with_customer_price(),
+            NumberFormat.FORMAT_TEXT,
+            False,
+        ),
         (
             _("Producer unit price"),
             10,
@@ -114,7 +120,7 @@ def export_offer_row(product, row_num, ws):
             c.style.borders.bottom.border_style = Border.BORDER_HAIR
     col_num = len(row)
     q_min = product.customer_minimum_order_quantity
-    q_alert = product.customer_alert_order_quantity
+    q_alert = product.get_q_alert()
     q_step = product.customer_increment_order_quantity
     # The q_min cannot be 0. In this case try to replace q_min by q_step.
     # In last ressort by q_alert.

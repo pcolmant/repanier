@@ -22,7 +22,6 @@ class SelectAdminDeliveryWidget(forms.Select):
         for option_value, option_label in self.choices:
             status = (
                 DeliveryBoard.objects.filter(id=option_value)
-                .order_by("?")
                 .only("status")
                 .first()
                 .status

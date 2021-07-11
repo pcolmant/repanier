@@ -50,18 +50,14 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     customerinvoice__delivery_id=delivery.id,
                 )
                 for customer in customer_set:
-                    invoice = (
-                        CustomerInvoice.objects.filter(
-                            permanence=permanence, customer=customer
-                        )
-                        .order_by("?")
-                        .first()
-                    )
+                    invoice = CustomerInvoice.objects.filter(
+                        permanence=permanence, customer=customer
+                    ).first()
                     if invoice is not None and invoice.has_purchase:
                         customer.preparation_order = preparation_order
                         # customer.save(update_fields=['preparation_order'])
                         # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                        Customer.objects.filter(id=customer.id).order_by("?").update(
+                        Customer.objects.filter(id=customer.id).update(
                             preparation_order=preparation_order
                         )
                         preparation_order += 1
@@ -122,18 +118,14 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 represent_this_buyinggroup=False,
             )
             for customer in customer_set:
-                invoice = (
-                    CustomerInvoice.objects.filter(
-                        permanence=permanence, customer=customer
-                    )
-                    .order_by("?")
-                    .first()
-                )
+                invoice = CustomerInvoice.objects.filter(
+                    permanence=permanence, customer=customer
+                ).first()
                 if invoice is not None and invoice.has_purchase:
                     customer.preparation_order = preparation_order
                     # customer.save(update_fields=['preparation_order'])
                     # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                    Customer.objects.filter(id=customer.id).order_by("?").update(
+                    Customer.objects.filter(id=customer.id).update(
                         preparation_order=preparation_order
                     )
                     preparation_order += 1
@@ -287,13 +279,9 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
             for producer in Producer.objects.filter(permanence=permanence).order_by(
                 "short_profile_name"
             ):
-                invoice = (
-                    ProducerInvoice.objects.filter(
-                        permanence=permanence, producer=producer
-                    )
-                    .order_by("?")
-                    .first()
-                )
+                invoice = ProducerInvoice.objects.filter(
+                    permanence=permanence, producer=producer
+                ).first()
                 minimum_order_amount_reached = EMPTY_STRING
                 if invoice is None:
                     total_price_with_tax = REPANIER_MONEY_ZERO
@@ -571,7 +559,9 @@ def export_preparation_for_a_delivery(
                                         department_for_customer_save__short_name,
                                     )
                                 else:
-                                    c.value = "{}".format(purchase.get_long_name_with_customer_price())
+                                    c.value = "{}".format(
+                                        purchase.get_long_name_with_customer_price()
+                                    )
                                 c.style.number_format.format_code = (
                                     NumberFormat.FORMAT_TEXT
                                 )
@@ -771,7 +761,9 @@ def export_preparation_for_a_delivery(
                                             department_for_customer_save__short_name,
                                         )
                                     else:
-                                        c.value = "{}".format(purchase.get_long_name_with_customer_price())
+                                        c.value = "{}".format(
+                                            purchase.get_long_name_with_customer_price()
+                                        )
                                     c.style.alignment.wrap_text = True
                                     if count_offer_item != 0:
                                         c.style.font.color.index = "FF939393"
@@ -926,7 +918,6 @@ def export_producer_by_product(permanence, producer, wb=None):
             ProducerInvoice.objects.filter(
                 permanence_id=permanence.id, producer_id=producer.id
             )
-            .order_by("?")
             .only("status")
             .first()
             .status
@@ -1705,7 +1696,9 @@ def export_customer_for_a_delivery(
                                 department_for_customer_save__short_name,
                             )
                         else:
-                            c.value = "{}".format(purchase.get_long_name_with_customer_price())
+                            c.value = "{}".format(
+                                purchase.get_long_name_with_customer_price()
+                            )
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.alignment.wrap_text = True
                         c.style.borders.bottom.border_style = Border.BORDER_THIN

@@ -158,12 +158,12 @@ class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
         customer = Customer.objects.filter(id=customer_id).first()
         if customer is not None:
 
-            if customer.delivery_point is not None:
+            if customer.group is not None:
                 # The customer is member of a group
                 qs = DeliveryBoard.objects.filter(
                     Q(
                         permanence_id=permanence_id,
-                        delivery_point_id=customer.delivery_point_id,
+                        delivery_point__group_id=customer.group_id,
                     )
                     | Q(
                         permanence_id=permanence_id,
@@ -187,13 +187,27 @@ class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
     def get_result_label(self, item):
         permanence_id = self.forwarded.get("permanence", None)
         customer_id = self.forwarded.get("customer", None)
-        customer_invoice = CustomerInvoice.objects.filter(
-            permanence_id=permanence_id,
-            customer_id=customer_id,
-        ).only("delivery_id").first()
+        customer_invoice = (
+            CustomerInvoice.objects.filter(
+                permanence_id=permanence_id,
+                customer_id=customer_id,
+            )
+            .only("delivery_id")
+            .first()
+        )
         if customer_invoice is not None and customer_invoice.delivery_id == item.id:
-            return mark_safe("<i class='fas fa-shopping-basket'></i> <i class='fas fa-arrow-right'></i> {}".format(item.get_delivery_display()))
+            return mark_safe(
+                "<i class='fas fa-shopping-basket'></i> <i class='fas fa-arrow-right'></i> {}".format(
+                    item.get_delivery_display()
+                )
+            )
         return item.get_delivery_display()
+
+
+class OfferItemAutocompleteChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.get_long_name_with_customer_price()
+
 
 class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -205,7 +219,11 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
         ).order_by("department_for_customer", "long_name_v2")
 
         if self.q:
-            qs = qs.filter(long_name_v2__icontains=self.q)
+            qs = qs.filter(
+                Q(long_name_v2__icontains=self.q)
+                | Q(producer__short_profile_name__icontains=self.q)
+                | Q(product__department_for_customer__short_name_v2__icontains=self.q)
+            )
 
         return qs
 
@@ -275,8 +293,8 @@ class PurchaseForm(forms.ModelForm):
             },
         ),
     )
-    offer_item = forms.ModelChoiceField(
-        label=_("Offer item"),
+    offer_item = OfferItemAutocompleteChoiceField(
+        label=_("Customer rate"),
         queryset=OfferItem.objects.all(),
         required=True,
         widget=autocomplete.ModelSelect2(

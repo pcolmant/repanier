@@ -38,7 +38,7 @@ def automatically_open():
 def open_order(permanence_id, send_mail=True):
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
-    permanence = Permanence.objects.filter(id=permanence_id).order_by("?").first()
+    permanence = Permanence.objects.filter(id=permanence_id).first()
     permanence.set_status(
         old_status=PERMANENCE_PLANNED, new_status=PERMANENCE_WAIT_FOR_OPEN
     )
@@ -46,17 +46,15 @@ def open_order(permanence_id, send_mail=True):
     # Create offer items which can be purchased depending on selection in the admin
     producers_in_this_permanence = (
         Producer.objects.filter(permanence=permanence, is_active=True)
-        .order_by("?")
         .only("id")
     )
     product_queryset = Product.objects.filter(
         producer__in=producers_in_this_permanence, is_box=False, is_into_offer=True
-    ).order_by("?")
+    )
     for product in product_queryset:
         product.get_or_create_offer_item(permanence)
     boxes_in_this_permanence = (
         Box.objects.filter(permanence=permanence, is_active=True)
-        .order_by("?")
         .only("id")
     )
     for box in boxes_in_this_permanence:
@@ -78,7 +76,7 @@ def open_order(permanence_id, send_mail=True):
     for producer in permanence.producers.all():
         producer_invoice = ProducerInvoice.objects.filter(
             permanence_id=permanence.id, producer_id=producer.id
-        ).order_by("?")
+        )
         if not producer_invoice.exists():
             ProducerInvoice.objects.create(
                 permanence_id=permanence.id,
@@ -110,7 +108,6 @@ def automatically_closed():
                     permanence_id=permanence.id, status=PERMANENCE_OPENED
                 )
                 .values_list("id", flat=True)
-                .order_by("?")
             )
         else:
             deliveries_id = ()
@@ -130,7 +127,6 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
 
     permanence = (
         Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED)
-        .order_by("?")
         .first()
     )
     if permanence is None:

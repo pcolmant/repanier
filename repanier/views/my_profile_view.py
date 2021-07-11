@@ -68,7 +68,6 @@ class CustomerForm(forms.Form):
         qs = (
             user_model.objects.filter(email=email1, is_staff=False)
             .exclude(id=self.request.user.id)
-            .order_by("?")
         )
         if qs.exists():
             self.add_error(
@@ -126,7 +125,7 @@ def my_profile_view(request):
                 # Important : place this code after because form = CustomerForm(data, request=request) delete form.cleaned_data
                 email = form.cleaned_data.get("email1")
                 user_model = get_user_model()
-                user = user_model.objects.filter(email=email).order_by("?").first()
+                user = user_model.objects.filter(email=email).first()
                 if user is None or user.email != email:
                     # user.email != email for case unsensitive SQL query
                     customer.user.username = customer.user.email = email.lower()

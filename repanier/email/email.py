@@ -125,10 +125,10 @@ class RepanierEmail(EmailMultiAlternatives):
                 # customer.valid_email = valid_email
                 # customer.save(update_fields=['valid_email'])
                 # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                Customer.objects.filter(id=customer.id).order_by("?").update(
+                Customer.objects.filter(id=customer.id).update(
                     valid_email=email_send
                 )
-            time.sleep(min(1, 1 + random()))
+            time.sleep(min(1, 1 + int(random())))
 
         return email_send
 
@@ -163,7 +163,7 @@ class RepanierEmail(EmailMultiAlternatives):
         except SMTPServerDisconnected:
             return "SMTPServerDisconnected"
         except SMTPAuthenticationError:
-            return "SMTPAuthenticationError : usser {}, password {}".format(
+            return "SMTPAuthenticationError : user {}, password {}".format(
                 settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD
             )
         except SMTPSenderRefused:

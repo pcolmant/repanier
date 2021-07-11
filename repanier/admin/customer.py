@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX, XLS
+from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget, ForeignKeyWidget
 from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models.customer import Customer
@@ -193,16 +193,13 @@ class CustomerResource(resources.ModelResource):
         user_model = get_user_model()
         user_email_qs = user_model.objects.filter(
             email=instance.user.email, is_staff=False
-        ).order_by("?")
+        )
         user_username_qs = user_model.objects.filter(
             username=instance.short_basket_name
-        ).order_by("?")
+        )
         if instance.id is not None:
             customer = (
-                Customer.objects.filter(id=instance.id)
-                .order_by("?")
-                .only("id", "user_id")
-                .first()
+                Customer.objects.filter(id=instance.id).only("id", "user_id").first()
             )
             user_email_qs = user_email_qs.exclude(id=customer.user_id)
             user_username_qs = user_username_qs.exclude(id=customer.user_id)
@@ -576,7 +573,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
+        return [f for f in (XLSX, CSV) if f().can_import()]
 
     def get_export_formats(self):
         """

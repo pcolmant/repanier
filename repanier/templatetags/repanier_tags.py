@@ -182,7 +182,9 @@ def repanier_user_bs3(context, *args, **kwargs):
                 )
             nodes.append('<li class="divider"></li>')
         nodes.append(
-            '<li><a href="{}">{}</a></li>'.format(reverse("repanier:logout"), _("Logout"))
+            '<li><a href="{}">{}</a></li>'.format(
+                reverse("repanier:logout"), _("Logout")
+            )
         )
         nodes.append("</ul></li>")
 
@@ -192,7 +194,6 @@ def repanier_user_bs3(context, *args, **kwargs):
             producer = (
                 Producer.objects.filter(offer_uuid=p_offer_uuid)
                 .only("long_profile_name")
-                .order_by("?")
                 .first()
             )
             if producer is not None:
@@ -283,7 +284,7 @@ def repanier_permanence_title(*args, **kwargs):
     result = EMPTY_STRING
     p_permanence_id = sint(kwargs.get("permanence_id", 0))
     if p_permanence_id > 0:
-        permanence = Permanence.objects.filter(id=p_permanence_id).order_by("?").first()
+        permanence = Permanence.objects.filter(id=p_permanence_id).first()
         if permanence is not None:
             result = permanence.get_permanence_display()
         else:
@@ -296,7 +297,7 @@ def repanier_html_permanence_title(*args, **kwargs):
     result = EMPTY_STRING
     p_permanence_id = sint(kwargs.get("permanence_id", 0))
     if p_permanence_id > 0:
-        permanence = Permanence.objects.filter(id=p_permanence_id).order_by("?").first()
+        permanence = Permanence.objects.filter(id=p_permanence_id).first()
         if permanence is not None:
             result = permanence.get_html_permanence_title_display()
         else:
@@ -312,7 +313,6 @@ def repanier_display_task(*args, **kwargs):
         permanence_board = (
             PermanenceBoard.objects.filter(id=p_task_id)
             .select_related("permanence_role")
-            .order_by("?")
             .first()
         )
         if permanence_board is not None:
@@ -328,9 +328,7 @@ def repanier_select_task(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     result = EMPTY_STRING
-    customer = (
-        Customer.objects.filter(id=user.customer_id, may_order=True).first()
-    )
+    customer = Customer.objects.filter(id=user.customer_id, may_order=True).first()
     if customer is not None:
         p_task_id = sint(kwargs.get("task_id", 0))
         if p_task_id > 0:
@@ -410,7 +408,6 @@ def repanier_select_offer_item(context, *args, **kwargs):
                 offer_item_id=offer_item.id,
                 is_box_content=True,
             )
-            .order_by("?")
             .only("quantity_ordered")
             .first()
         )
@@ -430,9 +427,10 @@ def repanier_select_offer_item(context, *args, **kwargs):
 def select_offer_item(offer_item, result, user):
     purchase = (
         PurchaseWoReceiver.objects.filter(
-            customer_id=user.customer_id, offer_item_id=offer_item.id, is_box_content=False
+            customer_id=user.customer_id,
+            offer_item_id=offer_item.id,
+            is_box_content=False,
         )
-        .order_by("?")
         .only("quantity_ordered")
         .first()
     )
@@ -442,19 +440,15 @@ def select_offer_item(offer_item, result, user):
             offer_item, purchase.quantity_ordered, is_open=is_open
         )
     else:
-        is_open = (
-            ProducerInvoice.objects.filter(
-                permanence__offeritem=offer_item.id,
-                producer__offeritem=offer_item.id,
-                status=PERMANENCE_OPENED,
-            )
-            .order_by("?")
-            .exists()
-        )
+        is_open = ProducerInvoice.objects.filter(
+            permanence__offeritem=offer_item.id,
+            producer__offeritem=offer_item.id,
+            status=PERMANENCE_OPENED,
+        ).exists()
         html = get_html_selected_value(offer_item, DECIMAL_ZERO, is_open=is_open)
     if is_open:
         result.append(
-            '<select name="offer_item{id}" id="offer_item{id}" onchange="order_ajax({id})" onmouseover="show_select_order_list_ajax({id})" class="form-control">{option}</select>'.format(
+            '<select name="offer_item{id}" id="offer_item{id}" onchange="order_ajax({id})" onmouseover="show_select_order_list_ajax({id})" onmouseout="clear_select_order_list_ajax()" class="form-control">{option}</select>'.format(
                 id=offer_item.id, option=html
             )
         )
@@ -472,7 +466,7 @@ def repanier_btn_like(context, *args, **kwargs):
     user = request.user
     result = EMPTY_STRING
     customer_is_active = (
-        Customer.objects.filter(user_id=user.id, is_active=True).order_by("?").exists()
+        Customer.objects.filter(user_id=user.id, is_active=True).exists()
     )
     if customer_is_active:
         offer_item = kwargs.get("offer_item", None)

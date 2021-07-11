@@ -55,7 +55,7 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
             return User.objects.filter(
                 Q(username__iexact=email[:150], is_active=True)
                 | Q(email__iexact=email, is_active=True)
-            ).order_by("?")
+            )
         else:
             return User.objects.none()
 
@@ -101,7 +101,6 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
             else:
                 customer = (
                     Customer.objects.filter(user=self.user, is_active=True)
-                    .order_by("?")
                     .first()
                 )
                 if customer is not None:

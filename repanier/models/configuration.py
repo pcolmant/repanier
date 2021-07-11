@@ -246,9 +246,7 @@ class Configuration(models.Model):
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
 
-        webmaster_group = (
-            Group.objects.filter(name=WEBMASTER_GROUP).only("id").order_by("?").first()
-        )
+        webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only("id").first()
         if webmaster_group is None:
             webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
         content_types = ContentType.objects.exclude(
@@ -275,9 +273,7 @@ class Configuration(models.Model):
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
 
-        repanier_group = (
-            Group.objects.filter(name=REPANIER_GROUP).only("id").order_by("?").first()
-        )
+        repanier_group = Group.objects.filter(name=REPANIER_GROUP).only("id").first()
         if repanier_group is None:
             repanier_group = Group.objects.create(name=REPANIER_GROUP)
         content_types = ContentType.objects.filter(

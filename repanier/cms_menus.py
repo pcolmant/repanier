@@ -75,13 +75,9 @@ class PermanenceMenu(Menu):
         return nodes
 
     def append_permanence_board(self, nodes, parent_node, submenu_id):
-        permanence_board_set = (
-            PermanenceBoard.objects.filter(
-                permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
-            )
-            .only("id")
-            .order_by("?")
-        )
+        permanence_board_set = PermanenceBoard.objects.filter(
+            permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
+        ).only("id")
         separator_needed = False
         if permanence_board_set.exists():
             submenu_id += 1

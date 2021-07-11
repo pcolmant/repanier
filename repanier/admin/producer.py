@@ -1,6 +1,5 @@
 from collections import OrderedDict
 
-import repanier.apps
 from django import forms
 from django.conf import settings
 from django.conf.urls import url
@@ -13,7 +12,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX, XLS
+from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget
 from repanier.admin.forms import ImportStockForm
 from repanier.admin.tools import check_cancel_in_post
@@ -28,8 +27,6 @@ from repanier.xlsx.widget import (
     IdWidget,
     TwoDecimalsWidget,
     DecimalBooleanWidget,
-    TwoMoneysWidget,
-    DateWidgetExcel,
 )
 from repanier.xlsx.xlsx_invoice import export_invoice
 from repanier.xlsx.xlsx_product import export_customer_prices
@@ -39,6 +36,8 @@ from repanier.xlsx.xlsx_stock import handle_uploaded_stock, export_producer_stoc
 class ProducerResource(resources.ModelResource):
 
     id = fields.Field(attribute="id", widget=IdWidget(), readonly=True)
+    short_name = fields.Field(attribute="short_profile_name")
+    long_name = fields.Field(attribute="long_profile_name")
     phone1 = fields.Field(attribute="phone1", widget=CharWidget(), readonly=False)
     phone2 = fields.Field(attribute="phone2", widget=CharWidget(), readonly=False)
 
@@ -47,12 +46,6 @@ class ProducerResource(resources.ModelResource):
         default=DECIMAL_ONE,
         widget=TwoDecimalsWidget(),
         readonly=False,
-    )
-    date_balance = fields.Field(
-        attribute="get_admin_date_balance", widget=DateWidgetExcel(), readonly=True
-    )
-    balance = fields.Field(
-        attribute="get_admin_balance", widget=TwoMoneysWidget(), readonly=True
     )
     invoice_by_basket = fields.Field(
         attribute="invoice_by_basket",
@@ -65,12 +58,6 @@ class ProducerResource(resources.ModelResource):
         default=False,
         widget=DecimalBooleanWidget(),
         readonly=False,
-    )
-    represent_this_buyinggroup = fields.Field(
-        attribute="represent_this_buyinggroup",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=True,
     )
     reference_site = fields.Field(attribute="reference_site", readonly=True)
 
@@ -94,14 +81,13 @@ class ProducerResource(resources.ModelResource):
         model = Producer
         fields = (
             "id",
-            "short_profile_name",
-            "long_profile_name",
+            "short_name",
+            "long_name",
             "email",
             "email2",
             "email3",
             "phone1",
             "phone2",
-            "fax",
             "address",
             "invoice_by_basket",
             "sort_products_by_reference",
@@ -109,15 +95,12 @@ class ProducerResource(resources.ModelResource):
             "price_list_multiplier",
             "reference_site",
             "bank_account",
-            "date_balance",
-            "balance",
-            "represent_this_buyinggroup",
         )
         export_order = fields
         import_id_fields = ("id",)
         skip_unchanged = True
         report_skipped = False
-        use_transactions = False
+        use_transactions = True
 
 
 def create__producer_action(year):
@@ -151,8 +134,6 @@ def create__producer_action(year):
 
 
 class ProducerDataForm(forms.ModelForm):
-    from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
-
     permanences = forms.ModelMultipleChoiceField(
         Permanence.objects.filter(status=PERMANENCE_PLANNED),
         label=_("Sales"),
@@ -464,7 +445,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
+        return [f for f in (XLSX, CSV) if f().can_import()]
 
     def get_export_formats(self):
         """

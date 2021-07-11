@@ -42,7 +42,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "get_vat_level_display",
             "customer_minimum_order_quantity",
             "customer_increment_order_quantity",
-            "customer_alert_order_quantity",
             "wrapped",
             "stock",
             "label",
@@ -74,17 +73,13 @@ def product_rest(request, producer_short_profile_name, reference):
     Retrieve, update or delete a code snippet.
     """
     if request.method == "GET":
-        product = (
-            Product.objects.filter(
-                reference=reference,
-                producer__short_profile_name=producer_short_profile_name.decode(
-                    "unicode-escape"
-                ),
-                order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,
-            )
-            .order_by("?")
-            .first()
-        )
+        product = Product.objects.filter(
+            reference=reference,
+            producer__short_profile_name=producer_short_profile_name.decode(
+                "unicode-escape"
+            ),
+            order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,
+        ).first()
         if product is not None:
             serializer = ProductSerializer(product)
             return JsonResponse(serializer.data)

@@ -137,27 +137,15 @@ class Customer(models.Model):
     )
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
-    # TODO : TBD
-    delivery_point = models.ForeignKey(
-        "LUT_DeliveryPoint",
-        verbose_name=_("Delivery point"),
-        blank=True,
-        null=True,
-        default=None,
-        on_delete=models.CASCADE,
-    )
-
     @classmethod
     def get_or_create_group(cls):
-        customer_buyinggroup = (
-            Customer.objects.filter(represent_this_buyinggroup=True)
-            .order_by("?")
-            .first()
-        )
+        customer_buyinggroup = Customer.objects.filter(
+            represent_this_buyinggroup=True
+        ).first()
         if customer_buyinggroup is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
-            user = User.objects.filter(username=short_name).order_by("?").first()
+            user = User.objects.filter(username=short_name).first()
             if user is None:
                 user = User.objects.create_user(
                     username=short_name,
@@ -186,7 +174,7 @@ class Customer(models.Model):
             long_name = settings.REPANIER_SETTINGS_COORDINATOR_NAME
             # short_name is the first word of long_name, limited to max. 25 characters
             short_name = long_name.split(None, 1)[0][:25]
-            user = User.objects.filter(username=short_name).order_by("?").first()
+            user = User.objects.filter(username=short_name).first()
             if user is None:
                 user = User.objects.create_user(
                     username=short_name,
@@ -212,7 +200,6 @@ class Customer(models.Model):
                 Q(user__email=email_address) | Q(email2=email_address)
             )
             .exclude(valid_email=False)
-            .order_by("?")
             .first()
         )
         return customer
@@ -269,34 +256,29 @@ class Customer(models.Model):
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = (
-                CustomerInvoice.objects.filter(
-                    customer_id=self.id,
-                    status__gte=PERMANENCE_OPENED,
-                    status__lte=PERMANENCE_SEND,
-                    customer_charged_id=self.id,
-                )
-                .order_by("?")
-                .aggregate(
-                    total_price=Sum(
-                        "total_price_with_tax",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+            result_set = CustomerInvoice.objects.filter(
+                customer_id=self.id,
+                status__lte=PERMANENCE_SEND,
+                customer_charged_id=self.id,
+            ).aggregate(
+                total_price=Sum(
+                    "total_price_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    delta_price=Sum(
-                        "delta_price_with_tax",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                delta_price=Sum(
+                    "delta_price_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    delta_transport=Sum(
-                        "delta_transport",
-                        output_field=DecimalField(
-                            max_digits=5, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                delta_transport=Sum(
+                    "delta_transport",
+                    output_field=DecimalField(
+                        max_digits=5, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
             total_price = (
                 result_set["total_price"]
@@ -322,25 +304,21 @@ class Customer(models.Model):
 
     def get_bank_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = (
-                BankAccount.objects.filter(
-                    customer_id=self.id, customer_invoice__isnull=True
-                )
-                .order_by("?")
-                .aggregate(
-                    bank_in=Sum(
-                        "bank_amount_in",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+            result_set = BankAccount.objects.filter(
+                customer_id=self.id, customer_invoice__isnull=True
+            ).aggregate(
+                bank_in=Sum(
+                    "bank_amount_in",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    bank_out=Sum(
-                        "bank_amount_out",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                bank_out=Sum(
+                    "bank_amount_out",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
             bank_in = (
                 result_set["bank_in"]
@@ -358,36 +336,34 @@ class Customer(models.Model):
         return RepanierMoney(bank_not_invoiced)
 
     def get_balance(self):
-        last_customer_invoice = CustomerInvoice.objects.filter(
+        any_customer_invoice = CustomerInvoice.objects.filter(
             customer_id=self.id, invoice_sort_order__isnull=False
-        ).order_by("?")
+        )
+
         balance = self.get_admin_balance()
-        if last_customer_invoice.exists():
-            if balance.amount >= 30:
-                return format_html(
-                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
-                    reverse("repanier:customer_invoice_view_with_customer", args=(0, self.id, )),
-                    balance,
-                )
-            elif balance.amount >= -10:
-                return format_html(
-                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
-                    reverse("repanier:customer_invoice_view_with_customer", args=(0, self.id, )),
-                    balance,
-                )
-            else:
-                return format_html(
-                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
-                    reverse("repanier:customer_invoice_view_with_customer", args=(0, self.id, )),
-                    balance,
-                )
+
+        if balance.amount >= 30:
+            color = "#32CD32"
+        elif balance.amount >= -10:
+            color = "#696969"
         else:
-            if balance.amount >= 30:
-                return format_html('<span style="color:#32CD32">{}</span>', balance)
-            elif balance.amount >= -10:
-                return format_html('<span style="color:#696969">{}</span>', balance)
-            else:
-                return format_html('<span style="color:red">{}</span>', balance)
+            color = "red"
+
+        if any_customer_invoice.exists():
+            return format_html(
+                '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:{}">{}</span></a>',
+                reverse(
+                    "repanier:customer_invoice_view_with_customer",
+                    args=(
+                        0,
+                        self.id,
+                    ),
+                ),
+                color,
+                balance,
+            )
+        else:
+            return format_html('<span style="color:{}">{}</span>', color, balance)
 
     get_balance.short_description = _("Balance")
     get_balance.admin_order_field = "balance"

@@ -189,13 +189,9 @@ class CustomerInvoice(Invoice):
 
     @classmethod
     def get_or_create_invoice(cls, permanence, customer, delivery):
-        customer_invoice = (
-            CustomerInvoice.objects.filter(
-                permanence_id=permanence.id, customer_id=customer.id
-            )
-            .order_by("?")
-            .first()
-        )
+        customer_invoice = CustomerInvoice.objects.filter(
+            permanence_id=permanence.id, customer_id=customer.id
+        ).first()
         if customer_invoice is None:
             customer_invoice = CustomerInvoice.objects.create(
                 permanence_id=permanence.id,
@@ -256,11 +252,11 @@ class CustomerInvoice(Invoice):
             else:
                 delivery_id = 0
 
-                if self.customer.delivery_point is not None:
+                if self.customer.group is not None:
                     qs = DeliveryBoard.objects.filter(
                         Q(
                             permanence_id=permanence.id,
-                            delivery_point_id=self.customer.delivery_point_id,
+                            delivery_point__group_id=self.customer.group_id,
                             status=PERMANENCE_OPENED,
                         )
                         | Q(
@@ -378,7 +374,7 @@ class CustomerInvoice(Invoice):
 
             msg_delivery = """
             {}<b><i>
-            <select name=\"delivery\" id=\"delivery\" onmouseover=\"show_select_delivery_list_ajax({})\" onchange=\"delivery_ajax()\" class=\"form-control\">
+            <select name=\"delivery\" id=\"delivery\" onmouseover=\"show_select_delivery_list_ajax({})\" onmouseout=\"clear_select_delivery_list_ajax()\" onchange=\"delivery_ajax()\" class=\"form-control\">
             <option value=\"{}\" selected>{}</option>
             </select>
             </i></b><br>{}{}
@@ -557,22 +553,18 @@ class CustomerInvoice(Invoice):
         #   self.customer_charged_id = self.customer_id
         #   price_list_multiplier may vary
         if delivery is None:
+            delivery_point = None
             if self.permanence.with_delivery_point:
                 # If the customer is member of a group set the group as default delivery point
-                delivery_point = self.customer.delivery_point
-                if delivery_point is not None:
+                group_id = self.customer.group_id
+                if group_id is not None:
                     default_delivery = DeliveryBoard.objects.filter(
-                        delivery_point=delivery_point, permanence=self.permanence
+                        permanence_id=self.permanence_id,
+                        delivery_point__group_id=group_id,
                     ).first()
                     if default_delivery is not None:
                         delivery = default_delivery
-                    else:
-                        # the delivery_point is
-                        # not available for this permanence
-                        delivery_point = None
-
-            else:
-                delivery_point = None
+                        delivery_point = default_delivery.delivery_point
         else:
             delivery_point = delivery.delivery_point
         self.delivery = delivery
@@ -590,9 +582,7 @@ class CustomerInvoice(Invoice):
                 self.transport = delivery_point.transport
                 self.min_transport = delivery_point.min_transport
             else:
-                assert (
-                    self.customer_id != group.id
-                ), "A group may not place an order"
+                assert self.customer_id != group.id, "A group may not place an order"
                 self.customer_charged = group
                 self.price_list_multiplier = DECIMAL_ONE
                 self.transport = REPANIER_MONEY_ZERO
@@ -780,20 +770,16 @@ class CustomerInvoice(Invoice):
     def create_child(self, new_permanence):
         if self.customer_id != self.customer_charged_id:
             # An invoice must exist for the customer who will be charged
-            new_customer_charged_invoice = (
-                CustomerInvoice.objects.filter(
-                    permanence_id=new_permanence.id,
-                    customer_id=self.customer_charged_id,
-                )
-                .order_by("?")
-                .only("id")
-            )
+            new_customer_charged_invoice = CustomerInvoice.objects.filter(
+                permanence_id=new_permanence.id,
+                customer_id=self.customer_charged_id,
+            ).only("id")
 
             if not new_customer_charged_invoice.exists():
                 old_customer_charged_invoice = CustomerInvoice.objects.filter(
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_charged_id,
-                ).order_by("?")
+                )
                 CustomerInvoice.objects.create(
                     permanence_id=new_permanence.id,
                     customer_id=self.customer_charged_id,

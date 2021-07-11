@@ -93,7 +93,7 @@ class ProducerInvoiceView(DetailView):
             if self.uuid:
                 try:
                     producer = (
-                        Producer.objects.filter(uuid=self.uuid).order_by("?").first()
+                        Producer.objects.filter(uuid=self.uuid).first()
                     )
                     producer_id = producer.id
                 except:

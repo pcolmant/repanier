@@ -20,9 +20,7 @@ from repanier.tools import sint
 def delivery_select_ajax(request):
     # construct a list which will contain all of the data for the response
     user = request.user
-    customer = (
-        Customer.objects.filter(user_id=user.id, may_order=True).order_by("?").first()
-    )
+    customer = Customer.objects.filter(user_id=user.id, may_order=True).first()
     if customer is None:
         raise Http404
     translation.activate(customer.language)
@@ -31,16 +29,15 @@ def delivery_select_ajax(request):
         CustomerInvoice.objects.filter(
             customer_id=customer.id, permanence_id=permanence_id
         )
-        .order_by("?")
         .first()
     )
     if customer_invoice is None:
         raise Http404
-    if customer.delivery_point is not None:
+    if customer.group is not None:
         qs = DeliveryBoard.objects.filter(
             Q(
                 permanence_id=permanence_id,
-                delivery_point_id=customer.delivery_point_id,
+                delivery_point__group_id=customer.group_id,
                 status=PERMANENCE_OPENED,
             )
             | Q(

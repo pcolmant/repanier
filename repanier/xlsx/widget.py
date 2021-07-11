@@ -1,12 +1,13 @@
 import datetime
 
-from django.utils import datetime_safe
+from django.utils.html import strip_tags
 from import_export.widgets import (
     CharWidget,
     ForeignKeyWidget,
     DecimalWidget,
     BooleanWidget,
     Widget,
+    IntegerWidget,
 )
 from repanier.const import *
 
@@ -16,7 +17,7 @@ class DecimalBooleanWidget(BooleanWidget):
     Widget for converting boolean fields.
     """
 
-    TRUE_VALUES = ["1", 1, DECIMAL_ONE, 1.0]
+    TRUE_VALUES = ["1", 1, DECIMAL_ONE, 1.0, True]
     FALSE_VALUE = "0"
 
     def clean(self, value, row=None, *args, **kwargs):
@@ -27,7 +28,7 @@ class DecimalBooleanWidget(BooleanWidget):
     def render(self, value, obj=None):
         if value is None:
             return EMPTY_STRING
-        return self.TRUE_VALUES[0] if value else self.FALSE_VALUE
+        return value
 
 
 class DecimalsWidget(DecimalWidget):
@@ -59,7 +60,7 @@ class IdWidget(DecimalsWidget):
             return None
 
     def render(self, value, obj=None):
-        return super(IdWidget, self).render_quantize(value, ZERO_DECIMAL)
+        return super().render_quantize(value, ZERO_DECIMAL)
 
 
 class ZeroDecimalsWidget(DecimalsWidget):
@@ -68,10 +69,10 @@ class ZeroDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super(ZeroDecimalsWidget, self).clean_quantize(value, ZERO_DECIMAL)
+        return super().clean_quantize(value, ZERO_DECIMAL)
 
     def render(self, value, obj=None):
-        return super(ZeroDecimalsWidget, self).render_quantize(value, ZERO_DECIMAL)
+        return super().render_quantize(value, ZERO_DECIMAL)
 
 
 class TwoDecimalsWidget(DecimalsWidget):
@@ -80,10 +81,10 @@ class TwoDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super(TwoDecimalsWidget, self).clean_quantize(value, TWO_DECIMALS)
+        return super().clean_quantize(value, TWO_DECIMALS)
 
     def render(self, value, obj=None):
-        return super(TwoDecimalsWidget, self).render_quantize(value, TWO_DECIMALS)
+        return super().render_quantize(value, TWO_DECIMALS)
 
 
 class ThreeDecimalsWidget(DecimalsWidget):
@@ -92,10 +93,10 @@ class ThreeDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super(ThreeDecimalsWidget, self).clean_quantize(value, THREE_DECIMALS)
+        return super().clean_quantize(value, THREE_DECIMALS)
 
     def render(self, value, obj=None):
-        return super(ThreeDecimalsWidget, self).render_quantize(value, THREE_DECIMALS)
+        return super().render_quantize(value, THREE_DECIMALS)
 
 
 class FourDecimalsWidget(DecimalsWidget):
@@ -104,10 +105,10 @@ class FourDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super(FourDecimalsWidget, self).clean_quantize(value, FOUR_DECIMALS)
+        return super().clean_quantize(value, FOUR_DECIMALS)
 
     def render(self, value, obj=None):
-        return super(FourDecimalsWidget, self).render_quantize(value, FOUR_DECIMALS)
+        return super().render_quantize(value, FOUR_DECIMALS)
 
 
 class MoneysWidget(DecimalWidget):
@@ -130,10 +131,10 @@ class TwoMoneysWidget(MoneysWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super(TwoMoneysWidget, self).clean_quantize(value, TWO_DECIMALS)
+        return super().clean_quantize(value, TWO_DECIMALS)
 
     def render(self, value, obj=None):
-        return super(TwoMoneysWidget, self).render_quantize(value, TWO_DECIMALS)
+        return super().render_quantize(value, TWO_DECIMALS)
 
 
 class ProducerNameWidget(ForeignKeyWidget):
@@ -168,39 +169,7 @@ class CustomerNameWidget(ForeignKeyWidget):
             return
 
 
-# class TranslatedForeignKeyWidget(ForeignKeyWidget):
-#     def clean(self, value, row=None, *args, **kwargs):
-#         if value:
-#             target = self.model.objects.filter(**{"translations__{}".format(self.field): value}).first()
-#             if target is not None:
-#                 return target
-#             else:
-#                 target = self.model.objects.create(**{"{}".format(self.field): value})
-#                 return target
-#         else:
-#             return
-
-
-# class TranslatedManyToManyWidget(ManyToManyWidget):
-#     def clean(self, value, row=None, *args, **kwargs):
-#         if not value:
-#             return self.model.objects.none()
-#         result = []
-#         if value:
-#             array_values = value.split(self.separator)
-#             for v in array_values:
-#                 add_this = self.model.objects.filter(**{"translations__{}".format(self.field): v}).first()
-#                 if add_this is None:
-#                     add_this = self.model.objects.create(**{"{}".format(self.field): v})
-#                 result.append(add_this)
-#         return result
-#
-#     def render(self, array_values, obj=None):
-#         ids = [smart_text(getattr(obj, self.field)) for obj in array_values.all()]
-#         return self.separator.join(ids)
-
-
-class ChoiceWidget(CharWidget):
+class TaxLevelWidget(DecimalWidget):
     """
     Widget for ``Choices`` which looks up related choices.
 
@@ -212,16 +181,30 @@ class ChoiceWidget(CharWidget):
     def __init__(self, lut, lut_reverse, *args, **kwargs):
         self.lut_dict = dict(lut)
         self.lut_reverse = dict(lut_reverse)
-        super(ChoiceWidget, self).__init__()
+        super().__init__()
 
     def clean(self, value, row=None, *args, **kwargs):
-        val = super(ChoiceWidget, self).clean(value)
-        return self.lut_reverse[val] if val else None
+        val = super().clean(value)
+        return self.lut_reverse[val] if val else self.lut_reverse[DECIMAL_ZERO]
 
     def render(self, value, obj=None):
-        if value is None:
-            return EMPTY_STRING
-        return "{}".format(self.lut_dict[value] if value else None)
+        if value:
+            return self.lut_dict[value]
+        return DECIMAL_ZERO
+
+
+class OrderUnitWidget(IntegerWidget):
+    def __init__(self, lut, default_value, *args, **kwargs):
+        self.lut_dict = dict(lut)
+        self.default_value = default_value
+        super().__init__()
+
+    def clean(self, value, row=None, *args, **kwargs):
+        val = str(super().clean(value))
+        return val if val in self.lut_dict else self.default_value
+
+    def render(self, value, obj=None):
+        return int(value) or int(self.default_value)
 
 
 class OneToOneWidget(ForeignKeyWidget):
@@ -248,7 +231,7 @@ class OneToOneWidget(ForeignKeyWidget):
     """
 
     def __init__(self, model, field="pk", **kwargs):
-        super(OneToOneWidget, self).__init__(model, field, **kwargs)
+        super().__init__(model, field, **kwargs)
 
     def clean(self, value, row=None, *args, **kwargs):
         r = (
@@ -305,7 +288,9 @@ class DateWidgetExcel(Widget):
         if not value:
             return EMPTY_STRING
         if isinstance(value, str):
-            value_as_date = datetime.datetime.strptime(value[:10], self.formats[0]).date()
+            value_as_date = datetime.datetime.strptime(
+                value[:10], self.formats[0]
+            ).date()
             return value_as_date.strftime(self.formats[0])
         return value.strftime(self.formats[0])
 
@@ -317,11 +302,12 @@ class HTMLWidget(CharWidget):
 
     def clean(self, value, row=None, *args, **kwargs):
         if value:
-            return ("{}".format(value)).strip()
+            return str(value).strip()
         else:
             return EMPTY_STRING
 
     def render(self, value, obj=None):
+        # generate exported value
         if value is None:
             return EMPTY_STRING
-        return value.encode("utf-8").decode("utf-8")
+        return strip_tags(value.strip().replace("\n", EMPTY_STRING))

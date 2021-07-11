@@ -77,7 +77,7 @@ class BankAccount(models.Model):
 
     @classmethod
     def open_account(cls, customer_buyinggroup, very_first_customer):
-        bank_account = BankAccount.objects.filter().order_by("?")
+        bank_account = BankAccount.objects.filter()
         if not bank_account.exists():
             BankAccount.objects.create(
                 operation_status=BANK_LATEST_TOTAL,
@@ -102,9 +102,7 @@ class BankAccount(models.Model):
         # https://stackoverflow.com/questions/15855715/filter-on-datetime-closest-to-the-given-datetime
         # https://www.vinta.com.br/blog/2017/advanced-django-querying-sorting-events-date/
         # Get closest bank_account (sub-)total from target date
-        qs = cls.objects.filter(producer__isnull=True, customer__isnull=True).order_by(
-            "?"
-        )
+        qs = cls.objects.filter(producer__isnull=True, customer__isnull=True)
         closest_greater_qs = qs.filter(operation_date__gt=target).order_by(
             "operation_date"
         )
@@ -131,11 +129,7 @@ class BankAccount(models.Model):
 
     @classmethod
     def get_latest_total(cls):
-        return (
-            BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
-            .order_by("?")
-            .first()
-        )
+        return BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).first()
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:

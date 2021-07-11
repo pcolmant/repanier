@@ -28,13 +28,9 @@ def department_for_customer_rest(request, short_name):
     Retrieve, update or delete a code snippet.
     """
     if request.method == "GET":
-        department = (
-            LUT_DepartmentForCustomer.objects.filter(
-                short_name_v2=short_name.decode("unicode-escape"), is_active=True
-            )
-            .order_by("?")
-            .first()
-        )
+        department = LUT_DepartmentForCustomer.objects.filter(
+            short_name_v2=short_name.decode("unicode-escape"), is_active=True
+        ).first()
         if department is not None:
             serializer = DepartmentForCustomerSerializer(department)
             return JsonResponse(serializer.data)

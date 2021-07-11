@@ -66,6 +66,19 @@ class LUTAdmin(DjangoMpttAdmin):
         qs = super().get_queryset(request)
         return qs
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions
+
 
 class LUTProductionModeAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH

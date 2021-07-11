@@ -287,7 +287,6 @@ class PermanenceDoneAdmin(SaleAdmin):
                                     invoice_sort_order__isnull=True,
                                     producer_id=producer_id,
                                 )
-                                .order_by("?")
                                 .first()
                             )
                             if selected:
@@ -371,7 +370,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                 if payment_date < min_payment_date or payment_date > max_payment_date:
                     payment_date = min_payment_date
             else:
-                payment_date = min_payment_date
+                payment_date = max_payment_date
             permanence_form = PermanenceInvoicedForm(payment_date=payment_date)
 
         producers_invoiced = []
@@ -387,7 +386,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                 # We have already pay to much (look at the bank movements).
                 # So we do not need to pay anything
                 producer_invoice.calculated_invoiced_balance.amount = (
-                    producer.get_calculated_invoiced_balance(permanence_id)
+                    producer.get_calculated_purchases(permanence_id)
                 )
             else:
                 producer_invoice.calculated_invoiced_balance.amount = RepanierMoney(
@@ -412,6 +411,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                     "to_be_invoiced_balance": producer_invoice.to_be_invoiced_balance,
                     "invoice_reference": producer_invoice.invoice_reference,
                     "producer_price_are_wo_vat": producer_invoice.producer.producer_price_are_wo_vat,
+                    "represent_this_buyinggroup": producer.represent_this_buyinggroup,
                 }
             )
 
@@ -428,6 +428,8 @@ class PermanenceDoneAdmin(SaleAdmin):
                 "permanence_form": permanence_form,
                 "producer_invoiced_formset": producer_invoiced_formset,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
+                "min_payment_date": min_payment_date,
+                "max_payment_date": max_payment_date,
             },
         )
 

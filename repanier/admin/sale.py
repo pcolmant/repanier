@@ -47,9 +47,23 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     extra = 0
 
     def has_delete_permission(self, request, obj=None):
+        object_id = request.resolver_match.kwargs.get("object_id", None)
+        if object_id:
+            # Update
+            return Permanence.objects.filter(
+                id=object_id, highest_status=PERMANENCE_PLANNED
+            ).exists()
+        # Create
         return True
 
     def has_add_permission(self, request, obj):
+        object_id = request.resolver_match.kwargs.get("object_id", None)
+        if object_id:
+            # Update
+            return Permanence.objects.filter(
+                id=object_id, highest_status=PERMANENCE_PLANNED
+            ).exists()
+        # Create
         return True
 
     def has_change_permission(self, request, obj=None):
@@ -92,11 +106,17 @@ class DeliveryBoardInline(admin.TabularInline):
             return Permanence.objects.filter(
                 id=object_id, highest_status=PERMANENCE_PLANNED
             ).exists()
-        else:
-            # Create
-            return True
+        # Create
+        return True
 
     def has_add_permission(self, request, obj):
+        object_id = request.resolver_match.kwargs.get("object_id", None)
+        if object_id:
+            # Update
+            return Permanence.objects.filter(
+                id=object_id, highest_status=PERMANENCE_PLANNED
+            ).exists()
+        # Create
         return True
 
     def has_change_permission(self, request, obj=None):

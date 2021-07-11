@@ -1,6 +1,8 @@
 import datetime
 import logging
 
+from django.template.loader import render_to_string
+
 from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.db import models, transaction
@@ -30,7 +32,7 @@ from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
-from repanier.tools import cap, create_or_update_one_purchase
+from repanier.tools import cap, create_or_update_one_purchase, get_repanier_template_name
 
 logger = logging.getLogger(__name__)
 
@@ -598,9 +600,7 @@ class Permanence(models.Model):
             for delivery_point in qs:
                 delivery_point.set_status(new_status)
             if everything:
-                ProducerInvoice.objects.filter(permanence_id=self.id).order_by(
-                    "?"
-                ).update(status=new_status)
+                ProducerInvoice.objects.filter(permanence_id=self.id).update(status=new_status)
         else:
             from repanier.models.purchase import PurchaseWoReceiver
 
@@ -713,9 +713,7 @@ class Permanence(models.Model):
                                 membership_fee_valid_until = today
                             # customer.save(update_fields=['membership_fee_valid_until', ])
                             # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                            Customer.objects.filter(id=customer.id).order_by(
-                                "?"
-                            ).update(
+                            Customer.objects.filter(id=customer.id).update(
                                 membership_fee_valid_until=membership_fee_valid_until
                             )
         if everything or self.with_delivery_point:
@@ -889,9 +887,7 @@ class Permanence(models.Model):
                     customer_invoice.get_total_price_with_tax().amount
                 )
                 customer_invoice.balance.amount -= total_price_with_tax
-                Customer.objects.filter(id=customer_invoice.customer_id).order_by(
-                    "?"
-                ).update(
+                Customer.objects.filter(id=customer_invoice.customer_id).update(
                     date_balance=payment_date,
                     balance=F("balance") - total_price_with_tax,
                 )
@@ -899,9 +895,7 @@ class Permanence(models.Model):
                 # ne pas modifier sa balance
                 # ajuster la balance de celui qui paye
                 # celui qui paye a droit aux réductions
-                Customer.objects.filter(id=customer_invoice.customer_id).order_by(
-                    "?"
-                ).update(date_balance=payment_date)
+                Customer.objects.filter(id=customer_invoice.customer_id).update(date_balance=payment_date)
             customer_invoice.save()
 
         for producer_invoice in ProducerInvoice.objects.filter(permanence_id=self.id):
@@ -915,9 +909,7 @@ class Permanence(models.Model):
             total_price_with_tax = producer_invoice.get_total_price_with_tax().amount
             producer_invoice.balance.amount += total_price_with_tax
             producer_invoice.save()
-            Producer.objects.filter(id=producer_invoice.producer_id).order_by(
-                "?"
-            ).update(
+            Producer.objects.filter(id=producer_invoice.producer_id).update(
                 date_balance=payment_date, balance=F("balance") + total_price_with_tax
             )
             producer_invoice.save()
@@ -925,8 +917,7 @@ class Permanence(models.Model):
         result_set = PurchaseWoReceiver.objects.filter(
             permanence_id=self.id,
             is_box_content=False,
-            offer_item__price_list_multiplier__gte=DECIMAL_ONE,
-            producer__represent_this_buyinggroup=False,
+            offer_item__is_resale_price_fixed=True,
         ).aggregate(
             purchase_price=Sum(
                 "purchase_price",
@@ -1157,9 +1148,7 @@ class Permanence(models.Model):
             bank_account.producer_invoice_id = producer_invoice.id
             bank_account.save()
 
-        BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by(
-            "?"
-        ).update(operation_status=BANK_NOT_LATEST_TOTAL)
+        BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).update(operation_status=BANK_NOT_LATEST_TOTAL)
         # Important : Create a new bank total for this permanence even if there is no bank movement
         bank_account = BankAccount.objects.create(
             permanence_id=self.id,
@@ -1239,9 +1228,7 @@ class Permanence(models.Model):
             # customer.date_balance = customer_invoice.date_previous_balance
             # customer.save(update_fields=['balance', 'date_balance'])
             # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-            Customer.objects.filter(id=customer_invoice.customer_id).order_by(
-                "?"
-            ).update(
+            Customer.objects.filter(id=customer_invoice.customer_id).update(
                 balance=customer_invoice.previous_balance,
                 date_balance=customer_invoice.date_previous_balance,
             )
@@ -1279,9 +1266,7 @@ class Permanence(models.Model):
         )
 
         for producer_invoice in ProducerInvoice.objects.filter(permanence_id=self.id):
-            Producer.objects.filter(id=producer_invoice.producer_id).order_by(
-                "?"
-            ).update(
+            Producer.objects.filter(id=producer_invoice.producer_id).update(
                 balance=producer_invoice.previous_balance,
                 date_balance=producer_invoice.date_previous_balance,
             )
@@ -1381,9 +1366,7 @@ class Permanence(models.Model):
             new_permanence.producers.add(a_producer)
 
     def duplicate_delivery_board(self, new_permanence, cur_language):
-        for delivery_board in DeliveryBoard.objects.filter(permanence=self).order_by(
-            "?"
-        ):
+        for delivery_board in DeliveryBoard.objects.filter(permanence=self):
             new_delivery_board = DeliveryBoard.objects.create(
                 permanence=new_permanence,
                 delivery_point=delivery_board.delivery_point,
@@ -1503,6 +1486,58 @@ class Permanence(models.Model):
 
         return
 
+    def clean_offer_item(self, offer_item_qs):
+        if self.status > PERMANENCE_SEND:
+            # The purchases are already invoiced.
+            # The offer item may not be modified any more
+            raise ValueError(
+                "Not offer item may be cleaned when permanence.status > PERMANENCE_SEND"
+            )
+        permanence_offer_item_qs = offer_item_qs.filter(permanence_id=self.id)
+        for offer_item in permanence_offer_item_qs.select_related("producer", "product"):
+            product = offer_item.product
+            producer = offer_item.producer
+
+            offer_item.set_from(product)
+
+            offer_item.manage_production = producer.represent_this_buyinggroup
+            # Offer_items are not subjects to customer price modifications
+            # if product.is_box or product.is_box_content or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
+            offer_item.is_resale_price_fixed = (
+                    not(producer.represent_this_buyinggroup)
+                    or product.is_box
+                    or product.order_unit
+                    >= PRODUCT_ORDER_UNIT_DEPOSIT
+            )
+
+            offer_item.may_order = False
+            if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+                offer_item.may_order = product.is_into_offer
+
+            # The group must pay the VAT, so it's easier to always have
+            # offer_item with VAT included
+            # if producer.producer_price_are_wo_vat:
+            #     offer_item.producer_unit_price += offer_item.producer_vat
+            # offer_item.producer_price_are_wo_vat = False
+
+            offer_item.save()
+
+        # Now got everything to calculate the sort order of the order display screen
+        template_cache_part_a = get_repanier_template_name("cache_part_a.html")
+        template_cache_part_b = get_repanier_template_name("cache_part_b.html")
+
+        for offer_item in permanence_offer_item_qs.select_related("producer", "department_for_customer"):
+            offer_item.long_name_v2 = offer_item.product.long_name_v2
+            offer_item.cache_part_a_v2 = render_to_string(
+                template_cache_part_a,
+                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
+            )
+            offer_item.cache_part_b_v2 = render_to_string(
+                template_cache_part_b,
+                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
+            )
+            offer_item.save()
+
     def recalculate_order_amount(
         self, offer_item_qs=None, re_init=False, send_to_producer=False
     ):
@@ -1522,15 +1557,11 @@ class Permanence(models.Model):
                 total_vat=DECIMAL_ZERO,
                 total_deposit=DECIMAL_ZERO,
             )
-            CustomerProducerInvoice.objects.filter(permanence_id=self.id).order_by(
-                "?"
-            ).update(
+            CustomerProducerInvoice.objects.filter(permanence_id=self.id).update(
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO,
             )
-            OfferItemReadOnly.objects.filter(permanence_id=self.id).order_by(
-                "?"
-            ).update(
+            OfferItemReadOnly.objects.filter(permanence_id=self.id).update(
                 quantity_invoiced=DECIMAL_ZERO,
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO,
@@ -1538,7 +1569,8 @@ class Permanence(models.Model):
 
         purchase_set = Purchase.objects.filter(permanence_id=self.id)
         if offer_item_qs is not None:
-            purchase_set = purchase_set.filter(offer_item__in=offer_item_qs)
+            permanence_offer_item_qs = offer_item_qs.filter(permanence_id=self.id)
+            purchase_set = purchase_set.filter(offer_item__in=permanence_offer_item_qs)
 
         for a_purchase in purchase_set.select_related("offer_item", "customer_invoice"):
             # Recalculate the total_price_with_tax of ProducerInvoice,

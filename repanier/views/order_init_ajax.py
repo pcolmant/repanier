@@ -48,7 +48,6 @@ def order_init_ajax(request):
             "vat_id",
             "short_basket_name",
             "email2",
-            "delivery_point",
             "balance",
             "date_balance",
             "may_order",

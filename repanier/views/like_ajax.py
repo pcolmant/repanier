@@ -17,7 +17,6 @@ def like_ajax(request):
         offer_item_id = sint(request.GET.get("offer_item", 0))
         offer_item = (
             OfferItemReadOnly.objects.filter(id=offer_item_id)
-            .order_by("?")
             .first()
         )
         if offer_item is not None and offer_item.product_id is not None:

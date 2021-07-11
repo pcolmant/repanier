@@ -19,7 +19,6 @@ def download_customer_invoice(request, customer_invoice_id):
                 CustomerInvoice.objects.filter(
                     id=customer_invoice_id, invoice_sort_order__isnull=False
                 )
-                .order_by("?")
                 .first()
             )
         else:
@@ -29,7 +28,6 @@ def download_customer_invoice(request, customer_invoice_id):
                     id=customer_invoice_id,
                     invoice_sort_order__isnull=False,
                 )
-                .order_by("?")
                 .first()
             )
         if customer_invoice is not None:

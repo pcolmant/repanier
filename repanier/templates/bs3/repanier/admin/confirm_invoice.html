@@ -43,11 +43,11 @@
                             {% endfor %}
                         </ul>
                     {% endif %}
-                    <label for="id_payment_date"
-                           class="repanier-label-info">{% translate "Payment date" %}&nbsp;:</label>
+{#                    <label for="id_payment_date"#}
+{#                           class="repanier-label-info"></label>#}
                 </div>
             </div>
-            {{ permanence_form.payment_date }}
+            <h3>{% translate "Payment date" %}&nbsp;: {{ permanence_form.payment_date }}</h3>  ( {% translate "to be chosen between" %} {{ min_payment_date }} {% translate "and" %} {{ max_payment_date }} )
         </div>
         <div class="form-row">
             <p>&nbsp;</p>
@@ -79,8 +79,11 @@
                         </label>
                     </li>
                     <li class="repanier-flex-ul-li">
-                        {% translate ", calculated : " %}
+                        {% translate ", calculated : " %}<{{ f_form.represent_this_buyinggroup.value }}>
                         {{ f_form.calculated_invoiced_balance.value }}&nbsp;{% translate "w VAT" %}
+                    </li>
+                {% if not f_form.represent_this_buyinggroup.value %}
+                    <li class="repanier-flex-ul-li">
                         {% translate ", invoiced : " %}&nbsp;
                     </li>
                     <li class="repanier-flex-ul-li">
@@ -91,6 +94,7 @@
                         {% translate "w VAT" %}{% endif %}
                         {% translate ", invoice reference : " %} {{ f_form.invoice_reference }}
                     </li>
+                {% endif %}
                 </ul>
             </div>
         {% endfor %}

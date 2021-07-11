@@ -34,9 +34,7 @@ def order_select_ajax(request):
         raise Http404
     translation.activate(customer.language)
     offer_item_id = sint(request.GET.get("offer_item", 0))
-    offer_item = (
-        OfferItemReadOnly.objects.filter(id=offer_item_id).first()
-    )
+    offer_item = OfferItemReadOnly.objects.filter(id=offer_item_id).first()
     if offer_item is None:
         raise Http404
     # Select one purchase
@@ -54,6 +52,7 @@ def order_select_ajax(request):
     )
     if producer_invoice.exists():
         # The orders are opened for this producer and this permanence
+
         if offer_item.may_order:
             # This offer_item may be ordered
             customer_invoice = (
@@ -68,26 +67,20 @@ def order_select_ajax(request):
             else:
                 status = customer_invoice.status
             if PERMANENCE_OPENED <= status <= PERMANENCE_SEND:
+                product = offer_item.product
                 a_price = (
-                    offer_item.customer_unit_price.amount
-                    + offer_item.unit_deposit.amount
+                    product.customer_unit_price.amount + product.unit_deposit.amount
                 )
-                q_min = offer_item.customer_minimum_order_quantity
+                q_min = product.customer_minimum_order_quantity
                 if purchase is not None:
                     q_previous_order = purchase.quantity_ordered
                 else:
                     q_previous_order = DECIMAL_ZERO
-                if status == PERMANENCE_OPENED and offer_item.stock > DECIMAL_ZERO:
-                    q_alert = (
-                        offer_item.stock
-                        - offer_item.quantity_invoiced
-                        + q_previous_order
-                    )
-                    if q_alert < DECIMAL_ZERO:
-                        q_alert = DECIMAL_ZERO
+                if status == PERMANENCE_OPENED and product.stock > DECIMAL_ZERO:
+                    q_alert = offer_item.get_q_alert() + q_previous_order
                 else:
-                    q_alert = offer_item.customer_alert_order_quantity
-                q_step = offer_item.customer_increment_order_quantity
+                    q_alert = offer_item.get_q_alert()
+                q_step = product.customer_increment_order_quantity
                 q_order_is_displayed = False
                 q_select_id = 0
                 selected = EMPTY_STRING
@@ -121,9 +114,9 @@ def order_select_ajax(request):
                     if status == PERMANENCE_OPENED or (
                         status <= PERMANENCE_SEND and selected == "selected"
                     ):
-                        display = offer_item.get_display(
+                        display = product.get_display(
                             qty=q_valid,
-                            order_unit=offer_item.order_unit,
+                            order_unit=product.order_unit,
                             unit_price_amount=a_price,
                         )
                         html += '<option value="{}" {}>{}</option>'.format(
@@ -141,9 +134,9 @@ def order_select_ajax(request):
                 if not q_order_is_displayed:
                     # An custom order_qty > q_alert
                     q_select_id += 1
-                    display = offer_item.get_display(
+                    display = product.get_display(
                         qty=q_previous_order,
-                        order_unit=offer_item.order_unit,
+                        order_unit=product.order_unit,
                         unit_price_amount=a_price,
                     )
                     html = '<option value="{}" selected>{}</option>'.format(

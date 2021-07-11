@@ -4,7 +4,7 @@ import uuid
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum, DecimalField
+from django.db.models import Sum, DecimalField, F
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import number_format
@@ -23,9 +23,9 @@ from repanier.const import (
     PERMANENCE_SEND,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField, RepanierMoney
+from repanier.models.purchase import PurchaseWoReceiver
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
@@ -112,10 +112,6 @@ class Producer(models.Model):
         blank=True,
         validators=[MinValueValidator(0)],
     )
-    # TODO NEXT
-    # is_resale_price_fixed = models.BooleanField(
-    #     _("The resale price is fixed"), default=False
-    # )
     minimum_order_value = ModelRepanierMoneyField(
         _("Minimum order value"),
         help_text=_("0 mean : no minimum order value."),
@@ -141,11 +137,9 @@ class Producer(models.Model):
 
     @classmethod
     def get_or_create_group(cls):
-        producer_buyinggroup = (
-            Producer.objects.filter(represent_this_buyinggroup=True)
-            .order_by("?")
-            .first()
-        )
+        producer_buyinggroup = Producer.objects.filter(
+            represent_this_buyinggroup=True
+        ).first()
         if producer_buyinggroup is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
@@ -158,7 +152,7 @@ class Producer(models.Model):
             # Create this to also prevent the deletion of the producer representing the buying group
             membership_fee_product = Product.objects.filter(
                 order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, is_active=True
-            ).order_by("?")
+            )
             if not membership_fee_product.exists():
                 membership_fee_product = Product.objects.create(
                     producer_id=producer_buyinggroup.id,
@@ -208,33 +202,29 @@ class Producer(models.Model):
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = (
-                ProducerInvoice.objects.filter(
-                    producer_id=self.id,
-                    status__gte=PERMANENCE_OPENED,
-                    status__lte=PERMANENCE_SEND,
-                )
-                .order_by("?")
-                .aggregate(
-                    total_price_with_tax=Sum(
-                        "total_price_with_tax",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+            result_set = ProducerInvoice.objects.filter(
+                producer_id=self.id,
+                status__gte=PERMANENCE_OPENED,
+                status__lte=PERMANENCE_SEND,
+            ).aggregate(
+                total_price_with_tax=Sum(
+                    "total_price_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    delta_price_with_tax=Sum(
-                        "delta_price_with_tax",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                delta_price_with_tax=Sum(
+                    "delta_price_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    delta_transport=Sum(
-                        "delta_transport",
-                        output_field=DecimalField(
-                            max_digits=5, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                delta_transport=Sum(
+                    "delta_transport",
+                    output_field=DecimalField(
+                        max_digits=5, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
             if result_set["total_price_with_tax"] is not None:
                 order_not_invoiced = RepanierMoney(result_set["total_price_with_tax"])
@@ -250,25 +240,21 @@ class Producer(models.Model):
 
     def get_bank_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = (
-                BankAccount.objects.filter(
-                    producer_id=self.id, producer_invoice__isnull=True
-                )
-                .order_by("?")
-                .aggregate(
-                    bank_amount_in=Sum(
-                        "bank_amount_in",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+            result_set = BankAccount.objects.filter(
+                producer_id=self.id, producer_invoice__isnull=True
+            ).aggregate(
+                bank_amount_in=Sum(
+                    "bank_amount_in",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    bank_amount_out=Sum(
-                        "bank_amount_out",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                bank_amount_out=Sum(
+                    "bank_amount_out",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
 
             total_bank_amount_in = (
@@ -289,21 +275,19 @@ class Producer(models.Model):
 
         return bank_not_invoiced
 
-    def get_calculated_invoiced_balance(self, permanence_id):
-        bank_not_invoiced = self.get_bank_not_invoiced()
+    def get_calculated_purchases(self, permanence_id):
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
 
         result_set = (
-            OfferItemReadOnly.objects.filter(
+            PurchaseWoReceiver.objects.filter(
                 permanence_id=permanence_id,
                 producer_id=self.id,
-                price_list_multiplier__lt=1,
+                purchase_price__gte=F("selling_price"),
             )
-            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
-            .order_by("?")
+            .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
             .aggregate(
-                total_selling_price_with_tax=Sum(
-                    "total_selling_with_tax",
+                total_purchase_price_with_tax=Sum(
+                    "purchase_price",
                     output_field=DecimalField(
                         max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
@@ -312,22 +296,21 @@ class Producer(models.Model):
         )
 
         payment_needed = (
-            result_set["total_selling_price_with_tax"]
-            if result_set["total_selling_price_with_tax"] is not None
+            result_set["total_purchase_price_with_tax"]
+            if result_set["total_purchase_price_with_tax"] is not None
             else DECIMAL_ZERO
         )
 
         result_set = (
-            OfferItemReadOnly.objects.filter(
+            PurchaseWoReceiver.objects.filter(
                 permanence_id=permanence_id,
                 producer_id=self.id,
-                price_list_multiplier__gte=1,
+                purchase_price__lt=F("selling_price"),
             )
-            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
-            .order_by("?")
+            .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
             .aggregate(
-                total_purchase_price_with_tax=Sum(
-                    "total_purchase_with_tax",
+                total_selling_price_with_tax=Sum(
+                    "selling_price",
                     output_field=DecimalField(
                         max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
@@ -335,24 +318,17 @@ class Producer(models.Model):
             )
         )
 
-        if result_set["total_purchase_price_with_tax"] is not None:
-            payment_needed += result_set["total_purchase_price_with_tax"]
+        if result_set["total_selling_price_with_tax"] is not None:
+            payment_needed += result_set["total_selling_price_with_tax"]
 
-        # TODO PCO CORRECTION
-        # calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
-        # print("######## self.balance : {} ".format(self.balance))
-        # print("######## bank_not_invoiced : {} ".format(bank_not_invoiced))
-        # print("######## payment_needed : {} ".format(payment_needed))
-        calculated_invoiced_balance = bank_not_invoiced + payment_needed
-        # TODO PCO CORRECTION
-        return calculated_invoiced_balance
+        return payment_needed
 
-    get_calculated_invoiced_balance.short_description = _("Balance")
+    get_calculated_purchases.short_description = _("Balance")
 
     def get_balance(self):
-        last_producer_invoice_set = ProducerInvoice.objects.filter(
+        any_producer_invoice = ProducerInvoice.objects.filter(
             producer_id=self.id, invoice_sort_order__isnull=False
-        ).order_by("?")
+        )
 
         balance = self.get_admin_balance()
 
@@ -365,7 +341,7 @@ class Producer(models.Model):
         else:
             color = "#696969"
 
-        if last_producer_invoice_set.exists():
+        if any_producer_invoice.exists():
             return format_html(
                 '<a href="{}?producer={}" class="repanier-a-info" target="_blank"><span style="color:{}">{}</span></a>',
                 reverse("repanier:producer_invoice_view", args=(0,)),

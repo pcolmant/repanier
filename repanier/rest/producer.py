@@ -45,15 +45,11 @@ def producer_detail(request, short_profile_name):
     Retrieve, update or delete a code snippet.
     """
     if request.method == "GET":
-        producer = (
-            Producer.objects.filter(
-                short_profile_name=short_profile_name.decode("unicode-escape"),
-                is_active=True,
-                represent_this_buyinggroup=False,
-            )
-            .order_by("?")
-            .first()
-        )
+        producer = Producer.objects.filter(
+            short_profile_name=short_profile_name.decode("unicode-escape"),
+            is_active=True,
+            represent_this_buyinggroup=False,
+        ).first()
         if producer is not None:
             serializer = ProducerSerializer(producer)
             return JsonResponse(serializer.data)

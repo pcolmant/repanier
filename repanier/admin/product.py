@@ -9,12 +9,11 @@ from django.core.checks import messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy, reverse
-from django.utils.formats import number_format
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX, XLS
+from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import ForeignKeyWidget, ManyToManyWidget
 from repanier.admin.admin_filter import (
     AdminFilterProducer,
@@ -25,7 +24,6 @@ from repanier.const import (
     LUT_ALL_VAT,
     LUT_ALL_VAT_REVERSE,
     REPANIER_MONEY_ZERO,
-    DECIMAL_ONE,
     DECIMAL_ZERO,
     PRODUCT_ORDER_UNIT_DEPOSIT,
     PRODUCT_ORDER_UNIT_PC,
@@ -33,12 +31,10 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_PC_PRICE_KG,
     PRODUCT_ORDER_UNIT_PC_PRICE_PC,
     EMPTY_STRING,
-    LIMIT_ORDER_QTY_ITEM,
     PRODUCT_ORDER_UNIT_PC_PRICE_LT,
     LUT_VAT,
     LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST,
     LUT_PRODUCT_ORDER_UNIT,
-    LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL,
     LUT_PRODUCT_ORDER_UNIT_ALL,
 )
 from repanier.middleware import get_request_params, get_query_filters, add_filter
@@ -55,34 +51,31 @@ from repanier.widget.select_admin_order_unit import SelectAdminOrderUnitWidget
 from repanier.xlsx.widget import (
     IdWidget,
     DecimalBooleanWidget,
-    ChoiceWidget,
     ThreeDecimalsWidget,
     TwoMoneysWidget,
     HTMLWidget,
+    OrderUnitWidget,
+    TaxLevelWidget,
 )
 
 
 class ProductResource(resources.ModelResource):
     id = fields.Field(attribute="id", widget=IdWidget(), readonly=True)
-    producer_name = fields.Field(
+    producer = fields.Field(
         attribute="producer",
         widget=ForeignKeyWidget(Producer, field="short_profile_name"),
     )
-    long_name = fields.Field(attribute="long_name_v2")
-    offer_description = fields.Field(
-        attribute="offer_description_v2", widget=HTMLWidget()
-    )
-    department_for_customer = fields.Field(
+    product = fields.Field(attribute="long_name_v2")
+    description = fields.Field(attribute="offer_description_v2", widget=HTMLWidget())
+    department = fields.Field(
         attribute="department_for_customer",
         widget=ForeignKeyWidget(LUT_DepartmentForCustomer, field="short_name_v2"),
     )
-    order_unit = fields.Field(
+    unit = fields.Field(
         attribute="order_unit",
-        widget=ChoiceWidget(
-            LUT_PRODUCT_ORDER_UNIT_ALL, LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL
-        ),
+        widget=OrderUnitWidget(LUT_PRODUCT_ORDER_UNIT_ALL, PRODUCT_ORDER_UNIT_PC),
     )
-    order_average_weight = fields.Field(
+    average_weight = fields.Field(
         attribute="order_average_weight", widget=ThreeDecimalsWidget()
     )
     producer_unit_price = fields.Field(
@@ -92,30 +85,23 @@ class ProductResource(resources.ModelResource):
         attribute="customer_unit_price", widget=TwoMoneysWidget()
     )
     unit_deposit = fields.Field(attribute="unit_deposit", widget=TwoMoneysWidget())
-    vat_level = fields.Field(
-        attribute="vat_level", widget=ChoiceWidget(LUT_ALL_VAT, LUT_ALL_VAT_REVERSE)
+    tax_level = fields.Field(
+        attribute="vat_level", widget=TaxLevelWidget(LUT_ALL_VAT, LUT_ALL_VAT_REVERSE)
     )
-    customer_minimum_order_quantity = fields.Field(
+    minimum_order_quantity = fields.Field(
         attribute="customer_minimum_order_quantity", widget=ThreeDecimalsWidget()
     )
-    customer_increment_order_quantity = fields.Field(
+    increment_order_quantity = fields.Field(
         attribute="customer_increment_order_quantity", widget=ThreeDecimalsWidget()
-    )
-    customer_alert_order_quantity = fields.Field(
-        attribute="customer_alert_order_quantity", widget=ThreeDecimalsWidget()
     )
     wrapped = fields.Field(attribute="wrapped", widget=DecimalBooleanWidget())
     stock = fields.Field(attribute="stock", widget=ThreeDecimalsWidget())
-    producer_order_by_quantity = fields.Field(
-        attribute="producer_order_by_quantity", widget=ThreeDecimalsWidget()
-    )
     label = fields.Field(
         attribute="production_mode",
         widget=ManyToManyWidget(
             LUT_ProductionMode, separator="; ", field="short_name_v2"
         ),
     )
-    picture = fields.Field(attribute="picture2", readonly=True)
     is_into_offer = fields.Field(
         attribute="is_into_offer", widget=DecimalBooleanWidget(), readonly=True
     )
@@ -139,12 +125,8 @@ class ProductResource(resources.ModelResource):
             instance.customer_minimum_order_quantity = DECIMAL_ZERO
         if instance.customer_increment_order_quantity is None:
             instance.customer_increment_order_quantity = DECIMAL_ZERO
-        if instance.customer_alert_order_quantity is None:
-            instance.customer_alert_order_quantity = DECIMAL_ZERO
         if instance.stock is None:
             instance.stock = DECIMAL_ZERO
-        if instance.producer_order_by_quantity is None:
-            instance.producer_order_by_quantity = DECIMAL_ZERO
         if instance.order_unit is None:
             raise ValueError(_("The order unit must be set."))
         if instance.order_unit != PRODUCT_ORDER_UNIT_DEPOSIT:
@@ -174,11 +156,6 @@ class ProductResource(resources.ModelResource):
                     raise ValueError(_("The increment must be an integer."))
                 if instance.stock != instance.stock // 1:
                     raise ValueError(_("The stock must be an integer."))
-                if (
-                    instance.customer_alert_order_quantity
-                    != instance.customer_alert_order_quantity // 1
-                ):
-                    raise ValueError(_("The alert quantity must be an integer."))
 
         if instance.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
             if instance.customer_minimum_order_quantity <= DECIMAL_ZERO:
@@ -186,16 +163,12 @@ class ProductResource(resources.ModelResource):
                     _("The minimum order quantity must be greater than zero.")
                 )
 
-            if (
-                instance.customer_minimum_order_quantity
-                != instance.customer_alert_order_quantity
-                and instance.customer_increment_order_quantity <= DECIMAL_ZERO
-            ):
+            if instance.customer_increment_order_quantity <= DECIMAL_ZERO:
                 raise ValueError(_("The increment must be greater than zero."))
 
         qs = Product.objects.filter(
             reference=instance.reference, producer=instance.producer
-        ).order_by("?")
+        )
         if instance.id is not None:
             qs = qs.exclude(id=instance.id)
         if qs.exists():
@@ -208,27 +181,24 @@ class ProductResource(resources.ModelResource):
         model = Product
         fields = (
             "id",
-            "producer_name",
             "reference",
-            "department_for_customer",
-            "long_name",
-            "order_unit",
+            "producer",
+            "department",
+            "product",
+            "unit",
             "wrapped",
-            "order_average_weight",
+            "average_weight",
             "producer_unit_price",
             "customer_unit_price",
             "unit_deposit",
-            "vat_level",
-            "customer_minimum_order_quantity",
-            "customer_increment_order_quantity",
-            "customer_alert_order_quantity",
+            "tax_level",
+            "minimum_order_quantity",
+            "increment_order_quantity",
             "stock",
-            "producer_order_by_quantity",
             "label",
-            "picture",
             "is_into_offer",
             "is_active",
-            "offer_description_v2",
+            "description",
         )
         export_order = fields
         import_id_fields = ("id",)
@@ -258,7 +228,7 @@ class ProductDataForm(forms.ModelForm):
             if reference:
                 qs = Product.objects.filter(
                     reference=reference, producer_id=producer.id
-                ).order_by("?")
+                )
                 if self.instance.id is not None:
                     qs = qs.exclude(id=self.instance.id)
                 if qs.exists():
@@ -293,12 +263,6 @@ class ProductDataForm(forms.ModelForm):
             customer_increment_order_quantity = self.cleaned_data.get(
                 "customer_increment_order_quantity", DECIMAL_ZERO
             )
-            field_customer_alert_order_quantity_is_present = (
-                "customer_alert_order_quantity" in self.cleaned_data
-            )
-            customer_alert_order_quantity = self.cleaned_data.get(
-                "customer_alert_order_quantity", LIMIT_ORDER_QTY_ITEM
-            )
             stock = self.cleaned_data.get("stock", DECIMAL_ZERO)
 
             if order_unit in [
@@ -327,85 +291,17 @@ class ProductDataForm(forms.ModelForm):
                     )
                 if stock != stock // 1:
                     self.add_error("stock", _("The stock must be an integer."))
-                if customer_alert_order_quantity != customer_alert_order_quantity // 1:
-                    self.add_error(
-                        "customer_alert_order_quantity",
-                        _("The alert quantity must be an integer."),
-                    )
             if customer_minimum_order_quantity <= DECIMAL_ZERO:
                 self.add_error(
                     "customer_minimum_order_quantity",
                     _("The minimum order quantity must be greater than zero."),
                 )
 
-            if (
-                customer_minimum_order_quantity != customer_alert_order_quantity
-                and customer_increment_order_quantity <= DECIMAL_ZERO
-            ):
+            if customer_increment_order_quantity <= DECIMAL_ZERO:
                 self.add_error(
                     "customer_increment_order_quantity",
                     _("The increment must be greater than zero."),
                 )
-            elif stock == DECIMAL_ZERO:
-                if customer_increment_order_quantity <= customer_minimum_order_quantity:
-                    if customer_minimum_order_quantity != customer_alert_order_quantity:
-                        order_qty_item = (
-                            customer_alert_order_quantity
-                            - customer_minimum_order_quantity
-                        ) / customer_increment_order_quantity
-                        q_max = (
-                            customer_minimum_order_quantity
-                            + int(order_qty_item) * customer_increment_order_quantity
-                        )
-                        if order_qty_item > (LIMIT_ORDER_QTY_ITEM - 1):
-                            q_max = (
-                                customer_minimum_order_quantity
-                                + LIMIT_ORDER_QTY_ITEM
-                                * customer_increment_order_quantity
-                            )
-                    else:
-                        order_qty_item = DECIMAL_ONE
-                        q_max = customer_alert_order_quantity
-                else:
-                    order_qty_item = (
-                        customer_alert_order_quantity
-                        / customer_increment_order_quantity
-                    )
-                    q_max = int(order_qty_item) * customer_increment_order_quantity
-                    if order_qty_item > LIMIT_ORDER_QTY_ITEM:
-                        q_max = (
-                            customer_minimum_order_quantity
-                            + LIMIT_ORDER_QTY_ITEM * customer_increment_order_quantity
-                        )
-                if field_customer_alert_order_quantity_is_present:
-                    if order_qty_item > LIMIT_ORDER_QTY_ITEM:
-                        self.add_error(
-                            "customer_alert_order_quantity",
-                            _(
-                                "This alert quantity will generate more than %(qty_item)d choices for the customer into the order form."
-                            )
-                            % {"qty_item": LIMIT_ORDER_QTY_ITEM},
-                        )
-                    elif (
-                        customer_alert_order_quantity < customer_minimum_order_quantity
-                    ):
-                        self.add_error(
-                            "customer_alert_order_quantity",
-                            _(
-                                "The alert quantity must be greater than or equal to the minimum order quantity."
-                            ),
-                        )
-                    if (
-                        q_max != customer_alert_order_quantity
-                        and q_max > customer_minimum_order_quantity
-                    ):
-                        self.add_error(
-                            "customer_alert_order_quantity",
-                            _(
-                                "This alert quantity is not reachable. %(q_max)s is the best lower choice."
-                            )
-                            % {"q_max": number_format(q_max, 3)},
-                        )
 
     class Meta:
         model = Product
@@ -413,7 +309,6 @@ class ProductDataForm(forms.ModelForm):
         widgets = {
             "long_name_v2": forms.TextInput(attrs={"style": "width: 95%;"}),
             "order_unit": SelectAdminOrderUnitWidget(attrs={"style": "width: 95%;"}),
-            # "department_for_customer": apply_select2(forms.Select),
         }
 
 
@@ -476,9 +371,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             if "producers" in request.POST:
                 producers = request.POST.getlist("producers", [])
                 if len(producers) == 1:
-                    producer = (
-                        Producer.objects.filter(id=producers[0]).order_by("?").first()
-                    )
+                    producer = Producer.objects.filter(id=producers[0]).first()
                     if producer is not None:
                         user_message, user_message_level = task_product.admin_duplicate(
                             product, producer
@@ -548,6 +441,10 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
         vat_level_field = form.base_fields["vat_level"]
+        department_field = form.base_fields["department_for_customer"]
+
+        # department_field is not required in the product model
+        department_field.required = True
         # TODO : Make it dependent of the producer country
         vat_level_field.widget.choices = LUT_VAT
         producer_field.widget.can_add_related = False
@@ -651,7 +548,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
+        return [f for f in (XLSX, CSV) if f().can_import()]
 
     def get_export_formats(self):
         """

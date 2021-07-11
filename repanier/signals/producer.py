@@ -28,6 +28,6 @@ def producer_pre_save(sender, **kwargs):
 @receiver(post_save, sender=Producer)
 def producer_post_save(sender, **kwargs):
     producer = kwargs["instance"]
-    for a_product in Product.objects.filter(producer_id=producer.id).order_by("?"):
+    for a_product in Product.objects.filter(producer_id=producer.id):
         a_product.save()
     update_offer_item(producer_id=producer.id)

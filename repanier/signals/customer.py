@@ -22,7 +22,7 @@ def customer_pre_save(sender, **kwargs):
         other_bank_account1 = Customer.objects.filter(
             Q(bank_account1=customer.bank_account1)
             | Q(bank_account2=customer.bank_account1)
-        ).order_by("?")
+        )
         if customer.id is not None:
             other_bank_account1 = other_bank_account1.exclude(id=customer.id)
         if other_bank_account1.exists():
@@ -32,7 +32,7 @@ def customer_pre_save(sender, **kwargs):
         other_bank_account2 = Customer.objects.filter(
             Q(bank_account1=customer.bank_account2)
             | Q(bank_account2=customer.bank_account2)
-        ).order_by("?")
+        )
         if customer.id is not None:
             other_bank_account2 = other_bank_account2.exclude(id=customer.id)
         if other_bank_account2.exists():

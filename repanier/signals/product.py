@@ -17,8 +17,6 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_KG,
     PRODUCT_ORDER_UNIT_LT,
     DECIMAL_ONE,
-    LIMIT_ORDER_QTY_ITEM,
-    THREE_DECIMALS,
 )
 from repanier.models import Product
 
@@ -56,10 +54,7 @@ def product_pre_save(sender, **kwargs):
         PRODUCT_ORDER_UNIT_LT,
     ]:
         product.wrapped = False
-    product.recalculate_prices(
-        producer.producer_price_are_wo_vat,
-        producer.price_list_multiplier,
-    )
+    product.recalculate_prices()
 
     if not product.is_active:
         product.is_into_offer = False
@@ -72,25 +67,6 @@ def product_pre_save(sender, **kwargs):
         )
     if product.order_average_weight <= DECIMAL_ZERO:
         product.order_average_weight = DECIMAL_ONE
-
-    # TODO : check
-    if product.order_unit not in [
-        PRODUCT_ORDER_UNIT_PC_KG,
-        PRODUCT_ORDER_UNIT_KG,
-        PRODUCT_ORDER_UNIT_LT,
-    ]:
-        if product.order_unit == PRODUCT_ORDER_UNIT_PC:
-            product.customer_minimum_order_quantity = DECIMAL_ONE
-        product.customer_alert_order_quantity = (
-            product.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM
-        ).quantize(THREE_DECIMALS)
-    else:
-        product.customer_alert_order_quantity = (
-            product.customer_minimum_order_quantity
-            + (product.customer_increment_order_quantity * (LIMIT_ORDER_QTY_ITEM - 1))
-        ).quantize(THREE_DECIMALS)
-    if product.stock > DECIMAL_ZERO:
-        product.customer_alert_order_quantity = min(999, product.stock)
 
     if not product.reference:
         product.reference = uuid.uuid1()

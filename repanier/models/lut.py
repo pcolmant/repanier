@@ -123,18 +123,6 @@ class LUT_DeliveryPoint(MPTTModel):
         decimal_places=2,
         validators=[MinValueValidator(0)],
     )
-    # TODO : TBD
-    customer_responsible = models.ForeignKey(
-        "Customer",
-        verbose_name=_("Customer responsible"),
-        help_text=_(
-            "Invoices are sent to this customer who is responsible for collecting the payments."
-        ),
-        blank=True,
-        null=True,
-        default=None,
-        on_delete=models.CASCADE,
-    )
 
     objects = LUT_DeliveryPointManager()
 

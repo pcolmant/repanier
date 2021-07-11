@@ -34,13 +34,12 @@ def delivery_ajax(request):
     permanence = (
         Permanence.objects.filter(id=permanence_id)
         .only("id", "status")
-        .order_by("?")
         .first()
     )
     if permanence is None:
         raise Http404
     customer = (
-        Customer.objects.filter(user_id=user.id, may_order=True).order_by("?").first()
+        Customer.objects.filter(user_id=user.id, may_order=True).first()
     )
     if customer is None:
         raise Http404
@@ -48,7 +47,6 @@ def delivery_ajax(request):
         CustomerInvoice.objects.filter(
             customer_id=customer.id, permanence_id=permanence_id
         )
-        .order_by("?")
         .first()
     )
     if customer_invoice is None:
@@ -56,13 +54,13 @@ def delivery_ajax(request):
     json_dict = {}
     if customer_invoice.status == PERMANENCE_OPENED:
         delivery_id = sint(request.GET.get("delivery", 0))
-        if customer.delivery_point is not None:
+        if customer.group is not None:
             # The customer is member of a group
             qs = DeliveryBoard.objects.filter(
                 Q(
                     id=delivery_id,
                     permanence_id=permanence_id,
-                    delivery_point_id=customer.delivery_point_id,
+                    delivery_point__group_id=customer.group_id,
                     status=PERMANENCE_OPENED,
                 )
                 | Q(

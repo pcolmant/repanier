@@ -16,7 +16,6 @@ def my_cart_amount_ajax(request, permanence_id):
         CustomerInvoice.objects.filter(
             permanence_id=permanence_id, customer_id=user.customer_id
         )
-        .order_by("?")
         .first()
     )
     if customer_invoice is None:

@@ -24,7 +24,6 @@ class SelectAdminPermanenceWidget(forms.Select):
         for option_value, option_label in self.choices:
             permanence = (
                 Permanence.objects.filter(id=option_value)
-                .order_by("?")
                 .only("status")
                 .first()
             )

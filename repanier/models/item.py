@@ -23,7 +23,6 @@ from repanier.const import (
     LUT_PRODUCT_PLACEMENT,
     PRODUCT_PLACEMENT_BASKET,
     LUT_ALL_VAT,
-    LIMIT_ORDER_QTY_ITEM,
     DICT_VAT_DEFAULT,
 )
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelRepanierMoneyField
@@ -98,34 +97,6 @@ class Item(models.Model):
     wrapped = models.BooleanField(
         _("Individually wrapped by the producer"), default=False
     )
-    customer_minimum_order_quantity = models.DecimalField(
-        _("Minimum order quantity"),
-        default=DECIMAL_ONE,
-        max_digits=6,
-        decimal_places=3,
-        validators=[MinValueValidator(0)],
-    )
-    customer_increment_order_quantity = models.DecimalField(
-        _("Then quantity of"),
-        default=DECIMAL_ONE,
-        max_digits=6,
-        decimal_places=3,
-        validators=[MinValueValidator(0)],
-    )
-    customer_alert_order_quantity = models.DecimalField(
-        _("Alert quantity"),
-        default=LIMIT_ORDER_QTY_ITEM,
-        max_digits=6,
-        decimal_places=3,
-        validators=[MinValueValidator(0)],
-    )
-    producer_order_by_quantity = models.DecimalField(
-        _("Producer order by quantity"),
-        default=DECIMAL_ZERO,
-        max_digits=6,
-        decimal_places=3,
-        validators=[MinValueValidator(0)],
-    )
     placement = models.CharField(
         max_length=3,
         choices=LUT_PRODUCT_PLACEMENT,
@@ -144,18 +115,6 @@ class Item(models.Model):
     is_box = models.BooleanField(default=False)
     is_active = models.BooleanField(_("Active"), default=True)
 
-    # TBD
-    limit_order_quantity_to_stock = models.BooleanField(
-        _("Limit maximum order qty of the group to stock qty"), default=False
-    )
-
-    # @property
-    # def email_offer_price_with_vat(self):
-    #     offer_price = self.get_reference_price()
-    #     if offer_price == EMPTY_STRING:
-    #         offer_price = self.get_unit_price()
-    #     return offer_price
-
     def set_from(self, source):
         self.is_active = source.is_active
         self.picture2 = source.picture2
@@ -173,24 +132,19 @@ class Item(models.Model):
         self.producer_vat = source.producer_vat
         self.unit_deposit = source.unit_deposit
         self.stock = source.stock
-        self.customer_minimum_order_quantity = source.customer_minimum_order_quantity
-        self.customer_increment_order_quantity = (
-            source.customer_increment_order_quantity
-        )
-        self.customer_alert_order_quantity = source.customer_alert_order_quantity
-        self.producer_order_by_quantity = source.producer_order_by_quantity
         self.is_box = source.is_box
 
-    def recalculate_prices(self, producer_price_are_wo_vat, price_list_multiplier):
+    def recalculate_prices(self):
         vat = DICT_VAT[self.vat_level]
         vat_rate = vat[DICT_VAT_RATE]
-        if producer_price_are_wo_vat:
+        producer = self.producer
+        if producer.producer_price_are_wo_vat:
             self.producer_vat.amount = (
                 self.producer_unit_price.amount * vat_rate
             ).quantize(FOUR_DECIMALS)
             if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                 self.customer_unit_price.amount = (
-                    self.producer_unit_price.amount * price_list_multiplier
+                    self.producer_unit_price.amount * producer.price_list_multiplier
                 ).quantize(TWO_DECIMALS)
             else:
                 self.customer_unit_price = self.producer_unit_price
@@ -204,7 +158,7 @@ class Item(models.Model):
             ).quantize(FOUR_DECIMALS)
             if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                 self.customer_unit_price.amount = (
-                    self.producer_unit_price.amount * price_list_multiplier
+                    self.producer_unit_price.amount * producer.price_list_multiplier
                 ).quantize(TWO_DECIMALS)
             else:
                 self.customer_unit_price = self.producer_unit_price

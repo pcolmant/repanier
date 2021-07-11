@@ -52,7 +52,7 @@ def permanence_producer_rest(request, permanence_id, producer_name):
         permanence_id=permanence_id,
         producer__short_profile_name=producer_name.decode("unicode-escape"),
         status=PERMANENCE_OPENED,
-    ).order_by("?")
+    )
     if offer_item.exists():
         serializer = OfferItemSerializer(offer_item, many=True)
         return JsonResponse(serializer.data)
@@ -69,7 +69,7 @@ def permanence_producer_product_rest(request, permanence_id, producer_name, refe
             producer__short_profile_name=producer_name.decode("unicode-escape"),
             reference=reference.decode("unicode-escape"),
             status=PERMANENCE_OPENED,
-        ).order_by("?")
+        )
         if offer_item.exists():
             serializer = OfferItemSerializer(offer_item)
             return JsonResponse(serializer.data)
