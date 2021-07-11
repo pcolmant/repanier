@@ -287,7 +287,7 @@ class Producer(models.Model):
             .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
             .aggregate(
                 total_purchase_price_with_tax=Sum(
-                    "purchase_price",
+                    "selling_price",
                     output_field=DecimalField(
                         max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
@@ -310,7 +310,7 @@ class Producer(models.Model):
             .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
             .aggregate(
                 total_selling_price_with_tax=Sum(
-                    "selling_price",
+                    "purchase_price",
                     output_field=DecimalField(
                         max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
