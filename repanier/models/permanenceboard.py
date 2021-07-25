@@ -1,6 +1,4 @@
-import repanier.apps
 from django.db import models
-from django.db.models import UniqueConstraint
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import EMPTY_STRING
