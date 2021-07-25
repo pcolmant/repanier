@@ -1,5 +1,6 @@
 import repanier.apps
 from django.db import models
+from django.db.models import UniqueConstraint
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import EMPTY_STRING
@@ -51,7 +52,9 @@ class PermanenceBoard(models.Model):
         verbose_name = _("Permanence board")
         verbose_name_plural = _("Permanences board")
         unique_together = ("permanence", "permanence_role", "customer")
-        index_together = [["permanence_date", "permanence", "permanence_role"]]
+        indexes = [
+            models.Index(fields=["permanence_date", "permanence", "permanence_role"], name="repanier_permanenceboard_idx01"),
+        ]
 
     def __str__(self):
         return EMPTY_STRING

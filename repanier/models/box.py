@@ -1,6 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum, DecimalField
+from django.db.models import Sum, DecimalField, UniqueConstraint
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
@@ -124,4 +124,6 @@ class BoxContent(models.Model):
         verbose_name = _("Box content")
         verbose_name_plural = _("Boxes content")
         unique_together = (("box", "product"),)
-        index_together = [["product", "box"]]
+        indexes = [
+            models.Index(fields=["product", "box"], name="repanier_box_idx01"),
+        ]

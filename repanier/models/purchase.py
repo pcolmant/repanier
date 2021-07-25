@@ -3,6 +3,7 @@ import logging
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
+from django.db.models import UniqueConstraint
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -360,7 +361,13 @@ class Purchase(models.Model):
         verbose_name_plural = _("Purchases")
         # ordering = ("permanence", "customer", "offer_item", "is_box_content")
         unique_together = ("customer", "offer_item", "is_box_content")
-        index_together = [["permanence", "customer_invoice"]]
+        # UniqueConstraint(
+        #     fields=["customer", "offer_item", "is_box_content"], name="unique01"
+        # )
+        indexes = [
+            models.Index(fields=["permanence", "customer_invoice"], name="repanier_purchase_idx01"),
+            models.Index(fields=["permanence", "producer"], name="repanier_purchase_idx02"),
+        ]
 
 
 class PurchaseWoReceiver(Purchase):

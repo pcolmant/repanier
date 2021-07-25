@@ -1812,7 +1812,6 @@ class Permanence(models.Model):
     class Meta:
         verbose_name = _("Sale")
         verbose_name_plural = _("Sales")
-        index_together = [["permanence_date"]]
 
 
 class PermanenceInPreparation(Permanence):

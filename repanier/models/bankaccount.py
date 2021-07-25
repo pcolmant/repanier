@@ -217,9 +217,9 @@ class BankAccount(models.Model):
         verbose_name = _("Bank account transaction")
         verbose_name_plural = _("Bank account transactions")
         ordering = ("-operation_date", "-id")
-        index_together = [
-            ["operation_date", "id"],
-            ["customer_invoice", "operation_date", "id"],
-            ["producer_invoice", "operation_date", "operation_date", "id"],
-            ["permanence", "customer", "producer", "operation_date", "id"],
+        indexes = [
+            models.Index(fields=["operation_date", "id"], name="repanier_bankaccount_idx01"),
+            models.Index(fields=["customer_invoice", "operation_date", "id"], name="repanier_bankaccount_idx02"),
+            models.Index(fields=["producer_invoice", "operation_date", "operation_date", "id"], name="repanier_bankaccount_idx03"),
+            models.Index(fields=["permanence", "customer", "producer", "operation_date", "id"], name="repanier_bankaccount_idx04"),
         ]
