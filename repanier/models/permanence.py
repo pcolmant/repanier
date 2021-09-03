@@ -1812,6 +1812,7 @@ class Permanence(models.Model):
     class Meta:
         verbose_name = _("Sale")
         verbose_name_plural = _("Sales")
+        #TODO : check how to remove vvvvv
         index_together = [["permanence_date"]]
 
 

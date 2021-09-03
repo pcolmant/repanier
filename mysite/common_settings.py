@@ -184,7 +184,6 @@ REPANIER_SETTINGS_GROUP_NAME = config.get(
     fallback=get_group_name(ALLOWED_HOSTS[0]),
 )
 DEFAULT_FROM_EMAIL = "{} <{}>".format(REPANIER_SETTINGS_GROUP_NAME, EMAIL_HOST_USER)
-REPANIER_DEMO_EMAIL = "repanier@no-spam.ws"
 
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
 DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
@@ -221,10 +220,6 @@ REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
 
 REPANIER_SETTINGS_CUSTOM_CSS_PATH = get_repanier_css_name(
     os.path.join("css", "custom.css")
-)
-
-REPANIER_SETTINGS_BRANDING_CSS_PATH = get_repanier_css_name(
-    os.path.join("css", "branding.css")
 )
 
 # print(
