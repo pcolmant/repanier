@@ -72,7 +72,9 @@ class PermanenceMenu(Menu):
                 if displayed_permanence_counter > 4:
                     break
 
-        return nodes
+        if len(nodes) > 1:
+            return nodes
+        return []
 
     def append_permanence_board(self, nodes, parent_node, submenu_id):
         permanence_board_set = PermanenceBoard.objects.filter(
