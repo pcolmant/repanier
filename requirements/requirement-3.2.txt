@@ -44,7 +44,7 @@ python-dateutil==2.8.1
 pytz==2020.1
 PyYAML==5.4.1
 six==1.15.0
-sqlparse==0.4.1
+sqlparse==0.4.2
 tablib==3.0.0
 Unidecode==1.1.1 # django-filer 2.0.2 depends on Unidecode<1.2 and >=0.04
 uWSGI==2.0.19.1
