@@ -21,7 +21,6 @@ def export_offer(permanence, wb=None):
             .filter(
                 producer__in=producers_in_this_permanence,
                 is_into_offer=True,
-                is_box=False,
             )
             .order_by(
                 "producer__short_profile_name",
@@ -33,7 +32,7 @@ def export_offer(permanence, wb=None):
             row_num = export_offer_row(product, row_num, ws)
         for product in (
             Product.objects.prefetch_related("producer", "department_for_customer")
-            .filter(is_into_offer=True, is_box=True)
+            .filter(is_into_offer=True)
             .order_by("customer_unit_price", "unit_deposit", "long_name_v2")
         ):
             row_num = export_offer_row(product, row_num, ws)
@@ -84,7 +83,6 @@ def export_offer_row(product, row_num, ws):
             10,
             product.producer_unit_price
             if product.producer_unit_price < product.customer_unit_price
-            and not product.is_box
             else EMPTY_STRING,
             repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
             False,

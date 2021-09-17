@@ -21,7 +21,6 @@ from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
     sint,
     get_html_selected_value,
-    get_html_selected_box_value,
     get_repanier_template_name,
 )
 
@@ -397,30 +396,9 @@ def repanier_select_offer_item(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     offer_item = kwargs.get("offer_item")
-    date = kwargs.get("date", EMPTY_STRING)
     result = []
     if offer_item.may_order:
         select_offer_item(offer_item, result, user)
-    if offer_item.is_box_content:
-        box_purchase = (
-            PurchaseWoReceiver.objects.filter(
-                customer_id=user.customer_id,
-                offer_item_id=offer_item.id,
-                is_box_content=True,
-            )
-            .only("quantity_ordered")
-            .first()
-        )
-        if box_purchase is None:
-            quantity_ordered = DECIMAL_ZERO
-        else:
-            quantity_ordered = box_purchase.quantity_ordered
-        html = get_html_selected_box_value(offer_item, quantity_ordered)
-        result.append(
-            '<select id="box_offer_item{id}" name="box_offer_item{id}" disabled class="form-control">{option}</select>'.format(
-                result=result, id=offer_item.id, option=html
-            )
-        )
     return mark_safe(EMPTY_STRING.join(result))
 
 
@@ -429,7 +407,6 @@ def select_offer_item(offer_item, result, user):
         PurchaseWoReceiver.objects.filter(
             customer_id=user.customer_id,
             offer_item_id=offer_item.id,
-            is_box_content=False,
         )
         .only("quantity_ordered")
         .first()

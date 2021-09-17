@@ -79,7 +79,6 @@ class Permanence(models.Model):
     producers = models.ManyToManyField(
         "Producer", verbose_name=_("Producers"), blank=True
     )
-    boxes = models.ManyToManyField("Box", verbose_name=_("Boxes"), blank=True)
 
     with_delivery_point = models.BooleanField(_("With delivery point"), default=False)
     automatically_closed = models.BooleanField(
@@ -696,7 +695,6 @@ class Permanence(models.Model):
                                 status=PERMANENCE_OPENED,
                                 q_order=1,
                                 batch_job=True,
-                                is_box_content=False,
                                 comment=EMPTY_STRING,
                             )
                             membership_fee_valid_until = (
@@ -740,7 +738,6 @@ class Permanence(models.Model):
                         status=PERMANENCE_OPENED,
                         q_order=1,
                         batch_job=True,
-                        is_box_content=False,
                         comment=EMPTY_STRING,
                     )
                     create_or_update_one_purchase(
@@ -749,7 +746,6 @@ class Permanence(models.Model):
                         status=PERMANENCE_OPENED,
                         q_order=0,
                         batch_job=True,
-                        is_box_content=False,
                         comment=EMPTY_STRING,
                     )
         if everything:
@@ -774,7 +770,6 @@ class Permanence(models.Model):
                     status=PERMANENCE_OPENED,
                     q_order=1,
                     batch_job=True,
-                    is_box_content=False,
                     comment=EMPTY_STRING,
                 )
 
@@ -916,7 +911,6 @@ class Permanence(models.Model):
 
         result_set = PurchaseWoReceiver.objects.filter(
             permanence_id=self.id,
-            is_box_content=False,
             offer_item__is_resale_price_fixed=True,
         ).aggregate(
             purchase_price=Sum(
@@ -1505,7 +1499,6 @@ class Permanence(models.Model):
             # if product.is_box or product.is_box_content or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
             offer_item.is_resale_price_fixed = (
                     not(producer.represent_this_buyinggroup)
-                    or product.is_box
                     or product.order_unit
                     >= PRODUCT_ORDER_UNIT_DEPOSIT
             )

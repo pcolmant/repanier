@@ -19,8 +19,8 @@ from .purchase import Purchase
 from .staff import Staff
 
 # after Producer and Product
-from .box import Box
-from .box import BoxContent
+# from .box import Box
+# from .box import BoxContent
 
 # proxies
 from .invoice import CustomerSend

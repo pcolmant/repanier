@@ -823,7 +823,7 @@ class CustomerInvoice(Invoice):
             from repanier.models.purchase import PurchaseWoReceiver
 
             purchase_qs = PurchaseWoReceiver.objects.filter(
-                customer_invoice_id=self.id, is_box_content=False
+                customer_invoice_id=self.id
             )
 
             for a_purchase in purchase_qs.select_related("customer"):
@@ -988,7 +988,7 @@ class CustomerProducerInvoice(models.Model):
             return format_html("<b>{}</b>", self.total_purchase_with_tax)
         return EMPTY_STRING
 
-    get_html_producer_price_purchased.short_description = _("Producer amount booked")
+    get_html_producer_price_purchased.short_description = _("Row amount")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     def __str__(self):

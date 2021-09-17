@@ -8,7 +8,6 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
-from repanier.models.box import BoxContent
 from repanier.models.invoice import (
     CustomerInvoice,
     ProducerInvoice,
@@ -24,7 +23,7 @@ class PurchaseManager(models.Manager):
         purchase_set = (
             super()
             .get_queryset()
-            .order_by("permanence", "customer", "offer_item", "is_box_content")
+            .order_by("permanence", "customer", "offer_item")
         )
         if permanence is not None:
             purchase_set = purchase_set.filter(permanence_id=permanence.id)
@@ -183,7 +182,7 @@ class Purchase(models.Model):
         # workaround for a display problem with Money field in the admin list_display
         return self.selling_price
 
-    get_selling_price.short_description = _("Customer row price")
+    get_selling_price.short_description = _("Row amount")
 
     def get_producer_unit_price(self):
         offer_item = self.offer_item
@@ -307,49 +306,16 @@ class Purchase(models.Model):
             self.customer_producer_invoice = customer_producer_invoice
         super().save(*args, **kwargs)
 
-    @transaction.atomic
-    def save_box(self):
-        if self.offer_item.is_box:
-            for content in BoxContent.objects.filter(box_id=self.offer_item.product_id):
-                content_offer_item = content.product.get_or_create_offer_item(
-                    self.permanence
-                )
-                # Select one purchase
-                content_purchase = Purchase.objects.filter(
-                    customer_id=self.customer_id,
-                    offer_item_id=content_offer_item.id,
-                    is_box_content=True,
-                ).first()
-                if content_purchase is None:
-                    content_purchase = Purchase.objects.create(
-                        permanence=self.permanence,
-                        offer_item=content_offer_item,
-                        producer=self.producer,
-                        customer=self.customer,
-                        quantity_ordered=self.quantity_ordered
-                        * content.content_quantity,
-                        quantity_invoiced=self.quantity_invoiced
-                        * content.content_quantity,
-                        is_box_content=True,
-                        status=self.status,
-                    )
-                else:
-                    content_purchase.status = self.status
-                    content_purchase.quantity_ordered = (
-                        self.quantity_ordered * content.content_quantity
-                    )
-                    content_purchase.quantity_invoiced = (
-                        self.quantity_invoiced * content.content_quantity
-                    )
-                    content_purchase.save()
-                content_purchase.permanence.producers.add(content_offer_item.producer)
 
     def __str__(self):
-        return "{} > {} > {}".format(
-            self.permanence,
-            self.customer,
-            self.offer_item.get_long_name_with_customer_price(),
-        )
+        if hasattr(self, 'offer_item'):
+            return "{} > {} > {}".format(
+                self.permanence,
+                self.customer,
+                self.offer_item.get_long_name_with_customer_price(),
+            )
+        else:
+            return EMPTY_STRING
         # Use to not display label (inline_admin_form.original) into the inline form (tabular.html)
         # return EMPTY_STRING
 

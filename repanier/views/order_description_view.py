@@ -28,13 +28,6 @@ def order_description_view(request, permanence_id):
     is_like = request.GET.get("is_like", EMPTY_STRING)
     producer_id = request.GET.get("producer", "all")
     department_id = request.GET.get("department", "all")
-    box_id = request.GET.get("box", "all")
-    if box_id != "all":
-        is_box = True
-        # Do not display "all department" as selected
-        department_id = None
-    else:
-        is_box = False
     q = request.GET.get("q", None)
 
     template_name = get_repanier_template_name("order_description.html")
@@ -44,11 +37,9 @@ def order_description_view(request, permanence_id):
         {
             "is_like": is_like,
             "is_basket": is_basket,
-            "is_box": is_box,
             "q": q,
             "producer_id": producer_id,
             "department_id": department_id,
-            "box_id": box_id,
             "permanence_id": permanence_id,
             "may_order": True,
             "permanence": permanence,

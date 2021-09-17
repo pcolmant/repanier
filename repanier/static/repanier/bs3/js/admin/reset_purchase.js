@@ -9,10 +9,10 @@
 
             // Clear the autocomplete with the same prefix
             $(':input[name=' + prefix + 'delivery]').val(null).trigger('change');
-            $(':input[name=' + prefix + 'offer_item]').val(null).trigger('change');
+            $(':input[name=' + prefix + 'product]').val(null).trigger('change');
         });
         // Bind on continent field change
-        $(':input[name$=offer_item]').on('change', function () {
+        $(':input[name$=product]').on('change', function () {
             // Get the field prefix, ie. if this comes from a formset form
             var prefix = $(this).getFormPrefix();
 

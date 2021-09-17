@@ -132,7 +132,6 @@ class Item(models.Model):
         self.producer_vat = source.producer_vat
         self.unit_deposit = source.unit_deposit
         self.stock = source.stock
-        self.is_box = source.is_box
 
     def recalculate_prices(self):
         vat = DICT_VAT[self.vat_level]

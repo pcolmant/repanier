@@ -42,7 +42,6 @@ class CustomerInvoiceView(DetailView):
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,
-                    is_box_content=False,
                 ).order_by("producer", "offer_item__order_sort_order_v2")
             else:
                 purchase_set = Purchase.objects.filter(

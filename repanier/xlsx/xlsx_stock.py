@@ -1,15 +1,11 @@
 import repanier.apps
-from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
 from repanier.models.offeritem import OfferItemReadOnly
-from repanier.models.product import Product
-from repanier.packages.openpyxl import load_workbook
 from repanier.packages.openpyxl.style import Fill
 from repanier.packages.openpyxl.styles import Color
-from repanier.tools import update_offer_item, next_row
+from repanier.tools import next_row
 from repanier.xlsx.export_tools import *
-from repanier.xlsx.import_tools import get_row, get_header
 
 
 def export_permanence_stock(
@@ -335,186 +331,186 @@ def export_permanence_stock(
 #     return error, error_msg
 
 
-def export_producer_stock(producers, customer_price=False, wb=None):
-    yellowFill = Fill()
-    yellowFill.start_color.index = "FFEEEE11"
-    yellowFill.end_color.index = "FFEEEE11"
-    yellowFill.fill_type = Fill.FILL_SOLID
-
-    header = [
-        (_("Id"), 5),
-        (_("Producer"), 60),
-        (_("Reference"), 20),
-        (_("Product"), 60),
-        (_("Customer unit price") if customer_price else _("Producer unit price"), 10),
-        (_("Deposit"), 10),
-        (_("Maximum quantity"), 10),
-        (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
-    ]
-    producers = producers.iterator()
-    producer = next_row(producers)
-    wb, ws = new_landscape_a4_sheet(wb, _("Maximum quantity"), _("Maximum quantity"), header)
-    show_column_reference = False
-    row_num = 1
-    while producer is not None:
-        products = (
-            Product.objects.filter(
-                producer_id=producer.id,
-                is_active=True,
-            )
-            .order_by("long_name_v2", "order_average_weight")
-            .select_related("producer", "department_for_customer")
-            .iterator()
-        )
-        product = next_row(products)
-        while product is not None:
-            if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                c = ws.cell(row=row_num, column=0)
-                c.value = product.id
-                c = ws.cell(row=row_num, column=1)
-                c.value = "{}".format(product.producer)
-                if len(product.reference) < 36:
-                    if product.reference.isdigit():
-                        # Avoid display of exponent by Excel
-                        product_reference = "[{}]".format(product.reference)
-                    else:
-                        product_reference = product.reference
-                    show_column_reference = True
-                else:
-                    product_reference = EMPTY_STRING
-                c = ws.cell(row=row_num, column=2)
-                c.value = "{}".format(product_reference)
-                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-                c = ws.cell(row=row_num, column=3)
-                if product.department_for_customer is not None:
-                    c.value = "{} - {}".format(
-                        product.department_for_customer.short_name_v2,
-                        product.get_long_name_with_customer_price(),
-                    )
-                else:
-                    c.value = product.get_long_name_with_customer_price()
-                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                c.style.alignment.wrap_text = True
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-                c = ws.cell(row=row_num, column=4)
-                unit_price = (
-                    product.customer_unit_price
-                    if customer_price
-                    else product.producer_unit_price
-                )
-                c.value = unit_price.amount
-                c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                )
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-                c = ws.cell(row=row_num, column=5)
-                c.value = product.unit_deposit.amount
-                c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                )
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-                c = ws.cell(row=row_num, column=6)
-                c.value = product.stock
-                c.style.number_format.format_code = (
-                    '_ * #,##0.00_ ;_ * -#,##0.00_ ;_ * "-"??_ ;_ @_ '
-                )
-                c.style.font.color = Color(Color.BLUE)
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-                c = ws.cell(row=row_num, column=7)
-                c.value = "=ROUND((E{}+F{})*G{},2)".format(
-                    row_num + 1, row_num + 1, row_num + 1
-                )
-                c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                )
-                ws.conditional_formatting.addCellIs(
-                    get_column_letter(8) + str(row_num + 1),
-                    "notEqual",
-                    [
-                        str(
-                            (
-                                (unit_price.amount + product.unit_deposit.amount)
-                                * product.stock
-                            ).quantize(TWO_DECIMALS)
-                        )
-                    ],
-                    True,
-                    wb,
-                    None,
-                    None,
-                    yellowFill,
-                )
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-                row_num += 1
-            product = next_row(products)
-        row_num += 1
-        c = ws.cell(row=row_num, column=4)
-        c.value = "{}".format(_("Total"))
-        c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-        c.style.font.bold = True
-        c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
-        c = ws.cell(row=row_num, column=7)
-        formula = "SUM(H{}:H{})".format(2, row_num)
-        c.value = "=" + formula
-        c.style.number_format.format_code = (
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-        )
-        c.style.font.bold = True
-
-        ws.column_dimensions[get_column_letter(1)].visible = False
-        if not show_column_reference:
-            ws.column_dimensions[get_column_letter(3)].visible = False
-        producer = next_row(producers)
-    return wb
-
-
-@transaction.atomic
-def import_producer_stock(worksheet):
-    error = False
-    error_msg = None
-    header = get_header(worksheet)
-    if header:
-        row_num = 1
-        row = get_row(worksheet, header, row_num)
-        while row and not error:
-            try:
-                # with transaction.atomic():
-                product_id = None if row[_("Id")] is None else Decimal(row[_("Id")])
-                if product_id is not None:
-                    stock = (
-                        DECIMAL_ZERO
-                        if row[_("Maximum quantity")] is None
-                        else Decimal(row[_("Maximum quantity")]).quantize(THREE_DECIMALS)
-                    )
-                    stock = stock if stock >= DECIMAL_ZERO else DECIMAL_ZERO
-                    Product.objects.filter(id=product_id).update(stock=stock)
-                update_offer_item(product_id=product_id)
-                row_num += 1
-                row = get_row(worksheet, header, row_num)
-            except KeyError as e:
-                # Missing field
-                error = True
-                error_msg = _("Row %(row_num)d : A required column is missing.") % {
-                    "row_num": row_num + 1
-                }
-            except Exception as e:
-                error = True
-                error_msg = _("Row %(row_num)d : %(error_msg)s.") % {
-                    "row_num": row_num + 1,
-                    "error_msg": str(e),
-                }
-    return error, error_msg
+# def export_producer_stock(producers, customer_price=False, wb=None):
+#     yellowFill = Fill()
+#     yellowFill.start_color.index = "FFEEEE11"
+#     yellowFill.end_color.index = "FFEEEE11"
+#     yellowFill.fill_type = Fill.FILL_SOLID
+#
+#     header = [
+#         (_("Id"), 5),
+#         (_("Producer"), 60),
+#         (_("Reference"), 20),
+#         (_("Product"), 60),
+#         (_("Customer unit price") if customer_price else _("Producer unit price"), 10),
+#         (_("Deposit"), 10),
+#         (_("Maximum quantity"), 10),
+#         (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
+#     ]
+#     producers = producers.iterator()
+#     producer = next_row(producers)
+#     wb, ws = new_landscape_a4_sheet(wb, _("Maximum quantity"), _("Maximum quantity"), header)
+#     show_column_reference = False
+#     row_num = 1
+#     while producer is not None:
+#         products = (
+#             Product.objects.filter(
+#                 producer_id=producer.id,
+#                 is_active=True,
+#             )
+#             .order_by("long_name_v2", "order_average_weight")
+#             .select_related("producer", "department_for_customer")
+#             .iterator()
+#         )
+#         product = next_row(products)
+#         while product is not None:
+#             if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+#                 c = ws.cell(row=row_num, column=0)
+#                 c.value = product.id
+#                 c = ws.cell(row=row_num, column=1)
+#                 c.value = "{}".format(product.producer)
+#                 if len(product.reference) < 36:
+#                     if product.reference.isdigit():
+#                         # Avoid display of exponent by Excel
+#                         product_reference = "[{}]".format(product.reference)
+#                     else:
+#                         product_reference = product.reference
+#                     show_column_reference = True
+#                 else:
+#                     product_reference = EMPTY_STRING
+#                 c = ws.cell(row=row_num, column=2)
+#                 c.value = "{}".format(product_reference)
+#                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+#                 c.style.borders.bottom.border_style = Border.BORDER_THIN
+#                 c = ws.cell(row=row_num, column=3)
+#                 if product.department_for_customer is not None:
+#                     c.value = "{} - {}".format(
+#                         product.department_for_customer.short_name_v2,
+#                         product.get_long_name_with_customer_price(),
+#                     )
+#                 else:
+#                     c.value = product.get_long_name_with_customer_price()
+#                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+#                 c.style.alignment.wrap_text = True
+#                 c.style.borders.bottom.border_style = Border.BORDER_THIN
+#                 c = ws.cell(row=row_num, column=4)
+#                 unit_price = (
+#                     product.customer_unit_price
+#                     if customer_price
+#                     else product.producer_unit_price
+#                 )
+#                 c.value = unit_price.amount
+#                 c.style.number_format.format_code = (
+#                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+#                 )
+#                 c.style.borders.bottom.border_style = Border.BORDER_THIN
+#                 c = ws.cell(row=row_num, column=5)
+#                 c.value = product.unit_deposit.amount
+#                 c.style.number_format.format_code = (
+#                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+#                 )
+#                 c.style.borders.bottom.border_style = Border.BORDER_THIN
+#                 c = ws.cell(row=row_num, column=6)
+#                 c.value = product.stock
+#                 c.style.number_format.format_code = (
+#                     '_ * #,##0.00_ ;_ * -#,##0.00_ ;_ * "-"??_ ;_ @_ '
+#                 )
+#                 c.style.font.color = Color(Color.BLUE)
+#                 c.style.borders.bottom.border_style = Border.BORDER_THIN
+#                 c = ws.cell(row=row_num, column=7)
+#                 c.value = "=ROUND((E{}+F{})*G{},2)".format(
+#                     row_num + 1, row_num + 1, row_num + 1
+#                 )
+#                 c.style.number_format.format_code = (
+#                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+#                 )
+#                 ws.conditional_formatting.addCellIs(
+#                     get_column_letter(8) + str(row_num + 1),
+#                     "notEqual",
+#                     [
+#                         str(
+#                             (
+#                                 (unit_price.amount + product.unit_deposit.amount)
+#                                 * product.stock
+#                             ).quantize(TWO_DECIMALS)
+#                         )
+#                     ],
+#                     True,
+#                     wb,
+#                     None,
+#                     None,
+#                     yellowFill,
+#                 )
+#                 c.style.borders.bottom.border_style = Border.BORDER_THIN
+#                 row_num += 1
+#             product = next_row(products)
+#         row_num += 1
+#         c = ws.cell(row=row_num, column=4)
+#         c.value = "{}".format(_("Total"))
+#         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+#         c.style.font.bold = True
+#         c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
+#         c = ws.cell(row=row_num, column=7)
+#         formula = "SUM(H{}:H{})".format(2, row_num)
+#         c.value = "=" + formula
+#         c.style.number_format.format_code = (
+#             repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+#         )
+#         c.style.font.bold = True
+#
+#         ws.column_dimensions[get_column_letter(1)].visible = False
+#         if not show_column_reference:
+#             ws.column_dimensions[get_column_letter(3)].visible = False
+#         producer = next_row(producers)
+#     return wb
 
 
-def handle_uploaded_stock(request, producers, file_to_import, *args):
-    error = False
-    error_msg = None
-    wb = load_workbook(file_to_import)
-    if wb is not None:
-        ws = wb.get_sheet_by_name(format_worksheet_title(_("Maximum quantity")))
-        if ws is not None:
-            error, error_msg = import_producer_stock(ws, producers=producers)
-            if error:
-                error_msg = format_worksheet_title(_("Maximum quantity")) + " > " + error_msg
-    return error, error_msg
+# @transaction.atomic
+# def import_producer_stock(worksheet):
+#     error = False
+#     error_msg = None
+#     header = get_header(worksheet)
+#     if header:
+#         row_num = 1
+#         row = get_row(worksheet, header, row_num)
+#         while row and not error:
+#             try:
+#                 # with transaction.atomic():
+#                 product_id = None if row[_("Id")] is None else Decimal(row[_("Id")])
+#                 if product_id is not None:
+#                     stock = (
+#                         DECIMAL_ZERO
+#                         if row[_("Maximum quantity")] is None
+#                         else Decimal(row[_("Maximum quantity")]).quantize(THREE_DECIMALS)
+#                     )
+#                     stock = stock if stock >= DECIMAL_ZERO else DECIMAL_ZERO
+#                     Product.objects.filter(id=product_id).update(stock=stock)
+#                 update_offer_item(product_id=product_id)
+#                 row_num += 1
+#                 row = get_row(worksheet, header, row_num)
+#             except KeyError as e:
+#                 # Missing field
+#                 error = True
+#                 error_msg = _("Row %(row_num)d : A required column is missing.") % {
+#                     "row_num": row_num + 1
+#                 }
+#             except Exception as e:
+#                 error = True
+#                 error_msg = _("Row %(row_num)d : %(error_msg)s.") % {
+#                     "row_num": row_num + 1,
+#                     "error_msg": str(e),
+#                 }
+#     return error, error_msg
+
+
+# def handle_uploaded_stock(request, producers, file_to_import, *args):
+#     error = False
+#     error_msg = None
+#     wb = load_workbook(file_to_import)
+#     if wb is not None:
+#         ws = wb.get_sheet_by_name(format_worksheet_title(_("Maximum quantity")))
+#         if ws is not None:
+#             error, error_msg = import_producer_stock(ws, producers=producers)
+#             if error:
+#                 error_msg = format_worksheet_title(_("Maximum quantity")) + " > " + error_msg
+#     return error, error_msg

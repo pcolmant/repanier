@@ -106,7 +106,6 @@
                             </div>
                             <input type="hidden" name="producer" value="{{ producer_id }}">
                             <input type="hidden" name="department" value="{{ department_id }}">
-                            <input type="hidden" name="box" value="{{ box_id }}">
                             <input type="hidden" name="is_like" value="{{ is_like }}">
                             <input type="hidden" name="is_basket" value="{{ is_basket }}">
                         </form>
@@ -124,12 +123,6 @@
                             <li>
                                 <a href="{% url "repanier:order_view" permanence_id %}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My" %} <span class="glyphicon glyphicon-heart"></span></a>
                             </li>
-                            {% endif %}
-                            {% if box_set %}
-                                {% for box in box_set.all %}
-                                    <li><a href="{% url "repanier:order_view" permanence_id %}?box={{ box.id|unlocalize }}"
-                                           {% if box.id == box_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }}{#  <span class="glyphicon glyphicon-gift"></span> #}</a>
-                                {% endfor %}
                             {% endif %}
                             {% if producer_set %}
                                 <li>
@@ -416,7 +409,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_filter_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_filter_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}
@@ -425,7 +418,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}

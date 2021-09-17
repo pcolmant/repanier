@@ -79,7 +79,6 @@ class Product(Item):
     def get_or_create_offer_item(self, permanence):
 
         from repanier.models.offeritem import OfferItem, OfferItemReadOnly
-        from repanier.models.box import BoxContent
 
         offer_item_qs = OfferItem.objects.filter(
             permanence_id=permanence.id, product_id=self.id
@@ -90,24 +89,7 @@ class Product(Item):
                 product_id=self.id,
                 producer_id=self.producer_id,
             )
-        permanence.clean_offer_item(offer_item_qs=offer_item_qs)
-        if self.is_box:
-            # Add box products
-            for box_content in BoxContent.objects.filter(box=self.id):
-                box_offer_item_qs = OfferItem.objects.filter(
-                    permanence_id=permanence.id, product_id=box_content.product_id
-                )
-                if not box_offer_item_qs.exists():
-                    OfferItemReadOnly.objects.create(
-                        permanence_id=permanence.id,
-                        product_id=box_content.product_id,
-                        producer_id=box_content.product.producer_id,
-                        is_box_content=True,
-                    )
-                else:
-                    box_offer_item = box_offer_item_qs.first()
-                    box_offer_item.is_box_content = True
-                    box_offer_item.save(update_fields=["is_box_content"])
+            permanence.clean_offer_item(offer_item_qs=offer_item_qs)
 
         offer_item = offer_item_qs.first()
         return offer_item
@@ -150,16 +132,12 @@ class Product(Item):
         return mark_safe(link)
 
     def get_qty_display(self):
-        if self.is_box:
-            # To avoid unicode error in email_offer.send_open_order
-            qty_display = EMPTY_STRING  # BOX_UNICODE
-        else:
-            qty_display = self.get_display(
-                qty=1,
-                order_unit=self.order_unit,
-                with_qty_display=False,
-                with_price_display=False,
-            )
+        qty_display = self.get_display(
+            qty=1,
+            order_unit=self.order_unit,
+            with_qty_display=False,
+            with_price_display=False,
+        )
         return qty_display
 
     def __str__(self):

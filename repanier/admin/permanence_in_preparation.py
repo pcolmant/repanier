@@ -21,7 +21,6 @@ from repanier.admin.forms import (
 )
 from repanier.admin.sale import (
     ProducerAutocomplete,
-    BoxesAutocomplete,
     SaleAdmin,
 )
 from repanier.admin.tools import (
@@ -89,11 +88,6 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 r"^producer_autocomplete/$",
                 ProducerAutocomplete.as_view(),
                 name="producer-autocomplete",
-            ),
-            url(
-                r"^boxes_autocomplete/$",
-                BoxesAutocomplete.as_view(),
-                name="boxes-autocomplete",
             ),
             url(
                 r"^(?P<permanence_id>.+)/export-offer/$",

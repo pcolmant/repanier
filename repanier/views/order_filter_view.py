@@ -33,13 +33,6 @@ def order_filter_view(request, permanence_id):
     is_like = request.GET.get("is_like", EMPTY_STRING)
     producer_id = request.GET.get("producer", "all")
     department_id = request.GET.get("department", "all")
-    box_id = request.GET.get("box", "all")
-    if box_id != "all":
-        is_box = True
-        # Do not display "all department" as selected
-        department_id = None
-    else:
-        is_box = False
     q = request.GET.get("q", None)
 
     if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
@@ -53,24 +46,12 @@ def order_filter_view(request, permanence_id):
         LUT_DepartmentForCustomer.objects.filter(
             offeritem__permanence_id=permanence_id,
             offeritem__is_active=True,
-            offeritem__is_box=False,
         )
         .order_by("tree_id", "lft")
         .distinct("id", "tree_id", "lft")
     )
     if producer_id != "all":
         department_set = department_set.filter(offeritem__producer_id=producer_id)
-
-    box_set = OfferItemReadOnly.objects.filter(
-        permanence_id=permanence_id,
-        is_box=True,
-        is_active=True,
-        may_order=True,
-    ).order_by(
-        "customer_unit_price",
-        "unit_deposit",
-        "long_name_v2",
-    )
 
     template_name = get_repanier_template_name("order_filter.html")
     return render(
@@ -79,16 +60,13 @@ def order_filter_view(request, permanence_id):
         {
             "is_like": is_like,
             "is_basket": is_basket,
-            "is_box": is_box,
             "q": q,
             "producer_id": producer_id,
             "department_id": department_id,
-            "box_id": box_id,
             "permanence_id": permanence_id,
             "may_order": True,
             "producer_set": producer_set,
             "department_set": department_set,
-            "box_set": box_set,
             "is_filter_view": "active",
         },
     )

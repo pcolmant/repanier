@@ -16,7 +16,6 @@ from repanier.models import (
     Permanence,
     LUT_DeliveryPoint,
     Producer,
-    Box,
 )
 
 
@@ -26,16 +25,6 @@ class ProducerAutocomplete(autocomplete.Select2QuerySetView):
 
         if self.q:
             qs = qs.filter(short_profile_name__istartswith=self.q)
-
-        return qs
-
-
-class BoxesAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        qs = Box.objects.filter(is_box=True, is_into_offer=True)
-
-        if self.q:
-            qs = qs.filter(long_name_v2__istartswith=self.q)
 
         return qs
 
@@ -155,10 +144,10 @@ class SaleForm(forms.ModelForm):
         if "producers" in self.fields:
             producer_field = self.fields["producers"]
             producer_field.widget.can_add_related = False
-        if settings.REPANIER_SETTINGS_BOX:
-            if "boxes" in self.fields:
-                boxes_field = self.fields["boxes"]
-                boxes_field.widget.can_add_related = False
+        # if settings.REPANIER_SETTINGS_BOX:
+        #     if "boxes" in self.fields:
+        #         boxes_field = self.fields["boxes"]
+        #         boxes_field.widget.can_add_related = False
 
     class Meta:
         model = Permanence
@@ -205,8 +194,8 @@ class SaleAdmin(admin.ModelAdmin):
             "producers",
         ]
 
-        if settings.REPANIER_SETTINGS_BOX:
-            fields.append("boxes")
+        # if settings.REPANIER_SETTINGS_BOX:
+        #     fields.append("boxes")
 
         return fields
 
@@ -217,8 +206,8 @@ class SaleAdmin(admin.ModelAdmin):
         if permanence is not None:
             if permanence.status > PERMANENCE_PLANNED:
                 readonly_fields.append("producers")
-                if settings.REPANIER_SETTINGS_BOX:
-                    readonly_fields.append("boxes")
+                # if settings.REPANIER_SETTINGS_BOX:
+                #     readonly_fields.append("boxes")
             elif permanence.status >= PERMANENCE_CLOSED:
                 readonly_fields.append("automatically_closed")
         return readonly_fields
@@ -255,8 +244,6 @@ class SaleAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "producers":
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
-        if db_field.name == "boxes":
-            kwargs["queryset"] = Box.objects.filter(is_box=True, is_into_offer=True)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     @transaction.atomic

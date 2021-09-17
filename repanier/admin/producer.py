@@ -2,7 +2,6 @@ from collections import OrderedDict
 
 from django import forms
 from django.conf import settings
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import Textarea, TextInput, EmailInput
@@ -14,15 +13,11 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget
-from repanier.admin.forms import ImportStockForm
-from repanier.admin.tools import check_cancel_in_post
 from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
 from repanier.middleware import get_query_filters
-from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.tools import web_services_activated
-from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.widget import (
     IdWidget,
     TwoDecimalsWidget,
@@ -30,7 +25,6 @@ from repanier.xlsx.widget import (
 )
 from repanier.xlsx.xlsx_invoice import export_invoice
 from repanier.xlsx.xlsx_product import export_customer_prices
-from repanier.xlsx.xlsx_stock import handle_uploaded_stock, export_producer_stock
 
 
 class ProducerResource(resources.ModelResource):
@@ -178,16 +172,6 @@ class ProducerDataForm(forms.ModelForm):
             "price_list_multiplier", DECIMAL_ONE
         )
 
-        if invoice_by_basket and self.instance.id is not None:
-            if BoxContent.objects.filter(
-                product__producer_id=self.instance.id
-            ).exists():
-                self.add_error(
-                    "invoice_by_basket",
-                    _(
-                        "Some products of this producer are in a box. This implies that this producer cannot invoice by basket."
-                    ),
-                )
         short_profile_name = self.cleaned_data["short_profile_name"]
         qs = Producer.objects.filter(short_profile_name=short_profile_name)
         if self.instance.id is not None:
@@ -261,21 +245,21 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_redirect_to_change_list_url(self):
         return "{}{}".format(self.change_list_url, get_query_filters())
 
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            url(
-                r"^export-stock/$",
-                self.admin_site.admin_view(self.export_stock),
-                name="producer-export-stock",
-            ),
-            url(
-                r"^import-stock/$",
-                self.admin_site.admin_view(self.import_stock),
-                name="producer-import-stock",
-            ),
-        ]
-        return custom_urls + urls
+    # def get_urls(self):
+    #     urls = super().get_urls()
+    #     custom_urls = [
+    #         url(
+    #             r"^export-stock/$",
+    #             self.admin_site.admin_view(self.export_stock),
+    #             name="producer-export-stock",
+    #         ),
+    #         url(
+    #             r"^import-stock/$",
+    #             self.admin_site.admin_view(self.import_stock),
+    #             name="producer-import-stock",
+    #         ),
+    #     ]
+    #     return custom_urls + urls
 
     def export_customer_prices(self, request, producer_qs):
         wb = export_customer_prices(
@@ -295,35 +279,35 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     export_customer_prices.short_description = _("Export the customer tariff")
 
-    def export_stock(self, request):
-        wb = export_producer_stock(
-            producers=Producer.objects.all().order_by("short_profile_name"),
-            wb=None,
-        )
-        if wb is not None:
-            response = HttpResponse(
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-            response["Content-Disposition"] = "attachment; filename={0}.xlsx".format(
-                _("Maximum quantity")
-            )
-            wb.save(response)
-            return response
-        else:
-            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+    # def export_stock(self, request):
+    #     wb = export_producer_stock(
+    #         producers=Producer.objects.all().order_by("short_profile_name"),
+    #         wb=None,
+    #     )
+    #     if wb is not None:
+    #         response = HttpResponse(
+    #             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    #         )
+    #         response["Content-Disposition"] = "attachment; filename={0}.xlsx".format(
+    #             _("Maximum quantity")
+    #         )
+    #         wb.save(response)
+    #         return response
+    #     else:
+    #         return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
-    @check_cancel_in_post
-    def import_stock(self, request):
-        return import_xslx_view(
-            self,
-            admin,
-            request,
-            None,
-            _("Import the stock"),
-            handle_uploaded_stock,
-            action="import_stock",
-            form_klass=ImportStockForm,
-        )
+    # @check_cancel_in_post
+    # def import_stock(self, request):
+    #     return import_xslx_view(
+    #         self,
+    #         admin,
+    #         request,
+    #         None,
+    #         _("Import the stock"),
+    #         handle_uploaded_stock,
+    #         action="import_stock",
+    #         form_klass=ImportStockForm,
+    #     )
 
     def get_list_display(self, request):
         list_display = ["__str__", "get_products"]

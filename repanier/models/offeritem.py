@@ -98,7 +98,7 @@ class OfferItem(Item):
             return mark_safe(_("<b>%(price)s</b>") % {"price": price})
         return EMPTY_STRING
 
-    get_html_producer_price_purchased.short_description = _("Producer amount invoiced")
+    get_html_producer_price_purchased.short_description = _("Row amount")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     def get_html_like(self, user):
@@ -131,26 +131,22 @@ class OfferItem(Item):
         return "{}".format(self.long_name_v2)
 
     def get_qty_display(self):
-        if self.is_box:
-            # To avoid unicode error in email_offer.send_open_order
-            qty_display = EMPTY_STRING  # BOX_UNICODE
+        if self.use_order_unit_converted:
+            # The only conversion done in permanence concerns PRODUCT_ORDER_UNIT_PC_KG
+            # so we are sure that self.order_unit == PRODUCT_ORDER_UNIT_PC_KG
+            qty_display = self.get_display(
+                qty=1,
+                order_unit=PRODUCT_ORDER_UNIT_KG,
+                with_qty_display=False,
+                with_price_display=False,
+            )
         else:
-            if self.use_order_unit_converted:
-                # The only conversion done in permanence concerns PRODUCT_ORDER_UNIT_PC_KG
-                # so we are sure that self.order_unit == PRODUCT_ORDER_UNIT_PC_KG
-                qty_display = self.get_display(
-                    qty=1,
-                    order_unit=PRODUCT_ORDER_UNIT_KG,
-                    with_qty_display=False,
-                    with_price_display=False,
-                )
-            else:
-                qty_display = self.get_display(
-                    qty=1,
-                    order_unit=self.order_unit,
-                    with_qty_display=False,
-                    with_price_display=False,
-                )
+            qty_display = self.get_display(
+                qty=1,
+                order_unit=self.order_unit,
+                with_qty_display=False,
+                with_price_display=False,
+            )
         return qty_display
 
     def __str__(self):

@@ -177,10 +177,6 @@ class OfferItemPurchaseSendInline(admin.TabularInline):
             kwargs["queryset"] = Customer.objects.filter(may_order=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(is_box_content=False)
-
 
 class OfferItemSendForm(forms.ModelForm):
     offer_purchase_price = FormRepanierMoneyField(
@@ -458,14 +454,12 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                     Purchase.objects.filter(
                         customer_id=previous_customer.id,
                         offer_item_id=offer_item.id,
-                        is_box_content=False,
                     )
                     .first()
                 )
                 if purchase is not None:
                     purchase.quantity_invoiced = DECIMAL_ZERO
                     purchase.save()
-                    purchase.save_box()
         for purchase_form in formset:
             purchase_form_instance = purchase_form.instance
             try:
@@ -559,12 +553,10 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                                         * offer_item.producer_unit_price.amount
                                     ).quantize(TWO_DECIMALS)
                                 purchase.save()
-                                purchase.save_box()
 
         for purchase_form in formset:
             if purchase_form.has_changed() and purchase_form.repanier_is_valid:
                 purchase_form.instance.save()
-                purchase_form.instance.save_box()
 
         # Important : linked with (1*)
         offer_item.permanence.recalculate_order_amount(

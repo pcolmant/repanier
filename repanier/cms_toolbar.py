@@ -69,12 +69,12 @@ class RepanierToolbar(CMSToolbar):
             admin_menu.add_sideframe_item(_("Producers"), url=url, position=position)
             position += 1
 
-            if settings.REPANIER_SETTINGS_BOX:
-                url = "{}?is_into_offer__exact=1&is_active__exact=1".format(
-                    reverse("admin:repanier_box_changelist")
-                )
-                admin_menu.add_sideframe_item(_("Boxes"), url=url, position=position)
-                position += 1
+            # if settings.REPANIER_SETTINGS_BOX:
+            #     url = "{}?is_into_offer__exact=1&is_active__exact=1".format(
+            #         reverse("admin:repanier_box_changelist")
+            #     )
+            #     admin_menu.add_sideframe_item(_("Boxes"), url=url, position=position)
+            #     position += 1
 
         if user.is_order_manager:
             url = reverse("admin:repanier_permanenceinpreparation_changelist")

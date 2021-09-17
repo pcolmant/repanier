@@ -40,7 +40,7 @@ def order_select_ajax(request):
     # Select one purchase
     purchase = (
         PurchaseWoReceiver.objects.filter(
-            customer_id=customer.id, offer_item_id=offer_item_id, is_box_content=False
+            customer_id=customer.id, offer_item_id=offer_item_id
         )
         .only("quantity_ordered")
         .first()

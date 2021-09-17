@@ -1,4 +1,3 @@
-from .box import *
 from .configuration import *
 from .customer import *
 from .group import *

@@ -601,7 +601,6 @@ def import_invoice_sheet(
                         status=PERMANENCE_SEND,
                         q_order=Decimal(qty),
                         batch_job=True,
-                        is_box_content=False,
                         comment=comment or EMPTY_STRING,
                     )
                     import_counter += 1

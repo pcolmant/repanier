@@ -72,15 +72,3 @@ def product_pre_save(sender, **kwargs):
         product.reference = uuid.uuid1()
 
     product.long_name_v2 = capfirst(product.long_name_v2)
-
-
-@receiver(post_save, sender=Product)
-def product_post_save(sender, **kwargs):
-    product = kwargs["instance"]
-    from repanier.models.box import BoxContent
-
-    BoxContent.objects.filter(product_id=product.id).update(
-        calculated_customer_content_price=F("content_quantity")
-        * product.customer_unit_price.amount,
-        calculated_content_deposit=F("content_quantity") * product.unit_deposit.amount,
-    )

@@ -12,7 +12,6 @@ from django.core.cache import cache
 from django.db import transaction
 from django.db.models import F
 from django.http import Http404
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
@@ -281,15 +280,12 @@ def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
         product = offer_item.product
         if quantity_ordered <= const.DECIMAL_ZERO:
             if is_open:
-                if product.is_box:
-                    label = _("Sold out")
+                q_min = product.customer_minimum_order_quantity
+                q_alert = offer_item.get_q_alert()
+                if q_min <= q_alert:
+                    label = "---"
                 else:
-                    q_min = product.customer_minimum_order_quantity
-                    q_alert = offer_item.get_q_alert()
-                    if q_min <= q_alert:
-                        label = "---"
-                    else:
-                        label = _("Sold out")
+                    label = _("Sold out")
             else:
                 label = _("Closed")
             html = '<option value="0" selected>{}</option>'.format(label)
@@ -311,30 +307,12 @@ def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
     return mark_safe(html)
 
 
-def get_html_selected_box_value(offer_item, quantity_ordered):
-    # Select one purchase
-    if quantity_ordered > const.DECIMAL_ZERO:
-        qty_display = offer_item.get_display(
-            qty=quantity_ordered,
-            order_unit=offer_item.order_unit,
-            with_price_display=False,
-        )
-    else:
-        qty_display = "---"
-    return mark_safe(
-        '<option value="0" selected>☑ {} {}</option>'.format(
-            qty_display, const.BOX_UNICODE
-        )
-    )
-
-
 def create_or_update_one_purchase(
     customer_id,
     offer_item,
     status,
     q_order=None,
     batch_job=False,
-    is_box_content=False,
     comment=None,
 ):
     from repanier.models.purchase import Purchase
@@ -346,9 +324,10 @@ def create_or_update_one_purchase(
     purchase = Purchase.objects.filter(
         customer_id=customer_id,
         offer_item_id=offer_item.id,
-        is_box_content=is_box_content,
     ).first()
     if batch_job:
+        print("####### q_order : {}".format(q_order))
+        print("####### status : {}".format(status))
         if purchase is None:
             purchase = Purchase.objects.create(
                 permanence_id=offer_item.permanence_id,
@@ -361,19 +340,18 @@ def create_or_update_one_purchase(
                 quantity_invoiced=q_order
                 if status >= const.PERMANENCE_SEND
                 else const.DECIMAL_ZERO,
-                is_box_content=is_box_content,
                 status=status,
                 comment=comment,
             )
         else:
             purchase.set_comment(comment)
+            purchase.status = status
             if status < const.PERMANENCE_SEND:
                 purchase.quantity_ordered = q_order
             else:
+                # purchase.quantity_ordered = q_order
                 purchase.quantity_invoiced = q_order
             purchase.save()
-            # if offer_item.is_box:
-            #     purchase.save_box()
         return purchase, True
     else:
         permanence_is_opened = CustomerInvoice.objects.filter(
@@ -394,26 +372,8 @@ def create_or_update_one_purchase(
                     # then adapt the quantity to accept the sale
                     if q_alert < q_order:
                         q_alert = q_order
-                if is_box_content and q_alert < q_order:
-                    # Select one purchase
-                    non_box_purchase = Purchase.objects.filter(
-                        customer_id=customer_id,
-                        offer_item_id=offer_item.id,
-                        is_box_content=False,
-                    ).first()
-                    if non_box_purchase is not None:
-                        tbd_qty = min(
-                            q_order - q_alert, non_box_purchase.quantity_ordered
-                        )
-                        tbk_qty = non_box_purchase.quantity_ordered - tbd_qty
-                        non_box_purchase.quantity_ordered = tbk_qty
-                        non_box_purchase.save()
-                        q_alert += tbd_qty
             else:
-                if is_box_content:
-                    q_alert = q_order
-                else:
-                    q_alert = offer_item.get_q_alert()
+                q_alert = offer_item.get_q_alert()
             if purchase is not None:
                 purchase.set_comment(comment)
                 if q_order <= q_alert:
@@ -436,7 +396,6 @@ def create_or_update_one_purchase(
                     customer_id=customer_id,
                     quantity_ordered=q_order,
                     quantity_invoiced=const.DECIMAL_ZERO,
-                    is_box_content=is_box_content,
                     status=status,
                     comment=comment,
                 )
@@ -449,7 +408,6 @@ def create_or_update_one_purchase(
 def create_or_update_one_cart_item(
     customer, offer_item_id, q_order=None, value_id=None, batch_job=False, comment=None
 ):
-    from repanier.models.box import BoxContent
     from repanier.models.offeritem import OfferItem
     from repanier.models.purchase import Purchase
 
@@ -486,83 +444,15 @@ def create_or_update_one_cart_item(
                     q_order = q_min + q_step * (value_id - 1)
     if q_order < const.DECIMAL_ZERO:
         q_order = const.DECIMAL_ZERO
-    is_box_updated = True
-    if offer_item.is_box:
-        # Select one purchase
-        purchase = Purchase.objects.filter(
-            customer_id=customer.id,
-            offer_item_id=offer_item.id,
-            is_box_content=False,
-        ).first()
-        if purchase is not None:
-            delta_q_order = q_order - purchase.quantity_ordered
-        else:
-            delta_q_order = q_order
-        with transaction.atomic():
-            sid = transaction.savepoint()
-            # This code executes inside a transaction.
-            for content in BoxContent.objects.filter(box=offer_item.product_id).only(
-                "product_id", "content_quantity"
-            ):
-                box_offer_item = (
-                    OfferItem.objects.filter(
-                        product_id=content.product_id,
-                        permanence_id=offer_item.permanence_id,
-                    )
-                    .select_related("producer")
-                    .first()
-                )
-                if box_offer_item is not None:
-                    # Select one purchase
-                    purchase = Purchase.objects.filter(
-                        customer_id=customer.id,
-                        offer_item_id=box_offer_item.id,
-                        is_box_content=True,
-                    ).first()
-                    if purchase is not None:
-                        quantity_ordered = (
-                            purchase.quantity_ordered
-                            + delta_q_order * content.content_quantity
-                        )
-                    else:
-                        quantity_ordered = delta_q_order * content.content_quantity
-                    if quantity_ordered < const.DECIMAL_ZERO:
-                        quantity_ordered = const.DECIMAL_ZERO
-                    purchase, is_box_updated = create_or_update_one_purchase(
-                        customer_id=customer.id,
-                        offer_item=box_offer_item,
-                        status=const.PERMANENCE_OPENED,
-                        q_order=quantity_ordered,
-                        batch_job=batch_job,
-                        is_box_content=True,
-                        comment=const.EMPTY_STRING,
-                    )
-                else:
-                    is_box_updated = False
-                if not is_box_updated:
-                    break
-            if is_box_updated:
-                transaction.savepoint_commit(sid)
-            else:
-                transaction.savepoint_rollback(sid)
-    if not offer_item.is_box or is_box_updated:
-        return create_or_update_one_purchase(
-            customer_id=customer.id,
-            offer_item=offer_item,
-            status=const.PERMANENCE_OPENED,
-            q_order=q_order,
-            batch_job=batch_job,
-            is_box_content=False,
-            comment=comment,
-        )
-    elif not batch_job:
-        # Select one purchase
-        purchase = Purchase.objects.filter(
-            customer_id=customer.id,
-            offer_item_id=offer_item.id,
-            is_box_content=False,
-        ).first()
-        return purchase, False
+
+    return create_or_update_one_purchase(
+        customer_id=customer.id,
+        offer_item=offer_item,
+        status=const.PERMANENCE_OPENED,
+        q_order=q_order,
+        batch_job=batch_job,
+        comment=comment,
+    )
 
 
 def my_basket(is_order_confirm_send, order_amount):
@@ -649,7 +539,7 @@ def reorder_offer_items(permanence_id):
     offer_item_qs = OfferItemReadOnly.objects.filter(permanence_id=permanence_id)
 
     i = 0
-    reorder_queryset = offer_item_qs.filter(is_box=False,).order_by(
+    reorder_queryset = offer_item_qs.order_by(
         "department_for_customer",
         "long_name_v2",
         "order_average_weight",
@@ -665,7 +555,6 @@ def reorder_offer_items(permanence_id):
     # producer lists sort order : sort by reference if needed, otherwise sort by order_sort_order
     i = 10000
     reorder_queryset = offer_item_qs.filter(
-        is_box=False,
         producer__sort_products_by_reference=True,
     ).order_by("department_for_customer", "reference")
     for offer_item in reorder_queryset:
@@ -673,21 +562,7 @@ def reorder_offer_items(permanence_id):
         offer_item.save()
         if i < 19999:
             i += 1
-    # preparation lists sort order
-    i = -9999
-    reorder_queryset = offer_item_qs.filter(is_box=True,).order_by(
-        "customer_unit_price",
-        "unit_deposit",
-        "long_name_v2",
-    )
-    for offer_item in reorder_queryset:
-        # display box on top
-        offer_item.producer_sort_order_v2 = (
-            offer_item.order_sort_order_v2
-        ) = offer_item.preparation_sort_order_v2 = i
-        offer_item.save()
-        if i < -1:
-            i += 1
+
 
 
 def update_offer_item(product_id=None, producer_id=None):
@@ -697,9 +572,9 @@ def update_offer_item(product_id=None, producer_id=None):
     # The user can modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in Permanence.objects.filter(
         status__in=[
-            const.PERMANENCE_PLANNED,
+            # const.PERMANENCE_PLANNED,
             const.PERMANENCE_OPENED,
-            const.PERMANENCE_CLOSED,
+            # const.PERMANENCE_CLOSED,
         ]
     ):
         if product_id is not None:
@@ -778,52 +653,6 @@ def get_html_basket_message(customer, permanence, status):
     return mark_safe(basket_message)
 
 
-def html_box_content(offer_item, user):
-    from repanier.models.box import BoxContent
-    from repanier.models.offeritem import OfferItemReadOnly
-
-    box_id = offer_item.product_id
-    box_products = list(
-        BoxContent.objects.filter(box_id=box_id).values_list("product_id", flat=True)
-    )
-    if len(box_products) > 0:
-        box_offer_items_qs = (
-            OfferItemReadOnly.objects.filter(
-                permanence_id=offer_item.permanence_id,
-                product_id__in=box_products,
-            )
-            .order_by("order_sort_order_v2")
-            .select_related("producer")
-        )
-        box_products_description = []
-        for box_offer_item in box_offer_items_qs:
-            box_products_description.append(
-                format_html(
-                    '<li>{} * {}, {} <span class="btn_like{}" style="cursor: pointer;">{}</span></li>',
-                    mark_safe(
-                        box_offer_item.get_display(
-                            qty=BoxContent.objects.filter(
-                                box_id=box_id, product_id=box_offer_item.product_id
-                            )
-                            .only("content_quantity")
-                            .first()
-                            .content_quantity,
-                            order_unit=box_offer_item.order_unit,
-                            with_price_display=False,
-                        )
-                    ),
-                    box_offer_item.long_name_v2,
-                    box_offer_item.producer.short_profile_name,
-                    box_offer_item.id,
-                    mark_safe(box_offer_item.get_like(user)),
-                )
-            )
-        return format_html(
-            "<ul>{}</ul>", mark_safe(const.EMPTY_STRING.join(box_products_description))
-        )
-    return const.EMPTY_STRING
-
-
 def rule_of_3_reload_purchase(
     customer, offer_item, purchase_form, purchase_form_instance
 ):
@@ -832,7 +661,7 @@ def rule_of_3_reload_purchase(
     purchase_form.repanier_is_valid = True
     # Reload purchase, because it has maybe be deleted
     purchase = Purchase.objects.filter(
-        customer_id=customer.id, offer_item_id=offer_item.id, is_box_content=False
+        customer_id=customer.id, offer_item_id=offer_item.id
     ).first()
     if purchase is None:
         # Doesn't exists ? Create one
@@ -844,7 +673,6 @@ def rule_of_3_reload_purchase(
             quantity_ordered=const.DECIMAL_ZERO,
             quantity_invoiced=const.DECIMAL_ZERO,
             comment=purchase_form_instance.comment,
-            is_box_content=False,
             status=const.PERMANENCE_SEND,
         )
     # And set the form's values

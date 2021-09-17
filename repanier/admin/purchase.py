@@ -23,7 +23,7 @@ from repanier.middleware import (
     get_preserved_filters_as_dict,
     get_preserved_filters_from_dict,
 )
-from repanier.models import Producer
+from repanier.models import Producer, Product
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
@@ -204,25 +204,23 @@ class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
         return item.get_delivery_display()
 
 
-class OfferItemAutocompleteChoiceField(forms.ModelChoiceField):
+class ProductAutocompleteChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.get_long_name_with_customer_price()
 
 
-class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
+class ProductAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
-        permanence_id = self.forwarded.get("permanence", None)
-        qs = OfferItem.objects.filter(
-            permanence_id=permanence_id,
-            is_box_content=False,
-        ).order_by("department_for_customer", "long_name_v2")
+        qs = Product.objects.filter(is_box=False, is_active=True).order_by(
+            "department_for_customer", "long_name_v2"
+        )
 
         if self.q:
             qs = qs.filter(
                 Q(long_name_v2__icontains=self.q)
                 | Q(producer__short_profile_name__icontains=self.q)
-                | Q(product__department_for_customer__short_name_v2__icontains=self.q)
+                | Q(department_for_customer__short_name_v2__icontains=self.q)
             )
 
         return qs
@@ -233,7 +231,7 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
         purchase = Purchase.objects.filter(
             permanence_id=permanence_id,
             customer_id=customer_id,
-            offer_item_id=item.id,
+            offer_item__product_id=item.id,
         ).first()
         purchased_symbol = EMPTY_STRING
         if purchase is not None:
@@ -293,12 +291,12 @@ class PurchaseForm(forms.ModelForm):
             },
         ),
     )
-    offer_item = OfferItemAutocompleteChoiceField(
-        label=_("Customer rate"),
-        queryset=OfferItem.objects.all(),
+    product = ProductAutocompleteChoiceField(
+        label=_("Product Customer rate"),
+        queryset=Product.objects.all(),
         required=True,
         widget=autocomplete.ModelSelect2(
-            url="admin:repanier_purchase_form_offeritem",
+            url="admin:repanier_purchase_form_product",
             forward=(
                 forward.Field("permanence"),
                 forward.Field("customer"),
@@ -309,6 +307,11 @@ class PurchaseForm(forms.ModelForm):
                 "data-html": True,
             },
         ),
+    )
+    offer_item = forms.ModelChoiceField(
+        label=_("Customer rate"),
+        queryset=OfferItem.objects.all(),
+        required=False,
     )
     quantity = forms.DecimalField(
         min_value=DECIMAL_ZERO,
@@ -327,6 +330,8 @@ class PurchaseForm(forms.ModelForm):
         customer_field = self.fields["customer"]
         quantity_field = self.fields["quantity"]
         delivery_field = self.fields["delivery"]
+        offer_item_field = self.fields["offer_item"]
+        product_field = self.fields["product"]
 
         if purchase.id is None:
             # Add new purchase
@@ -336,6 +341,7 @@ class PurchaseForm(forms.ModelForm):
             customer_id = query_params.get("customer", None)
             customer_field.initial = customer_id
             delivery_point_id = None
+            product_field.initial = None
         else:
             # Update existing purchase
             if purchase.status < PERMANENCE_SEND:
@@ -345,10 +351,15 @@ class PurchaseForm(forms.ModelForm):
 
             permanence_id = purchase.permanence_id
             delivery_point_id = purchase.customer_invoice.delivery
+            product_field.initial = purchase.offer_item.product_id
 
         permanence_field.widget = forms.HiddenInput()
         permanence_field.widget.attrs["readonly"] = True
         permanence_field.disabled = True
+
+        offer_item_field.widget = forms.HiddenInput()
+        offer_item_field.widget.attrs["readonly"] = True
+        offer_item_field.disabled = True
 
         customer_field.widget.can_change_related = False
         customer_field.widget.can_add_related = False
@@ -419,7 +430,6 @@ class PurchaseAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .filter(
                 permanence_id=permanence_id,
-                is_box_content=False,
             )
         )
 
@@ -471,9 +481,9 @@ class PurchaseAdmin(admin.ModelAdmin):
                 name="repanier_purchase_form_delivery",
             ),
             path(
-                "offer_item_autocomplete/",
-                OfferItemAutocomplete.as_view(),
-                name="repanier_purchase_form_offeritem",
+                "product_autocomplete/",
+                ProductAutocomplete.as_view(),
+                name="repanier_purchase_form_product",
             ),
             path(
                 "producer_of_permanence/<int:permanence>/",
@@ -593,6 +603,7 @@ class PurchaseAdmin(admin.ModelAdmin):
             "permanence",
             "customer",
             "delivery",
+            "product",
             "offer_item",
             "quantity",
             "comment",
@@ -617,13 +628,18 @@ class PurchaseAdmin(admin.ModelAdmin):
             if delivery is not None:
                 status = delivery.status
 
+
+
         if status > PERMANENCE_SEND:
             # The purchase is maybe already invoiced
             # Do not update it
             # It is forbidden to change invoiced permanence
             return
 
-        offer_item = form.cleaned_data.get("offer_item")
+        print("###### ok status : {}".format(status))
+
+        product = form.cleaned_data.get("product")
+        offer_item = product.get_or_create_offer_item(permanence)
         quantity = form.cleaned_data.get("quantity", DECIMAL_ZERO)
         comment = form.cleaned_data.get("comment")
 
@@ -636,7 +652,6 @@ class PurchaseAdmin(admin.ModelAdmin):
             comment=comment,
         )
 
-        purchase.save_box()
         # The customer_invoice may be created with "purchase.save()"
         customer_invoice = CustomerInvoice.objects.filter(
             customer_id=purchase.customer_id,

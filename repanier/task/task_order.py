@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 from repanier.const import *
 from repanier.email import email_offer
 from repanier.email import email_order
-from repanier.models.box import Box
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.invoice import ProducerInvoice
@@ -49,16 +48,11 @@ def open_order(permanence_id, send_mail=True):
         .only("id")
     )
     product_queryset = Product.objects.filter(
-        producer__in=producers_in_this_permanence, is_box=False, is_into_offer=True
+        producer__in=producers_in_this_permanence, is_into_offer=True
     )
     for product in product_queryset:
         product.get_or_create_offer_item(permanence)
-    boxes_in_this_permanence = (
-        Box.objects.filter(permanence=permanence, is_active=True)
-        .only("id")
-    )
-    for box in boxes_in_this_permanence:
-        box.get_or_create_offer_item(permanence)
+
     # Calculate the sort order of the order display screen
     reorder_offer_items(permanence.id)
     # Calculate the Purchase 'sum' for each customer

@@ -1731,61 +1731,55 @@ def export_customer_for_a_delivery(
                         c.value = "{}".format(base_unit)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
-                        if purchase.is_box_content:
-                            # No price infos : The customer pay for a box not for a product
-                            for x in range(6, 10):
-                                c = ws.cell(row=row_num, column=x)
-                                c.style.borders.bottom.border_style = Border.BORDER_THIN
+                        c = ws.cell(row=row_num, column=7)
+                        customer_unit_price = purchase.get_customer_unit_price()
+                        c.value = customer_unit_price
+                        c.style.number_format.format_code = (
+                            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        )
+                        c.style.borders.bottom.border_style = Border.BORDER_THIN
+                        c = ws.cell(row=row_num, column=8)
+                        unit_deposit = offer_item_save.unit_deposit.amount
+                        c.value = unit_deposit
+                        c.style.number_format.format_code = (
+                            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        )
+                        c.style.borders.bottom.border_style = Border.BORDER_THIN
+                        c = ws.cell(row=row_num, column=9)
+                        if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                            price_qty = qty * offer_item_save.order_average_weight
+                            c.value = "=ROUND(F{}*{}*(H{}+I{}),2)".format(
+                                row_num + 1,
+                                offer_item_save.order_average_weight,
+                                row_num + 1,
+                                row_num + 1,
+                            )
                         else:
-                            c = ws.cell(row=row_num, column=7)
-                            customer_unit_price = purchase.get_customer_unit_price()
-                            c.value = customer_unit_price
-                            c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                            price_qty = qty
+                            c.value = "=ROUND(F{}*(H{}+I{}),2)".format(
+                                row_num + 1, row_num + 1, row_num + 1
                             )
-                            c.style.borders.bottom.border_style = Border.BORDER_THIN
-                            c = ws.cell(row=row_num, column=8)
-                            unit_deposit = offer_item_save.unit_deposit.amount
-                            c.value = unit_deposit
-                            c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        purchases_price = (
+                            price_qty * (customer_unit_price + unit_deposit)
+                        ).quantize(TWO_DECIMALS)
+                        if not xlsx_formula:
+                            c.value = purchases_price
+                            total_price += purchases_price
+                        c.style.number_format.format_code = (
+                            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        )
+                        c.style.borders.bottom.border_style = Border.BORDER_THIN
+                        if xlsx_formula:
+                            ws.conditional_formatting.addCellIs(
+                                get_column_letter(10) + str(row_num + 1),
+                                "notEqual",
+                                [str(purchases_price)],
+                                True,
+                                wb,
+                                None,
+                                None,
+                                yellowFill,
                             )
-                            c.style.borders.bottom.border_style = Border.BORDER_THIN
-                            c = ws.cell(row=row_num, column=9)
-                            if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
-                                price_qty = qty * offer_item_save.order_average_weight
-                                c.value = "=ROUND(F{}*{}*(H{}+I{}),2)".format(
-                                    row_num + 1,
-                                    offer_item_save.order_average_weight,
-                                    row_num + 1,
-                                    row_num + 1,
-                                )
-                            else:
-                                price_qty = qty
-                                c.value = "=ROUND(F{}*(H{}+I{}),2)".format(
-                                    row_num + 1, row_num + 1, row_num + 1
-                                )
-                            purchases_price = (
-                                price_qty * (customer_unit_price + unit_deposit)
-                            ).quantize(TWO_DECIMALS)
-                            if not xlsx_formula:
-                                c.value = purchases_price
-                                total_price += purchases_price
-                            c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                            )
-                            c.style.borders.bottom.border_style = Border.BORDER_THIN
-                            if xlsx_formula:
-                                ws.conditional_formatting.addCellIs(
-                                    get_column_letter(10) + str(row_num + 1),
-                                    "notEqual",
-                                    [str(purchases_price)],
-                                    True,
-                                    wb,
-                                    None,
-                                    None,
-                                    yellowFill,
-                                )
 
                         c = ws.cell(row=row_num, column=10)
                         if xlsx_formula:

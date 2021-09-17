@@ -26,7 +26,6 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
         qs = OfferItem.objects.filter(
             permanence_id=permanence_id,
             producer_id=producer_id,
-            is_box_content=False,
         ).order_by("department_for_customer", "long_name_v2")
 
         if self.q:
@@ -204,9 +203,7 @@ class CustomerPurchaseSendInline(admin.TabularInline):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(
-            is_box_content=False,
-        ).order_by("offer_item__preparation_sort_order_v2")
+        return qs.order_by("offer_item__preparation_sort_order_v2")
 
 
 class CustomerSendForm(forms.ModelForm):
@@ -402,12 +399,10 @@ class CustomerSendAdmin(admin.ModelAdmin):
                 purchase = Purchase.objects.filter(
                     customer_id=customer.id,
                     offer_item_id=previous_offer_item.id,
-                    is_box_content=False,
                 ).first()
                 if purchase is not None:
                     purchase.quantity_invoiced = DECIMAL_ZERO
                     purchase.save()
-                    purchase.save_box()
         for purchase_form in formset:
             purchase_form_instance = purchase_form.instance
             try:
@@ -489,7 +484,6 @@ class CustomerSendAdmin(admin.ModelAdmin):
                                 ).quantize(FOUR_DECIMALS)
 
                             purchase.save()
-                            purchase.save_box()
                             if selling_price:
                                 adjusted_invoice += purchase.selling_price.amount
                             else:
@@ -497,4 +491,3 @@ class CustomerSendAdmin(admin.ModelAdmin):
         for purchase_form in formset:
             if purchase_form.has_changed() and purchase_form.repanier_is_valid:
                 purchase_form.instance.save()
-                purchase_form.instance.save_box()
