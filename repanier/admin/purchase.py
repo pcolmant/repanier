@@ -340,7 +340,14 @@ class PurchaseForm(forms.ModelForm):
             permanence_field.initial = permanence_id
             customer_id = query_params.get("customer", None)
             customer_field.initial = customer_id
-            delivery_point_id = None
+            customer_invoice = CustomerInvoice.objects.filter(
+                customer_id=customer_id,
+                permanence_id=permanence_id,
+            ).first()
+            if customer_invoice is not None:
+                delivery_point_id = customer_invoice.delivery_id
+            else:
+                delivery_point_id = None
             product_field.initial = None
         else:
             # Update existing purchase
