@@ -1,20 +1,20 @@
 asgiref==3.4.1
 defusedxml==0.7.1
 diff-match-patch==20200713
-Django==3.2.5
+Django==3.2.7
 django-classy-tags==2.0.0
 django-cms==3.9.0
 # https://github.com/pcolmant/django-cms/archive/refs/heads/develop.zip
-django-admin-autocomplete-filter==0.7
+django-admin-autocomplete-filter==0.7.1
 django-autocomplete-light==3.8.2
 django-crispy-forms==1.12.0
-django-debug-toolbar==3.2.1
+django-debug-toolbar==3.2.2
 django-easy-select2==1.5.7
 django-filer==2.0.2 # 2.1rc1
 django-formtools==2.3
-django-import-export==2.5.0
+django-import-export==2.6.0
 django-js-asset==1.2.2
-django-mptt==0.12.0
+django-mptt==0.13.3
 django-mptt-admin==2.1.0
 django-parler==2.2
 django-polymorphic==3.0.0
@@ -31,20 +31,20 @@ djangocms-text-ckeditor==4.0.0
 djangocms-video==3.0.0
 djangorestframework==3.12.4
 easy-thumbnails==2.7.1 # 2.8rc0
-et-xmlfile==1.0.1
+et-xmlfile==1.1.1
 html5lib==1.1
 jdcal==1.4.1
 jsonfield==3.1.0
 MarkupPy==1.14
 odfpy==1.4.1
-openpyxl==3.0.7
-Pillow==8.3.1
+openpyxl==3.0.8
+Pillow==8.3.2
 psycopg2-binary==2.9.1
-python-dateutil==2.8.1
-pytz==2020.1
+python-dateutil==2.8.2
+pytz==2021.1
 PyYAML==5.4.1
-six==1.15.0
-sqlparse==0.4.1
+six==1.16.0
+sqlparse==0.4.2
 tablib==3.0.0
 Unidecode==1.1.1 # django-filer 2.0.2 depends on Unidecode<1.2 and >=0.04
 uWSGI==2.0.19.1
