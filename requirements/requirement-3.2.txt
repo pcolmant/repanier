@@ -31,7 +31,7 @@ djangocms-text-ckeditor==4.0.0
 djangocms-video==3.0.0
 djangorestframework==3.12.4
 easy-thumbnails==2.7.1 # 2.8rc0
-et-xmlfile==1.1.1
+et-xmlfile==1.1.0
 html5lib==1.1
 jdcal==1.4.1
 jsonfield==3.1.0
