@@ -89,8 +89,8 @@ class Product(Item):
                 product_id=self.id,
                 producer_id=self.producer_id,
             )
-            permanence.clean_offer_item(offer_item_qs=offer_item_qs)
 
+        permanence.clean_offer_item(offer_item_qs=offer_item_qs)
         offer_item = offer_item_qs.first()
         return offer_item
 
