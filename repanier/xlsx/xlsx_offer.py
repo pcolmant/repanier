@@ -30,12 +30,12 @@ def export_offer(permanence, wb=None):
             )
         ):
             row_num = export_offer_row(product, row_num, ws)
-        for product in (
-            Product.objects.prefetch_related("producer", "department_for_customer")
-            .filter(is_into_offer=True)
-            .order_by("customer_unit_price", "unit_deposit", "long_name_v2")
-        ):
-            row_num = export_offer_row(product, row_num, ws)
+        # for product in (
+        #     Product.objects.prefetch_related("producer", "department_for_customer")
+        #     .filter(is_into_offer=True)
+        #     .order_by("customer_unit_price", "unit_deposit", "long_name_v2")
+        # ):
+        #     row_num = export_offer_row(product, row_num, ws)
 
     elif permanence.status == PERMANENCE_OPENED:
         for offer_item in (
