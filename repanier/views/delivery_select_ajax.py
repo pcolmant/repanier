@@ -25,12 +25,9 @@ def delivery_select_ajax(request):
         raise Http404
     translation.activate(customer.language)
     permanence_id = sint(request.GET.get("permanence", 0))
-    customer_invoice = (
-        CustomerInvoice.objects.filter(
-            customer_id=customer.id, permanence_id=permanence_id
-        )
-            .first()
-    )
+    customer_invoice = CustomerInvoice.objects.filter(
+        customer_id=customer.id, permanence_id=permanence_id
+    ).first()
     if customer_invoice is None:
         raise Http404
     if customer.group is not None:
@@ -64,8 +61,8 @@ def delivery_select_ajax(request):
                 delivery.id, delivery.get_delivery_customer_display()
             )
         elif (
-                delivery.status == PERMANENCE_OPENED
-                and customer_invoice.status == PERMANENCE_OPENED
+            delivery.status == PERMANENCE_OPENED
+            and customer_invoice.status == PERMANENCE_OPENED
         ):
             delivery_counter += 1
             html += '<option value="{}">{}</option>'.format(

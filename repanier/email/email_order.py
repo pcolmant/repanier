@@ -72,7 +72,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
 
             if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD:
                 for permanence_board in PermanenceBoard.objects.filter(
-                        permanence_id=permanence.id
+                    permanence_id=permanence.id
                 ):
                     if permanence_board.customer:
                         to_email.append(permanence_board.customer.user.email)
@@ -134,9 +134,9 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
         to_email = []
         send_email = False
         if (
-                producer_invoice is not None
-                and producer_invoice.get_total_price_with_tax()
-                < producer.minimum_order_value
+            producer_invoice is not None
+            and producer_invoice.get_total_price_with_tax()
+            < producer.minimum_order_value
         ):
             html_body = "{}<br><br>{}".format(order_producer_mail_subject, html_body)
             order_producer_mail_subject = _(
@@ -195,12 +195,12 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
 
 
 def export_order_2_1_group(
-        config, delivery_id, filename, permanence, order_responsible
+    config, delivery_id, filename, permanence, order_responsible
 ):
     delivery_board = (
         DeliveryBoard.objects.filter(id=delivery_id)
-            .exclude(delivery_point__group=None)
-            .first()
+        .exclude(delivery_point__group=None)
+        .first()
     )
     if delivery_board is None:
         return
@@ -218,9 +218,7 @@ def export_order_2_1_group(
             settings.REPANIER_SETTINGS_GROUP_NAME, permanence
         )
 
-        long_basket_name = group.long_basket_name or str(
-            group
-        )
+        long_basket_name = group.long_basket_name or str(group)
 
         template = Template(order_customer_mail)
         context = TemplateContext(
@@ -273,12 +271,12 @@ def export_order_2_1_group(
 
 
 def export_order_2_1_customer(
-        customer,
-        filename,
-        permanence,
-        order_responsible=None,
-        abstract_ws=None,
-        cancel_order=False,
+    customer,
+    filename,
+    permanence,
+    order_responsible=None,
+    abstract_ws=None,
+    cancel_order=False,
 ):
     from repanier.apps import (
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER,
@@ -302,12 +300,10 @@ def export_order_2_1_customer(
             if customer_invoice.delivery is not None:
                 delivery_point = customer_invoice.delivery
                 if (
-                        delivery_point.delivery_point.inform_customer_responsible
-                        and delivery_point.delivery_point.group is not None
+                    delivery_point.delivery_point.inform_customer_responsible
+                    and delivery_point.delivery_point.group is not None
                 ):
-                    group = (
-                        delivery_point.delivery_point.group
-                    )
+                    group = delivery_point.delivery_point.group
                     if group.id != customer.id:
                         to_email.append(group.user.email)
                         if group.email2:
@@ -377,8 +373,8 @@ def export_order_2_1_customer(
                 send_even_if_unsubscribed=True,
             )
             if (
-                    not cancel_order
-                    and REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER
+                not cancel_order
+                and REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER
             ):
                 if abstract_ws is not None:
                     wb.add_sheet(abstract_ws, index=0)

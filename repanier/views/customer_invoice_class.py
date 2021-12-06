@@ -53,8 +53,8 @@ class CustomerInvoiceView(DetailView):
                     customer_invoice__customer_charged_id=customer_invoice.customer_id,
                     permanence_id=customer_invoice.permanence_id,
                 )
-                    .exclude(customer_id=customer_invoice.customer_id)
-                    .order_by("customer", "producer", "offer_item__order_sort_order_v2")
+                .exclude(customer_id=customer_invoice.customer_id)
+                .order_by("customer", "producer", "offer_item__order_sort_order_v2")
             )
             context["purchase_by_other_set"] = purchase_by_other_set
             if customer_invoice.invoice_sort_order is not None:
@@ -64,9 +64,9 @@ class CustomerInvoiceView(DetailView):
                         invoice_sort_order__isnull=False,
                         invoice_sort_order__lt=customer_invoice.invoice_sort_order,
                     )
-                        .order_by("-invoice_sort_order")
-                        .only("id")
-                        .first()
+                    .order_by("-invoice_sort_order")
+                    .only("id")
+                    .first()
                 )
                 next_customer_invoice = (
                     CustomerInvoice.objects.filter(
@@ -74,9 +74,9 @@ class CustomerInvoiceView(DetailView):
                         invoice_sort_order__isnull=False,
                         invoice_sort_order__gt=customer_invoice.invoice_sort_order,
                     )
-                        .order_by("invoice_sort_order")
-                        .only("id")
-                        .first()
+                    .order_by("invoice_sort_order")
+                    .only("id")
+                    .first()
                 )
             else:
                 previous_customer_invoice = None
@@ -85,9 +85,9 @@ class CustomerInvoiceView(DetailView):
                         customer_id=customer_invoice.customer_id,
                         invoice_sort_order__isnull=False,
                     )
-                        .order_by("invoice_sort_order")
-                        .only("id")
-                        .first()
+                    .order_by("invoice_sort_order")
+                    .only("id")
+                    .first()
                 )
             if previous_customer_invoice is not None:
                 context["previous_customer_invoice_id"] = previous_customer_invoice.id
@@ -109,9 +109,9 @@ class CustomerInvoiceView(DetailView):
             else:
                 customer_id = (
                     CustomerInvoice.objects.filter(id=pk)
-                        .only("customer_id")
-                        .first()
-                        .customer_id
+                    .only("customer_id")
+                    .first()
+                    .customer_id
                 )
         else:
             customer_id = user.customer_id
@@ -120,9 +120,9 @@ class CustomerInvoiceView(DetailView):
                 CustomerInvoice.objects.filter(
                     customer_id=customer_id, invoice_sort_order__isnull=False
                 )
-                    .only("id")
-                    .order_by("-invoice_sort_order")
-                    .first()
+                .only("id")
+                .order_by("-invoice_sort_order")
+                .first()
             )
             if last_customer_invoice is not None:
                 self.kwargs["pk"] = last_customer_invoice.id

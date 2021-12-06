@@ -168,9 +168,9 @@ class CustomerInvoice(Invoice):
     def get_total_price_with_tax(self, customer_charged=False):
         if self.customer_id == self.customer_charged_id:
             return (
-                    self.total_price_with_tax
-                    + self.delta_price_with_tax
-                    + self.delta_transport
+                self.total_price_with_tax
+                + self.delta_price_with_tax
+                + self.delta_transport
             )
         else:
             if self.status < PERMANENCE_INVOICED or not customer_charged:
@@ -206,8 +206,8 @@ class CustomerInvoice(Invoice):
     @property
     def has_purchase(self):
         if (
-                self.total_price_with_tax.amount != DECIMAL_ZERO
-                or self.is_order_confirm_send
+            self.total_price_with_tax.amount != DECIMAL_ZERO
+            or self.is_order_confirm_send
         ):
             return True
 
@@ -242,7 +242,7 @@ class CustomerInvoice(Invoice):
         return qty_ordered != DECIMAL_ZERO or qty_invoiced != DECIMAL_ZERO
 
     def get_html_my_order_confirmation(
-            self, permanence, is_basket=False, basket_message=EMPTY_STRING
+        self, permanence, is_basket=False, basket_message=EMPTY_STRING
     ):
 
         if permanence.with_delivery_point:
@@ -422,7 +422,7 @@ class CustomerInvoice(Invoice):
                     if is_basket:
                         if self.status == PERMANENCE_OPENED:
                             if (
-                                    permanence.with_delivery_point and self.delivery is None
+                                permanence.with_delivery_point and self.delivery is None
                             ) or not self.has_purchase:
                                 btn_disabled = "disabled"
                             msg_confirmation1 = (
@@ -659,14 +659,14 @@ class CustomerInvoice(Invoice):
                 )
 
                 total_selling_price_with_tax_wo_deposit = (
-                        total_selling_price_with_tax - total_deposit
+                    total_selling_price_with_tax - total_deposit
                 )
                 self.delta_price_with_tax.amount = (
-                                                           total_selling_price_with_tax_wo_deposit * self.price_list_multiplier
-                                                   ).quantize(TWO_DECIMALS) - total_selling_price_with_tax_wo_deposit
+                    total_selling_price_with_tax_wo_deposit * self.price_list_multiplier
+                ).quantize(TWO_DECIMALS) - total_selling_price_with_tax_wo_deposit
                 self.delta_vat.amount = -(
-                        (total_vat * self.price_list_multiplier).quantize(FOUR_DECIMALS)
-                        - total_vat
+                    (total_vat * self.price_list_multiplier).quantize(FOUR_DECIMALS)
+                    - total_vat
                 )
 
             result_set = PurchaseWoReceiver.objects.filter(
@@ -737,7 +737,7 @@ class CustomerInvoice(Invoice):
 
         if settings.REPANIER_SETTINGS_ROUND_INVOICES:
             total_price = (
-                    self.total_price_with_tax.amount + self.delta_price_with_tax.amount
+                self.total_price_with_tax.amount + self.delta_price_with_tax.amount
             )
             total_price_gov_be = round_gov_be(total_price)
             self.delta_price_with_tax.amount += total_price_gov_be - total_price
@@ -750,7 +750,7 @@ class CustomerInvoice(Invoice):
             #   self.price_list_multiplier may vary
             if self.transport.amount != DECIMAL_ZERO:
                 total_price_with_tax = (
-                        self.total_price_with_tax.amount + self.delta_price_with_tax.amount
+                    self.total_price_with_tax.amount + self.delta_price_with_tax.amount
                 )
                 if total_price_with_tax != DECIMAL_ZERO:
                     if self.min_transport.amount == DECIMAL_ZERO:
@@ -807,9 +807,9 @@ class CustomerInvoice(Invoice):
 
     def cancel_if_unconfirmed(self, permanence, send_mail=True):
         if (
-                settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
-                and not self.is_order_confirm_send
-                and self.has_purchase
+            settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+            and not self.is_order_confirm_send
+            and self.has_purchase
         ):
             if send_mail:
                 from repanier.email.email_order import export_order_2_1_customer
@@ -822,9 +822,7 @@ class CustomerInvoice(Invoice):
 
             from repanier.models.purchase import PurchaseWoReceiver
 
-            purchase_qs = PurchaseWoReceiver.objects.filter(
-                customer_invoice_id=self.id
-            )
+            purchase_qs = PurchaseWoReceiver.objects.filter(customer_invoice_id=self.id)
 
             for a_purchase in purchase_qs.select_related("customer"):
                 create_or_update_one_cart_item(
@@ -919,10 +917,10 @@ class ProducerInvoice(Invoice):
 
     def get_total_price_with_tax(self):
         return (
-                self.total_price_with_tax
-                + self.delta_price_with_tax
-                + self.delta_transport
-                + self.delta_stock_with_tax
+            self.total_price_with_tax
+            + self.delta_price_with_tax
+            + self.delta_transport
+            + self.delta_stock_with_tax
         )
 
     def get_total_vat(self):
@@ -936,7 +934,7 @@ class ProducerInvoice(Invoice):
         json_dict = {}
         if a_producer.minimum_order_value.amount > DECIMAL_ZERO:
             ratio = (
-                    self.total_price_with_tax.amount / a_producer.minimum_order_value.amount
+                self.total_price_with_tax.amount / a_producer.minimum_order_value.amount
             )
             if ratio >= DECIMAL_ONE:
                 ratio = 100

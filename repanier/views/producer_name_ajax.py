@@ -10,10 +10,7 @@ from repanier.models.producer import Producer
 @never_cache
 @require_GET
 def producer_name_ajax(request, offer_uuid=None):
-    producer = (
-        Producer.objects.filter(offer_uuid=offer_uuid, is_active=True)
-            .first()
-    )
+    producer = Producer.objects.filter(offer_uuid=offer_uuid, is_active=True).first()
     if producer is None:
         return HttpResponse(_("Anonymous"))
     return HttpResponse(producer.short_profile_name)

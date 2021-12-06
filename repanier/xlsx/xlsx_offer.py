@@ -17,17 +17,17 @@ def export_offer(permanence, wb=None):
         )
 
         for product in (
-                Product.objects.prefetch_related("producer", "department_for_customer")
-                        .filter(
-                    producer__in=producers_in_this_permanence,
-                    is_into_offer=True,
-                )
-                        .order_by(
-                    "producer__short_profile_name",
-                    "department_for_customer",
-                    "long_name_v2",
-                    "order_average_weight",
-                )
+            Product.objects.prefetch_related("producer", "department_for_customer")
+            .filter(
+                producer__in=producers_in_this_permanence,
+                is_into_offer=True,
+            )
+            .order_by(
+                "producer__short_profile_name",
+                "department_for_customer",
+                "long_name_v2",
+                "order_average_weight",
+            )
         ):
             row_num = export_offer_row(product, row_num, ws)
         # for product in (
@@ -39,14 +39,14 @@ def export_offer(permanence, wb=None):
 
     elif permanence.status == PERMANENCE_OPENED:
         for offer_item in (
-                OfferItem.objects.prefetch_related("producer", "department_for_customer")
-                        .filter(
-                    permanence_id=permanence.id,
-                    is_active=True,
-                )
-                        .order_by(
-                    "order_sort_order_v2",
-                )
+            OfferItem.objects.prefetch_related("producer", "department_for_customer")
+            .filter(
+                permanence_id=permanence.id,
+                is_active=True,
+            )
+            .order_by(
+                "order_sort_order_v2",
+            )
         ):
             row_num = export_offer_row(offer_item, row_num, ws)
 

@@ -39,12 +39,9 @@ def send_invoice(permanence_id):
                     if producer.long_profile_name is not None
                     else producer.short_profile_name
                 )
-                if (
-                        Purchase.objects.filter(
-                            permanence_id=permanence.id, producer_id=producer.id
-                        )
-                                .exists()
-                ):
+                if Purchase.objects.filter(
+                    permanence_id=permanence.id, producer_id=producer.id
+                ).exists():
                     invoice_producer_mail = config.invoice_producer_mail_v2
                     invoice_producer_mail_subject = "{} - {}".format(
                         settings.REPANIER_SETTINGS_GROUP_NAME, permanence
@@ -81,22 +78,19 @@ def send_invoice(permanence_id):
         # This is the detail of the invoice, i.e. sold products
         invoice_description = permanence.invoice_description_v2
         for customer in Customer.objects.filter(
-                customerinvoice__permanence_id=permanence.id,
-                customerinvoice__customer_charged_id=F("id"),
-                represent_this_buyinggroup=False,
+            customerinvoice__permanence_id=permanence.id,
+            customerinvoice__customer_charged_id=F("id"),
+            represent_this_buyinggroup=False,
         ):
             long_basket_name = (
                 customer.long_basket_name
                 if customer.long_basket_name is not None
                 else customer.short_basket_name
             )
-            if (
-                    Purchase.objects.filter(
-                        permanence_id=permanence.id,
-                        customer_invoice__customer_charged_id=customer.id,
-                    )
-                            .exists()
-            ):
+            if Purchase.objects.filter(
+                permanence_id=permanence.id,
+                customer_invoice__customer_charged_id=customer.id,
+            ).exists():
                 to_email = [customer.user.email]
                 if customer.email2:
                     to_email.append(customer.email2)

@@ -39,9 +39,9 @@ class ProducerInvoiceView(DetailView):
                     permanence_id=producer_invoice.permanence_id,
                     producer_id=producer_invoice.producer_id,
                 )
-                    .exclude(quantity_invoiced=DECIMAL_ZERO)
-                    .order_by("producer_sort_order_v2")
-                    .distinct()
+                .exclude(quantity_invoiced=DECIMAL_ZERO)
+                .order_by("producer_sort_order_v2")
+                .distinct()
             )
             context["offer_item_set"] = offer_item_set
             if producer_invoice.invoice_sort_order is not None:
@@ -51,9 +51,9 @@ class ProducerInvoiceView(DetailView):
                         invoice_sort_order__isnull=False,
                         invoice_sort_order__lt=producer_invoice.invoice_sort_order,
                     )
-                        .order_by("-invoice_sort_order")
-                        .only("id")
-                        .first()
+                    .order_by("-invoice_sort_order")
+                    .only("id")
+                    .first()
                 )
                 next_producer_invoice = (
                     ProducerInvoice.objects.filter(
@@ -61,9 +61,9 @@ class ProducerInvoiceView(DetailView):
                         invoice_sort_order__isnull=False,
                         invoice_sort_order__gt=producer_invoice.invoice_sort_order,
                     )
-                        .order_by("invoice_sort_order")
-                        .only("id")
-                        .first()
+                    .order_by("invoice_sort_order")
+                    .only("id")
+                    .first()
                 )
             else:
                 previous_producer_invoice = None
@@ -72,9 +72,9 @@ class ProducerInvoiceView(DetailView):
                         producer_id=producer_invoice.producer_id,
                         invoice_sort_order__isnull=False,
                     )
-                        .order_by("invoice_sort_order")
-                        .only("id")
-                        .first()
+                    .order_by("invoice_sort_order")
+                    .only("id")
+                    .first()
                 )
             if previous_producer_invoice is not None:
                 context["previous_producer_invoice_id"] = previous_producer_invoice.id
@@ -92,9 +92,7 @@ class ProducerInvoiceView(DetailView):
             self.uuid = self.kwargs.get("uuid", None)
             if self.uuid:
                 try:
-                    producer = (
-                        Producer.objects.filter(uuid=self.uuid).first()
-                    )
+                    producer = Producer.objects.filter(uuid=self.uuid).first()
                     producer_id = producer.id
                 except:
                     raise Http404
@@ -106,9 +104,9 @@ class ProducerInvoiceView(DetailView):
                 ProducerInvoice.objects.filter(
                     producer_id=producer_id, invoice_sort_order__isnull=False
                 )
-                    .only("id")
-                    .order_by("-invoice_sort_order")
-                    .first()
+                .only("id")
+                .order_by("-invoice_sort_order")
+                .first()
             )
             if last_producer_invoice is not None:
                 self.kwargs["pk"] = last_producer_invoice.id

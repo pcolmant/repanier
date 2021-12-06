@@ -24,8 +24,8 @@ def send_open_order(permanence_id):
 
     to_email = []
     for customer in Customer.objects.filter(
-            represent_this_buyinggroup=False,
-            may_order=True,
+        represent_this_buyinggroup=False,
+        may_order=True,
     ):
         to_email.append(customer.user.email)
         if customer.email2:
@@ -47,7 +47,7 @@ def send_open_order(permanence_id):
         "".join(
             "<li>{producer}, {product}</li>".format(
                 producer=o.producer.short_profile_name,
-                product=o.get_long_name_with_customer_price()
+                product=o.get_long_name_with_customer_price(),
             )
             for o in qs
         ),

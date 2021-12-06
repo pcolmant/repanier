@@ -76,20 +76,20 @@ class Staff(MPTTModel):
     @classmethod
     def get_or_create_any_coordinator(cls):
         coordinator = (
-                (
-                    cls.objects.filter(
-                        is_active=True, is_repanier_admin=True, can_be_contacted=True
-                    )
-                        .order_by("id")
-                        .first()
+            (
+                cls.objects.filter(
+                    is_active=True, is_repanier_admin=True, can_be_contacted=True
                 )
-                or (
-                    cls.objects.filter(is_active=True, is_repanier_admin=True)
-                        .order_by("id")
-                        .first()
-                )
-                or (cls.objects.filter(is_active=True).order_by("id").first())
-                or (cls.objects.order_by("id").first())
+                .order_by("id")
+                .first()
+            )
+            or (
+                cls.objects.filter(is_active=True, is_repanier_admin=True)
+                .order_by("id")
+                .first()
+            )
+            or (cls.objects.filter(is_active=True).order_by("id").first())
+            or (cls.objects.order_by("id").first())
         )
         if coordinator is None:
             # Create the very first staff member

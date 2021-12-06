@@ -27,8 +27,8 @@ def order_select_ajax(request):
     user = request.user
     customer = (
         Customer.objects.filter(id=user.customer_id, may_order=True)
-            .only("id", "vat_id", "language")
-            .first()
+        .only("id", "vat_id", "language")
+        .first()
     )
     if customer is None:
         raise Http404
@@ -42,8 +42,8 @@ def order_select_ajax(request):
         PurchaseWoReceiver.objects.filter(
             customer_id=customer.id, offer_item_id=offer_item_id
         )
-            .only("quantity_ordered")
-            .first()
+        .only("quantity_ordered")
+        .first()
     )
     producer_invoice = ProducerInvoice.objects.filter(
         permanence_id=offer_item.permanence_id,
@@ -59,8 +59,8 @@ def order_select_ajax(request):
                 CustomerInvoice.objects.filter(
                     permanence_id=offer_item.permanence_id, customer_id=customer.id
                 )
-                    .only("status")
-                    .first()
+                .only("status")
+                .first()
             )
             if customer_invoice is None:
                 status = EMPTY_STRING
@@ -69,7 +69,7 @@ def order_select_ajax(request):
             if PERMANENCE_OPENED <= status <= PERMANENCE_SEND:
                 product = offer_item.product
                 a_price = (
-                        product.customer_unit_price.amount + product.unit_deposit.amount
+                    product.customer_unit_price.amount + product.unit_deposit.amount
                 )
                 q_min = product.customer_minimum_order_quantity
                 if purchase is not None:
@@ -92,12 +92,12 @@ def order_select_ajax(request):
                 html = EMPTY_STRING
                 if q_valid <= q_alert:
                     if status == PERMANENCE_OPENED or (
-                            status <= PERMANENCE_SEND and selected == "selected"
+                        status <= PERMANENCE_SEND and selected == "selected"
                     ):
                         html = '<option value="0" {}>---</option>'.format(selected)
                 else:
                     if status == PERMANENCE_OPENED or (
-                            status <= PERMANENCE_SEND and selected == "selected"
+                        status <= PERMANENCE_SEND and selected == "selected"
                     ):
                         html = '<option value="0" {}>{}</option>'.format(
                             selected, _("Sold out")
@@ -112,7 +112,7 @@ def order_select_ajax(request):
                             q_order_is_displayed = True
                             selected = "selected"
                     if status == PERMANENCE_OPENED or (
-                            status <= PERMANENCE_SEND and selected == "selected"
+                        status <= PERMANENCE_SEND and selected == "selected"
                     ):
                         display = product.get_display(
                             qty=q_valid,

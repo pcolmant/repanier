@@ -12,12 +12,9 @@ from repanier.tools import my_basket
 @login_required
 def my_cart_amount_ajax(request, permanence_id):
     user = request.user
-    customer_invoice = (
-        CustomerInvoice.objects.filter(
-            permanence_id=permanence_id, customer_id=user.customer_id
-        )
-            .first()
-    )
+    customer_invoice = CustomerInvoice.objects.filter(
+        permanence_id=permanence_id, customer_id=user.customer_id
+    ).first()
     if customer_invoice is None:
         raise Http404
     json_dict = my_basket(

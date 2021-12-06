@@ -125,9 +125,7 @@ class RepanierEmail(EmailMultiAlternatives):
                 # customer.valid_email = valid_email
                 # customer.save(update_fields=['valid_email'])
                 # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                Customer.objects.filter(id=customer.id).update(
-                    valid_email=email_send
-                )
+                Customer.objects.filter(id=customer.id).update(valid_email=email_send)
             time.sleep(min(1, 1 + int(random())))
 
         return email_send

@@ -147,8 +147,8 @@ class RepanierMoney(object):
     # Override comparison operators
     def __eq__(self, other):
         return (
-                       isinstance(other, RepanierMoney) and (self.amount == other.amount)
-               ) or self.amount == other
+            isinstance(other, RepanierMoney) and (self.amount == other.amount)
+        ) or self.amount == other
 
     def __ne__(self, other):
         result = self.__eq__(other)
@@ -156,13 +156,13 @@ class RepanierMoney(object):
 
     def __lt__(self, other):
         return (
-                       isinstance(other, RepanierMoney) and (self.amount < other.amount)
-               ) or self.amount < other
+            isinstance(other, RepanierMoney) and (self.amount < other.amount)
+        ) or self.amount < other
 
     def __gt__(self, other):
         return (
-                       isinstance(other, RepanierMoney) and (self.amount > other.amount)
-               ) or self.amount > other
+            isinstance(other, RepanierMoney) and (self.amount > other.amount)
+        ) or self.amount > other
 
     def __le__(self, other):
         return self < other or self == other
@@ -243,25 +243,35 @@ class ModelRepanierMoneyField(models.DecimalField):
         return super().get_db_prep_save(value, connection)
 
     def contribute_to_class(self, cls, name, private_only=False):
-        super().contribute_to_class(
-            cls, name, private_only=private_only
-        )
+        super().contribute_to_class(cls, name, private_only=private_only)
         setattr(cls, self.name, ModelRepanierMoneyFieldProxy(self))
 
 
 class FormRepanierMoneyField(DecimalField):
     widget = RepanierMoneyWidget
 
-    def __init__(self, *, max_value=None, min_value=None, max_digits=None, decimal_places=None, **kwargs):
+    def __init__(
+        self,
+        *,
+        max_value=None,
+        min_value=None,
+        max_digits=None,
+        decimal_places=None,
+        **kwargs,
+    ):
         # Important : add "localize"
-        super().__init__(max_value=max_value, min_value=min_value, max_digits=max_digits, decimal_places=decimal_places,
-                         localize=True, **kwargs)
+        super().__init__(
+            max_value=max_value,
+            min_value=min_value,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            localize=True,
+            **kwargs,
+        )
 
     def to_python(self, value):
         # Important : Do not validate if self.disabled
-        value = (
-                        not self.disabled and super().to_python(value)
-                ) or DECIMAL_ZERO
+        value = (not self.disabled and super().to_python(value)) or DECIMAL_ZERO
         return RepanierMoney(value)
 
     def prepare_value(self, value):

@@ -19,8 +19,8 @@ def task_form_ajax(request):
     user = request.user
     customer = (
         Customer.objects.filter(id=user.customer_id, may_order=True)
-            .only("id", "vat_id", "language")
-            .first()
+        .only("id", "vat_id", "language")
+        .first()
     )
     if customer is None:
         raise Http404

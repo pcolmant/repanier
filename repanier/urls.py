@@ -93,7 +93,7 @@ urlpatterns = [
             template_name=get_repanier_template_name(
                 "registration/password_reset_confirm.html"
             ),
-            success_url=reverse_lazy('repanier:password_reset_complete')
+            success_url=reverse_lazy("repanier:password_reset_complete"),
         ),
         name="password_reset_confirm",
     ),

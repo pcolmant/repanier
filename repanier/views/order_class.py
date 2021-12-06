@@ -45,8 +45,8 @@ class OrderView(ListView):
         permanence_id = sint(kwargs.get("permanence_id", 0))
         self.permanence = (
             Permanence.objects.filter(id=permanence_id)
-                .only("id", "status", "permanence_date", "with_delivery_point")
-                .first()
+            .only("id", "status", "permanence_date", "with_delivery_point")
+            .first()
         )
         permanence_ok_or_404(self.permanence)
         self.user = request.user
@@ -102,8 +102,8 @@ class OrderView(ListView):
                         offeritem__permanence_id=self.permanence.id,
                         offeritem__is_active=True,
                     )
-                        .order_by("tree_id", "lft")
-                        .distinct("id", "tree_id", "lft")
+                    .order_by("tree_id", "lft")
+                    .distinct("id", "tree_id", "lft")
                 )
             else:
                 department_set = (
@@ -112,8 +112,8 @@ class OrderView(ListView):
                         offeritem__permanence_id=self.permanence.id,
                         offeritem__is_active=True,
                     )
-                        .order_by("tree_id", "lft")
-                        .distinct("id", "tree_id", "lft")
+                    .order_by("tree_id", "lft")
+                    .distinct("id", "tree_id", "lft")
                 )
             context["department_set"] = department_set
             context["staff_order"] = Staff.get_or_create_order_responsible()
@@ -176,9 +176,9 @@ class OrderView(ListView):
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
 
         if self.customer is None and (
-                not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
-                or self.is_basket
-                or self.is_like
+            not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
+            or self.is_basket
+            or self.is_like
         ):
             return OfferItemReadOnly.objects.none()
 
@@ -200,8 +200,8 @@ class OrderView(ListView):
             if self.department_id != "all":
                 department = (
                     LUT_DepartmentForCustomer.objects.filter(id=self.department_id)
-                        .only("lft", "rght", "tree_id")
-                        .first()
+                    .only("lft", "rght", "tree_id")
+                    .first()
                 )
                 if department is not None:
                     tmp_qs = qs.filter(

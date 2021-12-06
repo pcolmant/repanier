@@ -22,7 +22,7 @@ def set_threading_local(name, value):
     threading_local.repanier_local[name] = value
 
 
-def get_threading_local(name, default_value= None):
+def get_threading_local(name, default_value=None):
     repanier_local = getattr(threading_local, "repanier_local", {})
     return repanier_local.get(name, default_value)
 
@@ -59,15 +59,21 @@ def get_preserved_filters():
     filters = _get_filters()
     return urlencode({"_changelist_filters": filters}) if filters else ""
 
+
 def get_preserved_filters_as_dict():
     filters_as_dict = QueryDict(_get_filters(), mutable=True)
     return filters_as_dict
 
+
 def get_preserved_filters_from_dict(filters_as_dict):
     """
-        Return the admin preserved filters querystring from a dictionary.
-        """
-    return urlencode({"_changelist_filters": filters_as_dict.urlencode()}) if filters_as_dict else ""
+    Return the admin preserved filters querystring from a dictionary.
+    """
+    return (
+        urlencode({"_changelist_filters": filters_as_dict.urlencode()})
+        if filters_as_dict
+        else ""
+    )
 
 
 def get_query_preserved_filters():
@@ -98,6 +104,7 @@ def get_request_params():
     params_inside_url = get_request().resolver_match.kwargs
     params = params_inside_filters | params_inside_url
     return params
+
 
 def is_ajax():
     request = get_request()

@@ -21,7 +21,7 @@ from repanier.tools import reorder_purchases
 def automatically_open():
     something_to_open = False
     for permanence in Permanence.objects.filter(
-            status=PERMANENCE_PLANNED, automatically_closed=True
+        status=PERMANENCE_PLANNED, automatically_closed=True
     ):
         permanence.set_status(
             old_status=PERMANENCE_PLANNED, new_status=PERMANENCE_WAIT_FOR_OPEN
@@ -43,10 +43,9 @@ def open_order(permanence_id, send_mail=True):
     )
 
     # Create offer items which can be purchased depending on selection in the admin
-    producers_in_this_permanence = (
-        Producer.objects.filter(permanence=permanence, is_active=True)
-            .only("id")
-    )
+    producers_in_this_permanence = Producer.objects.filter(
+        permanence=permanence, is_active=True
+    ).only("id")
     product_queryset = Product.objects.filter(
         producer__in=producers_in_this_permanence, is_into_offer=True
     )
@@ -61,9 +60,9 @@ def open_order(permanence_id, send_mail=True):
     # 3 - Keep only producer with offer items which can be ordered
     permanence.producers.clear()
     for offer_item in (
-            OfferItemReadOnly.objects.filter(permanence_id=permanence.id, may_order=True)
-                    .order_by("producer_id")
-                    .distinct("producer_id")
+        OfferItemReadOnly.objects.filter(permanence_id=permanence.id, may_order=True)
+        .order_by("producer_id")
+        .distinct("producer_id")
     ):
         permanence.producers.add(offer_item.producer_id)
 
@@ -94,14 +93,13 @@ def back_to_scheduled(permanence):
 def automatically_closed():
     something_to_close = False
     for permanence in Permanence.objects.filter(
-            status=PERMANENCE_OPENED, automatically_closed=True
+        status=PERMANENCE_OPENED, automatically_closed=True
     ):
         if permanence.with_delivery_point:
             deliveries_id = list(
                 DeliveryBoard.objects.filter(
                     permanence_id=permanence.id, status=PERMANENCE_OPENED
-                )
-                    .values_list("id", flat=True)
+                ).values_list("id", flat=True)
             )
         else:
             deliveries_id = ()
@@ -119,10 +117,9 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
 
-    permanence = (
-        Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED)
-            .first()
-    )
+    permanence = Permanence.objects.filter(
+        id=permanence_id, status=PERMANENCE_OPENED
+    ).first()
     if permanence is None:
         return
     if permanence.with_delivery_point:

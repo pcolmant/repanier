@@ -61,8 +61,8 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 CustomerInvoice.objects.filter(
                     customer_id=customer.id, invoice_sort_order__lte=bank_account.id
                 )
-                    .order_by("-invoice_sort_order")
-                    .first()
+                .order_by("-invoice_sort_order")
+                .first()
             )
             if last_customer_invoice is not None:
                 balance_before = last_customer_invoice.balance.amount
@@ -139,8 +139,8 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 ProducerInvoice.objects.filter(
                     producer_id=producer.id, invoice_sort_order__lte=bank_account.id
                 )
-                    .order_by("-invoice_sort_order")
-                    .first()
+                .order_by("-invoice_sort_order")
+                .first()
             )
             if last_producer_invoice is not None:
                 balance_before = -last_producer_invoice.balance.amount
@@ -197,18 +197,18 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
         row_num += 1
 
     final_bank_amount = (
-            bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+        bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
     )
     bank_account = (
         BankAccount.objects.filter(
             id__lt=bank_account.id, customer__isnull=True, producer__isnull=True
         )
-            .order_by("-id")
-            .first()
+        .order_by("-id")
+        .first()
     )
     if bank_account is not None:
         initial_bank_amount = (
-                bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+            bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
         )
     else:
         # This shouldn't occur because an initial balance is automatically generated
@@ -243,12 +243,12 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
 
 def export_invoice(
-        permanence=None,
-        year=None,
-        customer=None,
-        producer=None,
-        wb=None,
-        sheet_name=EMPTY_STRING,
+    permanence=None,
+    year=None,
+    customer=None,
+    producer=None,
+    wb=None,
+    sheet_name=EMPTY_STRING,
 ):
     # Detail of what has been prepared
     from repanier.apps import REPANIER_SETTINGS_CONFIG
@@ -521,7 +521,7 @@ def export_invoice(
 
 
 def import_invoice_sheet(
-        worksheet, invoice_reference=EMPTY_STRING, customer_2_id_dict=None, producer=None
+    worksheet, invoice_reference=EMPTY_STRING, customer_2_id_dict=None, producer=None
 ):
     error = False
     error_msg = None
@@ -616,10 +616,10 @@ def import_invoice_sheet(
             error_msg = _(
                 "Row %(row_num)d : A required column %(column_name)s is missing %(error_msg)s."
             ) % {
-                            "row_num": row_num + 1,
-                            "column_name": column_name,
-                            "error_msg": str(e),
-                        }
+                "row_num": row_num + 1,
+                "column_name": column_name,
+                "error_msg": str(e),
+            }
         except Exception as e:
             error = True
             error_msg = _("Row %(row_num)d : %(error_msg)s.") % {
@@ -637,7 +637,7 @@ def import_invoice_sheet(
 
 
 def handle_uploaded_invoice(
-        request, permanences, file_to_import, producer, invoice_reference
+    request, permanences, file_to_import, producer, invoice_reference
 ):
     if producer is None:
         error = True

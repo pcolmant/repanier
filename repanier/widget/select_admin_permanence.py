@@ -15,17 +15,13 @@ class SelectAdminPermanenceWidget(forms.Select):
     template_name = get_repanier_template_name("widgets/select_admin_purchase_qty.html")
 
     def get_context(self, name, value, attrs):
-        context = super().get_context(
-            name, value, attrs
-        )
+        context = super().get_context(name, value, attrs)
         case_show_show = 'case "0": '
         case_show_hide = 'case "0": '
         case_hide_show = 'case "0": '
         for option_value, option_label in self.choices:
             permanence = (
-                Permanence.objects.filter(id=option_value)
-                    .only("status")
-                    .first()
+                Permanence.objects.filter(id=option_value).only("status").first()
             )
             if permanence is not None:
                 status = permanence.status

@@ -19,29 +19,29 @@ def my_balance_ajax(request):
         CustomerInvoice.objects.filter(
             customer_id=request.customer_id, invoice_sort_order__isnull=False
         )
-            .only("balance", "date_balance")
-            .order_by("-invoice_sort_order")
-            .first()
+        .only("balance", "date_balance")
+        .order_by("-invoice_sort_order")
+        .first()
     )
     if last_customer_invoice is not None:
         if last_customer_invoice.balance < DECIMAL_ZERO:
             result = _(
                 'My balance : <font color="red">%(balance)s</font> at %(date)s'
             ) % {
-                         "balance": last_customer_invoice.balance,
-                         "date": last_customer_invoice.date_balance.strftime(
-                             settings.DJANGO_SETTINGS_DATE
-                         ),
-                     }
+                "balance": last_customer_invoice.balance,
+                "date": last_customer_invoice.date_balance.strftime(
+                    settings.DJANGO_SETTINGS_DATE
+                ),
+            }
         else:
             result = _(
                 'My balance : <font color="green">%(balance)s</font> at %(date)s'
             ) % {
-                         "balance": last_customer_invoice.balance,
-                         "date": last_customer_invoice.date_balance.strftime(
-                             settings.DJANGO_SETTINGS_DATE
-                         ),
-                     }
+                "balance": last_customer_invoice.balance,
+                "date": last_customer_invoice.date_balance.strftime(
+                    settings.DJANGO_SETTINGS_DATE
+                ),
+            }
     else:
         result = _("My balance")
     return HttpResponse(result)

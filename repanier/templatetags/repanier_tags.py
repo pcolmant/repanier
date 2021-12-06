@@ -442,9 +442,9 @@ def repanier_btn_like(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     result = EMPTY_STRING
-    customer_is_active = (
-        Customer.objects.filter(user_id=user.id, is_active=True).exists()
-    )
+    customer_is_active = Customer.objects.filter(
+        user_id=user.id, is_active=True
+    ).exists()
     if customer_is_active:
         offer_item = kwargs.get("offer_item", None)
         str_id = str(offer_item.id)

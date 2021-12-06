@@ -16,9 +16,9 @@ from repanier.xlsx.import_tools import *
 def next_purchase(purchases):
     purchase = next_row(purchases)
     while (
-            purchase is not None
-            and purchase.quantity_invoiced <= DECIMAL_ZERO
-            and purchase.offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT
+        purchase is not None
+        and purchase.quantity_invoiced <= DECIMAL_ZERO
+        and purchase.offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT
     ):
         purchase = next_row(purchases)
     return purchase
@@ -55,8 +55,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     Producer.objects.filter(
                         producerinvoice__permanence_id=permanence.id
                     )
-                        .distinct()
-                        .iterator()
+                    .distinct()
+                    .iterator()
                 )
                 title1 = "{}-{}".format(customer.short_basket_name, permanence)
             else:
@@ -64,8 +64,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     Producer.objects.filter(
                         producerinvoice__permanence_id=permanence.id
                     )
-                        .distinct()
-                        .iterator()
+                    .distinct()
+                    .iterator()
                 )
                 title1 = "{}".format(permanence)
         else:
@@ -73,8 +73,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                 Producer.objects.filter(
                     producerinvoice__permanence__permanence_date__year=year
                 )
-                    .distinct()
-                    .iterator()
+                .distinct()
+                .iterator()
             )
             title1 = "{}-{}".format(customer.short_basket_name, year)
     else:
@@ -99,11 +99,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 permanence_id=permanence.id,
                                 producer_id=producer.id,
                             )
-                                .order_by(
+                            .order_by(
                                 "customer__short_basket_name",
                                 "offer_item__preparation_sort_order_v2",
                             )
-                                .iterator()
+                            .iterator()
                         )
                     else:
                         purchases = (
@@ -112,11 +112,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 customer_id=customer.id,
                                 producer_id=producer.id,
                             )
-                                .order_by(
+                            .order_by(
                                 "customer__short_basket_name",
                                 "offer_item__preparation_sort_order_v2",
                             )
-                                .iterator()
+                            .iterator()
                         )
                 else:
                     if customer is None:
@@ -126,12 +126,12 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 permanence__permanence_date__year=year,
                                 producer_id=producer.id,
                             )
-                                .order_by(
+                            .order_by(
                                 "permanence_id",
                                 "customer__short_basket_name",
                                 "offer_item__preparation_sort_order_v2",
                             )
-                                .iterator()
+                            .iterator()
                         )
                     else:
                         purchases = (
@@ -141,10 +141,10 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 customer_id=customer.id,
                                 producer_id=producer.id,
                             )
-                                .order_by(
+                            .order_by(
                                 "permanence_id", "offer_item__preparation_sort_order_v2"
                             )
-                                .iterator()
+                            .iterator()
                         )
                 purchase = next_purchase(purchases)
                 while purchase is not None:
@@ -153,17 +153,17 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     row_start_permanence = 0
                     row_num += 1
                     while (
-                            purchase is not None
-                            and permanence_save.id == purchase.permanence_id
+                        purchase is not None
+                        and permanence_save.id == purchase.permanence_id
                     ):
                         customer_save = purchase.customer
                         count_purchase = 0
                         row_start_purchase = 0
                         purchases_price = DECIMAL_ZERO
                         while (
-                                purchase is not None
-                                and permanence_save.id == purchase.permanence_id
-                                and customer_save.id == purchase.customer_id
+                            purchase is not None
+                            and permanence_save.id == purchase.permanence_id
+                            and customer_save.id == purchase.customer_id
                         ):
                             offer_item_save = purchase.offer_item
                             department_for_customer_save = (
@@ -176,11 +176,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             )
 
                             while (
-                                    purchase is not None
-                                    and permanence_save.id == purchase.permanence_id
-                                    and customer_save.id == purchase.customer_id
-                                    and department_for_customer_save
-                                    == purchase.offer_item.department_for_customer
+                                purchase is not None
+                                and permanence_save.id == purchase.permanence_id
+                                and customer_save.id == purchase.customer_id
+                                and department_for_customer_save
+                                == purchase.offer_item.department_for_customer
                             ):
                                 c = ws.cell(row=row_num, column=1)
                                 c.value = purchase.id
@@ -256,11 +256,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 )
                                 if year is None:
                                     purchase_price = (
-                                            purchase.quantity_invoiced
-                                            * (
-                                                    purchase.get_producer_unit_price()
-                                                    + purchase.get_unit_deposit()
-                                            )
+                                        purchase.quantity_invoiced
+                                        * (
+                                            purchase.get_producer_unit_price()
+                                            + purchase.get_unit_deposit()
+                                        )
                                     ).quantize(TWO_DECIMALS)
                                     purchases_price += purchase_price
                                     c.style.font.color = Color(Color.BLUE)
@@ -401,12 +401,12 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 permanence_id=permanence.id,
                                 producer_id=producer.id,
                             )
-                                .order_by(  # "product__placement",
+                            .order_by(  # "product__placement",
                                 "offer_item__preparation_sort_order_v2",
                                 "quantity_for_preparation_sort_order",
                                 "customer__short_basket_name",
                             )
-                                .iterator()
+                            .iterator()
                         )
                     else:
                         purchases = (
@@ -415,12 +415,12 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 customer_id=customer.id,
                                 producer_id=producer.id,
                             )
-                                .order_by(  # "product__placement",
+                            .order_by(  # "product__placement",
                                 "offer_item__preparation_sort_order_v2",
                                 "quantity_for_preparation_sort_order",
                                 "customer__short_basket_name",
                             )
-                                .iterator()
+                            .iterator()
                         )
                 else:
                     if customer is None:
@@ -430,13 +430,13 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 permanence__permanence_date__year=year,
                                 producer_id=producer.id,
                             )
-                                .order_by(
+                            .order_by(
                                 "permanence_id",
                                 "offer_item__preparation_sort_order_v2",
                                 "quantity_for_preparation_sort_order",
                                 "customer__short_basket_name",
                             )
-                                .iterator()
+                            .iterator()
                         )
                     else:
                         purchases = (
@@ -446,12 +446,12 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 customer_id=customer.id,
                                 producer_id=producer.id,
                             )
-                                .order_by(
+                            .order_by(
                                 "permanence_id",
                                 "offer_item__preparation_sort_order_v2",
                                 "quantity_for_preparation_sort_order",
                             )
-                                .iterator()
+                            .iterator()
                         )
                 purchase = next_purchase(purchases)
                 while purchase is not None:
@@ -460,8 +460,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     row_start_permanence = 0
                     row_num += 1
                     while (
-                            purchase is not None
-                            and permanence_save.id == purchase.permanence_id
+                        purchase is not None
+                        and permanence_save.id == purchase.permanence_id
                     ):
                         producer_save = purchase.producer
                         department_for_customer_save = (
@@ -473,11 +473,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             else EMPTY_STRING
                         )
                         while (
-                                purchase is not None
-                                and permanence_save.id == purchase.permanence_id
-                                and producer_save == purchase.producer
-                                and department_for_customer_save
-                                == purchase.offer_item.department_for_customer
+                            purchase is not None
+                            and permanence_save.id == purchase.permanence_id
+                            and producer_save == purchase.producer
+                            and department_for_customer_save
+                            == purchase.offer_item.department_for_customer
                         ):
                             offer_item_save = purchase.offer_item
                             count_offer_item = 0
@@ -488,8 +488,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.style.borders.top.border_style = Border.BORDER_THIN
                             row_start_offer_item = 0
                             while (
-                                    purchase is not None
-                                    and offer_item_save == purchase.offer_item
+                                purchase is not None
+                                and offer_item_save == purchase.offer_item
                             ):
                                 c = ws.cell(row=row_num, column=1)
                                 c.value = purchase.id
@@ -586,11 +586,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 )
                                 if year is None:
                                     offer_item_price = (
-                                            purchase.quantity_invoiced
-                                            * (
-                                                    purchase.get_producer_unit_price()
-                                                    + purchase.get_unit_deposit()
-                                            )
+                                        purchase.quantity_invoiced
+                                        * (
+                                            purchase.get_producer_unit_price()
+                                            + purchase.get_unit_deposit()
+                                        )
                                     ).quantize(TWO_DECIMALS)
                                     offer_items_price += offer_item_price
                                     if offer_item_save.order_unit in [
@@ -647,13 +647,13 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             count_permanence_purchase += count_offer_item
                             if year is None and count_offer_item > 1:
                                 if (
-                                        not offer_item_save.wrapped
-                                        and offer_item_save.order_unit
-                                        in [
-                                    PRODUCT_ORDER_UNIT_KG,
-                                    PRODUCT_ORDER_UNIT_PC_KG,
-                                    PRODUCT_ORDER_UNIT_LT,
-                                ]
+                                    not offer_item_save.wrapped
+                                    and offer_item_save.order_unit
+                                    in [
+                                        PRODUCT_ORDER_UNIT_KG,
+                                        PRODUCT_ORDER_UNIT_PC_KG,
+                                        PRODUCT_ORDER_UNIT_LT,
+                                    ]
                                 ):
                                     c = ws.cell(row=row_num - 1, column=11)
                                     c.value = "=SUM(J{}:J{})".format(
@@ -769,7 +769,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
 
 @transaction.atomic
 def import_purchase_sheet(
-        worksheet, permanence=None, customer_2_id_dict=None, producer_2_id_dict=None
+    worksheet, permanence=None, customer_2_id_dict=None, producer_2_id_dict=None
 ):
     error = False
     error_msg = None
@@ -805,10 +805,9 @@ def import_purchase_sheet(
                             "Row %(row_num)d : The given permanence doesn't own the given purchase id."
                         ) % {"row_num": row_num + 1}
                         break
-                    offer_item = (
-                        OfferItemReadOnly.objects.filter(id=purchase.offer_item_id)
-                            .first()
-                    )
+                    offer_item = OfferItemReadOnly.objects.filter(
+                        id=purchase.offer_item_id
+                    ).first()
                     if offer_item is None:
                         error = True
                         error_msg = _(
@@ -850,12 +849,12 @@ def import_purchase_sheet(
                             #     PRODUCT_ORDER_UNIT_LT
                             # ]:
                             producer_unit_price = (
-                                    purchase.offer_item.producer_unit_price.amount
-                                    + purchase.offer_item.unit_deposit.amount
+                                purchase.offer_item.producer_unit_price.amount
+                                + purchase.offer_item.unit_deposit.amount
                             ).quantize(TWO_DECIMALS)
                             if producer_unit_price != DECIMAL_ZERO:
                                 purchase.quantity_invoiced = (
-                                        producer_row_price / producer_unit_price
+                                    producer_row_price / producer_unit_price
                                 ).quantize(FOUR_DECIMALS)
                             else:
                                 purchase.quantity_invoiced = DECIMAL_ZERO
@@ -876,8 +875,8 @@ def import_purchase_sheet(
                         rule_of_3_source = DECIMAL_ZERO
                         producer_unit_price = row[_("Producer unit price")]
                         if (
-                                producer_unit_price is not None
-                                and not purchase.producer.invoice_by_basket
+                            producer_unit_price is not None
+                            and not purchase.producer.invoice_by_basket
                         ):
                             previous_producer_unit_price = (
                                 purchase.get_producer_unit_price()
@@ -917,7 +916,7 @@ def import_purchase_sheet(
                                 if ratio != DECIMAL_ONE:
                                     adjusted_invoice = DECIMAL_ZERO
                                     for i, purchase in enumerate(
-                                            array_purchase, start=1
+                                        array_purchase, start=1
                                     ):
                                         producer_unit_price = (
                                             purchase.offer_item.producer_unit_price.amount
@@ -926,7 +925,7 @@ def import_purchase_sheet(
                                             delta = rule_of_3_target - adjusted_invoice
                                             if producer_unit_price != DECIMAL_ZERO:
                                                 purchase.quantity_invoiced = (
-                                                        delta / producer_unit_price
+                                                    delta / producer_unit_price
                                                 ).quantize(FOUR_DECIMALS)
                                             else:
                                                 purchase.quantity_invoiced = (
@@ -934,11 +933,11 @@ def import_purchase_sheet(
                                                 )
                                         else:
                                             purchase.quantity_invoiced = (
-                                                    purchase.quantity_invoiced * ratio
+                                                purchase.quantity_invoiced * ratio
                                             ).quantize(FOUR_DECIMALS)
                                             adjusted_invoice += (
-                                                    purchase.quantity_invoiced
-                                                    * producer_unit_price
+                                                purchase.quantity_invoiced
+                                                * producer_unit_price
                                             ).quantize(TWO_DECIMALS)
                                         purchase.save()
 

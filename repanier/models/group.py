@@ -4,7 +4,6 @@ from repanier.models.customer import Customer
 
 
 class Group(Customer):
-
     def __str__(self):
         return "[{}]".format(self.short_basket_name)
 

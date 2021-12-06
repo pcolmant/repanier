@@ -120,8 +120,8 @@ class BankAccount(models.Model):
 
         if closest_greater is not None and closest_less is not None:
             if (
-                    closest_greater.operation_date - target
-                    > target - closest_less.operation_date
+                closest_greater.operation_date - target
+                > target - closest_less.operation_date
             ):
                 return closest_less
             else:
@@ -218,10 +218,19 @@ class BankAccount(models.Model):
         verbose_name_plural = _("Bank account transactions")
         ordering = ("-operation_date", "-id")
         indexes = [
-            models.Index(fields=["operation_date", "id"], name="repanier_bankaccount_idx01"),
-            models.Index(fields=["customer_invoice", "operation_date", "id"], name="repanier_bankaccount_idx02"),
-            models.Index(fields=["producer_invoice", "operation_date", "operation_date", "id"],
-                         name="repanier_bankaccount_idx03"),
-            models.Index(fields=["permanence", "customer", "producer", "operation_date", "id"],
-                         name="repanier_bankaccount_idx04"),
+            models.Index(
+                fields=["operation_date", "id"], name="repanier_bankaccount_idx01"
+            ),
+            models.Index(
+                fields=["customer_invoice", "operation_date", "id"],
+                name="repanier_bankaccount_idx02",
+            ),
+            models.Index(
+                fields=["producer_invoice", "operation_date", "operation_date", "id"],
+                name="repanier_bankaccount_idx03",
+            ),
+            models.Index(
+                fields=["permanence", "customer", "producer", "operation_date", "id"],
+                name="repanier_bankaccount_idx04",
+            ),
         ]

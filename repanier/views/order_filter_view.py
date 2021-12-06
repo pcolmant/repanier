@@ -21,9 +21,7 @@ from repanier.tools import permanence_ok_or_404, get_repanier_template_name
 @login_required
 def order_filter_view(request, permanence_id):
     user = request.user
-    customer = (
-        Customer.objects.filter(user_id=user.id, may_order=True).first()
-    )
+    customer = Customer.objects.filter(user_id=user.id, may_order=True).first()
     if customer is None:
         raise Http404
     translation.activate(customer.language)
@@ -47,8 +45,8 @@ def order_filter_view(request, permanence_id):
             offeritem__permanence_id=permanence_id,
             offeritem__is_active=True,
         )
-            .order_by("tree_id", "lft")
-            .distinct("id", "tree_id", "lft")
+        .order_by("tree_id", "lft")
+        .distinct("id", "tree_id", "lft")
     )
     if producer_id != "all":
         department_set = department_set.filter(offeritem__producer_id=producer_id)

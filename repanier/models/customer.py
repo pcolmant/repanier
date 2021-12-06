@@ -167,8 +167,8 @@ class Customer(models.Model):
     def get_or_create_the_very_first_customer(cls):
         very_first_customer = (
             Customer.objects.filter(represent_this_buyinggroup=False, is_active=True)
-                .order_by("id")
-                .first()
+            .order_by("id")
+            .first()
         )
         if very_first_customer is None:
             long_name = settings.REPANIER_SETTINGS_COORDINATOR_NAME
@@ -199,8 +199,8 @@ class Customer(models.Model):
             Customer.objects.filter(
                 Q(user__email=email_address) | Q(email2=email_address)
             )
-                .exclude(valid_email=False)
-                .first()
+            .exclude(valid_email=False)
+            .first()
         )
         return customer
 
@@ -220,7 +220,7 @@ class Customer(models.Model):
 
     def get_admin_balance(self):
         return (
-                self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
+            self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
         )
 
     get_admin_balance.short_description = _("Balance")
@@ -369,10 +369,10 @@ class Customer(models.Model):
     get_balance.admin_order_field = "balance"
 
     def get_html_on_hold_movement(
-            self,
-            bank_not_invoiced=None,
-            order_not_invoiced=None,
-            total_price_with_tax=REPANIER_MONEY_ZERO,
+        self,
+        bank_not_invoiced=None,
+        order_not_invoiced=None,
+        total_price_with_tax=REPANIER_MONEY_ZERO,
     ):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             bank_not_invoiced = (
@@ -391,8 +391,8 @@ class Customer(models.Model):
             other_order_not_invoiced = REPANIER_MONEY_ZERO
 
         if (
-                other_order_not_invoiced.amount != DECIMAL_ZERO
-                or bank_not_invoiced.amount != DECIMAL_ZERO
+            other_order_not_invoiced.amount != DECIMAL_ZERO
+            or bank_not_invoiced.amount != DECIMAL_ZERO
         ):
             if other_order_not_invoiced.amount != DECIMAL_ZERO:
                 if bank_not_invoiced.amount == DECIMAL_ZERO:
@@ -403,9 +403,9 @@ class Customer(models.Model):
                     customer_on_hold_movement = _(
                         "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
                     ) % {
-                                                    "bank": bank_not_invoiced,
-                                                    "other_order": other_order_not_invoiced,
-                                                }
+                        "bank": bank_not_invoiced,
+                        "other_order": other_order_not_invoiced,
+                    }
             else:
                 customer_on_hold_movement = _(
                     "This balance does not take account of any unrecognized payments %(bank)s."
@@ -436,8 +436,8 @@ class Customer(models.Model):
                 customer_id=self.id,
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
             )
-                .order_by("-id")
-                .prefetch_related("customer_invoice")
+            .order_by("-id")
+            .prefetch_related("customer_invoice")
         )
         if last_membership_fee.exists():
             return last_membership_fee.first().customer_invoice.date_balance

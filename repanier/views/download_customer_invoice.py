@@ -15,21 +15,15 @@ def download_customer_invoice(request, customer_invoice_id):
     user = request.user
     if user.is_authenticated:
         if user.is_repanier_staff:
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    id=customer_invoice_id, invoice_sort_order__isnull=False
-                )
-                    .first()
-            )
+            customer_invoice = CustomerInvoice.objects.filter(
+                id=customer_invoice_id, invoice_sort_order__isnull=False
+            ).first()
         else:
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    customer__user_id=request.user.id,
-                    id=customer_invoice_id,
-                    invoice_sort_order__isnull=False,
-                )
-                    .first()
-            )
+            customer_invoice = CustomerInvoice.objects.filter(
+                customer__user_id=request.user.id,
+                id=customer_invoice_id,
+                invoice_sort_order__isnull=False,
+            ).first()
         if customer_invoice is not None:
             # wb = export_purchase(permanence=customer_invoice.permanence, customer=customer_invoice.customer, wb=None)
             wb = export_invoice(

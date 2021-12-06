@@ -564,7 +564,6 @@ def reorder_offer_items(permanence_id):
             i += 1
 
 
-
 def update_offer_item(product_id=None, producer_id=None):
     from repanier.models.permanence import Permanence
     from repanier.models.offeritem import OfferItem
@@ -578,13 +577,9 @@ def update_offer_item(product_id=None, producer_id=None):
         ]
     ):
         if product_id is not None:
-            offer_item_qs = OfferItem.objects.filter(
-                product_id=product_id
-            )
+            offer_item_qs = OfferItem.objects.filter(product_id=product_id)
         else:
-            offer_item_qs = OfferItem.objects.filter(
-                producer_id=producer_id
-            )
+            offer_item_qs = OfferItem.objects.filter(producer_id=producer_id)
         permanence.clean_offer_item(offer_item_qs=offer_item_qs)
         permanence.recalculate_order_amount(offer_item_qs=offer_item_qs)
     cache.clear()

@@ -30,11 +30,7 @@ class CustomerForm(forms.Form):
             label=_("I agree to receive mails from this site")
         ),
     )
-    email1 = fields.EmailField(
-        label=_(
-            "E-mail address used to sign in to the site"
-        )
-    )
+    email1 = fields.EmailField(label=_("E-mail address used to sign in to the site"))
     email2 = fields.EmailField(
         label=_("Secondary email address informed of sales"),
         required=False,
@@ -65,14 +61,15 @@ class CustomerForm(forms.Form):
     def clean_email1(self):
         email1 = self.cleaned_data["email1"]
         user_model = get_user_model()
-        qs = (
-            user_model.objects.filter(email=email1, is_staff=False)
-                .exclude(id=self.request.user.id)
+        qs = user_model.objects.filter(email=email1, is_staff=False).exclude(
+            id=self.request.user.id
         )
         if qs.exists():
             self.add_error(
                 "email1",
-                _("The email address {} is already used by another user.").format(email1),
+                _("The email address {} is already used by another user.").format(
+                    email1
+                ),
             )
         return email1
 
@@ -86,9 +83,7 @@ class CustomerForm(forms.Form):
 @never_cache
 def my_profile_view(request):
     user = request.user
-    customer = (
-        Customer.objects.filter(id=user.customer_id).first()
-    )
+    customer = Customer.objects.filter(id=user.customer_id).first()
     if customer is None:
         raise Http404
     from repanier.apps import (

@@ -20,10 +20,10 @@ from repanier.tools import sint, get_repanier_template_name
 @csrf_protect
 @never_cache
 def login_view(
-        request,
-        redirect_field_name=REDIRECT_FIELD_NAME,
-        authentication_form=AuthenticationForm,
-        extra_context=None,
+    request,
+    redirect_field_name=REDIRECT_FIELD_NAME,
+    authentication_form=AuthenticationForm,
+    extra_context=None,
 ):
     """
     Displays the login form and handles the login action.
@@ -77,14 +77,11 @@ def login_view(
                     # The user want to be logged in as a customer
                     return HttpResponseRedirect(redirect_to)
 
-            as_staff = (
-                Staff.objects.filter(
-                    id=as_staff_id,
-                    customer_responsible_id=user.customer_id,
-                    is_active=True,
-                )
-                    .first()
-            )
+            as_staff = Staff.objects.filter(
+                id=as_staff_id,
+                customer_responsible_id=user.customer_id,
+                is_active=True,
+            ).first()
 
             if as_staff is None:
                 # This should not occurs
