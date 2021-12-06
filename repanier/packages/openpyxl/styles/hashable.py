@@ -28,6 +28,7 @@ except ImportError:
 
 from copy import deepcopy
 
+
 class HashableObject(object):
     """Define how to hash property classes."""
     __fields__ = None

@@ -7,7 +7,6 @@ from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.product import Product
 
-
 # class Box(Product):
 #     # def get_calculated_stock(self):
 #     #     # stock : max_digits=9, decimal_places=3 => 1000000 > max(stock)

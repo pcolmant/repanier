@@ -71,52 +71,52 @@ def purchase_pre_save(sender, **kwargs):
 
     unit_deposit = purchase.get_unit_deposit()
     purchase.purchase_price.amount = (
-        (purchase.get_producer_unit_price() + unit_deposit) * quantity
+            (purchase.get_producer_unit_price() + unit_deposit) * quantity
     ).quantize(TWO_DECIMALS)
     purchase.selling_price.amount = (
-        (purchase.get_customer_unit_price() + unit_deposit) * quantity
+            (purchase.get_customer_unit_price() + unit_deposit) * quantity
     ).quantize(TWO_DECIMALS)
 
     delta_purchase_price = (
-        purchase.purchase_price.amount - purchase.previous_purchase_price
+            purchase.purchase_price.amount - purchase.previous_purchase_price
     )
     delta_selling_price = (
-        purchase.selling_price.amount - purchase.previous_selling_price
+            purchase.selling_price.amount - purchase.previous_selling_price
     )
 
     if (
-        delta_quantity != DECIMAL_ZERO
-        or delta_selling_price != DECIMAL_ZERO
-        or delta_purchase_price != DECIMAL_ZERO
+            delta_quantity != DECIMAL_ZERO
+            or delta_selling_price != DECIMAL_ZERO
+            or delta_purchase_price != DECIMAL_ZERO
     ):
 
         purchase.vat_level = purchase.offer_item.vat_level
         purchase.producer_vat.amount = (
-            purchase.get_producer_unit_vat() * quantity
+                purchase.get_producer_unit_vat() * quantity
         ).quantize(FOUR_DECIMALS)
         purchase.customer_vat.amount = (
-            purchase.get_customer_unit_vat() * quantity
+                purchase.get_customer_unit_vat() * quantity
         ).quantize(FOUR_DECIMALS)
 
         purchase.deposit.amount = unit_deposit * quantity
         delta_purchase_vat = (
-            purchase.producer_vat.amount - purchase.previous_producer_vat
+                purchase.producer_vat.amount - purchase.previous_producer_vat
         )
         delta_selling_vat = (
-            purchase.customer_vat.amount - purchase.previous_customer_vat
+                purchase.customer_vat.amount - purchase.previous_customer_vat
         )
         delta_deposit = purchase.deposit.amount - purchase.previous_deposit
 
         OfferItemReadOnly.objects.filter(id=purchase.offer_item_id).update(
             quantity_invoiced=F("quantity_invoiced") + delta_quantity,
             total_purchase_with_tax=F("total_purchase_with_tax")
-            + delta_purchase_price,
+                                    + delta_purchase_price,
             total_selling_with_tax=F("total_selling_with_tax")
-            + delta_selling_price,
+                                   + delta_selling_price,
         )
         purchase.offer_item = (
             OfferItemReadOnly.objects.filter(id=purchase.offer_item_id)
-            .first()
+                .first()
         )
         CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(
             total_price_with_tax=F("total_price_with_tax") + delta_selling_price,
@@ -128,14 +128,14 @@ def purchase_pre_save(sender, **kwargs):
             id=purchase.customer_producer_invoice_id
         ).update(
             total_purchase_with_tax=F("total_purchase_with_tax")
-            + delta_purchase_price,
+                                    + delta_purchase_price,
             total_selling_with_tax=F("total_selling_with_tax")
-            + delta_selling_price,
+                                   + delta_selling_price,
         )
 
         if (
-            purchase.price_list_multiplier <= DECIMAL_ONE
-            and not purchase.is_resale_price_fixed
+                purchase.price_list_multiplier <= DECIMAL_ONE
+                and not purchase.is_resale_price_fixed
         ):
             delta_purchase_price = delta_selling_price
             delta_purchase_vat = delta_selling_vat

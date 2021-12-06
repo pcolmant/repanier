@@ -29,8 +29,10 @@ if VER[0] == 3:
     basestring = str
     unicode = str
     from io import BufferedReader
+
     file = BufferedReader
     from io import BufferedRandom
+
     tempfile = BufferedRandom
 else:
     basestring = basestring
@@ -42,7 +44,9 @@ if VER[0] == 3:
     from io import BytesIO, StringIO
 else:
     from StringIO import StringIO
+
     BytesIO = StringIO
+
 
 def safe_string(value):
     from numbers import Number

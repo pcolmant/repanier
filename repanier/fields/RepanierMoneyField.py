@@ -60,7 +60,6 @@ class RepanierMoney(object):
 
         return "".join(reversed(result))
 
-
     def __float__(self):
         return float(self.amount)
 
@@ -148,8 +147,8 @@ class RepanierMoney(object):
     # Override comparison operators
     def __eq__(self, other):
         return (
-            isinstance(other, RepanierMoney) and (self.amount == other.amount)
-        ) or self.amount == other
+                       isinstance(other, RepanierMoney) and (self.amount == other.amount)
+               ) or self.amount == other
 
     def __ne__(self, other):
         result = self.__eq__(other)
@@ -157,13 +156,13 @@ class RepanierMoney(object):
 
     def __lt__(self, other):
         return (
-            isinstance(other, RepanierMoney) and (self.amount < other.amount)
-        ) or self.amount < other
+                       isinstance(other, RepanierMoney) and (self.amount < other.amount)
+               ) or self.amount < other
 
     def __gt__(self, other):
         return (
-            isinstance(other, RepanierMoney) and (self.amount > other.amount)
-        ) or self.amount > other
+                       isinstance(other, RepanierMoney) and (self.amount > other.amount)
+               ) or self.amount > other
 
     def __le__(self, other):
         return self < other or self == other
@@ -216,6 +215,7 @@ class ModelRepanierMoneyFieldProxy(object):
                 value = str(value)
             obj.__dict__[self.field.name] = self.field.to_python(value)
 
+
 class ModelMoneyField(models.DecimalField):
     # Replaced with ModelRepanierMoneyField
     pass
@@ -260,8 +260,8 @@ class FormRepanierMoneyField(DecimalField):
     def to_python(self, value):
         # Important : Do not validate if self.disabled
         value = (
-            not self.disabled and super().to_python(value)
-        ) or DECIMAL_ZERO
+                        not self.disabled and super().to_python(value)
+                ) or DECIMAL_ZERO
         return RepanierMoney(value)
 
     def prepare_value(self, value):

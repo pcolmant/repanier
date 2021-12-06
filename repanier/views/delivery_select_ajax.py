@@ -29,7 +29,7 @@ def delivery_select_ajax(request):
         CustomerInvoice.objects.filter(
             customer_id=customer.id, permanence_id=permanence_id
         )
-        .first()
+            .first()
     )
     if customer_invoice is None:
         raise Http404
@@ -64,8 +64,8 @@ def delivery_select_ajax(request):
                 delivery.id, delivery.get_delivery_customer_display()
             )
         elif (
-            delivery.status == PERMANENCE_OPENED
-            and customer_invoice.status == PERMANENCE_OPENED
+                delivery.status == PERMANENCE_OPENED
+                and customer_invoice.status == PERMANENCE_OPENED
         ):
             delivery_counter += 1
             html += '<option value="{}">{}</option>'.format(

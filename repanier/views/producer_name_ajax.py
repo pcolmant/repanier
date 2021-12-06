@@ -12,7 +12,7 @@ from repanier.models.producer import Producer
 def producer_name_ajax(request, offer_uuid=None):
     producer = (
         Producer.objects.filter(offer_uuid=offer_uuid, is_active=True)
-        .first()
+            .first()
     )
     if producer is None:
         return HttpResponse(_("Anonymous"))

@@ -275,7 +275,7 @@ class DateWidgetExcel(Widget):
         if isinstance(value, float):
             # Data comes from Excel
             return (
-                datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
+                    datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
             ).date()
         for format in self.formats:
             try:

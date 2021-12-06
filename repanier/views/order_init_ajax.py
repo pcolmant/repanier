@@ -43,7 +43,7 @@ def order_init_ajax(request):
     user = request.user
     customer = (
         Customer.objects.filter(id=user.customer_id, may_order=True)
-        .only(
+            .only(
             "id",
             "vat_id",
             "short_basket_name",
@@ -52,7 +52,7 @@ def order_init_ajax(request):
             "date_balance",
             "may_order",
         )
-        .first()
+            .first()
     )
     if customer is None:
         raise Http404
@@ -95,7 +95,7 @@ def order_init_ajax(request):
     if customer.may_order:
         if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
             for producer_invoice in ProducerInvoice.objects.filter(
-                permanence_id=permanence.id
+                    permanence_id=permanence.id
             ).only("total_price_with_tax", "status"):
                 json_dict.update(producer_invoice.get_order_json())
         communication = sboolean(request.GET.get("co", False))
@@ -109,15 +109,15 @@ def order_init_ajax(request):
             from repanier.apps import REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
 
             if (
-                REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION > DECIMAL_ZERO
-                or len(permanence_boards) > 0
+                    REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION > DECIMAL_ZERO
+                    or len(permanence_boards) > 0
             ):
                 if len(permanence_boards) == 0:
                     count_activity = PermanenceBoard.objects.filter(
                         customer_id=customer.id,
                         permanence_date__lt=now,
                         permanence_date__gte=now
-                        - datetime.timedelta(
+                                             - datetime.timedelta(
                             days=float(REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION) * 7
                         ),
                     ).count()

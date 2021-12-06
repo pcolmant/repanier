@@ -63,15 +63,15 @@ class Product(Item):
                     q_alert = LIMIT_ORDER_QTY_ITEM
                 else:
                     q_alert = (
-                        self.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM
+                            self.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM
                     ).quantize(THREE_DECIMALS)
             else:
                 q_alert = (
-                    self.customer_minimum_order_quantity
-                    + (
-                        self.customer_increment_order_quantity
-                        * (LIMIT_ORDER_QTY_ITEM - 1)
-                    )
+                        self.customer_minimum_order_quantity
+                        + (
+                                self.customer_increment_order_quantity
+                                * (LIMIT_ORDER_QTY_ITEM - 1)
+                        )
                 ).quantize(THREE_DECIMALS)
         return q_alert
 

@@ -45,10 +45,10 @@ def write_string_table(string_table):
     temp_buffer = StringIO()
     doc = XMLGenerator(out=temp_buffer, encoding='utf-8')
     start_tag(doc, 'sst', {'xmlns':
-            'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
-            'uniqueCount': '%d' % len(string_table)})
+                               'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                           'uniqueCount': '%d' % len(string_table)})
     strings_to_write = sorted(string_table.items(),
-            key=lambda pair: pair[1])
+                              key=lambda pair: pair[1])
     for key in [pair[0] for pair in strings_to_write]:
         start_tag(doc, 'si')
         if key.strip() != key:
@@ -61,6 +61,7 @@ def write_string_table(string_table):
     string_table_xml = temp_buffer.getvalue()
     temp_buffer.close()
     return string_table_xml
+
 
 class StringTableBuilder(object):
 

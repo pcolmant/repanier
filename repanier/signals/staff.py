@@ -10,7 +10,6 @@ def staff_pre_save(sender, **kwargs):
     staff = kwargs["instance"]
     staff.login_attempt_counter = DECIMAL_ZERO
 
-
 # @receiver(post_save, sender=Staff)
 # def staff_post_save(sender, **kwargs):
 #     staff = kwargs["instance"]

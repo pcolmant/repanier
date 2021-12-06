@@ -139,30 +139,30 @@ class Item(models.Model):
         producer = self.producer
         if producer.producer_price_are_wo_vat:
             self.producer_vat.amount = (
-                self.producer_unit_price.amount * vat_rate
+                    self.producer_unit_price.amount * vat_rate
             ).quantize(FOUR_DECIMALS)
             if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                 self.customer_unit_price.amount = (
-                    self.producer_unit_price.amount * producer.price_list_multiplier
+                        self.producer_unit_price.amount * producer.price_list_multiplier
                 ).quantize(TWO_DECIMALS)
             else:
                 self.customer_unit_price = self.producer_unit_price
             self.customer_vat.amount = (
-                self.customer_unit_price.amount * vat_rate
+                    self.customer_unit_price.amount * vat_rate
             ).quantize(FOUR_DECIMALS)
             self.customer_unit_price += self.customer_vat
         else:
             self.producer_vat.amount = self.producer_unit_price.amount - (
-                self.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)
+                    self.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)
             ).quantize(FOUR_DECIMALS)
             if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                 self.customer_unit_price.amount = (
-                    self.producer_unit_price.amount * producer.price_list_multiplier
+                        self.producer_unit_price.amount * producer.price_list_multiplier
                 ).quantize(TWO_DECIMALS)
             else:
                 self.customer_unit_price = self.producer_unit_price
             self.customer_vat.amount = self.customer_unit_price.amount - (
-                self.customer_unit_price.amount / (DECIMAL_ONE + vat_rate)
+                    self.customer_unit_price.amount / (DECIMAL_ONE + vat_rate)
             ).quantize(FOUR_DECIMALS)
 
     def get_unit_price(self, customer_price=True):
@@ -184,12 +184,12 @@ class Item(models.Model):
             return "{}".format(unit_price)
 
     def get_display(
-        self,
-        qty=0,
-        order_unit=PRODUCT_ORDER_UNIT_PC,
-        unit_price_amount=None,
-        with_qty_display=True,
-        with_price_display=True,
+            self,
+            qty=0,
+            order_unit=PRODUCT_ORDER_UNIT_PC,
+            unit_price_amount=None,
+            with_qty_display=True,
+            with_price_display=True,
     ):
         magnitude = 1
         if qty == DECIMAL_ZERO:

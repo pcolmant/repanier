@@ -67,7 +67,7 @@ class CustomerForm(forms.Form):
         user_model = get_user_model()
         qs = (
             user_model.objects.filter(email=email1, is_staff=False)
-            .exclude(id=self.request.user.id)
+                .exclude(id=self.request.user.id)
         )
         if qs.exists():
             self.add_error(

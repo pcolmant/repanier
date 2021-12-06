@@ -33,8 +33,8 @@ def delivery_ajax(request):
     permanence_id = sint(request.GET.get("permanence", 0))
     permanence = (
         Permanence.objects.filter(id=permanence_id)
-        .only("id", "status")
-        .first()
+            .only("id", "status")
+            .first()
     )
     if permanence is None:
         raise Http404
@@ -47,7 +47,7 @@ def delivery_ajax(request):
         CustomerInvoice.objects.filter(
             customer_id=customer.id, permanence_id=permanence_id
         )
-        .first()
+            .first()
     )
     if customer_invoice is None:
         raise Http404
@@ -86,8 +86,8 @@ def delivery_ajax(request):
             invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
             customer_invoice.save()
             if (
-                settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
-                and invoice_confirm_status_is_changed
+                    settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+                    and invoice_confirm_status_is_changed
             ):
                 html = render_to_string(template_communication_confirm_order)
                 json_dict["#communicationModal"] = mark_safe(html)

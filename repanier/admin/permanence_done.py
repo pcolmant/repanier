@@ -50,7 +50,6 @@ logger = logging.getLogger(__name__)
 
 
 class PermanenceDoneAdmin(SaleAdmin):
-
     list_display = (
         "get_permanence_admin_display",
         "get_row_actions",
@@ -281,14 +280,11 @@ class PermanenceDoneAdmin(SaleAdmin):
                             selected = producer_invoiced_form.cleaned_data.get(
                                 "selected"
                             )
-                            producer_invoice = (
-                                ProducerInvoice.objects.filter(
-                                    permanence_id=permanence_id,
-                                    invoice_sort_order__isnull=True,
-                                    producer_id=producer_id,
-                                )
-                                .first()
-                            )
+                            producer_invoice = ProducerInvoice.objects.filter(
+                                permanence_id=permanence_id,
+                                invoice_sort_order__isnull=True,
+                                producer_id=producer_id,
+                            ).first()
                             if selected:
                                 at_least_one_selected = True
                                 producer_invoice.to_be_invoiced_balance = (

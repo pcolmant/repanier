@@ -40,8 +40,8 @@ def customer_pre_save(sender, **kwargs):
     if not customer.is_active:
         customer.may_order = False
     if (
-        settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE
-        and customer.price_list_multiplier <= DECIMAL_ZERO
+            settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE
+            and customer.price_list_multiplier <= DECIMAL_ZERO
     ):
         customer.price_list_multiplier = DECIMAL_ONE
     customer.city = "{}".format(customer.city).upper()

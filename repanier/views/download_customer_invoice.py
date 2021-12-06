@@ -19,7 +19,7 @@ def download_customer_invoice(request, customer_invoice_id):
                 CustomerInvoice.objects.filter(
                     id=customer_invoice_id, invoice_sort_order__isnull=False
                 )
-                .first()
+                    .first()
             )
         else:
             customer_invoice = (
@@ -28,7 +28,7 @@ def download_customer_invoice(request, customer_invoice_id):
                     id=customer_invoice_id,
                     invoice_sort_order__isnull=False,
                 )
-                .first()
+                    .first()
             )
         if customer_invoice is not None:
             # wb = export_purchase(permanence=customer_invoice.permanence, customer=customer_invoice.customer, wb=None)

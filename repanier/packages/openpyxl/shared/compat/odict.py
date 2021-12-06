@@ -24,6 +24,7 @@ except ImportError:
 
 class OrderedDict(dict):
     'Dictionary that remembers insertion order'
+
     # An inherited dict maps keys to values.
     # The inherited dict provides __getitem__, __len__, __contains__, and get.
     # The remaining methods are order-aware.

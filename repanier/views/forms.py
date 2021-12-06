@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 
 class AuthRepanierPasswordResetForm(PasswordResetForm):
     def send_mail(
-        self,
-        subject_template_name,
-        email_template_name,
-        context,
-        from_email,
-        to_email,
-        html_email_template_name=None,
+            self,
+            subject_template_name,
+            email_template_name,
+            context,
+            from_email,
+            to_email,
+            html_email_template_name=None,
     ):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
@@ -62,12 +62,12 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
 
 class AuthRepanierSetPasswordForm(SetPasswordForm):
     def send_mail(
-        self,
-        subject_template_name,
-        email_template_name,
-        context,
-        to_email,
-        html_email_template_name=None,
+            self,
+            subject_template_name,
+            email_template_name,
+            context,
+            to_email,
+            html_email_template_name=None,
     ):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
@@ -101,7 +101,7 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
             else:
                 customer = (
                     Customer.objects.filter(user=self.user, is_active=True)
-                    .first()
+                        .first()
                 )
                 if customer is not None:
                     Customer.objects.filter(id=customer.id).update(

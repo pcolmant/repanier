@@ -35,7 +35,6 @@ def read_string_table(xml_source):
     root = fromstring(text=xml_source)
     string_index_nodes = root.findall('{%s}si' % SHEET_MAIN_NS)
     for index, string_index_node in enumerate(string_index_nodes):
-
         string = get_string(string_index_node)
 
         # fix XML escaping sequence for '_x'

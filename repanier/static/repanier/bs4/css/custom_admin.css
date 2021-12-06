@@ -1,38 +1,165 @@
 /*Django 1.11 adjustment*/
-div.help {margin-left: 0 !important;}
+div.help {
+    margin-left: 0 !important;
+}
+
 /*{#  vvvvvvvvv django cms admin style 1.2.6  #}*/
-label.translatable-field:before {color:red;content:"\2691\a0";}
-div.parler-language-tabs span.current:before {color:red;content:"\2691\a0";}
-.calendar-shortcuts a:first-child, span.datetimeshortcuts a:first-child {width: initial !important;}
-table thead th {padding:0;vertical-align:middle !important;white-space:normal !important;}
-table tbody td {vertical-align:middle !important;white-space:nowrap !important;}
-table tbody th {vertical-align:middle !important;white-space: normal !important;}
+label.translatable-field:before {
+    color: red;
+    content: "\2691\a0";
+}
+
+div.parler-language-tabs span.current:before {
+    color: red;
+    content: "\2691\a0";
+}
+
+.calendar-shortcuts a:first-child, span.datetimeshortcuts a:first-child {
+    width: initial !important;
+}
+
+table thead th {
+    padding: 0;
+    vertical-align: middle !important;
+    white-space: normal !important;
+}
+
+table tbody td {
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+}
+
+table tbody th {
+    vertical-align: middle !important;
+    white-space: normal !important;
+}
+
 #change-history thead th,
 .change-list table thead th,
 .dashboard table thead th,
 .results table thead th,
 .tabular table thead th,
-#changelist table thead th {white-space: normal;}
-.wrap-text {white-space: normal !important;}
-.module {width: 100%;white-space: normal;}
-form fieldset {width: 100%;white-space: nowrap;}
-body.cms-admin-sideframe .object-tools {margin-top:-42px; margin-right:75px; background:none !important;}
-body.cms-admin-sideframe #content {margin-top: 90px !important;}
-body.cms-admin-sideframe form input[type = text],form input[type = email],form input[type = password],form input[type = url] {font-size:14px;width:25em !important;max-width:none !important;border-radius:3px !important;background-color:#fff;-webkit-appearance:none;-moz-appearance:none;appearance:none}
-body.cms-admin-sideframe form input[type = number],form select {font-size: 14px;width: auto!important;max-width: none !important;border-radius: 3px !important;background-color: #fff;-webkit-appearance: none;-moz-appearance: none;appearance: none}
-body.cms-admin-sideframe form button {font-size:10px;max-width:none !important;border-radius:3px !important;background-color:#fff;-webkit-appearance:none;-moz-appearance: none;appearance:none}
-body.cms-admin-sideframe form textarea {font-size: 14px;width: 80em !important;max-width: none !important;border-radius: 3px !important;background-color: #fff;-webkit-appearance: none;-moz-appearance: none;appearance: none}
-.cms-pagetree-root{margin-top: -55px;}
-.cms-pagetree-header-cell{margin-top: -110px;padding-right: 100px;}
-#field-searchbar{width: 100% !important;}
-form label.aligned.btn, form label.btn{color: black !important;}
+#changelist table thead th {
+    white-space: normal;
+}
+
+.wrap-text {
+    white-space: normal !important;
+}
+
+.module {
+    width: 100%;
+    white-space: normal;
+}
+
+form fieldset {
+    width: 100%;
+    white-space: nowrap;
+}
+
+body.cms-admin-sideframe .object-tools {
+    margin-top: -42px;
+    margin-right: 75px;
+    background: none !important;
+}
+
+body.cms-admin-sideframe #content {
+    margin-top: 90px !important;
+}
+
+body.cms-admin-sideframe form input[type = text], form input[type = email], form input[type = password], form input[type = url] {
+    font-size: 14px;
+    width: 25em !important;
+    max-width: none !important;
+    border-radius: 3px !important;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none
+}
+
+body.cms-admin-sideframe form input[type = number], form select {
+    font-size: 14px;
+    width: auto !important;
+    max-width: none !important;
+    border-radius: 3px !important;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none
+}
+
+body.cms-admin-sideframe form button {
+    font-size: 10px;
+    max-width: none !important;
+    border-radius: 3px !important;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none
+}
+
+body.cms-admin-sideframe form textarea {
+    font-size: 14px;
+    width: 80em !important;
+    max-width: none !important;
+    border-radius: 3px !important;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none
+}
+
+.cms-pagetree-root {
+    margin-top: -55px;
+}
+
+.cms-pagetree-header-cell {
+    margin-top: -110px;
+    padding-right: 100px;
+}
+
+#field-searchbar {
+    width: 100% !important;
+}
+
+form label.aligned.btn, form label.btn {
+    color: black !important;
+}
+
 /* filter*/
-#changelist-filter {position: relative !important; overflow-y: inherit !important;}
-.change-list #changelist.filtered .paginator {position: static !important;}
-div, span, ul {line-height: inherit !important;}
-.select2-container.select2-container--default .select2-selection--single .select2-selection__rendered {font-size: 14px !important;}
-.change-list #changelist .actions select {width: auto !important;font-size: 14px;}
+#changelist-filter {
+    position: relative !important;
+    overflow-y: inherit !important;
+}
+
+.change-list #changelist.filtered .paginator {
+    position: static !important;
+}
+
+div, span, ul {
+    line-height: inherit !important;
+}
+
+.select2-container.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 14px !important;
+}
+
+.change-list #changelist .actions select {
+    width: auto !important;
+    font-size: 14px;
+}
+
 /*{#  ^^^^^^^^^^^  django cms admin style 1.2.6  #}*/
-.repanier-submit-row {position:sticky;bottom:20px;}
-div.recurrence-widget {width:100%;}
-.change-list #changelist table tbody td, .change-list #changelist table tbody th {white-space: normal;}
+.repanier-submit-row {
+    position: sticky;
+    bottom: 20px;
+}
+
+div.recurrence-widget {
+    width: 100%;
+}
+
+.change-list #changelist table tbody td, .change-list #changelist table tbody th {
+    white-space: normal;
+}

@@ -78,7 +78,6 @@ class FormatRule(Mapping):
         return len(self.keys())
 
 
-
 class ConditionalFormatting(object):
     """Conditional formatting rules."""
     rule_attributes = ('aboveAverage', 'bottom', 'dxfId', 'equalAverage', 'operator', 'percent', 'priority', 'rank',
@@ -213,4 +212,3 @@ class ConditionalFormatting(object):
         if stopIfTrue:
             rule['stopIfTrue'] = '1'
         self.addCustomRule(range_string, rule)
-

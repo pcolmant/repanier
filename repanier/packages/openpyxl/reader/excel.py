@@ -35,16 +35,17 @@ from ..shared.compat import unicode, file, StringIO
 # package imports
 from ..shared.exc import OpenModeError, InvalidFileException
 from ..shared.ooxml import (ARC_SHARED_STRINGS, ARC_CORE, ARC_WORKBOOK,
-                                   PACKAGE_WORKSHEETS, ARC_STYLE, ARC_THEME,
-                                   ARC_CONTENT_TYPES)
+                            PACKAGE_WORKSHEETS, ARC_STYLE, ARC_THEME,
+                            ARC_CONTENT_TYPES)
 from ..workbook import Workbook, DocumentProperties
 from ..reader.strings import read_string_table
 from ..reader.style import read_style_table
 from ..reader.workbook import (read_sheets_titles, read_named_ranges,
-        read_properties_core, read_excel_base_date,
-        read_content_types)
+                               read_properties_core, read_excel_base_date,
+                               read_content_types)
 from ..reader.worksheet import read_worksheet
 from ..reader.comments import read_comments, get_comments_file
+
 # Use exc_info for Python 2 compatibility with "except Exception[,/ as] e"
 
 
@@ -52,8 +53,8 @@ VALID_WORKSHEET = "application/vnd.openxmlformats-officedocument.spreadsheetml.w
 VALID_CHARTSHEET = "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml"
 WORK_OR_CHART_TYPE = [VALID_WORKSHEET, VALID_CHARTSHEET]
 
-
 CENTRAL_DIRECTORY_SIGNATURE = '\x50\x4b\x05\x06'
+
 
 def repair_central_directory(zipFile, is_file_instance):
     ''' trims trailing data from the central directory
@@ -144,7 +145,6 @@ def load_workbook(filename, use_iterators=False, keep_vba=False, guess_types=Tru
 
 
 def _load_workbook(wb, archive, filename, use_iterators, keep_vba):
-
     valid_files = archive.namelist()
 
     # If are going to preserve the vba then attach the archive to the
@@ -182,7 +182,8 @@ def _load_workbook(wb, archive, filename, use_iterators, keep_vba):
     content_types = read_content_types(archive.read(ARC_CONTENT_TYPES))
     sheet_types = [(sheet, contyp) for sheet, contyp in content_types if contyp in WORK_OR_CHART_TYPE]
     sheet_names = read_sheets_titles(archive.read(ARC_WORKBOOK))
-    worksheet_names = [worksheet for worksheet, sheet_type in zip(sheet_names, sheet_types) if sheet_type[1] == VALID_WORKSHEET]
+    worksheet_names = [worksheet for worksheet, sheet_type in zip(sheet_names, sheet_types) if
+                       sheet_type[1] == VALID_WORKSHEET]
     for i, sheet_name in enumerate(worksheet_names):
 
         sheet_codename = 'sheet%d.xml' % (i + 1)

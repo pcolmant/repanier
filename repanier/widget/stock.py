@@ -12,5 +12,3 @@ class StockWidget(NumberInput):
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         return context
-
-

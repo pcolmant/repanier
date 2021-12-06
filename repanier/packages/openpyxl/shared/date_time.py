@@ -41,6 +41,7 @@ RE_W3CDTF = '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.(\d{2}))?Z?'
 
 EPOCH = datetime.datetime.utcfromtimestamp(0)
 
+
 def datetime_to_W3CDTF(dt):
     """Convert from a datetime to a timestamp string."""
     return datetime.datetime.strftime(dt, W3CDTF_FORMAT)
@@ -48,7 +49,7 @@ def datetime_to_W3CDTF(dt):
 
 def W3CDTF_to_datetime(formatted_string):
     """Convert from a timestamp string to a datetime object."""
-    match = re.match(RE_W3CDTF,formatted_string)
+    match = re.match(RE_W3CDTF, formatted_string)
     digits = map(int, match.groups()[:6])
     return datetime.datetime(*digits)
 
@@ -66,26 +67,26 @@ class SharedDate(object):
     """
     datetime_object_type = 'DateTime'
 
-    def __init__(self,base_date=CALENDAR_WINDOWS_1900):
-        if int(base_date)==CALENDAR_MAC_1904:
+    def __init__(self, base_date=CALENDAR_WINDOWS_1900):
+        if int(base_date) == CALENDAR_MAC_1904:
             self.excel_base_date = CALENDAR_MAC_1904
-        elif int(base_date)==CALENDAR_WINDOWS_1900:
+        elif int(base_date) == CALENDAR_WINDOWS_1900:
             self.excel_base_date = CALENDAR_WINDOWS_1900
         else:
-            raise ValueError("base_date:%s invalid"%base_date)
+            raise ValueError("base_date:%s invalid" % base_date)
 
     def datetime_to_julian(self, date):
         """Convert from python datetime to excel julian date representation."""
 
         if isinstance(date, datetime.datetime):
             return self.to_julian(date.year, date.month, date.day, \
-                hours=date.hour, minutes=date.minute,
+                                  hours=date.hour, minutes=date.minute,
                                   seconds=date.second + date.microsecond * 1.0e-6)
         elif isinstance(date, datetime.date):
             return self.to_julian(date.year, date.month, date.day)
         elif isinstance(date, datetime.time):
             return self.time_to_julian(hours=date.hour, minutes=date.minute,
-                                    seconds=date.second + date.microsecond * 1.0e-6)
+                                       seconds=date.second + date.microsecond * 1.0e-6)
         elif isinstance(date, datetime.timedelta):
             return self.time_to_julian(hours=0, minutes=0, seconds=date.seconds + date.days * 3600 * 24)
 
@@ -115,7 +116,6 @@ class SharedDate(object):
         else:
             raise NotImplementedError('base date supported.')
 
-
         # Julian base date adjustment
         if month > 2:
             month = month - 3
@@ -127,8 +127,8 @@ class SharedDate(object):
         # JD 2415020 = 31 - Dec - 1899 -> Excel Date of 0
         century, decade = int(str(year)[:2]), int(str(year)[2:])
         excel_date = floor(146097 * century / 4) + \
-                floor((1461 * decade) / 4) + floor((153 * month + 2) / 5) + \
-                day + 1721119 - excel_base_date
+                     floor((1461 * decade) / 4) + floor((153 * month + 2) / 5) + \
+                     day + 1721119 - excel_base_date
         if excel_1900_leap_year:
             excel_date += 1
 
@@ -165,7 +165,7 @@ class SharedDate(object):
             hours = floor(value * 24)
             mins = floor(value * 24 * 60) - floor(hours * 60)
             secs = floor(value * 24 * 60 * 60) - floor(hours * 60 * 60) - \
-                    floor(mins * 60)
+                   floor(mins * 60)
             return datetime.time(int(hours), int(mins), int(secs))
         else:
             msg = 'Negative dates (%s) are not supported' % value

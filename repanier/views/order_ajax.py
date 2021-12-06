@@ -75,8 +75,8 @@ def order_ajax(request):
                         producer_id=offer_item.producer_id,
                         permanence_id=offer_item.permanence_id,
                     )
-                    .only("total_price_with_tax")
-                    .first()
+                        .only("total_price_with_tax")
+                        .first()
                 )
                 json_dict.update(producer_invoice.get_order_json())
 

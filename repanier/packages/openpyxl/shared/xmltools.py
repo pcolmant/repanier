@@ -62,7 +62,6 @@ Shortcut functions taken from:
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesNSImpl
 
-
 # compatibility
 from .compat import OrderedDict
 
@@ -71,33 +70,33 @@ from .. import LXML
 
 if LXML is True:
     from lxml.etree import (
-    Element,
-    ElementTree,
-    SubElement,
-    fromstring,
-    tostring,
-    register_namespace,
-    iterparse
+        Element,
+        ElementTree,
+        SubElement,
+        fromstring,
+        tostring,
+        register_namespace,
+        iterparse
     )
     from xml.etree.cElementTree import iterparse
 else:
     try:
         from xml.etree.cElementTree import (
-        ElementTree,
-        Element,
-        SubElement,
-        fromstring,
-        tostring,
-        iterparse
+            ElementTree,
+            Element,
+            SubElement,
+            fromstring,
+            tostring,
+            iterparse
         )
     except ImportError:
         from xml.etree.ElementTree import (
-        ElementTree,
-        Element,
-        SubElement,
-        fromstring,
-        tostring,
-        iterparse
+            ElementTree,
+            Element,
+            SubElement,
+            fromstring,
+            tostring,
+            iterparse
         )
     from .namespace import register_namespace
 
@@ -124,6 +123,7 @@ register_namespace('r', REL_NS)
 register_namespace('vt', VTYPES_NS)
 register_namespace('xdr', SHEET_DRAWING_NS)
 register_namespace('cdr', CHART_DRAWING_NS)
+
 
 def get_document_content(xml_node):
     """Print nicely formatted xml to a string."""

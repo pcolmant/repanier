@@ -26,13 +26,13 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
         Product.objects.filter(
             is_active=True, is_into_offer=True, producer__in=producer_qs
         )
-        .order_by(
+            .order_by(
             "department_for_customer",
             "long_name_v2",
             "order_average_weight",
         )
-        .select_related("producer", "department_for_customer")
-        .iterator()
+            .select_related("producer", "department_for_customer")
+            .iterator()
     )
     product = next_row(products)
     while product is not None:

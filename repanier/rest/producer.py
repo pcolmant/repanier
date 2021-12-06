@@ -7,6 +7,7 @@ from rest_framework import serializers
 class ProducerSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField("get_short_profile_name")
     name = serializers.SerializerMethodField("get_long_profile_name")
+
     # minimum_order_value_amount = DecimalField(max_digits=8, decimal_places=2, source='minimum_order_value.amount',
     #                                           read_only=True)
 

@@ -15,9 +15,9 @@ from repanier.models.permanence import Permanence
 def home_info_bs3_ajax(request):
     permanences = []
     for permanence in (
-        Permanence.objects.filter(status=PERMANENCE_OPENED)
-        .only("id", "permanence_date", "with_delivery_point")
-        .order_by("-permanence_date", "-id")
+            Permanence.objects.filter(status=PERMANENCE_OPENED)
+                    .only("id", "permanence_date", "with_delivery_point")
+                    .order_by("-permanence_date", "-id")
     ):
         permanences.append(
             format_html(
@@ -68,7 +68,6 @@ def home_info_bs3_ajax(request):
         )
     else:
         permanences_info_html = EMPTY_STRING
-
 
     html = "{permanences_info_html}".format(
         permanences_info_html=permanences_info_html,

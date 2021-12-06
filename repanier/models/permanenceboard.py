@@ -51,7 +51,8 @@ class PermanenceBoard(models.Model):
         verbose_name_plural = _("Permanences board")
         unique_together = ("permanence", "permanence_role", "customer")
         indexes = [
-            models.Index(fields=["permanence_date", "permanence", "permanence_role"], name="repanier_permanenceboard_idx01"),
+            models.Index(fields=["permanence_date", "permanence", "permanence_role"],
+                         name="repanier_permanenceboard_idx01"),
         ]
 
     def __str__(self):

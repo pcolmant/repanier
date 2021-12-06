@@ -23,6 +23,7 @@
 
 import re
 
+
 # Python 2.6 without lxml
 def register_namespace(prefix, uri):
     from xml.etree.ElementTree import _namespace_map

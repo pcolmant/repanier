@@ -49,7 +49,8 @@ ARC_STYLE = PACKAGE_XL + '/styles.xml'
 ARC_THEME = PACKAGE_THEME + '/theme1.xml'
 ARC_SHARED_STRINGS = PACKAGE_XL + '/sharedStrings.xml'
 ARC_CUSTOM_UI = 'customUI/customUI.xml'
-ARC_VBA = ('xl/vba', 'xl/activeX', 'xl/drawings', 'xl/media', 'xl/ctrlProps', 'xl/worksheets/_rels', 'customUI', 'xl/printerSettings')
+ARC_VBA = ('xl/vba', 'xl/activeX', 'xl/drawings', 'xl/media', 'xl/ctrlProps', 'xl/worksheets/_rels', 'customUI',
+           'xl/printerSettings')
 
 # namespaces
 CHART_NS = "http://schemas.openxmlformats.org/drawingml/2006/chart"
@@ -71,7 +72,6 @@ XSI_NS = 'http://www.w3.org/2001/XMLSchema-instance'
 XML_NS = 'http://www.w3.org/XML/1998/namespace'
 SHEET_MAIN_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 CUSTOMUI_NS = 'http://schemas.microsoft.com/office/2006/relationships/ui/extensibility'
-
 
 NAMESPACES = {
     'cp': COREPROPS_NS,

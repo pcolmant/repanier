@@ -450,13 +450,10 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             previous_customer = purchase_form.fields["previous_customer"].initial
             if previous_customer is not None and previous_customer != purchase.customer:
                 # Delete the purchase because the customer has changed
-                purchase = (
-                    Purchase.objects.filter(
-                        customer_id=previous_customer.id,
-                        offer_item_id=offer_item.id,
-                    )
-                    .first()
-                )
+                purchase = Purchase.objects.filter(
+                    customer_id=previous_customer.id,
+                    offer_item_id=offer_item.id,
+                ).first()
                 if purchase is not None:
                     purchase.quantity_invoiced = DECIMAL_ZERO
                     purchase.save()

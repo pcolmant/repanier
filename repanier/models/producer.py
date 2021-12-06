@@ -177,7 +177,6 @@ class Producer(models.Model):
     def get_products(self):
         # This producer may have product's list
         if self.is_active:
-
             changeproductslist_url = reverse("admin:repanier_product_changelist")
             link = '<a href="{}?is_active__exact=1&producer={}" class="repanier-a-info">&nbsp;{}</a>'.format(
                 changeproductslist_url, str(self.id), _("Products")
@@ -195,7 +194,7 @@ class Producer(models.Model):
 
     def get_admin_balance(self):
         return (
-            self.balance - self.get_bank_not_invoiced() + self.get_order_not_invoiced()
+                self.balance - self.get_bank_not_invoiced() + self.get_order_not_invoiced()
         )
 
     get_admin_balance.short_description = _("Balance")
@@ -284,8 +283,8 @@ class Producer(models.Model):
                 producer_id=self.id,
                 purchase_price__gte=F("selling_price"),
             )
-            .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
-            .aggregate(
+                .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
+                .aggregate(
                 total_purchase_price_with_tax=Sum(
                     "selling_price",
                     output_field=DecimalField(
@@ -307,8 +306,8 @@ class Producer(models.Model):
                 producer_id=self.id,
                 purchase_price__lt=F("selling_price"),
             )
-            .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
-            .aggregate(
+                .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
+                .aggregate(
                 total_selling_price_with_tax=Sum(
                     "purchase_price",
                     output_field=DecimalField(
@@ -361,8 +360,8 @@ class Producer(models.Model):
             ProducerInvoice.objects.filter(
                 producer_id=self.id, invoice_sort_order__isnull=False
             )
-            .order_by("-id")
-            .first()
+                .order_by("-id")
+                .first()
         )
         if producer_last_invoice is not None:
             total_price_with_tax = producer_last_invoice.get_total_price_with_tax()
@@ -398,8 +397,8 @@ class Producer(models.Model):
         order_not_invoiced = self.get_order_not_invoiced()
 
         if (
-            order_not_invoiced.amount != DECIMAL_ZERO
-            or bank_not_invoiced.amount != DECIMAL_ZERO
+                order_not_invoiced.amount != DECIMAL_ZERO
+                or bank_not_invoiced.amount != DECIMAL_ZERO
         ):
             if order_not_invoiced.amount != DECIMAL_ZERO:
                 if bank_not_invoiced.amount == DECIMAL_ZERO:

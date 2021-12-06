@@ -16,7 +16,7 @@ def my_cart_amount_ajax(request, permanence_id):
         CustomerInvoice.objects.filter(
             permanence_id=permanence_id, customer_id=user.customer_id
         )
-        .first()
+            .first()
     )
     if customer_invoice is None:
         raise Http404

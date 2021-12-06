@@ -4,43 +4,51 @@
 	Green = #00686b
 */
 @import url('https://fonts.googleapis.com/css?family=Righteous|Raleway:300,300i,400,400i,700,700i,800&subset=latin-ext');
+
 BODY {
-	background-color: rgb(245, 245, 245);
+    background-color: rgb(245, 245, 245);
 }
+
 h1, h2, h3, h4, h5, h6 {
-	font-family: 'Righteous', Verdana, Arial, sans-serif;
-	color: #00686b;
+    font-family: 'Righteous', Verdana, Arial, sans-serif;
+    color: #00686b;
 }
+
 BODY,
 P {
-	font-family: 'Raleway', Verdana, Arial, sans-serif;
-	color:#333333;
+    font-family: 'Raleway', Verdana, Arial, sans-serif;
+    color: #333333;
 }
+
 /*
 	Navbar
 */
 .navbar {
-	background-color: #00686b;
+    background-color: #00686b;
 }
+
 .navbar .nav-link,
 .navbar .navbar-brand {
-	color: #FFF;
+    color: #FFF;
 }
+
 /*
 	Page banner
 */
 .banner {
-	background-color:#ACCFA8;
-	background-image:url("/static/repanier/bs4/img/bg_gasap_ferme.png");
-	background-position:center bottom;
-	background-repeat: repeat-x;
+    background-color: #ACCFA8;
+    background-image: url("/static/repanier/bs4/img/bg_gasap_ferme.png");
+    background-position: center bottom;
+    background-repeat: repeat-x;
 }
+
 .banner .page-title {
-	color:rgb(245, 245, 245);
+    color: rgb(245, 245, 245);
 }
+
 /*
 	Footer
 */
 FOOTER {
-	background-color:#7DAB87;
+    background-color: #7DAB87;
 }

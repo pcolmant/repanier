@@ -7,14 +7,14 @@ from repanier.const import EMPTY_STRING
 
 
 def import_xslx_view(
-    admin_ui,
-    admin,
-    request,
-    obj,
-    sub_title,
-    handle_uploaded_file,
-    action,
-    form_klass,
+        admin_ui,
+        admin,
+        request,
+        obj,
+        sub_title,
+        handle_uploaded_file,
+        action,
+        form_klass,
 ):
     if "apply" in request.POST:
         form = form_klass(request.POST, request.FILES)

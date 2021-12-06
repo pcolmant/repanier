@@ -37,14 +37,14 @@ from ..cell import (
     coordinate_from_string,
     get_column_letter,
     column_index_from_string
-    )
+)
 from ..worksheet import Worksheet, ColumnDimension, RowDimension
 from ..shared.ooxml import SHEET_MAIN_NS
 from ..style import Color
 from ..styles.formatting import ConditionalFormatting
 
-def _get_xml_iter(xml_source):
 
+def _get_xml_iter(xml_source):
     if not hasattr(xml_source, 'read'):
         if hasattr(xml_source, 'decode'):
             return BytesIO(xml_source)
@@ -59,7 +59,7 @@ def _get_xml_iter(xml_source):
 
 
 def read_dimension(xml_source):
-    min_row = min_col =  max_row = max_col = None
+    min_row = min_col = max_row = max_col = None
     source = _get_xml_iter(xml_source)
     it = iterparse(source)
     for event, el in it:
@@ -102,7 +102,7 @@ def read_dimension(xml_source):
         el.clear()
     max_row = int(row)
     warn("Unsized worksheet")
-    return get_column_letter(min_col), min_row, get_column_letter(max_col),  max_row
+    return get_column_letter(min_col), min_row, get_column_letter(max_col), max_row
 
 
 class WorkSheetParser(object):
@@ -130,13 +130,12 @@ class WorkSheetParser(object):
             '{%s}pageSetup' % SHEET_MAIN_NS: self.parse_page_setup,
             '{%s}headerFooter' % SHEET_MAIN_NS: self.parse_header_footer,
             '{%s}conditionalFormatting' % SHEET_MAIN_NS: self.parser_conditional_formatting
-                      }
+        }
         for event, element in it:
             tag_name = element.tag
             if tag_name in dispatcher:
                 dispatcher[tag_name](element)
                 element.clear()
-
 
     def parse_cell(self, element):
         value = element.findtext('{%s}v' % SHEET_MAIN_NS)
@@ -170,11 +169,9 @@ class WorkSheetParser(object):
             else:
                 self.ws.cell(coordinate).value = value
 
-
     def parse_merge(self, element):
         for mergeCell in safe_iterator(element, ('{%s}mergeCell' % SHEET_MAIN_NS)):
             self.ws.merge_cells(mergeCell.get('ref'))
-
 
     def parse_column_dimensions(self, element):
         for col in safe_iterator(element, '{%s}col' % SHEET_MAIN_NS):
@@ -190,14 +187,13 @@ class WorkSheetParser(object):
                     visible = col.get('hidden') != '1'
                     outline = col.get('outlineLevel') or 0
                     collapsed = col.get('collapsed') == '1'
-                    style_index =  self.style_table.get(int(col.get('style', 0)))
+                    style_index = self.style_table.get(int(col.get('style', 0)))
                     if column not in self.ws.column_dimensions:
                         new_dim = ColumnDimension(index=column,
                                                   width=width, auto_size=auto_size,
                                                   visible=visible, outline_level=outline,
                                                   collapsed=collapsed, style_index=style_index)
                         self.ws.column_dimensions[column] = new_dim
-
 
     def parse_row_dimensions(self, element):
         for row in safe_iterator(element, '{%s}row' % SHEET_MAIN_NS):
@@ -208,7 +204,6 @@ class WorkSheetParser(object):
             if ht is not None:
                 self.ws.row_dimensions[rowId].height = float(ht)
 
-
     def parse_print_options(self, element):
         hc = element.get('horizontalCentered')
         if hc is not None:
@@ -217,13 +212,11 @@ class WorkSheetParser(object):
         if vc is not None:
             self.ws.page_setup.verticalCentered = vc
 
-
     def parse_margins(self, element):
         for key in ("left", "right", "top", "bottom", "header", "footer"):
             value = element.get(key)
             if value is not None:
                 setattr(self.ws.page_margins, key, float(value))
-
 
     def parse_page_setup(self, element):
         for key in ("orientation", "paperSize", "scale", "fitToPage",
@@ -233,7 +226,6 @@ class WorkSheetParser(object):
             if value is not None:
                 setattr(self.ws.page_setup, key, value)
 
-
     def parse_header_footer(self, element):
         oddHeader = element.find('{%s}oddHeader' % SHEET_MAIN_NS)
         if oddHeader is not None and oddHeader.text is not None:
@@ -241,7 +233,6 @@ class WorkSheetParser(object):
         oddFooter = element.find('{%s}oddFooter' % SHEET_MAIN_NS)
         if oddFooter is not None and oddFooter.text is not None:
             self.ws.header_footer.setFooter(oddFooter.text)
-
 
     def parser_conditional_formatting(self, element):
         rules = {}
@@ -281,9 +272,9 @@ class WorkSheetParser(object):
                     colorNodes = colorScale.findall('{%s}color' % SHEET_MAIN_NS)
                     for color in colorNodes:
                         c = Color(Color.BLACK)
-                        if self.color_index\
-                           and color.get('indexed') is not None\
-                           and 0 <= int(color.get('indexed')) < len(self.color_index):
+                        if self.color_index \
+                                and color.get('indexed') is not None \
+                                and 0 <= int(color.get('indexed')) < len(self.color_index):
                             c.index = self.color_index[int(color.get('indexed'))]
                         if color.get('theme') is not None:
                             if color.get('tint') is not None:
@@ -315,7 +306,6 @@ class WorkSheetParser(object):
 
 
 def fast_parse(ws, xml_source, string_table, style_table, color_index=None):
-
     parser = WorkSheetParser(ws, xml_source, string_table, style_table, color_index)
     parser.parse()
 

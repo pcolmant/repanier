@@ -32,7 +32,7 @@ from .strings import (
     BytesIO,
     tempfile,
     safe_string
-    )
+)
 from .numbers import long
 from .itertools import xrange, ifilter, iteritems, iterkeys
 

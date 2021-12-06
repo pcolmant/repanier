@@ -9,7 +9,7 @@ from repanier.xlsx.export_tools import *
 
 
 def export_permanence_stock(
-    permanence, deliveries_id=(), customer_price=False, wb=None, ws_customer_title=None
+        permanence, deliveries_id=(), customer_price=False, wb=None, ws_customer_title=None
 ):
     if wb is not None:
         yellowFill = Fill()
@@ -43,9 +43,9 @@ def export_permanence_stock(
                 permanence_id=permanence.id,
                 manage_production=True,
             )
-            .order_by("producer", "long_name_v2", "order_average_weight")
-            .select_related("producer", "department_for_customer")
-            .iterator()
+                .order_by("producer", "long_name_v2", "order_average_weight")
+                .select_related("producer", "department_for_customer")
+                .iterator()
         )
         offer_item = next_row(offer_items)
         if offer_item is not None:
@@ -81,8 +81,8 @@ def export_permanence_stock(
                 c.style.font.bold = True
                 c.style.font.italic = True
                 while (
-                    offer_item is not None
-                    and producer_save.id == offer_item.producer_id
+                        offer_item is not None
+                        and producer_save.id == offer_item.producer_id
                 ):
                     department_for_customer_save__id = (
                         offer_item.department_for_customer_id
@@ -93,10 +93,10 @@ def export_permanence_stock(
                         else None
                     )
                     while (
-                        offer_item is not None
-                        and producer_save.id == offer_item.producer_id
-                        and department_for_customer_save__id
-                        == offer_item.department_for_customer_id
+                            offer_item is not None
+                            and producer_save.id == offer_item.producer_id
+                            and department_for_customer_save__id
+                            == offer_item.department_for_customer_id
                     ):
                         if len(offer_item.reference) < 36:
                             if offer_item.reference.isdigit():
@@ -171,8 +171,8 @@ def export_permanence_stock(
                             )
                             if not show_column_qty_ordered:
                                 show_column_qty_ordered = (
-                                    asked - min(asked, stock)
-                                ) > 0
+                                                                  asked - min(asked, stock)
+                                                          ) > 0
                             c.style.number_format.format_code = "#,##0.???"
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=8)
@@ -285,7 +285,6 @@ def export_permanence_stock(
             if not show_column_add2stock:
                 ws.column_dimensions[get_column_letter(12)].visible = False
     return wb
-
 
 # @transaction.atomic
 # def import_stock_sheet(worksheet, permanence=None):

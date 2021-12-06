@@ -635,8 +635,6 @@ class PurchaseAdmin(admin.ModelAdmin):
             if delivery is not None:
                 status = delivery.status
 
-
-
         if status > PERMANENCE_SEND:
             # The purchase is maybe already invoiced
             # Do not update it

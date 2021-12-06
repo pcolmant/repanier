@@ -46,7 +46,6 @@ logger = logging.getLogger(__name__)
 
 
 class PermanenceInPreparationAdmin(SaleAdmin):
-
     list_display = (
         "get_permanence_admin_display",
         "get_row_actions",

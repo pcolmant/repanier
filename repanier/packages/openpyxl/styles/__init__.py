@@ -62,5 +62,5 @@ class Style(HashableObject):
         new_style.protection = deepcopy(self.protection)
         return new_style
 
-DEFAULTS = Style()
 
+DEFAULTS = Style()

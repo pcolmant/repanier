@@ -47,8 +47,8 @@ def order_filter_view(request, permanence_id):
             offeritem__permanence_id=permanence_id,
             offeritem__is_active=True,
         )
-        .order_by("tree_id", "lft")
-        .distinct("id", "tree_id", "lft")
+            .order_by("tree_id", "lft")
+            .distinct("id", "tree_id", "lft")
     )
     if producer_id != "all":
         department_set = department_set.filter(offeritem__producer_id=producer_id)

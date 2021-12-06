@@ -103,7 +103,7 @@ class NumberFormat(HashableObject):
         48: '##0.0E+0',
         49: '@', }
     _BUILTIN_FORMATS_REVERSE = dict(
-            [(value, key) for key, value in _BUILTIN_FORMATS.items()])
+        [(value, key) for key, value in _BUILTIN_FORMATS.items()])
 
     __fields__ = ('_format_code',
                   '_format_index')
@@ -131,7 +131,7 @@ class NumberFormat(HashableObject):
         return self._format_code
 
     @format_code.setter
-    def format_code(self, format_code = FORMAT_GENERAL):
+    def format_code(self, format_code=FORMAT_GENERAL):
         """Setter for the format_code property."""
         self._format_code = format_code
         self._format_index = self.builtin_format_id(format_code)

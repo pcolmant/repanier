@@ -27,7 +27,7 @@
 from ..shared.xmltools import fromstring
 from ..shared.ooxml import NAMESPACES, DCORE_NS, COREPROPS_NS, DCTERMS_NS, SHEET_MAIN_NS, CONTYPES_NS
 from ..workbook import DocumentProperties
-from ..shared.date_time import W3CDTF_to_datetime,CALENDAR_WINDOWS_1900,CALENDAR_MAC_1904
+from ..shared.date_time import W3CDTF_to_datetime, CALENDAR_WINDOWS_1900, CALENDAR_MAC_1904
 from ..namedrange import NamedRange, NamedRangeContainingValue, split_named_range, refers_to_range
 
 import datetime
@@ -36,8 +36,8 @@ import datetime
 BUGGY_NAMED_RANGES = ['NA()', '#REF!']
 DISCARDED_RANGES = ['Excel_BuiltIn', 'Print_Area']
 
-def get_sheet_ids(xml_source):
 
+def get_sheet_ids(xml_source):
     sheet_names = read_sheets_titles(xml_source)
 
     return dict((sheet, 'sheet%d.xml' % (i + 1)) for i, sheet in enumerate(sheet_names))
@@ -66,7 +66,7 @@ def read_properties_core(xml_source):
 
 
 def read_excel_base_date(xml_source):
-    root = fromstring(text = xml_source)
+    root = fromstring(text=xml_source)
     wbPr = root.find('{%s}workbookPr' % SHEET_MAIN_NS)
     if wbPr is not None and wbPr.get('date1904') in ('1', 'true'):
         return CALENDAR_MAC_1904
@@ -82,6 +82,7 @@ def read_content_types(xml_source):
     for type in contents_root:
         yield type.get('PartName'), type.get('ContentType')
 
+
 def read_sheets_titles(xml_source):
     """Read titles for all sheets."""
     root = fromstring(xml_source)
@@ -89,11 +90,12 @@ def read_sheets_titles(xml_source):
 
     return [sheet.get('name') for sheet in titles_root]
 
+
 def read_named_ranges(xml_source, workbook):
     """Read named ranges, excluding poorly defined ranges."""
     named_ranges = []
     root = fromstring(xml_source)
-    names_root = root.find('{%s}definedNames' %SHEET_MAIN_NS)
+    names_root = root.find('{%s}definedNames' % SHEET_MAIN_NS)
     if names_root is not None:
         for name_node in names_root:
             range_name = name_node.get('name')

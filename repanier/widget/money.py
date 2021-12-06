@@ -22,9 +22,7 @@ class RepanierMoneyWidget(NumberInput):
         return context
 
     class Media:
-    #     css = {
-    #         'all': ('css/checkbox.css',)
-    #     }
+        #     css = {
+        #         'all': ('css/checkbox.css',)
+        #     }
         js = (get_repanier_static_name("js/admin/calculator-parser.js"),)
-
-

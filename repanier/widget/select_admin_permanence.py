@@ -24,8 +24,8 @@ class SelectAdminPermanenceWidget(forms.Select):
         for option_value, option_label in self.choices:
             permanence = (
                 Permanence.objects.filter(id=option_value)
-                .only("status")
-                .first()
+                    .only("status")
+                    .first()
             )
             if permanence is not None:
                 status = permanence.status

@@ -8,6 +8,7 @@ try:
 except:
     xrange = range
 
+
 def iteritems(iterable):
     if hasattr(iterable, 'iteritems'):
         for item in iterable.iteritems():
@@ -15,6 +16,7 @@ def iteritems(iterable):
     else:
         for item in iterable.items():
             yield item
+
 
 def iterkeys(iterable):
     if hasattr(iterable, 'iterkeys'):

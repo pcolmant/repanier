@@ -4,6 +4,7 @@
     display: table;
     clear: both;
 }
+
 .repanier-checkbox .cr {
     position: relative;
     display: inline-block;
@@ -14,6 +15,7 @@
     float: left;
     margin-right: .5em;
 }
+
 .repanier-checkbox .cr .cr-icon {
     position: absolute;
     font-size: .8em;
@@ -21,9 +23,11 @@
     top: 50%;
     left: 20%;
 }
+
 .repanier-checkbox input[type="checkbox"] {
     display: none;
 }
+
 .repanier-checkbox input[type="checkbox"] + .cr > .cr-icon {
     transform: scale(3) rotateZ(-20deg);
     opacity: 0;
@@ -34,6 +38,7 @@
     transform: scale(1) rotateZ(0deg);
     opacity: 1;
 }
+
 .repanier-checkbox input[type="checkbox"]:disabled + .cr {
     opacity: .5;
 }

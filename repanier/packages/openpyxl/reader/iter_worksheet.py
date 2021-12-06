@@ -32,11 +32,9 @@ from itertools import groupby
 import re
 from collections import namedtuple
 
-
 # compatibility
 from ..shared.compat import xrange
 from ..shared.xmltools import iterparse
-
 
 # package
 from ..worksheet import Worksheet
@@ -63,14 +61,17 @@ RE_COORDINATE = re.compile('^([A-Z]+)([0-9]+)$')
 SHARED_DATE = SharedDate()
 
 _COL_CONVERSION_CACHE = dict((get_column_letter(i), i) for i in xrange(1, 18279))
+
+
 def column_index_from_string(str_col, _col_conversion_cache=_COL_CONVERSION_CACHE):
     # we use a function argument to get indexed name lookup
     return _col_conversion_cache[str_col]
+
+
 del _COL_CONVERSION_CACHE
 
 RAW_ATTRIBUTES = ['row', 'column', 'coordinate', 'internal_value',
                   'data_type', 'style_id', 'number_format']
-
 
 BaseRawCell = namedtuple('RawCell', RAW_ATTRIBUTES)
 
@@ -96,8 +97,8 @@ class RawCell(BaseRawCell):
     def is_date(self):
         return self.data_type == Cell.TYPE_NUMERIC and is_date_format(self.number_format)
 
-def get_range_boundaries(range_string, row_offset=0, column_offset=1):
 
+def get_range_boundaries(range_string, row_offset=0, column_offset=1):
     if ':' in range_string:
         min_range, max_range = range_string.split(':')
         min_col, min_row = coordinate_from_string(min_range)
@@ -116,12 +117,11 @@ def get_range_boundaries(range_string, row_offset=0, column_offset=1):
 
 
 def get_missing_cells(row, columns):
-
     return dict([(column, RawCell(row, column, '%s%s' % (column, row),
                                   MISSING_VALUE, TYPE_NULL, None, None)) for column in columns])
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 class IterableWorksheet(Worksheet):
 
@@ -208,24 +208,25 @@ class IterableWorksheet(Worksheet):
                     cell = retrieved_columns[column]
                     if cell.style_id is not None:
                         style = style_table[int(cell.style_id)]
-                        cell = cell._replace(number_format=style.number_format.format_code) #pylint: disable-msg=W0212
+                        cell = cell._replace(number_format=style.number_format.format_code)  # pylint: disable-msg=W0212
                     if cell.internal_value is not None:
                         if cell.data_type in Cell.TYPE_STRING:
-                            cell = cell._replace(internal_value=unicode(self._string_table[int(cell.internal_value)])) #pylint: disable-msg=W0212
+                            cell = cell._replace(internal_value=unicode(
+                                self._string_table[int(cell.internal_value)]))  # pylint: disable-msg=W0212
                         elif cell.data_type == Cell.TYPE_BOOL:
                             cell = cell._replace(internal_value=cell.internal_value == '1')
                         elif cell.is_date:
-                            cell = cell._replace(internal_value=self._shared_date.from_julian(float(cell.internal_value)))
+                            cell = cell._replace(
+                                internal_value=self._shared_date.from_julian(float(cell.internal_value)))
                         elif cell.data_type == Cell.TYPE_NUMERIC:
                             cell = cell._replace(internal_value=float(cell.internal_value))
-                        elif cell.data_type in(Cell.TYPE_INLINE, Cell.TYPE_FORMULA_CACHE_STRING):
+                        elif cell.data_type in (Cell.TYPE_INLINE, Cell.TYPE_FORMULA_CACHE_STRING):
                             cell = cell._replace(internal_value=unicode(cell.internal_value))
                     full_row.append(cell)
                 else:
                     full_row.append(replacement_columns[column])
             current_row = row + 1
             yield tuple(full_row)
-
 
     def get_cells(self, min_row, min_col, max_row, max_col):
         p = iterparse(self.xml_source)
@@ -254,7 +255,7 @@ class IterableWorksheet(Worksheet):
                     yield RawCell(row, column_str, coord, value, data_type, style_id, None)
             # sub-elements of cells should be skipped
             if (element.tag == '{%s}v' % SHEET_MAIN_NS
-                or element.tag == '{%s}f' % SHEET_MAIN_NS):
+                    or element.tag == '{%s}f' % SHEET_MAIN_NS):
                 continue
             element.clear()
 

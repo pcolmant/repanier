@@ -25,17 +25,19 @@ import os
 
 from ..comments import Comment
 from ..shared.ooxml import (
-    PACKAGE_XL, 
+    PACKAGE_XL,
     PACKAGE_WORKSHEET_RELS,
     PACKAGE_WORKSHEETS,
     SHEET_MAIN_NS,
     COMMENTS_NS
-    )
+)
 from ..shared.xmltools import fromstring
+
 
 def _get_author_list(root):
     author_subtree = root.find('{%s}authors' % SHEET_MAIN_NS)
     return [author.text for author in author_subtree]
+
 
 def read_comments(ws, xml_source):
     """Given a worksheet and the XML of its comments file, assigns comments to cells"""
@@ -55,6 +57,7 @@ def read_comments(ws, xml_source):
 
         comment = Comment(comment_text, author)
         ws.cell(coordinate=cell).comment = comment
+
 
 def get_comments_file(sheet_codename, archive, valid_files):
     """Returns the XML filename in the archive which contains the comments for

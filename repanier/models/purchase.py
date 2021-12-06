@@ -22,8 +22,8 @@ class PurchaseManager(models.Manager):
     def get_invoices(self, permanence=None, year=None, customer=None, producer=None):
         purchase_set = (
             super()
-            .get_queryset()
-            .order_by("permanence", "customer", "offer_item")
+                .get_queryset()
+                .order_by("permanence", "customer", "offer_item")
         )
         if permanence is not None:
             purchase_set = purchase_set.filter(permanence_id=permanence.id)
@@ -155,7 +155,7 @@ class Purchase(models.Model):
             return offer_item.customer_unit_price.amount
         else:
             return (
-                offer_item.customer_unit_price.amount * self.price_list_multiplier
+                    offer_item.customer_unit_price.amount * self.price_list_multiplier
             ).quantize(TWO_DECIMALS)
 
     get_customer_unit_price.short_description = _("Customer unit price")
@@ -169,7 +169,7 @@ class Purchase(models.Model):
             return offer_item.customer_vat.amount
         else:
             return (
-                offer_item.customer_vat.amount * self.price_list_multiplier
+                    offer_item.customer_vat.amount * self.price_list_multiplier
             ).quantize(FOUR_DECIMALS)
 
     def get_producer_unit_vat(self):
@@ -236,7 +236,7 @@ class Purchase(models.Model):
             if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                 if offer_item.order_average_weight != 0:
                     return (
-                        self.quantity_invoiced / offer_item.order_average_weight
+                            self.quantity_invoiced / offer_item.order_average_weight
                     ).quantize(FOUR_DECIMALS)
             return self.quantity_invoiced
 
@@ -260,8 +260,8 @@ class Purchase(models.Model):
                 CustomerInvoice.objects.filter(
                     permanence_id=self.permanence_id, customer_id=self.customer_id
                 )
-                .only("id")
-                .first()
+                    .only("id")
+                    .first()
             )
             if customer_invoice is None:
                 customer_invoice = CustomerInvoice.objects.create(
@@ -278,8 +278,8 @@ class Purchase(models.Model):
                 ProducerInvoice.objects.filter(
                     permanence_id=self.permanence_id, producer_id=self.producer_id
                 )
-                .only("id")
-                .first()
+                    .only("id")
+                    .first()
             )
             if producer_invoice is None:
                 producer_invoice = ProducerInvoice.objects.create(
@@ -294,8 +294,8 @@ class Purchase(models.Model):
                     customer_id=self.customer_id,
                     producer_id=self.producer_id,
                 )
-                .only("id")
-                .first()
+                    .only("id")
+                    .first()
             )
             if customer_producer_invoice is None:
                 customer_producer_invoice = CustomerProducerInvoice.objects.create(
@@ -305,7 +305,6 @@ class Purchase(models.Model):
                 )
             self.customer_producer_invoice = customer_producer_invoice
         super().save(*args, **kwargs)
-
 
     def __str__(self):
         if hasattr(self, 'offer_item'):

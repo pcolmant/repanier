@@ -56,7 +56,7 @@ div.repanier-button-row {
     /*align-items: baseline;*/
 }
 
-a.repanier-a-info:link,  a.repanier-a-info:link:visited {
+a.repanier-a-info:link, a.repanier-a-info:link:visited {
     background-color: var(--info-background-color);
     color: var(--info-text-color);
     border: var(--border-height) solid var(--info-border-color);
@@ -73,7 +73,7 @@ a.repanier-a-info:hover, a.repanier-a-info:active {
     color: var(--info-hover-text-color);
 }
 
-a.repanier-a-info-selected:link,  a.repanier-a-info-selected:visited{
+a.repanier-a-info-selected:link, a.repanier-a-info-selected:visited {
     background-color: var(--info-hover-border-color);
     color: var(--info-hover-text-color);
     border: var(--border-height) solid var(--info-hover-border-color);
@@ -90,7 +90,7 @@ a.repanier-a-info-selected:hover, a.repanier-a-info-selected:active {
     color: var(--info-hover-text-color);
 }
 
-a.repanier-a-cancel:link,  a.repanier-a-cancel:link:visited {
+a.repanier-a-cancel:link, a.repanier-a-cancel:link:visited {
     background-color: var(--info-background-color);
     color: var(--info-text-color);
     border: var(--border-height) solid var(--info-border-color);
@@ -107,7 +107,7 @@ a.repanier-a-cancel:hover, a.repanier-a-cancel:active {
     color: var(--info-hover-text-color);
 }
 
-a.repanier-a-cancel-selected:link,  a.repanier-a-cancel-selected:visited{
+a.repanier-a-cancel-selected:link, a.repanier-a-cancel-selected:visited {
     background-color: var(--info-hover-border-color);
     color: var(--info-hover-text-color);
     border: var(--border-height) solid var(--info-hover-border-color);
@@ -255,6 +255,7 @@ div.repanier-objects-tools {
 div.form-row input[type=checkbox] {
     display: none;
 }
+
 div.recurrence-widget input[type=checkbox] {
     display: inline-block;
 }

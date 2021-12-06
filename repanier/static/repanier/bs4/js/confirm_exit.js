@@ -1,6 +1,6 @@
-(function($) {
-    $(document).ready(function() {
-        if(location.pathname.indexOf('change') <= -1) {
+(function ($) {
+    $(document).ready(function () {
+        if (location.pathname.indexOf('change') <= -1) {
             var formmodified = false;
             $("input[type='number'] form").change(function () {
                 formmodified = true;

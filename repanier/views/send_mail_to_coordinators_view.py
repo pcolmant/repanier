@@ -22,8 +22,8 @@ class CoordinatorsContactForm(forms.Form):
         super().__init__(*args, **kwargs)
         choices = []
         for staff in Staff.objects.filter(
-            is_active=True,
-            can_be_contacted=True,
+                is_active=True,
+                can_be_contacted=True,
         ):
             choices.append((staff.id, staff.get_str_member))
         self.fields["staff"].choices = choices
@@ -40,7 +40,7 @@ def send_mail_to_coordinators_view(request):
             to_email = [request.user.email]
             selected_staff_members = form.cleaned_data.get("staff")
             for staff in Staff.objects.filter(
-                is_active=True, can_be_contacted=True, id__in=selected_staff_members
+                    is_active=True, can_be_contacted=True, id__in=selected_staff_members
             ):
                 to_email = list(set(to_email + staff.get_to_email))
 
