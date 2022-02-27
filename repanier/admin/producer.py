@@ -405,7 +405,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         actions.update(
             OrderedDict(
                 create__producer_action(y)
-                for y in [this_year, this_year - 1, this_year - 2]
+                for y in [this_year, this_year - 1, this_year - 2, this_year - 3]
             )
         )
         if "delete_selected" in actions:
