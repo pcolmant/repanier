@@ -86,7 +86,11 @@ class Invoice(models.Model):
         return self.delta_price_with_tax.amount
 
     def get_abs_delta_price_with_tax(self):
-        return abs(self.delta_price_with_tax.amount)
+        return (
+            -self.delta_price_with_tax
+            if self.delta_price_with_tax.amount < DECIMAL_ZERO
+            else self.delta_price_with_tax
+        )
 
     def calculate_order_rounding(self):
         if settings.REPANIER_SETTINGS_ROUND_INVOICES:

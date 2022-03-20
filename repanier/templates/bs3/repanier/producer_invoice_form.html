@@ -4,30 +4,68 @@
     <div class="container-repanier">
     <div class="container">
         {# {% debug %} #}
-        <h4>{{ producer.long_profile_name }}</h4>
+        <div class="row">
+            <div class="col-lg-12">
+                <h4>{{ producer.long_profile_name }}</h4>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="btn-group">
+                    {% if previous_producer_invoice_id %}
+                        <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'repanier:producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+                           class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                    {% endif %}
+                    {% if next_producer_invoice_id %}
+                        <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'repanier:producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
+                           class="btn btn-disabled"> {% translate "Invoice" %} </a>
+                    {% else %}
+                        <span class="btn btn-disabled">{% translate "Invoice" %}</span>
+                    {% endif %}
+                    {% if next_producer_invoice_id %}
+                        <a href="
+                                {% if uuid %}{% url 'repanier:producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'repanier:producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+                           class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
         {% if object %}
-        <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> {% translate "Previous balance" %} : {{ object.get_negative_previous_balance }}
-            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br></h4>
+            <div class="row">
+                <div class="col-lg-12">
+                    <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+                        {% translate "Previous balance" %} : {{ object.get_negative_previous_balance }}
+                        <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br>
+                    </h4>
+                </div>
+            </div>
         {%  endif %}
         {% if offer_item_set %}
-            <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% translate "Purchases" %} {{ object.permanence }} : {{ object.get_total_price_with_tax }}
-            {% if object.total_vat != 0 or object.total_deposit != 0 or object.delta_transport != 0 %}
-                <small>
-                    . {% translate "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                    {% if object.total_vat != 0 %}{% translate "VAT" %} : {{ object.total_vat }}{% endif %}
-                    {% if object.total_deposit != 0 %}
-                        {% if object.total_vat != 0 %}; {% endif %}
-                        {% translate "Deposit" %} : {{ object.total_deposit }}
-                    {% endif %}
-                    {% if object.delta_transport != 0 %}
-                        {% if object.total_vat != 0 or object.total_deposit != 0 %}; {% endif %}
+            <div class="row">
+                    <div class="col-lg-12">
+                        {% translate "Purchases" %} {{ object.permanence }} : {{ object.get_total_price_with_tax }}
+                    </div>
+            </div>
+{#           {% if object.total_vat != 0 %}#}
+{#                <div class="row">#}
+{#                    <div class="col-lg-12 col-sm-offset-1">#}
+{#                        {% translate "VAT" %} : {{ object.total_vat }}.#}
+{#                    </div>#}
+{#                </div>#}
+{#            {% endif %}#}
+            {% if object.delta_transport != 0 %}
+                <div class="row">
+                    <div class="col-lg-12 col-sm-offset-1">
                         {% translate "Shipping cost" %} : {{ object.delta_transport }}
-                    {% endif %}
-                </small>
-                <br>
-                {% if object.delta_price_with_tax != 0 %}
-                    {% if object.delta_price_with_tax < 0 %}{% translate "Reduction granted" %}{%  else %}{% translate "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br>
-                {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            {% if object.delta_price_with_tax != 0 %}
+                <div class="row">
+                    <div class="col-lg-12 col-sm-offset-1">
+                        {% if object.delta_price_with_tax < 0 %}{% translate "Group reduction(s) granted" %}{%  else %}{% translate "Group supplement(s) granted" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}
+                    </div>
+                </div>
             {% endif %}
         {% endif %}
         {% for bank_account in bank_account_set %}
@@ -50,37 +88,21 @@
                 <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br>
             {% endif %}
         {% endfor %}
-        <div class="panel">
-            {% if object %}
-            <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% translate "New balance" %} : {{ object.get_negative_balance }}
-                <small>({{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id and object.invoice_sort_order %} - {% translate "last sale" %}{% endif %})</small>
-            </h4>
-            {% else %}
-            <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% translate "New balance" %} : {{ producer.get_negative_balance }}
-                <small>({{ producer.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id %} - {% translate "last sale" %}{% endif %})</small>
-            </h4>
-            {% endif %}
-            <span id="basket_message">{{ basket_message }}</span>
+        {% if object %}
+            <div class="row">
+                <div class="col-lg-12">
+                    <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span>
+{% translate "New balance" %} : {{ object.get_negative_balance }} <small>({{ object.date_balance | date:"DATE_FORMAT" }}
+{% if not next_producer_invoice_id and object.invoice_sort_order %} - {% translate "last sale" %}{% endif %})</small>
+                    </h4>
+                </div>
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-lg-12">
+                <span id="basket_message">{{ basket_message }}</span>
+            </div>
         </div>
-    <center>
-    <div class="btn-group">
-        {% if previous_producer_invoice_id %}
-            <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'repanier:producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-        {% endif %}
-        {% if next_producer_invoice_id %}
-            <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'repanier:producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-disabled"> {% translate "Invoice" %} </a>
-        {% else %}
-            <span class="btn btn-disabled">{% translate "Invoice" %}</span>
-        {% endif %}
-        {% if next_producer_invoice_id %}
-            <a href="
-                    {% if uuid %}{% url 'repanier:producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'repanier:producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-        {% endif %}
-    </div>
-    </center>
         {% if offer_item_set %}
             <br>
             <table class="table table-hover table-bordered">

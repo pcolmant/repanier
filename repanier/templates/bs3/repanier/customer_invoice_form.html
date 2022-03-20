@@ -34,8 +34,9 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
-{% translate "Previous balance" %} : {{ object.previous_balance }}
-<small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br></h4>
+                        {% translate "Previous balance" %} : {{ object.previous_balance }}
+                        <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br>
+                    </h4>
                 </div>
             </div>
         {%  endif %}
