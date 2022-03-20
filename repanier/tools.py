@@ -186,16 +186,9 @@ def get_base_unit(order_unit, qty=0):
     return base_unit
 
 
-def payment_message(customer, permanence):
-    from repanier.models.invoice import CustomerInvoice
-
-    customer_invoice = CustomerInvoice.objects.filter(
-        customer_id=customer.id, permanence_id=permanence.id
-    ).first()
-
-    total_price_with_tax = customer_invoice.get_total_price_with_tax()
+def payment_message(customer, permanence, customer_invoice):
     customer_order_amount = _("The amount of your order is %(amount)s.") % {
-        "amount": total_price_with_tax
+        "amount": customer_invoice.get_total_price_with_tax()
     }
     if customer.balance.amount != const.DECIMAL_ZERO:
         if customer.balance.amount < const.DECIMAL_ZERO:
@@ -220,51 +213,55 @@ def payment_message(customer, permanence):
             % {"name": customer_invoice.customer_charged.long_basket_name}
         )
     else:
-        bank_not_invoiced = customer.get_bank_not_invoiced()
-        order_not_invoiced = customer.get_order_not_invoiced()
+        if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER or customer_invoice.is_order_confirm_send:
+            bank_not_invoiced = customer.get_bank_not_invoiced()
+            order_not_invoiced = customer.get_order_not_invoiced()
 
-        customer_on_hold_movement = customer.get_html_on_hold_movement(
-            bank_not_invoiced, order_not_invoiced, total_price_with_tax
-        )
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            payment_needed = -(
-                customer.balance - order_not_invoiced + bank_not_invoiced
+            customer_on_hold_movement = customer.get_html_on_hold_movement(
+                bank_not_invoiced, order_not_invoiced, customer_invoice.get_total_price_with_tax()
             )
-        else:
-            payment_needed = total_price_with_tax
-
-        bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
-        if bank_account_number is not None:
-            if payment_needed.amount > const.DECIMAL_ZERO:
-                if permanence.short_name_v2:
-                    communication = "{} ({})".format(
-                        customer.short_basket_name, permanence.short_name_v2
-                    )
-                else:
-                    communication = customer.short_basket_name
-                group_name = settings.REPANIER_SETTINGS_GROUP_NAME
-                customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
-                    _(
-                        "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
-                    )
-                    % {
-                        "payment": payment_needed,
-                        "name": group_name,
-                        "number": bank_account_number,
-                        "communication": communication,
-                    }
+            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+                payment_needed = -(
+                    customer.balance - order_not_invoiced + bank_not_invoiced
                 )
-
             else:
-                if customer.balance.amount != const.DECIMAL_ZERO:
-                    customer_payment_needed = (
-                        '<br><font color="#51a351">{}.</font>'.format(
-                            _("Your account balance is sufficient")
+                payment_needed = customer_invoice.get_total_price_with_tax()
+
+            bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
+            if bank_account_number is not None:
+                if payment_needed.amount > const.DECIMAL_ZERO:
+                    if permanence.short_name_v2:
+                        communication = "{} ({})".format(
+                            customer.short_basket_name, permanence.short_name_v2
                         )
+                    else:
+                        communication = customer.short_basket_name
+                    group_name = settings.REPANIER_SETTINGS_GROUP_NAME
+                    customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
+                        _(
+                            "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
+                        )
+                        % {
+                            "payment": payment_needed,
+                            "name": group_name,
+                            "number": bank_account_number,
+                            "communication": communication,
+                        }
                     )
+
                 else:
-                    customer_payment_needed = const.EMPTY_STRING
+                    if customer.balance.amount != const.DECIMAL_ZERO:
+                        customer_payment_needed = (
+                            '<br><font color="#51a351">{}.</font>'.format(
+                                _("Your account balance is sufficient")
+                            )
+                        )
+                    else:
+                        customer_payment_needed = const.EMPTY_STRING
+            else:
+                customer_payment_needed = const.EMPTY_STRING
         else:
+            customer_on_hold_movement = const.EMPTY_STRING
             customer_payment_needed = const.EMPTY_STRING
 
     return (
@@ -326,8 +323,6 @@ def create_or_update_one_purchase(
         offer_item_id=offer_item.id,
     ).first()
     if batch_job:
-        print("####### q_order : {}".format(q_order))
-        print("####### status : {}".format(status))
         if purchase is None:
             purchase = Purchase.objects.create(
                 permanence_id=offer_item.permanence_id,
@@ -409,7 +404,6 @@ def create_or_update_one_cart_item(
     customer, offer_item_id, q_order=None, value_id=None, batch_job=False, comment=None
 ):
     from repanier.models.offeritem import OfferItem
-    from repanier.models.purchase import Purchase
 
     offer_item = (
         OfferItem.objects.select_for_update(nowait=False)
@@ -568,12 +562,13 @@ def update_offer_item(product_id=None, producer_id=None):
     from repanier.models.permanence import Permanence
     from repanier.models.offeritem import OfferItem
 
-    # The user can modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
+    # The user can also modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in Permanence.objects.filter(
         status__in=[
             # const.PERMANENCE_PLANNED,
             const.PERMANENCE_OPENED,
             # const.PERMANENCE_CLOSED,
+            const.PERMANENCE_SEND,
         ]
     ):
         if product_id is not None:
@@ -581,7 +576,7 @@ def update_offer_item(product_id=None, producer_id=None):
         else:
             offer_item_qs = OfferItem.objects.filter(producer_id=producer_id)
         permanence.clean_offer_item(offer_item_qs=offer_item_qs)
-        permanence.recalculate_order_amount(offer_item_qs=offer_item_qs)
+        permanence.update_offer_item(offer_item_qs=offer_item_qs)
     cache.clear()
 
 
@@ -601,7 +596,7 @@ def web_services_activated(reference_site=None):
     return activated, "Repanier", version
 
 
-def get_html_basket_message(customer, permanence, status):
+def get_html_basket_message(customer, permanence, status, customer_invoice):
     invoice_msg = const.EMPTY_STRING
     payment_msg = const.EMPTY_STRING
     (
@@ -609,7 +604,7 @@ def get_html_basket_message(customer, permanence, status):
         customer_on_hold_movement,
         customer_payment_needed,
         customer_order_amount,
-    ) = payment_message(customer, permanence)
+    ) = payment_message(customer, permanence, customer_invoice)
     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING and customer_last_balance:
         invoice_msg = "<br>{} {}".format(
             customer_last_balance, customer_on_hold_movement

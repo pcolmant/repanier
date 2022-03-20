@@ -40,4 +40,4 @@ class Command(BaseCommand):
                     .distinct()
                 )
                 for customer_invoice in customer_invoice_qs:
-                    customer_invoice.cancel_if_unconfirmed(permanence, send_mail=True)
+                    customer_invoice.cancel_if_unconfirmed(send_mail=True)

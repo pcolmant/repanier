@@ -187,11 +187,11 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             export_order_2_1_customer(
                 customer, filename, permanence, order_responsible, abstract_ws
             )
-            customer_invoice = CustomerInvoice.objects.filter(
-                customer_id=customer.id, permanence_id=permanence_id
-            ).first()
-            customer_invoice.confirm_order()
-            customer_invoice.save()
+            # customer_invoice = CustomerInvoice.objects.filter(
+            #     customer_id=customer.id, permanence_id=permanence_id
+            # ).first()
+            # customer_invoice.confirm_order()
+            # customer_invoice.save()
 
 
 def export_order_2_1_group(
@@ -310,12 +310,13 @@ def export_order_2_1_customer(
                             to_email.append(group.email2)
             else:
                 delivery_point = EMPTY_STRING
+
             (
                 customer_last_balance,
                 customer_on_hold_movement,
                 customer_payment_needed,
                 customer_order_amount,
-            ) = payment_message(customer, permanence)
+            ) = payment_message(customer, permanence, customer_invoice)
             long_basket_name = (
                 customer.long_basket_name
                 if customer.long_basket_name is not None

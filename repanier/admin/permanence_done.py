@@ -303,14 +303,12 @@ class PermanenceDoneAdmin(SaleAdmin):
                                 producer_invoice.invoice_reference = EMPTY_STRING
                                 producer_invoice.to_be_paid = False
                             producer_invoice.delta_vat = DECIMAL_ZERO
-                            producer_invoice.delta_deposit = DECIMAL_ZERO
                             producer_invoice.delta_price_with_tax = DECIMAL_ZERO
                             producer_invoice.save(
                                 update_fields=[
                                     "to_be_invoiced_balance",
                                     "invoice_reference",
                                     "delta_vat",
-                                    "delta_deposit",
                                     "delta_price_with_tax",
                                     "to_be_paid",
                                 ]

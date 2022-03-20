@@ -14,7 +14,6 @@ from repanier.const import (
 from repanier.models import (
     Purchase,
     OfferItemReadOnly,
-    CustomerInvoice,
     CustomerProducerInvoice,
     ProducerInvoice,
 )
@@ -115,11 +114,11 @@ def purchase_pre_save(sender, **kwargs):
         purchase.offer_item = OfferItemReadOnly.objects.filter(
             id=purchase.offer_item_id
         ).first()
-        CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(
-            total_price_with_tax=F("total_price_with_tax") + delta_selling_price,
-            total_vat=F("total_vat") + delta_selling_vat,
-            total_deposit=F("total_deposit") + delta_deposit,
-        )
+        # CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(
+        #     total_price_with_tax=F("total_price_with_tax") + delta_selling_price,
+        #     total_vat=F("total_vat") + delta_selling_vat,
+        #     total_deposit=F("total_deposit") + delta_deposit,
+        # )
 
         CustomerProducerInvoice.objects.filter(
             id=purchase.customer_producer_invoice_id
@@ -128,10 +127,7 @@ def purchase_pre_save(sender, **kwargs):
             total_selling_with_tax=F("total_selling_with_tax") + delta_selling_price,
         )
 
-        if (
-            purchase.price_list_multiplier <= DECIMAL_ONE
-            and not purchase.is_resale_price_fixed
-        ):
+        if purchase.price_list_multiplier != DECIMAL_ONE:
             delta_purchase_price = delta_selling_price
             delta_purchase_vat = delta_selling_vat
 

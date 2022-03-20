@@ -108,7 +108,7 @@ class LUT_DeliveryPoint(MPTTModel):
         _("Inform the group of orders placed by its members"), default=False
     )
     transport = ModelRepanierMoneyField(
-        _("Delivery point shipping cost"),
+        _("Shipping cost"),
         default=DECIMAL_ZERO,
         blank=True,
         max_digits=5,

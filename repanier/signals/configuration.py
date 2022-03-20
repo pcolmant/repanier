@@ -88,9 +88,9 @@ def configuration_post_save(sender, **kwargs):
         #     apps.REPANIER_SETTINGS_VAT_ID = None
         # else:
         apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
-        apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = (
-            config.page_break_on_customer_check
-        )
+        # apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = (
+        #     config.page_break_on_customer_check
+        # )
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION = config.membership_fee_duration
         if config.currency == CURRENCY_LOC:

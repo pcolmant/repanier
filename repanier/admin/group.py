@@ -160,8 +160,7 @@ class GroupWithUserDataForm(UserDataForm):
         label=_("Inform the group of orders placed by its members"), required=False
     )
     transport = FormRepanierMoneyField(
-        label=_("Delivery point shipping cost"),
-        # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
+        label=_("Shipping cost"),
         max_digits=5,
         decimal_places=2,
         validators=[MinValueValidator(0)],
@@ -170,7 +169,6 @@ class GroupWithUserDataForm(UserDataForm):
     )
     min_transport = FormRepanierMoneyField(
         label=_("Minimum order amount for free shipping cost"),
-        # help_text=_("This is the minimum order amount to avoid shipping cost."),
         max_digits=5,
         decimal_places=2,
         validators=[MinValueValidator(0)],

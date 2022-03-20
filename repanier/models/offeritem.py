@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum, DecimalField
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -9,6 +10,7 @@ from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
     PRODUCT_ORDER_UNIT_KG,
+    PERMANENCE_SEND,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.item import Item
@@ -56,7 +58,7 @@ class OfferItem(Item):
     # Calculated with Purchase : Quantity invoiced to all customers
     # If Permanence.status < SEND this is the order quantity
     # During sending the orders to the producer this become the invoiced quantity
-    # via permanence.recalculate_order_amount(..., send_to_producer=True)
+    # via permanence.send_to_producer()
     quantity_invoiced = models.DecimalField(
         _("Qty invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )
@@ -159,6 +161,89 @@ class OfferItem(Item):
 
 
 class OfferItemReadOnly(OfferItem):
+    def calculate_order_amount(self):
+        from repanier.models.purchase import PurchaseWoReceiver
+
+        query_set = PurchaseWoReceiver.objects.filter(
+            offer_item_id=self.id, status__lt=PERMANENCE_SEND
+        )
+
+        result_set = query_set.aggregate(
+            quantity_ordered=Sum(
+                "quantity_ordered",
+                output_field=DecimalField(
+                    max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+                ),
+            ),
+            purchase_price=Sum(
+                "purchase_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+            selling_price=Sum(
+                "selling_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+        )
+        self.quantity_invoiced = (
+            result_set["quantity_ordered"]
+            if result_set["quantity_ordered"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_purchase_with_tax.amount = (
+            result_set["purchase_price"]
+            if result_set["purchase_price"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_selling_with_tax.amount = (
+            result_set["selling_price"]
+            if result_set["selling_price"] is not None
+            else DECIMAL_ZERO
+        )
+
+        query_set = PurchaseWoReceiver.objects.filter(
+            offer_item_id=self.id, status__gte=PERMANENCE_SEND
+        )
+
+        result_set = query_set.aggregate(
+            quantity_invoiced=Sum(
+                "quantity_invoiced",
+                output_field=DecimalField(
+                    max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+                ),
+            ),
+            purchase_price=Sum(
+                "purchase_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+            selling_price=Sum(
+                "selling_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+        )
+        self.quantity_invoiced += (
+            result_set["quantity_invoiced"]
+            if result_set["quantity_invoiced"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_purchase_with_tax.amount += (
+            result_set["purchase_price"]
+            if result_set["purchase_price"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_selling_with_tax.amount += (
+            result_set["selling_price"]
+            if result_set["selling_price"] is not None
+            else DECIMAL_ZERO
+        )
+
     def __str__(self):
         return self.get_long_name_with_producer_price()
 

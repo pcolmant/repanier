@@ -146,9 +146,9 @@ PRODUCT_ORDER_UNIT_PC_KG_STR = _(
 )
 PRODUCT_ORDER_UNIT_PC_KG_SHORT_STR = _("Sold by piece, invoiced following the weight")
 PRODUCT_ORDER_UNIT_LT_STR = _("Sold in volume (in ℓ): non-conditioned liquids")
-PRODUCT_ORDER_UNIT_DEPOSIT_STR = _("Deposit taken back at the permanence.")
-PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE_STR = _("Membership fee.")
-PRODUCT_ORDER_UNIT_TRANSPORTATION_STR = _("Shipping cost.")
+PRODUCT_ORDER_UNIT_DEPOSIT_STR = _("Deposit taken back at the permanence")
+PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE_STR = _("Membership fee")
+PRODUCT_ORDER_UNIT_TRANSPORTATION_STR = _("Shipping cost")
 
 LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST = (
     (PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_STR),

@@ -78,9 +78,9 @@ class Configuration(models.Model):
     vat_id = models.CharField(
         _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING
     )
-    page_break_on_customer_check = models.BooleanField(
-        _("Page break on customer check"), default=False
-    )
+    # page_break_on_customer_check = models.BooleanField(
+    #     _("Page break on customer check"), default=False
+    # )
     membership_fee = ModelRepanierMoneyField(
         _("Membership fee"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
     )

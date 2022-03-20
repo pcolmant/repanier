@@ -83,7 +83,12 @@ def order_ajax(request):
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=offer_item.permanence_id, customer_id=customer.id
             ).first()
+            # The customer_invoice.calculate_order_amount() is made in
+            # Purchase purchase_pre_save signal
+            customer_invoice.calculate_order_transport()
+            customer_invoice.calculate_order_rounding()
             invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
+            customer_invoice.save()
             if invoice_confirm_status_is_changed:
                 if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                     template_name = get_repanier_template_name(
@@ -99,14 +104,15 @@ def order_ajax(request):
                     customer_invoice.get_total_price_with_tax(),
                 )
             )
-            permanence = Permanence.objects.filter(id=offer_item.permanence_id).first()
 
+            permanence = Permanence.objects.filter(id=offer_item.permanence_id).first()
             if is_basket:
                 basket_message = get_html_basket_message(
-                    customer, permanence, PERMANENCE_OPENED
+                    customer, permanence, PERMANENCE_OPENED, customer_invoice
                 )
             else:
                 basket_message = EMPTY_STRING
+
             json_dict.update(
                 customer_invoice.get_html_my_order_confirmation(
                     permanence=permanence,

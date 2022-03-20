@@ -574,19 +574,11 @@ class PurchaseAdmin(admin.ModelAdmin):
                 customer_id=customer_id, permanence_id=permanence_id
             ).first()
             if customer_invoice is not None:
-                if (
-                    customer_invoice.status == PERMANENCE_OPENED
-                    and not customer_invoice.is_order_confirm_send
-                ):
-                    filename = "{}-{}.xlsx".format(_("Order"), permanence)
-                    export_order_2_1_customer(customer, filename, permanence)
-                    user_message_level = messages.INFO
-                    user_message = customer.my_order_confirmation_email_send_to()
-                else:
-                    user_message_level = messages.INFO
-                    user_message = _("Order confirmed")
+                customer_invoice.calculate_order_amount()
                 customer_invoice.confirm_order()
                 customer_invoice.save()
+                user_message_level = messages.INFO
+                user_message = _("Order confirmed")
             else:
                 user_message_level = messages.INFO
                 user_message = _("Nothing to confirm.")
@@ -641,8 +633,6 @@ class PurchaseAdmin(admin.ModelAdmin):
             # It is forbidden to change invoiced permanence
             return
 
-        print("###### ok status : {}".format(status))
-
         product = form.cleaned_data.get("product")
         offer_item = product.get_or_create_offer_item(permanence)
         quantity = form.cleaned_data.get("quantity", DECIMAL_ZERO)
@@ -664,7 +654,7 @@ class PurchaseAdmin(admin.ModelAdmin):
         ).first()
         customer_invoice.status = status
         customer_invoice.set_order_delivery(delivery)
-        customer_invoice.calculate_order_price()
+        customer_invoice.calculate_order_amount()
         customer_invoice.confirm_order()
         customer_invoice.save()
 

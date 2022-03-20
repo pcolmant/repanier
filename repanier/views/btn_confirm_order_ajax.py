@@ -37,10 +37,13 @@ def btn_confirm_order_ajax(request):
     ).first()
     if customer_invoice is None:
         raise Http404
-    filename = "{}-{}.xlsx".format(_("Order"), permanence)
-    export_order_2_1_customer(customer, filename, permanence)
+    # customer_invoice.calculate_order_amount()
     customer_invoice.confirm_order()
     customer_invoice.save()
+
+    filename = "{}-{}.xlsx".format(_("Order"), permanence)
+    export_order_2_1_customer(customer, filename, permanence)
+
     json_dict = my_basket(
         customer_invoice.is_order_confirm_send,
         customer_invoice.get_total_price_with_tax(),
@@ -49,7 +52,9 @@ def btn_confirm_order_ajax(request):
         status = customer_invoice.delivery.status
     else:
         status = customer_invoice.status
-    basket_message = get_html_basket_message(customer, permanence, status)
+    basket_message = get_html_basket_message(
+        customer, permanence, status, customer_invoice
+    )
     json_dict.update(
         customer_invoice.get_html_my_order_confirmation(
             permanence=permanence, is_basket=True, basket_message=basket_message

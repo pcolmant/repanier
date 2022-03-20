@@ -1593,25 +1593,25 @@ def export_customer_for_a_delivery(
                 header,
             )
         else:
-            if repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK:
-                # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
-                wb, ws = new_portrait_a4_sheet(
-                    wb,
-                    _("Basket control")
-                    if delivery_id is None
-                    else "{}-{}".format(delivery_cpt, _("Basket control")),
-                    permanence,
-                    header,
-                )
-            else:
-                wb, ws = new_landscape_a4_sheet(
-                    wb,
-                    _("Basket control")
-                    if delivery_id is None
-                    else "{}-{}".format(delivery_cpt, _("Basket control")),
-                    permanence,
-                    header,
-                )
+            # if repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK:
+            #     # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
+            #     wb, ws = new_portrait_a4_sheet(
+            #         wb,
+            #         _("Basket control")
+            #         if delivery_id is None
+            #         else "{}-{}".format(delivery_cpt, _("Basket control")),
+            #         permanence,
+            #         header,
+            #     )
+            # else:
+            wb, ws = new_landscape_a4_sheet(
+                wb,
+                _("Basket control")
+                if delivery_id is None
+                else "{}-{}".format(delivery_cpt, _("Basket control")),
+                permanence,
+                header,
+            )
         hide_column_placement = True
         hide_column_producer = True
         offer_item_save = purchase.offer_item
@@ -1642,18 +1642,18 @@ def export_customer_for_a_delivery(
             first_purchase = True
             total_price = DECIMAL_ZERO
             something_ordered = False
-            if customer_invoice is None:
-                delta_transport_save = (
-                    CustomerInvoice.objects.filter(
-                        permanence_id=purchase.permanence_id,
-                        customer_id=customer_save.id,
-                    )
-                    .only("delta_transport")
-                    .first()
-                    .delta_transport
-                )
-            else:
-                delta_transport_save = customer_invoice.delta_transport
+            # if customer_invoice is None:
+            #     delta_transport_save = (
+            #         CustomerInvoice.objects.filter(
+            #             permanence_id=purchase.permanence_id,
+            #             customer_id=customer_save.id,
+            #         )
+            #         .only("delta_transport")
+            #         .first()
+            #         .delta_transport
+            #     )
+            # else:
+            #     delta_transport_save = customer_invoice.delta_transport
             while purchase is not None and customer_save.id == purchase.customer_id:
                 department_for_customer_save__id = (
                     offer_item_save.department_for_customer_id
@@ -1805,14 +1805,18 @@ def export_customer_for_a_delivery(
                     #     page_break = Break(id=row_number)  # create Break obj
                     #     ws.page_breaks.append(page_break)
             if something_ordered:
-                if delta_transport_save.amount > DECIMAL_ZERO:
+                ci = CustomerInvoice.objects.filter(
+                    permanence_id=permanence.id, customer_id=customer_save.id
+                ).first()
+                delta_transport = ci.delta_transport.amount
+                if delta_transport:
                     # Show possible delivery costs
-                    row_num += 1
+                    # row_num += 1
                     c = ws.cell(row=row_num, column=4)
-                    c.value = "{}".format(_("Delivery costs"))
+                    c.value = "{}".format(_("Shipping cost"))
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c = ws.cell(row=row_num, column=9)
-                    c.value = delta_transport_save.amount
+                    c.value = delta_transport
                     c.style.number_format.format_code = (
                         repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     )

@@ -1,7 +1,7 @@
 from django.template import Template, Context as TemplateContext
-
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
+from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
@@ -100,12 +100,15 @@ def send_invoice(permanence_id):
                 invoice_customer_mail_subject = "{} - {}".format(
                     settings.REPANIER_SETTINGS_GROUP_NAME, permanence
                 )
+                customer_invoice = CustomerInvoice.objects.filter(
+                    permanence_id=permanence.id, customer_id=customer.id
+                ).first()
                 (
                     customer_last_balance,
                     _,
                     customer_payment_needed,
                     customer_order_amount,
-                ) = payment_message(customer, permanence)
+                ) = payment_message(customer, permanence, customer_invoice)
                 template = Template(invoice_customer_mail)
                 context = TemplateContext(
                     {

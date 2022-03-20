@@ -67,7 +67,7 @@ def order_init_ajax(request):
             customer_charged_id=customer.id,
         )
         customer_invoice.set_order_delivery(delivery=None)
-        customer_invoice.calculate_order_price()
+        customer_invoice.calculate_order_amount()
         customer_invoice.save()
 
     if customer_invoice is None:
@@ -80,7 +80,9 @@ def order_init_ajax(request):
     else:
         status = customer_invoice.status
     if status <= PERMANENCE_OPENED:
-        basket_message = get_html_basket_message(customer, permanence, status)
+        basket_message = get_html_basket_message(
+            customer, permanence, status, customer_invoice
+        )
     else:
         if customer_invoice.delivery is not None:
             basket_message = EMPTY_STRING

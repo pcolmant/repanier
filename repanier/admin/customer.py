@@ -521,23 +521,22 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         super().save_model(request, customer, form, change)
         if customer.group is not None:
             customer_price = EMPTY_STRING
-            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                if customer.price_list_multiplier < DECIMAL_ONE:
-                    customer_price = _(
-                        " in addition to the %(discount)s%% personal discount rate on to the pricelist"
-                    ) % {
-                        "discount": Decimal(
-                            (DECIMAL_ONE - customer.price_list_multiplier) * 100
-                        ).quantize(TWO_DECIMALS)
-                    }
-                elif customer.price_list_multiplier > DECIMAL_ONE:
-                    customer_price = _(
-                        " in addition to the %(surcharge)s%% personal surcharge on to the pricelist"
-                    ) % {
-                        "surcharge": Decimal(
-                            (customer.price_list_multiplier - DECIMAL_ONE) * 100
-                        ).quantize(TWO_DECIMALS)
-                    }
+            if customer.price_list_multiplier < DECIMAL_ONE:
+                customer_price = _(
+                    " in addition to the %(discount)s%% personal discount rate on to the pricelist"
+                ) % {
+                    "discount": Decimal(
+                        (DECIMAL_ONE - customer.price_list_multiplier) * 100
+                    ).quantize(TWO_DECIMALS)
+                }
+            elif customer.price_list_multiplier > DECIMAL_ONE:
+                customer_price = _(
+                    " in addition to the %(surcharge)s%% personal surcharge on to the pricelist"
+                ) % {
+                    "surcharge": Decimal(
+                        (customer.price_list_multiplier - DECIMAL_ONE) * 100
+                    ).quantize(TWO_DECIMALS)
+                }
             if customer.group.price_list_multiplier < DECIMAL_ONE:
                 messages.add_message(
                     request,

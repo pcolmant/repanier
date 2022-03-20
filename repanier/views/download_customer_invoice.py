@@ -25,12 +25,11 @@ def download_customer_invoice(request, customer_invoice_id):
                 invoice_sort_order__isnull=False,
             ).first()
         if customer_invoice is not None:
-            # wb = export_purchase(permanence=customer_invoice.permanence, customer=customer_invoice.customer, wb=None)
             wb = export_invoice(
                 permanence=customer_invoice.permanence,
                 customer=customer_invoice.customer,
-                sheet_name=customer_invoice.permanence,
                 wb=None,
+                sheet_name=customer_invoice.permanence,
             )
             response = HttpResponse(
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -39,8 +38,8 @@ def download_customer_invoice(request, customer_invoice_id):
                 "Content-Disposition"
             ] = "attachment; filename={0}-{1}-{2}.xlsx".format(
                 _("Purchases"),
-                customer_invoice_id,
                 settings.REPANIER_SETTINGS_GROUP_NAME,
+                customer_invoice.permanence,
             )
             if wb is not None:
                 wb.save(response)

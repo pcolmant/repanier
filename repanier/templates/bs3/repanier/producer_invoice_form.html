@@ -11,16 +11,16 @@
         {%  endif %}
         {% if offer_item_set %}
             <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% translate "Purchases" %} {{ object.permanence }} : {{ object.get_total_price_with_tax }}
-            {% if object.get_total_vat != 0 or object.get_total_deposit != 0 or object.delta_transport != 0 %}
+            {% if object.total_vat != 0 or object.total_deposit != 0 or object.delta_transport != 0 %}
                 <small>
                     . {% translate "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                    {% if object.get_total_vat != 0 %}{% translate "VAT" %} : {{ object.get_total_vat }}{% endif %}
-                    {% if object.get_total_deposit != 0 %}
-                        {% if object.get_total_vat != 0 %}; {% endif %}
-                        {% translate "Deposit" %} : {{ object.get_total_deposit }}
+                    {% if object.total_vat != 0 %}{% translate "VAT" %} : {{ object.total_vat }}{% endif %}
+                    {% if object.total_deposit != 0 %}
+                        {% if object.total_vat != 0 %}; {% endif %}
+                        {% translate "Deposit" %} : {{ object.total_deposit }}
                     {% endif %}
                     {% if object.delta_transport != 0 %}
-                        {% if object.get_total_vat != 0 or object.get_total_deposit != 0 %}; {% endif %}
+                        {% if object.total_vat != 0 or object.total_deposit != 0 %}; {% endif %}
                         {% translate "Shipping cost" %} : {{ object.delta_transport }}
                     {% endif %}
                 </small>

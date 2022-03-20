@@ -470,6 +470,29 @@ def export_invoice(
             ws.column_dimensions[get_column_letter(18)].visible = False
             ws.column_dimensions[get_column_letter(19)].visible = False
             ws.column_dimensions[get_column_letter(20)].visible = False
+
+            if customer is not None:
+                customer_invoice = CustomerInvoice.objects.filter(
+                    permanence_id=permanence.id, customer_id=customer.id
+                ).first()
+                delta_transport = customer_invoice.delta_transport.amount
+                if delta_transport:
+                    # delivery is mandatory if transport
+                    delivery = customer_invoice.delivery or EMPTY_STRING
+                    for col_num in range(len(row)):
+                        c = ws.cell(row=row_num, column=col_num)
+                        c.style.borders.top.border_style = Border.BORDER_THIN
+                        c.style.borders.bottom.border_style = Border.BORDER_THIN
+                        if col_num == 2:
+                            c.value = "{} {}".format(_("Shipping cost"), delivery)
+                            c.style.font.bold = True
+                        if col_num == 12:
+                            c.value = delta_transport
+                            c.style.number_format.format_code = (
+                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                            )
+                    row_num += 1
+
             for col_num in range(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
                 c.style.borders.top.border_style = Border.BORDER_THIN
@@ -505,6 +528,7 @@ def export_invoice(
                         repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.font.bold = True
+
             if customer is not None:
                 config = REPANIER_SETTINGS_CONFIG
                 group_label = config.group_label_v2

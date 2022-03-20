@@ -8,6 +8,28 @@
                 <h4>{{ customer.long_basket_name }}</h4>
             </div>
         </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="btn-group">
+                    {% if previous_customer_invoice_id %}
+                        <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id %}" class="btn btn-info btn-disabled">
+                            <span class="glyphicon glyphicon-arrow-left"></span>
+                        </a>
+                    {% endif %}
+                    {% if next_customer_invoice_id %}
+                        <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id %}"
+                           class="btn btn-info btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
+                        <a href="{% url 'repanier:customer_invoice_view_with_customer' 0 object.customer_id %}"
+                           class="btn btn-info btn-disabled"> <span class="glyphicon glyphicon-arrow-right"></span>
+                            <span class="glyphicon glyphicon-arrow-right"></span> </a>
+                    {% endif %}
+                    {% if download_invoice %}
+                    <a href="{% url 'repanier:download_customer_invoice' object.id %}"
+                       class="btn btn-info btn-disabled"> {% translate "Export" %} <span class="glyphicon glyphicon glyphicon-save"></span> </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
         {% if object %}
             <div class="row">
                 <div class="col-lg-12">
@@ -38,30 +60,31 @@
                 </div>
             {% else %}
                 <div class="row">
-                    <div class="col-lg-12">
+                    <div class="col-lg-1">
                         <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
-{% translate "Purchases" %} : {{ object.permanence }} : {{ object.get_total_price_with_tax }}
-{% if object.total_vat != 0 %} = {{ object.get_total_price_wo_tax }} + {{ object.get_total_tax }} {% translate "VAT" %}{% endif %}.
+                    </div>
+                    <div class="col-lg-11">
+                        {% translate "Purchases" %} : {{ object.permanence }} : {{ object.get_total_price_with_tax }}
                     </div>
                 </div>
                 {% if object.total_deposit != 0 %}
                     <div class="row">
                         <div class="col-lg-12 col-sm-offset-1">
-                            <small>{% translate "Deposit" %} : {{ object.total_deposit }}.</small>
+                            {% translate "Deposit" %} : {{ object.total_deposit }}.
                         </div>
                     </div>
                 {% endif %}
                 {% if object.transport != 0 %}
                     <div class="row">
                         <div class="col-lg-12 col-sm-offset-1">
-                            <small>{% translate "Shipping cost" %} : {{ object.delta_transport }}.</small>
+                            {% translate "Shipping cost" %} : {{ object.delta_transport }}.
                         </div>
                     </div>
                 {% endif %}
                 {% if object.delivery %}
                     <div class="row">
                         <div class="col-lg-12 col-sm-offset-1">
-                            <small>{% translate "Delivery point" %} : {{ object.delivery }}. </small>
+                            {% translate "Delivery point" %} : {{ object.delivery }}.
                         </div>
                     </div>
                 {% endif %}
@@ -122,28 +145,6 @@
         <div class="row">
             <div class="col-lg-12">
                 <span id="basket_message">{{ basket_message }}</span>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="btn-group">
-                    {% if previous_customer_invoice_id %}
-                        <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id %}" class="btn btn-info btn-disabled">
-                            <span class="glyphicon glyphicon-arrow-left"></span>
-                        </a>
-                    {% endif %}
-                {% if download_invoice %}
-                    <a href="{% url 'repanier:download_customer_invoice' object.id %}"
-                       class="btn btn-info btn-disabled"> {% translate "Export" %} <span class="glyphicon glyphicon glyphicon-save"></span> </a>
-                {% endif %}
-                    {% if next_customer_invoice_id %}
-                        <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id %}"
-                           class="btn btn-info btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
-                        <a href="{% url 'repanier:customer_invoice_view_with_customer' 0 object.customer_id %}"
-                           class="btn btn-info btn-disabled"> <span class="glyphicon glyphicon-arrow-right"></span>
-                            <span class="glyphicon glyphicon-arrow-right"></span> </a>
-                    {% endif %}
-                </div>
             </div>
         </div>
     </div>

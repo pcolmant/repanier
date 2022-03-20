@@ -960,11 +960,6 @@ def import_purchase_sheet(
     if import_counter == 0:
         error = True
         error_msg = "{}".format(_("Nothing to import."))
-    # if not error:
-    #     recalculate_order_amount(
-    #         permanence_id=permanence.id,
-    #         re_init=True
-    #     )
     return error, error_msg
 
 

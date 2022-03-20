@@ -141,14 +141,15 @@ class OrderView(ListView):
                         customer_charged_id=self.customer.id,
                     )
                     customer_invoice.set_order_delivery(delivery=None)
-                    customer_invoice.calculate_order_price()
+                    customer_invoice.calculate_order_amount()
                     customer_invoice.save()
                 if customer_invoice.delivery is not None:
                     status = customer_invoice.delivery.status
                 else:
                     status = customer_invoice.status
+
                 basket_message = get_html_basket_message(
-                    self.customer, self.permanence, status
+                    self.customer, self.permanence, status, customer_invoice
                 )
                 html = customer_invoice.get_html_my_order_confirmation(
                     permanence=self.permanence,

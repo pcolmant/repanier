@@ -39,10 +39,7 @@ def customer_pre_save(sender, **kwargs):
             customer.bank_account2 = EMPTY_STRING
     if not customer.is_active:
         customer.may_order = False
-    if (
-        settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE
-        and customer.price_list_multiplier <= DECIMAL_ZERO
-    ):
+    if customer.price_list_multiplier <= DECIMAL_ZERO:
         customer.price_list_multiplier = DECIMAL_ONE
     customer.city = "{}".format(customer.city).upper()
     customer.login_attempt_counter = DECIMAL_ZERO

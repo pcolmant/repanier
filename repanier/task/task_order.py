@@ -55,7 +55,7 @@ def open_order(permanence_id, send_mail=True):
     # Calculate the sort order of the order display screen
     reorder_offer_items(permanence.id)
     # Calculate the Purchase 'sum' for each customer
-    permanence.recalculate_order_amount()
+    permanence.calculate_order_amount()
 
     # 3 - Keep only producer with offer items which can be ordered
     permanence.producers.clear()
@@ -147,7 +147,8 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
         everything=everything,
         deliveries_id=deliveries_id,
     )
-    permanence.recalculate_order_amount(send_to_producer=True)
+    permanence.send_to_producer()
+    permanence.calculate_order_amount()
     reorder_purchases(permanence.id)
     if send_mail:
         email_order.email_order(

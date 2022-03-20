@@ -20,7 +20,7 @@ from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.purchase import Purchase
-from repanier.tools import rule_of_3_reload_purchase, update_offer_item
+from repanier.tools import rule_of_3_reload_purchase
 
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
@@ -556,6 +556,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 purchase_form.instance.save()
 
         # Important : linked with (1*)
-        offer_item.permanence.recalculate_order_amount(
+        offer_item.permanence.update_offer_item(
             offer_item_qs=OfferItem.objects.filter(id=offer_item.id)
         )

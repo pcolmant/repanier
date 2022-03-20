@@ -44,60 +44,65 @@ def delivery_ajax(request):
     ).first()
     if customer_invoice is None:
         raise Http404
-    json_dict = {}
-    if customer_invoice.status == PERMANENCE_OPENED:
-        delivery_id = sint(request.GET.get("delivery", 0))
-        if customer.group is not None:
-            # The customer is member of a group
-            qs = DeliveryBoard.objects.filter(
-                Q(
-                    id=delivery_id,
-                    permanence_id=permanence_id,
-                    delivery_point__group_id=customer.group_id,
-                    status=PERMANENCE_OPENED,
-                )
-                | Q(
-                    id=delivery_id,
-                    permanence_id=permanence_id,
-                    delivery_point__group__isnull=True,
-                    status=PERMANENCE_OPENED,
-                )
+    if customer_invoice.status != PERMANENCE_OPENED:
+        raise Http404
+
+    delivery_id = sint(request.GET.get("delivery", 0))
+    if customer.group is not None:
+        # The customer is member of a group
+        qs = DeliveryBoard.objects.filter(
+            Q(
+                id=delivery_id,
+                permanence_id=permanence_id,
+                delivery_point__group_id=customer.group_id,
+                status=PERMANENCE_OPENED,
             )
-        else:
-            qs = DeliveryBoard.objects.filter(
+            | Q(
                 id=delivery_id,
                 permanence_id=permanence_id,
                 delivery_point__group__isnull=True,
                 status=PERMANENCE_OPENED,
             )
-        delivery = qs.first()
-        if delivery is None:
-            raise Http404
-        if customer_invoice.delivery != delivery:
-            customer_invoice.set_order_delivery(delivery)
-            customer_invoice.calculate_order_price()
-            invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
-            customer_invoice.save()
-            if (
-                settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
-                and invoice_confirm_status_is_changed
-            ):
-                html = render_to_string(template_communication_confirm_order)
-                json_dict["#communicationModal"] = mark_safe(html)
+        )
+    else:
+        qs = DeliveryBoard.objects.filter(
+            id=delivery_id,
+            permanence_id=permanence_id,
+            delivery_point__group__isnull=True,
+            status=PERMANENCE_OPENED,
+        )
+    delivery = qs.first()
+    if delivery is None or customer_invoice.delivery == delivery:
+        raise Http404
+    customer_invoice.set_order_delivery(delivery)
+    customer_invoice.calculate_order_amount()
+    invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
+    customer_invoice.save()
 
-            json_dict.update(
-                my_basket(
-                    customer_invoice.is_order_confirm_send,
-                    customer_invoice.get_total_price_with_tax(),
-                )
-            )
+    json_dict = {}
+
+    if (
+        settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+        and invoice_confirm_status_is_changed
+    ):
+        html = render_to_string(template_communication_confirm_order)
+        json_dict["#communicationModal"] = mark_safe(html)
+
+    json_dict.update(
+        my_basket(
+            customer_invoice.is_order_confirm_send,
+            customer_invoice.get_total_price_with_tax(),
+        )
+    )
 
     is_basket = sboolean(request.GET.get("is_basket", False))
     if customer_invoice.delivery is not None:
         status = customer_invoice.delivery.status
     else:
         status = customer_invoice.status
-    basket_message = get_html_basket_message(customer, permanence, status)
+    basket_message = get_html_basket_message(
+        customer, permanence, status, customer_invoice
+    )
     json_dict.update(
         customer_invoice.get_html_my_order_confirmation(
             permanence=permanence, is_basket=is_basket, basket_message=basket_message

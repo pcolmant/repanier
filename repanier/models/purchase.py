@@ -93,7 +93,7 @@ class Purchase(models.Model):
     )
     # If Permanence.status < SEND this is the order quantity
     # During sending the orders to the producer this become the invoiced quantity
-    # via tools.recalculate_order_amount(..., send_to_producer=True)
+    # via permanence.send_to_producer()
     quantity_invoiced = models.DecimalField(
         _("Quantity invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )
@@ -143,9 +143,8 @@ class Purchase(models.Model):
     def set_customer_price_list_multiplier(self):
         self.price_list_multiplier = DECIMAL_ONE
         self.is_resale_price_fixed = self.offer_item.is_resale_price_fixed
-        if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-            if not self.is_resale_price_fixed:
-                self.price_list_multiplier = self.customer.price_list_multiplier
+        if not self.is_resale_price_fixed:
+            self.price_list_multiplier = self.customer.price_list_multiplier
 
     def get_customer_unit_price(self):
         offer_item = self.offer_item
@@ -254,54 +253,23 @@ class Purchase(models.Model):
         if not self.pk:
             # This code only happens if the objects is not in the database yet.
             # Otherwise it would have pk
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    permanence_id=self.permanence_id, customer_id=self.customer_id
-                )
-                .only("id")
-                .first()
+            self.customer_invoice = CustomerInvoice.get_or_create_invoice(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_id,
+                status=self.status,
             )
-            if customer_invoice is None:
-                customer_invoice = CustomerInvoice.objects.create(
-                    permanence_id=self.permanence_id,
-                    customer_id=self.customer_id,
-                    customer_charged_id=self.customer_id,
-                    status=self.status,
-                )
-                customer_invoice.set_order_delivery(delivery=None)
-                customer_invoice.calculate_order_price()
-                customer_invoice.save()
-            self.customer_invoice = customer_invoice
-            producer_invoice = (
-                ProducerInvoice.objects.filter(
-                    permanence_id=self.permanence_id, producer_id=self.producer_id
-                )
-                .only("id")
-                .first()
+            self.producer_invoice = ProducerInvoice.get_or_create_invoice(
+                permanence_id=self.permanence_id,
+                producer_id=self.producer_id,
+                status=self.status,
             )
-            if producer_invoice is None:
-                producer_invoice = ProducerInvoice.objects.create(
-                    permanence_id=self.permanence_id,
-                    producer_id=self.producer_id,
-                    status=self.status,
-                )
-            self.producer_invoice = producer_invoice
-            customer_producer_invoice = (
-                CustomerProducerInvoice.objects.filter(
+            self.customer_producer_invoice = (
+                CustomerProducerInvoice.get_or_create_invoice(
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_id,
                     producer_id=self.producer_id,
                 )
-                .only("id")
-                .first()
             )
-            if customer_producer_invoice is None:
-                customer_producer_invoice = CustomerProducerInvoice.objects.create(
-                    permanence_id=self.permanence_id,
-                    customer_id=self.customer_id,
-                    producer_id=self.producer_id,
-                )
-            self.customer_producer_invoice = customer_producer_invoice
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -333,6 +301,20 @@ class Purchase(models.Model):
             ),
             models.Index(
                 fields=["permanence", "producer"], name="repanier_purchase_idx02"
+            ),
+            models.Index(
+                fields=["permanence", "customer"], name="repanier_purchase_idx03"
+            ),
+            models.Index(
+                fields=["permanence", "producer", "customer"],
+                name="repanier_purchase_idx04",
+            ),
+            models.Index(
+                fields=[
+                    "offer_item",
+                    "status",
+                ],
+                name="repanier_purchase_idx05",
             ),
         ]
 

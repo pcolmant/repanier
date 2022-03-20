@@ -43,7 +43,7 @@ class Invoice(models.Model):
         decimal_places=2,
     )
     delta_transport = ModelRepanierMoneyField(
-        _("Delivery point shipping cost"),
+        _("Shipping cost"),
         help_text=_("Transport to add"),
         default=DECIMAL_ZERO,
         max_digits=5,
@@ -87,6 +87,16 @@ class Invoice(models.Model):
 
     def get_abs_delta_price_with_tax(self):
         return abs(self.delta_price_with_tax.amount)
+
+    def calculate_order_rounding(self):
+        if settings.REPANIER_SETTINGS_ROUND_INVOICES:
+            total_price = (
+                self.total_price_with_tax.amount
+                + self.delta_price_with_tax.amount
+                + self.delta_transport.amount
+            )
+            total_price_gov_be = round_gov_be(total_price)
+            self.delta_price_with_tax.amount += total_price_gov_be - total_price
 
     def __str__(self):
         return _("Invoice")
@@ -143,7 +153,7 @@ class CustomerInvoice(Invoice):
         validators=[MinValueValidator(0)],
     )
     transport = ModelRepanierMoneyField(
-        _("Delivery point shipping cost"),
+        _("Shipping cost"),
         help_text=_(
             "This amount is added once for groups with entitled customer or at each customer for open groups."
         ),
@@ -176,9 +186,7 @@ class CustomerInvoice(Invoice):
             if self.status < PERMANENCE_INVOICED or not customer_charged:
                 return self.total_price_with_tax
             else:
-                return (
-                    self.customer_charged
-                )  # if self.total_price_with_tax != DECIMAL_ZERO else RepanierMoney()
+                return self.customer_charged
 
     def get_total_price_wo_tax(self):
         return self.get_total_price_with_tax() - self.get_total_tax()
@@ -188,20 +196,20 @@ class CustomerInvoice(Invoice):
         return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
 
     @classmethod
-    def get_or_create_invoice(cls, permanence, customer, delivery):
+    def get_or_create_invoice(cls, permanence_id, customer_id, status):
         customer_invoice = CustomerInvoice.objects.filter(
-            permanence_id=permanence.id, customer_id=customer.id
+            permanence_id=permanence_id, customer_id=customer_id
         ).first()
         if customer_invoice is None:
             customer_invoice = CustomerInvoice.objects.create(
-                permanence_id=permanence.id,
-                customer_id=customer.id,
-                status=permanence.status,
-                customer_charged_id=customer.id,
+                permanence_id=permanence_id,
+                customer_id=customer_id,
+                customer_charged_id=customer_id,
+                status=status,
             )
-            customer_invoice.set_order_delivery(delivery=delivery)
-            customer_invoice.calculate_order_price()
+            customer_invoice.set_order_delivery(delivery=None)
             customer_invoice.save()
+        return customer_invoice
 
     @property
     def has_purchase(self):
@@ -606,101 +614,24 @@ class CustomerInvoice(Invoice):
                         delivery=delivery,
                     )
 
-    def calculate_order_price(self):
+    def calculate_order_amount(self):
         from repanier.models.purchase import PurchaseWoReceiver
 
         self.delta_price_with_tax.amount = DECIMAL_ZERO
         self.delta_vat.amount = DECIMAL_ZERO
 
-        if self.customer_id == self.customer_charged_id:
-            # It's an invoice of a group, or of a customer who is not member of a group :
-            #   self.customer_charged_id == self.customer_id
-            #   self.price_list_multiplier may vary
-            if self.price_list_multiplier != DECIMAL_ONE:
-                result_set = PurchaseWoReceiver.objects.filter(
-                    permanence_id=self.permanence_id,
-                    customer_invoice__customer_charged_id=self.customer_id,
-                    is_resale_price_fixed=False,
-                ).aggregate(
-                    customer_vat=Sum(
-                        "customer_vat",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                        ),
-                    ),
-                    deposit=Sum(
-                        "deposit",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
-                    ),
-                    selling_price=Sum(
-                        "selling_price",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
-                    ),
-                )
-
-                total_vat = (
-                    result_set["customer_vat"]
-                    if result_set["customer_vat"] is not None
-                    else DECIMAL_ZERO
-                )
-                total_deposit = (
-                    result_set["deposit"]
-                    if result_set["deposit"] is not None
-                    else DECIMAL_ZERO
-                )
-                total_selling_price_with_tax = (
-                    result_set["selling_price"]
-                    if result_set["selling_price"] is not None
-                    else DECIMAL_ZERO
-                )
-
-                total_selling_price_with_tax_wo_deposit = (
-                    total_selling_price_with_tax - total_deposit
-                )
-                self.delta_price_with_tax.amount = (
-                    total_selling_price_with_tax_wo_deposit * self.price_list_multiplier
-                ).quantize(TWO_DECIMALS) - total_selling_price_with_tax_wo_deposit
-                self.delta_vat.amount = -(
-                    (total_vat * self.price_list_multiplier).quantize(FOUR_DECIMALS)
-                    - total_vat
-                )
-
-            result_set = PurchaseWoReceiver.objects.filter(
+        if self.is_group:
+            query_set = PurchaseWoReceiver.objects.filter(
                 permanence_id=self.permanence_id,
                 customer_invoice__customer_charged_id=self.customer_id,
-            ).aggregate(
-                customer_vat=Sum(
-                    "customer_vat",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                    ),
-                ),
-                deposit=Sum(
-                    "deposit",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                ),
-                selling_price=Sum(
-                    "selling_price",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                ),
             )
         else:
-            # It's an invoice of a member of a group
-            #   self.customer_charged_id != self.customer_id
-            #   self.customer_charged_id == owner of the group
-            #   assertion : self.price_list_multiplier always == DECIMAL_ONE
-
-            result_set = PurchaseWoReceiver.objects.filter(
-                permanence_id=self.permanence_id, customer_id=self.customer_id
-            ).aggregate(
+            query_set = PurchaseWoReceiver.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_id,
+            )
+        if self.price_list_multiplier != DECIMAL_ONE:
+            result_set = query_set.filter(is_resale_price_fixed=False,).aggregate(
                 customer_vat=Sum(
                     "customer_vat",
                     output_field=DecimalField(
@@ -721,6 +652,58 @@ class CustomerInvoice(Invoice):
                 ),
             )
 
+            total_selling_price_with_tax = (
+                result_set["selling_price"]
+                if result_set["selling_price"] is not None
+                else DECIMAL_ZERO
+            )
+            total_vat = (
+                result_set["customer_vat"]
+                if result_set["customer_vat"] is not None
+                else DECIMAL_ZERO
+            )
+            total_deposit = (
+                result_set["deposit"]
+                if result_set["deposit"] is not None
+                else DECIMAL_ZERO
+            )
+
+            total_selling_price_with_tax_wo_deposit = (
+                total_selling_price_with_tax - total_deposit
+            )
+            self.delta_price_with_tax.amount = (
+                total_selling_price_with_tax_wo_deposit * self.price_list_multiplier
+            ).quantize(TWO_DECIMALS) - total_selling_price_with_tax_wo_deposit
+            self.delta_vat.amount = -(
+                (total_vat * self.price_list_multiplier).quantize(FOUR_DECIMALS)
+                - total_vat
+            )
+
+        result_set = query_set.aggregate(
+            customer_vat=Sum(
+                "customer_vat",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=4, default=DECIMAL_ZERO
+                ),
+            ),
+            deposit=Sum(
+                "deposit",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+            selling_price=Sum(
+                "selling_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+        )
+        self.total_price_with_tax.amount = (
+            result_set["selling_price"]
+            if result_set["selling_price"] is not None
+            else DECIMAL_ZERO
+        )
         self.total_vat.amount = (
             result_set["customer_vat"]
             if result_set["customer_vat"] is not None
@@ -729,19 +712,9 @@ class CustomerInvoice(Invoice):
         self.total_deposit.amount = (
             result_set["deposit"] if result_set["deposit"] is not None else DECIMAL_ZERO
         )
-        self.total_price_with_tax.amount = (
-            result_set["selling_price"]
-            if result_set["selling_price"] is not None
-            else DECIMAL_ZERO
-        )
 
-        if settings.REPANIER_SETTINGS_ROUND_INVOICES:
-            total_price = (
-                self.total_price_with_tax.amount + self.delta_price_with_tax.amount
-            )
-            total_price_gov_be = round_gov_be(total_price)
-            self.delta_price_with_tax.amount += total_price_gov_be - total_price
         self.calculate_order_transport()
+        self.calculate_order_rounding()
 
     def calculate_order_transport(self):
         if self.customer_id == self.customer_charged_id:
@@ -779,7 +752,7 @@ class CustomerInvoice(Invoice):
                 old_customer_charged_invoice = CustomerInvoice.objects.filter(
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_charged_id,
-                )
+                ).first()
                 CustomerInvoice.objects.create(
                     permanence_id=new_permanence.id,
                     customer_id=self.customer_charged_id,
@@ -787,10 +760,11 @@ class CustomerInvoice(Invoice):
                     delivery_id=old_customer_charged_invoice.delivery_id,
                     is_order_confirm_send=old_customer_charged_invoice.is_order_confirm_send,
                     price_list_multiplier=old_customer_charged_invoice.price_list_multiplier,
-                    transport=old_customer_charged_invoice.transport,
-                    min_transport=old_customer_charged_invoice.min_transport,
+                    transport=DECIMAL_ZERO,  # Do not invoice transport twice
+                    min_transport=DECIMAL_ZERO,  # Do not invoice transport twice
                     is_group=old_customer_charged_invoice.is_group,
                     status=new_permanence.status,
+                    highest_status=new_permanence.status,
                 )
         return CustomerInvoice.objects.create(
             permanence_id=new_permanence.id,
@@ -799,13 +773,14 @@ class CustomerInvoice(Invoice):
             delivery_id=self.delivery_id,
             is_order_confirm_send=self.is_order_confirm_send,
             price_list_multiplier=self.price_list_multiplier,
-            transport=self.transport,
-            min_transport=self.min_transport,
+            transport=DECIMAL_ZERO,  # Do not invoice transport twice
+            min_transport=DECIMAL_ZERO,  # Do not invoice transport twice
             is_group=self.is_group,
             status=new_permanence.status,
+            highest_status=new_permanence.status,
         )
 
-    def cancel_if_unconfirmed(self, permanence, send_mail=True):
+    def cancel_if_unconfirmed(self, send_mail=True):
         if (
             settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
             and not self.is_order_confirm_send
@@ -814,26 +789,28 @@ class CustomerInvoice(Invoice):
             if send_mail:
                 from repanier.email.email_order import export_order_2_1_customer
 
-                filename = "{}-{}.xlsx".format(_("Canceled order"), permanence)
+                filename = "{}-{}.xlsx".format(_("Canceled order"), self.permanence)
 
                 export_order_2_1_customer(
-                    self.customer, filename, permanence, cancel_order=True
+                    self.customer, filename, self.permanence, cancel_order=True
                 )
 
-            from repanier.models.purchase import PurchaseWoReceiver
+            self.cancel()
 
-            purchase_qs = PurchaseWoReceiver.objects.filter(customer_invoice_id=self.id)
+    def cancel(self):
+        from repanier.models.purchase import PurchaseWoReceiver
 
-            for a_purchase in purchase_qs.select_related("customer"):
-                create_or_update_one_cart_item(
-                    customer=a_purchase.customer,
-                    offer_item_id=a_purchase.offer_item_id,
-                    q_order=DECIMAL_ZERO,
-                    batch_job=True,
-                    comment=_("Qty not confirmed : {}").format(
-                        number_format(a_purchase.quantity_ordered, 4)
-                    ),
-                )
+        purchase_qs = PurchaseWoReceiver.objects.filter(customer_invoice_id=self.id)
+        for a_purchase in purchase_qs.select_related("customer"):
+            create_or_update_one_cart_item(
+                customer=a_purchase.customer,
+                offer_item_id=a_purchase.offer_item_id,
+                q_order=DECIMAL_ZERO,
+                batch_job=True,
+                comment=_("Qty not confirmed : {}").format(
+                    number_format(a_purchase.quantity_ordered, 4)
+                ),
+            )
 
     def get_delivery_display(self):
         if self.delivery is None:
@@ -857,34 +834,6 @@ class ProducerInvoice(Invoice):
         verbose_name=_("Producer"),
         # related_name='producer_invoice',
         on_delete=models.PROTECT,
-    )
-
-    delta_stock_with_tax = ModelRepanierMoneyField(
-        _("Amount deducted from the stock"),
-        default=DECIMAL_ZERO,
-        max_digits=8,
-        decimal_places=2,
-    )
-
-    delta_stock_vat = ModelRepanierMoneyField(
-        _("Total VAT deducted from the stock"),
-        default=DECIMAL_ZERO,
-        max_digits=9,
-        decimal_places=4,
-    )
-    delta_deposit = ModelRepanierMoneyField(
-        _("Deposit"),
-        help_text=_("+ Deposit"),
-        default=DECIMAL_ZERO,
-        max_digits=8,
-        decimal_places=2,
-    )
-    delta_stock_deposit = ModelRepanierMoneyField(
-        _("Deposit"),
-        help_text=_("+ Deposit"),
-        default=DECIMAL_ZERO,
-        max_digits=8,
-        decimal_places=2,
     )
 
     to_be_paid = models.BooleanField(
@@ -917,17 +866,8 @@ class ProducerInvoice(Invoice):
 
     def get_total_price_with_tax(self):
         return (
-            self.total_price_with_tax
-            + self.delta_price_with_tax
-            + self.delta_transport
-            + self.delta_stock_with_tax
+            self.total_price_with_tax + self.delta_price_with_tax + self.delta_transport
         )
-
-    def get_total_vat(self):
-        return self.total_vat + self.delta_stock_vat
-
-    def get_total_deposit(self):
-        return self.total_deposit + self.delta_stock_deposit
 
     def get_order_json(self):
         a_producer = self.producer
@@ -944,6 +884,106 @@ class ProducerInvoice(Invoice):
                 number_format(ratio, 0)
             )
         return json_dict
+
+    @classmethod
+    def get_or_create_invoice(cls, permanence_id, producer_id, status):
+        producer_invoice = ProducerInvoice.objects.filter(
+            permanence_id=permanence_id, producer_id=producer_id
+        ).first()
+        if producer_invoice is None:
+            producer_invoice = ProducerInvoice.objects.create(
+                permanence_id=permanence_id,
+                producer_id=producer_id,
+                status=status,
+            )
+        return producer_invoice
+
+    def calculate_order_amount(self):
+        from repanier.models.purchase import PurchaseWoReceiver
+
+        self.delta_price_with_tax.amount = DECIMAL_ZERO
+        self.delta_vat.amount = DECIMAL_ZERO
+
+        query_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.permanence_id,
+            producer_id=self.producer_id,
+            price_list_multiplier=DECIMAL_ONE,
+        )
+
+        result_set = query_set.aggregate(
+            producer_vat=Sum(
+                "producer_vat",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=4, default=DECIMAL_ZERO
+                ),
+            ),
+            deposit=Sum(
+                "deposit",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+            purchase_price=Sum(
+                "purchase_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+        )
+        self.total_price_with_tax.amount = (
+            result_set["purchase_price"]
+            if result_set["purchase_price"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_vat.amount = (
+            result_set["producer_vat"]
+            if result_set["producer_vat"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_deposit.amount = (
+            result_set["deposit"] if result_set["deposit"] is not None else DECIMAL_ZERO
+        )
+
+        query_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.permanence_id,
+            producer_id=self.producer_id,
+        ).exclude(price_list_multiplier=DECIMAL_ONE)
+
+        result_set = query_set.aggregate(
+            customer_vat=Sum(
+                "customer_vat",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=4, default=DECIMAL_ZERO
+                ),
+            ),
+            deposit=Sum(
+                "deposit",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+            selling_price=Sum(
+                "selling_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+        )
+        self.total_vat.amount += (
+            result_set["customer_vat"]
+            if result_set["customer_vat"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_deposit.amount += (
+            result_set["deposit"] if result_set["deposit"] is not None else DECIMAL_ZERO
+        )
+        self.total_price_with_tax.amount += (
+            result_set["selling_price"]
+            if result_set["selling_price"] is not None
+            else DECIMAL_ZERO
+        )
+
+        # self.calculate_order_rounding()
 
     def __str__(self):
         return "{}, {}".format(self.producer, self.permanence)
@@ -988,6 +1028,61 @@ class CustomerProducerInvoice(models.Model):
 
     get_html_producer_price_purchased.short_description = _("Row amount")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
+
+    @classmethod
+    def get_or_create_invoice(cls, permanence_id, customer_id, producer_id):
+        customer_producer_invoice = CustomerProducerInvoice.objects.filter(
+            permanence_id=permanence_id,
+            customer_id=customer_id,
+            producer_id=producer_id,
+        ).first()
+        if customer_producer_invoice is None:
+            customer_producer_invoice = CustomerProducerInvoice.objects.create(
+                permanence_id=permanence_id,
+                customer_id=customer_id,
+                producer_id=producer_id,
+            )
+        return customer_producer_invoice
+
+    def calculate_order_amount(self):
+        from repanier.models.purchase import PurchaseWoReceiver
+
+        query_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.permanence_id,
+            producer_id=self.producer_id,
+            customer_id=self.customer_id,
+        )
+
+        result_set = query_set.aggregate(
+            # deposit=Sum(
+            #     "deposit",
+            #     output_field=DecimalField(
+            #         max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+            #     ),
+            # ),
+            purchase_price=Sum(
+                "purchase_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+            selling_price=Sum(
+                "selling_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                ),
+            ),
+        )
+        self.total_purchase_with_tax.amount = (
+            result_set["purchase_price"]
+            if result_set["purchase_price"] is not None
+            else DECIMAL_ZERO
+        )
+        self.total_selling_with_tax.amount = (
+            result_set["selling_price"]
+            if result_set["selling_price"] is not None
+            else DECIMAL_ZERO
+        )
 
     def __str__(self):
         return "{}, {}".format(self.producer, self.customer)
