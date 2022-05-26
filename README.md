@@ -107,7 +107,7 @@ For the impatient, this configuration will be made in [common_settings.py](https
 ## Set up a Python virtualenv
 A virtualenv let you isolate all the [pypi librairies](https://pypi.python.org/pypi) for a specific project.
 One virtualenv can contains many `Repanier` websites, using such all the same version of the pypi librairies.
-You will need to setup a new virtualenv at least at each security update of a package present in [requirement.txt](https://github.com/pcolmant/repanier/blob/master/requirements/requirement.txt)
+You will need to setup a new virtualenv at least at each security update of a package present in [requirement-3.2.txt](https://github.com/pcolmant/repanier/blob/master/requirements/requirement-3.2.txt)
 And then create (or migrate) `Repanier` websites.
 
 2. Create a python virtual environment called `prd1` here. Choose whatever you want, but carefully change it to what you choose everywhere in this tutorial.
@@ -122,8 +122,8 @@ And then create (or migrate) `Repanier` websites.
     ```
 4. Install the pypi librairies versions required by `Repanier`
     ```commandline
-    wget https://raw.githubusercontent.com/pcolmant/repanier/master/requirements/requirement.txt
-    pip install -r requirement.txt
+    wget https://raw.githubusercontent.com/pcolmant/repanier/master/requirements/requirement-3.2.txt
+    pip install -r requirement-3.2.txt
     ```
 
 ## Create a Django empty project with a PostgreSQL data base
