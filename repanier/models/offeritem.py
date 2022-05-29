@@ -11,6 +11,8 @@ from repanier.const import (
     EMPTY_STRING,
     PRODUCT_ORDER_UNIT_KG,
     PERMANENCE_SEND,
+    DECIMAL_ONE,
+    TWO_DECIMALS,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.item import Item
@@ -93,6 +95,28 @@ class OfferItem(Item):
             return self.total_selling_with_tax
         else:
             return self.total_purchase_with_tax
+
+    def get_price_list_multiplier(self, customer_invoice):
+        price_list_multiplier = DECIMAL_ONE
+        if not self.is_resale_price_fixed:
+            price_list_multiplier = customer_invoice.price_list_multiplier
+        return price_list_multiplier
+
+    def get_customer_unit_price(self, price_list_multiplier):
+        if price_list_multiplier == DECIMAL_ONE:
+            return self.customer_unit_price.amount
+        else:
+            return (self.customer_unit_price.amount * price_list_multiplier).quantize(
+                TWO_DECIMALS
+            )
+
+    def get_producer_unit_price(self, price_list_multiplier=None):
+        if self.manage_production:
+            return self.get_customer_unit_price(price_list_multiplier)
+        return self.producer_unit_price.amount
+
+    def get_unit_deposit(self):
+        return self.unit_deposit.amount
 
     def get_html_producer_price_purchased(self):
         price = self.total_purchase_with_tax

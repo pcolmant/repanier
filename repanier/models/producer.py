@@ -90,7 +90,6 @@ class Producer(models.Model):
     offer_uuid = models.CharField(
         "uuid", max_length=36, default=EMPTY_STRING, db_index=True
     )
-    offer_filled = models.BooleanField(_("Offer filled"), default=False)
     invoice_by_basket = models.BooleanField(_("Invoice by basket"), default=False)
     producer_price_are_wo_vat = models.BooleanField(
         _("Producer price are wo vat"), default=False
@@ -98,6 +97,7 @@ class Producer(models.Model):
     sort_products_by_reference = models.BooleanField(
         _("Sort products by reference"), default=False
     )
+    checking_stock = models.BooleanField(_("Checking stock"), default=False)
 
     price_list_multiplier = models.DecimalField(
         _(

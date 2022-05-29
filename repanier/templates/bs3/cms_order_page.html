@@ -57,26 +57,26 @@
     {% endspaceless %}{% endblock permanence_description %}
     {% block confirm_basket %}{% spaceless %}
         {% if may_order %}
-            {% if is_basket %}
-                <div class="row">
-                <div class="panel panel-default">
-                    <div class="panel-heading accordion-toggle" data-toggle="collapse" data-target="#collapse-basket-description" aria-expanded="true">
-                        <h4 class="panel-title">{% translate "Details of your order" %}</h4>
-                    </div>
-                    <div id="collapse-basket-description" class="panel-collapse collapse in" aria-expanded="true">
-                        <div class="panel-body bg-primary">
-                            <div class="col-xs-12">
-                            <span id="span_btn_confirm_order"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                </div>
-            {% else %}
+{#            {% if is_basket %}#}
+{#                <div class="row">#}
+{#                <div class="panel panel-default">#}
+{#                    <div class="panel-heading accordion-toggle" data-toggle="collapse" data-target="#collapse-basket-description" aria-expanded="true">#}
+{#                        <h4 class="panel-title">{% translate "Details of your order" %}</h4>#}
+{#                    </div>#}
+{#                    <div id="collapse-basket-description" class="panel-collapse collapse in" aria-expanded="true">#}
+{#                        <div class="panel-body bg-primary">#}
+{#                            <div class="col-xs-12">#}
+{#                            <span id="span_btn_confirm_order"></span>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#                </div>#}
+{#            {% else %}#}
                 {% if offeritem_list %}
                     <span id="span_btn_confirm_order"></span>
                 {% endif %}
-            {% endif %}
+{#            {% endif %}#}
         {% endif %}
     {% endspaceless %}{% endblock confirm_basket %}{% spaceless %}
     {% if may_order or display_anonymous_order_form %}
@@ -194,12 +194,9 @@
                             <h4 class="modal-title" id="otherQtyModalLabel"></h4>
                         </div>
                         <div class="modal-body">
-                <span id="otherQtyDetails">
-                  {% translate "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
-                  <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br>
-                  <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.get_phone1 }}</b><br>
-                  <a href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br>
-                </span>
+                            <span id="otherQtyDetails">
+                              {% translate "To order a bigger quantity, please contact your " %}{{ staff_order.signature }}<br>
+                            </span>
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>

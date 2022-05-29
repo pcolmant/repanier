@@ -302,13 +302,11 @@ class CustomerInvoice(Invoice):
                     ).update(status=PERMANENCE_CLOSED)
 
             if self.customer_id != self.customer_charged_id:
-                msg_price = msg_transport = EMPTY_STRING
+                msg_transport = EMPTY_STRING
             else:
                 if self.transport.amount <= DECIMAL_ZERO:
-                    transport = False
                     msg_transport = EMPTY_STRING
                 else:
-                    transport = True
                     if self.min_transport.amount > DECIMAL_ZERO:
                         msg_transport = "{}<br>".format(
                             _(
@@ -326,77 +324,20 @@ class CustomerInvoice(Invoice):
                             )
                             % {"transport": self.transport}
                         )
-                if self.price_list_multiplier == DECIMAL_ONE:
-                    msg_price = EMPTY_STRING
-                else:
-                    if transport:
-                        if self.price_list_multiplier > DECIMAL_ONE:
-                            msg_price = "{}<br>".format(
-                                _(
-                                    "In addition, a surcharge of %(increase)s %% is applied to the billed total. It does not apply to deposits or fees."
-                                )
-                                % {
-                                    "increase": number_format(
-                                        (self.price_list_multiplier - DECIMAL_ONE)
-                                        * 100,
-                                        2,
-                                    )
-                                }
-                            )
-                        else:
-                            msg_price = "{}<br>".format(
-                                _(
-                                    "In addition a reduction of %(decrease)s %% is applied to the billed total. It does not apply to deposits or fees."
-                                )
-                                % {
-                                    "decrease": number_format(
-                                        (DECIMAL_ONE - self.price_list_multiplier)
-                                        * 100,
-                                        2,
-                                    )
-                                }
-                            )
-                    else:
-                        if self.price_list_multiplier > DECIMAL_ONE:
-                            msg_price = "{}<br>".format(
-                                _(
-                                    "For this delivery point, an overload of %(increase)s %% is applied to the billed total (out of deposit)."
-                                )
-                                % {
-                                    "increase": number_format(
-                                        (self.price_list_multiplier - DECIMAL_ONE)
-                                        * 100,
-                                        2,
-                                    )
-                                }
-                            )
-                        else:
-                            msg_price = "{}<br>".format(
-                                _(
-                                    "For this delivery point, a reduction of %(decrease)s %% is applied to the invoiced total (out of deposit)."
-                                )
-                                % {
-                                    "decrease": number_format(
-                                        (DECIMAL_ONE - self.price_list_multiplier)
-                                        * 100,
-                                        2,
-                                    )
-                                }
-                            )
 
             msg_delivery = """
-            {}<b><i>
-            <select name=\"delivery\" id=\"delivery\" onmouseover=\"show_select_delivery_list_ajax({})\" onmouseout=\"clear_select_delivery_list_ajax()\" onchange=\"delivery_ajax()\" class=\"form-control\">
-            <option value=\"{}\" selected>{}</option>
+            <b><i>{} :
+            <select name="delivery" id="delivery" onmouseover="show_select_delivery_list_ajax({})" onmouseout="clear_select_delivery_list_ajax()" onchange="delivery_ajax()" class="form-control">
+            <option value="{}" selected>{}</option>
             </select>
-            </i></b><br>{}{}
+            </i></b>
+            {}
             """.format(
                 _("Delivery point"),
                 delivery_id,
                 delivery_id,
                 label,
                 msg_transport,
-                msg_price,
             )
         else:
             msg_delivery = EMPTY_STRING
@@ -408,19 +349,23 @@ class CustomerInvoice(Invoice):
             msg_html = EMPTY_STRING
         else:
             if self.is_order_confirm_send:
-                msg_confirmation2 = self.customer.my_order_confirmation_email_send_to()
+                msg_my_order_confirmation_email_send_to = (
+                    self.customer.my_order_confirmation_email_send_to()
+                )
                 msg_html = """
                 <div class="row">
                 <div class="panel panel-default">
                 <div class="panel-heading">
+                {}<br/>
                 {}
                 <p><font color="#51a351">{}</font><p/>
-                {}
                 </div>
                 </div>
                 </div>
                  """.format(
-                    msg_delivery, msg_confirmation2, basket_message
+                    basket_message,
+                    msg_delivery,
+                    msg_my_order_confirmation_email_send_to,
                 )
             else:
                 msg_html = None
@@ -450,30 +395,22 @@ class CustomerInvoice(Invoice):
                     else:
                         href = reverse("repanier:order_view", args=(permanence.id,))
                         if self.status == PERMANENCE_OPENED:
-                            msg_confirmation1 = (
-                                '<span style="color: red; ">{}</span><br>'.format(
-                                    _("⚠ Unconfirmed orders will be canceled.")
-                                )
-                            )
-                            msg_confirmation2 = _(
-                                "➜ Go to the confirmation step of my order."
-                            )
                             msg_html = """
                                 <div class="row">
                                 <div class="panel panel-default">
                                 <div class="panel-heading">
                                 {}
-                                {}
+                                <span style="color: red; ">{}</span><br>
                                 <a href="{}?is_basket=yes" class="btn btn-info" {}>{}</a>
                                 </div>
                                 </div>
                                 </div>
                                  """.format(
                                 msg_delivery,
-                                msg_confirmation1,
+                                _("⚠ Unconfirmed orders will be canceled."),
                                 href,
                                 btn_disabled,
-                                msg_confirmation2,
+                                _("➜ Go to the confirmation step of my order."),
                             )
                 else:
                     if is_basket:
@@ -500,34 +437,32 @@ class CustomerInvoice(Invoice):
                         <div class="row">
                         <div class="panel panel-default">
                         <div class="panel-heading">
-                        {}
-                        <div class="clearfix"></div>
+                        {}<br/>
                         {}
                         </div>
                         </div>
                         </div>
                          """.format(
-                            msg_delivery, basket_message
+                            basket_message, msg_delivery
                         )
                     else:
                         msg_html = """
                         <div class="row">
                         <div class="panel panel-default">
                         <div class="panel-heading">
+                        {}<br/>
                         {}
                         {}
                         <button id="btn_confirm_order" class="btn btn-info" {} onclick="btn_receive_order_email();">{}</button>
-                        <div class="clearfix"></div>
-                        {}
                         </div>
                         </div>
                         </div>
                          """.format(
+                            basket_message,
                             msg_delivery,
                             msg_confirmation1,
                             btn_disabled,
                             msg_confirmation2,
-                            basket_message,
                         )
         return {"#span_btn_confirm_order": mark_safe(msg_html)}
 
@@ -557,13 +492,19 @@ class CustomerInvoice(Invoice):
     def set_order_delivery(self, delivery):
         # Don't use delivery_id because it won't reload customer_invoice.delivery
         # Important
-        # If it's an invoice of a member of a group :
-        #   self.customer_charged_id != self.customer_id
-        #   self.customer_charged_id == owner of the group
-        #   price_list_multiplier = DECIMAL_ONE
-        # Else :
-        #   self.customer_charged_id = self.customer_id
-        #   price_list_multiplier may vary
+        # If it's an invoice for a group:
+        #   self.is_group == True
+        #   self.price_list_multiplier == DECIMAL_ONE
+        #   self.customer_charged_id == self.customer_id
+        # Else:
+        #   self.price_list_multiplier may vary
+        #   If it's an invoice for a member of a group :
+        #       self.customer_charged_id != self.customer_id
+        #       self.customer_charged_id == owner of the group
+        #       self.price_list_multiplier == self.customer_charged.price_list_multiplier
+        #   Else:
+        #       self.customer_charged_id == self.customer_id
+        #       self.price_list_multiplier == self.customer.price_list_multiplier
         if delivery is None:
             delivery_point = None
             if self.permanence.with_delivery_point:
@@ -583,22 +524,22 @@ class CustomerInvoice(Invoice):
 
         if delivery_point is None:
             self.customer_charged = self.customer
-            self.price_list_multiplier = DECIMAL_ONE
-            self.transport = DECIMAL_ZERO
-            self.min_transport = DECIMAL_ZERO
+            self.price_list_multiplier = self.customer.price_list_multiplier
+            self.transport.amount = DECIMAL_ZERO
+            self.min_transport.amount = DECIMAL_ZERO
         else:
             group = delivery_point.group
             if group is None:
                 self.customer_charged = self.customer
-                self.price_list_multiplier = DECIMAL_ONE
+                self.price_list_multiplier = self.customer.price_list_multiplier
                 self.transport = delivery_point.transport
                 self.min_transport = delivery_point.min_transport
             else:
                 assert self.customer_id != group.id, "A group may not place an order"
                 self.customer_charged = group
                 self.price_list_multiplier = DECIMAL_ONE
-                self.transport = REPANIER_MONEY_ZERO
-                self.min_transport = REPANIER_MONEY_ZERO
+                self.transport.amount = DECIMAL_ZERO
+                self.min_transport.amount = DECIMAL_ZERO
 
                 customer_invoice_charged = CustomerInvoice.objects.filter(
                     permanence_id=self.permanence_id,
@@ -610,9 +551,9 @@ class CustomerInvoice(Invoice):
                         customer_id=group.id,
                         status=self.status,
                         customer_charged_id=group.id,
-                        price_list_multiplier=group.price_list_multiplier,
-                        transport=delivery_point.transport,
-                        min_transport=delivery_point.min_transport,
+                        price_list_multiplier=self.price_list_multiplier,
+                        transport=self.transport,
+                        min_transport=self.min_transport,
                         is_order_confirm_send=True,
                         is_group=True,
                         delivery=delivery,
@@ -633,54 +574,6 @@ class CustomerInvoice(Invoice):
             query_set = PurchaseWoReceiver.objects.filter(
                 permanence_id=self.permanence_id,
                 customer_id=self.customer_id,
-            )
-        if self.price_list_multiplier != DECIMAL_ONE:
-            result_set = query_set.filter(is_resale_price_fixed=False,).aggregate(
-                customer_vat=Sum(
-                    "customer_vat",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                    ),
-                ),
-                deposit=Sum(
-                    "deposit",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                ),
-                selling_price=Sum(
-                    "selling_price",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                ),
-            )
-
-            total_selling_price_with_tax = (
-                result_set["selling_price"]
-                if result_set["selling_price"] is not None
-                else DECIMAL_ZERO
-            )
-            total_vat = (
-                result_set["customer_vat"]
-                if result_set["customer_vat"] is not None
-                else DECIMAL_ZERO
-            )
-            total_deposit = (
-                result_set["deposit"]
-                if result_set["deposit"] is not None
-                else DECIMAL_ZERO
-            )
-
-            total_selling_price_with_tax_wo_deposit = (
-                total_selling_price_with_tax - total_deposit
-            )
-            self.delta_price_with_tax.amount = (
-                total_selling_price_with_tax_wo_deposit * self.price_list_multiplier
-            ).quantize(TWO_DECIMALS) - total_selling_price_with_tax_wo_deposit
-            self.delta_vat.amount = -(
-                (total_vat * self.price_list_multiplier).quantize(FOUR_DECIMALS)
-                - total_vat
             )
 
         result_set = query_set.aggregate(
@@ -722,7 +615,7 @@ class CustomerInvoice(Invoice):
 
     def calculate_order_transport(self):
         if self.customer_id == self.customer_charged_id:
-            # It's an invoice of a group, or of a customer who is not member of a group :
+            # It's an invoice for a group, or of a customer who is not member of a group :
             #   self.customer_charged_id = self.customer_id
             #   self.price_list_multiplier may vary
             if self.transport.amount != DECIMAL_ZERO:
@@ -911,7 +804,6 @@ class ProducerInvoice(Invoice):
         query_set = PurchaseWoReceiver.objects.filter(
             permanence_id=self.permanence_id,
             producer_id=self.producer_id,
-            price_list_multiplier=DECIMAL_ONE,
         )
 
         result_set = query_set.aggregate(
@@ -946,45 +838,6 @@ class ProducerInvoice(Invoice):
         )
         self.total_deposit.amount = (
             result_set["deposit"] if result_set["deposit"] is not None else DECIMAL_ZERO
-        )
-
-        query_set = PurchaseWoReceiver.objects.filter(
-            permanence_id=self.permanence_id,
-            producer_id=self.producer_id,
-        ).exclude(price_list_multiplier=DECIMAL_ONE)
-
-        result_set = query_set.aggregate(
-            customer_vat=Sum(
-                "customer_vat",
-                output_field=DecimalField(
-                    max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                ),
-            ),
-            deposit=Sum(
-                "deposit",
-                output_field=DecimalField(
-                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                ),
-            ),
-            selling_price=Sum(
-                "selling_price",
-                output_field=DecimalField(
-                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                ),
-            ),
-        )
-        self.total_vat.amount += (
-            result_set["customer_vat"]
-            if result_set["customer_vat"] is not None
-            else DECIMAL_ZERO
-        )
-        self.total_deposit.amount += (
-            result_set["deposit"] if result_set["deposit"] is not None else DECIMAL_ZERO
-        )
-        self.total_price_with_tax.amount += (
-            result_set["selling_price"]
-            if result_set["selling_price"] is not None
-            else DECIMAL_ZERO
         )
 
         # self.calculate_order_rounding()

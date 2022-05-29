@@ -41,7 +41,7 @@ def export_permanence_stock(
         offer_items = (
             OfferItemReadOnly.objects.filter(
                 permanence_id=permanence.id,
-                manage_production=True,
+                producer__checking_stock=True,
             )
             .order_by("producer", "long_name_v2", "order_average_weight")
             .select_related("producer", "department_for_customer")

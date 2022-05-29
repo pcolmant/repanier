@@ -259,7 +259,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         purchase.quantity_invoiced
                                         * (
                                             purchase.get_producer_unit_price()
-                                            + purchase.get_unit_deposit()
+                                            + purchase.offer_item.unit_deposit.amount
                                         )
                                     ).quantize(TWO_DECIMALS)
                                     purchases_price += purchase_price
@@ -589,7 +589,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         purchase.quantity_invoiced
                                         * (
                                             purchase.get_producer_unit_price()
-                                            + purchase.get_unit_deposit()
+                                            + purchase.offer_item.unit_deposit.amount
                                         )
                                     ).quantize(TWO_DECIMALS)
                                     offer_items_price += offer_item_price

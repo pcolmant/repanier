@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO, EMPTY_STRING
+from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO, EMPTY_STRING, TWO_DECIMALS
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
@@ -29,7 +29,7 @@ def order_ajax(request):
     """
     Add a selected offer item to a customer order (i.e. update the customer's invoice and the producer's invoice)
     """
-
+    print("####### order_ajax")
     user = request.user
     customer = Customer.objects.filter(id=user.customer_id, may_order=True).first()
     if customer is None:
@@ -58,15 +58,31 @@ def order_ajax(request):
                 comment=EMPTY_STRING,
             )
             offer_item = OfferItemReadOnly.objects.filter(id=offer_item_id).first()
-            if purchase is None:
+            if purchase is not None:
+                offer_item = purchase.offer_item
+                price_list_multiplier = offer_item.get_price_list_multiplier(
+                    purchase.customer_invoice
+                )
+                customer_unit_price = offer_item.get_customer_unit_price(
+                    price_list_multiplier
+                )
+                unit_deposit = offer_item.get_unit_deposit()
+                unit_price_amount = (customer_unit_price + unit_deposit).quantize(
+                    TWO_DECIMALS
+                )
                 json_dict[
                     "#offer_item{}".format(offer_item.id)
-                ] = get_html_selected_value(offer_item, DECIMAL_ZERO, is_open=True)
+                ] = get_html_selected_value(
+                    offer_item,
+                    purchase.quantity_ordered,
+                    unit_price_amount=unit_price_amount,
+                    is_open=True,
+                )
             else:
                 json_dict[
                     "#offer_item{}".format(offer_item.id)
                 ] = get_html_selected_value(
-                    offer_item, purchase.quantity_ordered, is_open=True
+                    offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=True
                 )
 
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
@@ -83,10 +99,7 @@ def order_ajax(request):
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=offer_item.permanence_id, customer_id=customer.id
             ).first()
-            # The customer_invoice.calculate_order_amount() is made in
-            # Purchase purchase_pre_save signal
-            customer_invoice.calculate_order_transport()
-            customer_invoice.calculate_order_rounding()
+            customer_invoice.calculate_order_amount()
             invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
             customer_invoice.save()
             if invoice_confirm_status_is_changed:
@@ -97,7 +110,6 @@ def order_ajax(request):
                     html = render_to_string(template_name)
                     json_dict["#communicationModal"] = mark_safe(html)
                 customer_invoice.save()
-
             json_dict.update(
                 my_basket(
                     customer_invoice.is_order_confirm_send,

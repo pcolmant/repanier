@@ -107,7 +107,7 @@ For the impatient, this configuration will be made in [common_settings.py](https
 ## Set up a Python virtualenv
 A virtualenv let you isolate all the [pypi librairies](https://pypi.python.org/pypi) for a specific project.
 One virtualenv can contains many `Repanier` websites, using such all the same version of the pypi librairies.
-You will need to setup a new virtualenv at least at each security update of a package present in [requirement-3.2.txt](https://github.com/pcolmant/repanier/blob/master/requirements/requirement-3.2.txt)
+You will need to setup a new virtualenv at least at each security update of a package present in [requirement.txt](https://github.com/pcolmant/repanier/blob/master/requirements/requirement.txt)
 And then create (or migrate) `Repanier` websites.
 
 2. Create a python virtual environment called `prd1` here. Choose whatever you want, but carefully change it to what you choose everywhere in this tutorial.
@@ -122,8 +122,8 @@ And then create (or migrate) `Repanier` websites.
     ```
 4. Install the pypi librairies versions required by `Repanier`
     ```commandline
-    wget https://raw.githubusercontent.com/pcolmant/repanier/master/requirements/requirement-3.2.txt
-    pip install -r requirement-3.2.txt
+    wget https://raw.githubusercontent.com/pcolmant/repanier/master/requirements/requirement.txt
+    pip install -r requirement.txt
     ```
 
 ## Create a Django empty project with a PostgreSQL data base
@@ -169,6 +169,19 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     
 ## Configure nginx to answer to `example.com` dns name
 
+Create self-signed certificates for SSL (only necessary for local networks)
+```commandline
+sudo mkdir /etc/nginx/ssl-certs/
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl-certs/example.key -out /etc/nginx/ssl-certs/example.crt
+    Country Name (2 letter code) [AU]:BE
+    State or Province Name (full name) [Some-State]:Belgium
+    Locality Name (eg, city) []:Ath
+    Organization Name (eg, company) [Internet Widgits Pty Ltd]:Repanier
+    Organizational Unit Name (eg, section) []:
+    Common Name (e.g. server FQDN or YOUR name) []:example.com
+    Email Address []:
+```
+Edit the nginx configuration file
 ```commandline
 sudo nano /etc/nginx/nginx.conf
 ```
@@ -187,10 +200,16 @@ sudo nano /etc/nginx/nginx.conf
 sudo nano /etc/nginx/sites-available/_0_prd_example
 ```
     server {
-        listen 80;
-        listen [::]:80;
+        listen 443;
+        listen [::]:443;
 
         server_name example.com;
+
+        # begin of ssl config for self-signed certificates
+        ssl_certificate /etc/nginx/ssl-certs/example.crt;
+        ssl_trusted_certificate /etc/nginx/ssl-certs/example.crt;
+        ssl_certificate_key /etc/nginx/ssl-certs/example.key;
+        # end of ssl config for self-signed certificates
 
         access_log /var/log/nginx/_0_prd_example_access.log;
         error_log /var/log/nginx/_0_prd_example_error.log;
@@ -236,7 +255,7 @@ sudo nano /etc/uwsgi/apps-available/_0_prd_example.ini
 ```
     [uwsgi]
     vhost = true
-    plugins = python35
+    plugins = python3
     socket = /tmp/_0_prd_example.sock
     master = true
     enable-threads = true

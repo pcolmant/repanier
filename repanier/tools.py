@@ -52,7 +52,6 @@ if settings.DEBUG:
 
         return func_wrapper
 
-
 else:
 
     def debug_parameters(func):
@@ -213,12 +212,17 @@ def payment_message(customer, permanence, customer_invoice):
             % {"name": customer_invoice.customer_charged.long_basket_name}
         )
     else:
-        if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER or customer_invoice.is_order_confirm_send:
+        if (
+            not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+            or customer_invoice.is_order_confirm_send
+        ):
             bank_not_invoiced = customer.get_bank_not_invoiced()
             order_not_invoiced = customer.get_order_not_invoiced()
 
             customer_on_hold_movement = customer.get_html_on_hold_movement(
-                bank_not_invoiced, order_not_invoiced, customer_invoice.get_total_price_with_tax()
+                bank_not_invoiced,
+                order_not_invoiced,
+                customer_invoice.get_total_price_with_tax(),
             )
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 payment_needed = -(
@@ -272,7 +276,9 @@ def payment_message(customer, permanence, customer_invoice):
     )
 
 
-def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
+def get_html_selected_value(
+    offer_item, quantity_ordered, unit_price_amount, is_open=True
+):
     if offer_item is not None:
         product = offer_item.product
         if quantity_ordered <= const.DECIMAL_ZERO:
@@ -288,9 +294,9 @@ def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
             html = '<option value="0" selected>{}</option>'.format(label)
 
         else:
-            unit_price_amount = (
-                product.customer_unit_price.amount + product.unit_deposit.amount
-            )
+            # unit_price_amount = (
+            #     product.customer_unit_price.amount + product.unit_deposit.amount
+            # )
             display = product.get_display(
                 qty=quantity_ordered,
                 order_unit=offer_item.order_unit,
@@ -558,25 +564,35 @@ def reorder_offer_items(permanence_id):
             i += 1
 
 
-def update_offer_item(product_id=None, producer_id=None):
+def update_offer_item(product=None, producer_id=None):
     from repanier.models.permanence import Permanence
     from repanier.models.offeritem import OfferItem
 
     # The user can also modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in Permanence.objects.filter(
-        status__in=[
-            # const.PERMANENCE_PLANNED,
-            const.PERMANENCE_OPENED,
-            # const.PERMANENCE_CLOSED,
-            const.PERMANENCE_SEND,
-        ]
+        status=const.PERMANENCE_OPENED,
     ):
-        if product_id is not None:
-            offer_item_qs = OfferItem.objects.filter(product_id=product_id)
+        if product is not None:
+            offer_item_qs = OfferItem.objects.filter(product_id=product.id)
         else:
             offer_item_qs = OfferItem.objects.filter(producer_id=producer_id)
         permanence.clean_offer_item(offer_item_qs=offer_item_qs)
         permanence.update_offer_item(offer_item_qs=offer_item_qs)
+
+    for permanence in Permanence.objects.filter(
+        status=const.PERMANENCE_SEND,
+    ):
+        if product is not None:
+            if product.is_into_offer:
+                offer_item = product.get_or_create_offer_item(permanence)
+                offer_item_qs = OfferItem.objects.filter(id=offer_item.id)
+                permanence.update_offer_item(offer_item_qs=offer_item_qs)
+        else:
+            offer_item_qs = OfferItem.objects.filter(
+                producer_id=producer_id, product__is_into_offer=True
+            )
+            permanence.clean_offer_item(offer_item_qs=offer_item_qs)
+            permanence.update_offer_item(offer_item_qs=offer_item_qs)
     cache.clear()
 
 
@@ -609,35 +625,34 @@ def get_html_basket_message(customer, permanence, status, customer_invoice):
         invoice_msg = "<br>{} {}".format(
             customer_last_balance, customer_on_hold_movement
         )
-    if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None:
+    if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None and customer_payment_needed:
         payment_msg = "<br>{}".format(customer_payment_needed)
 
     if status == const.PERMANENCE_OPENED:
-        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-            if permanence.with_delivery_point:
-                you_can_change = _(
-                    "You can increase the order quantities as long as the orders are open for your delivery point."
+        if customer_invoice.is_order_confirm_send:
+            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                you_can_change = "<br>{}".format(
+                    _(
+                        "You can increase the order quantities as long as the orders are open."
+                    )
                 )
             else:
-                you_can_change = _(
-                    "You can increase the order quantities as long as the orders are open."
+                you_can_change = "<br>{}".format(
+                    _(
+                        "You can change the order quantities as long as the orders are open."
+                    )
                 )
         else:
-            if permanence.with_delivery_point:
-                you_can_change = _(
-                    "You can change the order quantities as long as the orders are open for your delivery point."
-                )
-            else:
-                you_can_change = _(
-                    "You can change the order quantities as long as the orders are open."
-                )
+            you_can_change = const.EMPTY_STRING
     else:
         if permanence.with_delivery_point:
-            you_can_change = _("The orders are closed for your delivery point.")
+            you_can_change = "<br>{}".format(
+                _("The orders are closed for your delivery point.")
+            )
         else:
-            you_can_change = _("The orders are closed.")
+            you_can_change = "<br>{}".format(_("The orders are closed."))
 
-    basket_message = "{}{}{}<br>{}".format(
+    basket_message = "<b>{}</b>{}{}{}".format(
         customer_order_amount, invoice_msg, payment_msg, you_can_change
     )
     return mark_safe(basket_message)

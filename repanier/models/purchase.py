@@ -140,25 +140,14 @@ class Purchase(models.Model):
     )
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, db_index=True)
 
-    def set_customer_price_list_multiplier(self):
-        self.price_list_multiplier = DECIMAL_ONE
-        self.is_resale_price_fixed = self.offer_item.is_resale_price_fixed
-        if not self.is_resale_price_fixed:
-            self.price_list_multiplier = self.customer.price_list_multiplier
-
     def get_customer_unit_price(self):
         offer_item = self.offer_item
-        if self.price_list_multiplier == DECIMAL_ONE:
-            return offer_item.customer_unit_price.amount
-        else:
-            return (
-                offer_item.customer_unit_price.amount * self.price_list_multiplier
-            ).quantize(TWO_DECIMALS)
+        price_list_multiplier = offer_item.get_price_list_multiplier(
+            self.customer_invoice
+        )
+        return offer_item.get_customer_unit_price(price_list_multiplier)
 
     get_customer_unit_price.short_description = _("Customer unit price")
-
-    def get_unit_deposit(self):
-        return self.offer_item.unit_deposit.amount
 
     def get_customer_unit_vat(self):
         offer_item = self.offer_item
@@ -183,8 +172,8 @@ class Purchase(models.Model):
 
     def get_producer_unit_price(self):
         offer_item = self.offer_item
-        if offer_item.manage_production:
-            return self.get_customer_unit_price()
+        # if offer_item.manage_production:
+        #     return self.get_customer_unit_price()
         return offer_item.producer_unit_price.amount
 
     get_producer_unit_price.short_description = _("Producer unit price")

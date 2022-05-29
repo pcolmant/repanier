@@ -49,7 +49,11 @@ os.sys.path.insert(0, PROJECT_PATH)
 conf_file_name = PROJECT_DIR / (DJANGO_SETTINGS_SITE_NAME + ".ini")
 
 if not conf_file_name.exists():
-    print("---- common_settings.py - /!\ settings file <{}> not found".format(conf_file_name))
+    print(
+        "---- common_settings.py - /!\ settings file <{}> not found".format(
+            conf_file_name
+        )
+    )
     raise SystemExit(-1)
 else:
     print("---- common_settings.py - settings file is : <{}>".format(conf_file_name))
@@ -185,6 +189,7 @@ REPANIER_SETTINGS_GROUP_NAME = config.get(
     fallback=get_group_name(ALLOWED_HOSTS[0]),
 )
 DEFAULT_FROM_EMAIL = "{} <{}>".format(REPANIER_SETTINGS_GROUP_NAME, EMAIL_HOST_USER)
+# DEFAULT_FROM_EMAIL = "{} <nrply@repanier.be>".format(REPANIER_SETTINGS_GROUP_NAME)
 
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
 DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
@@ -305,8 +310,7 @@ INSTALLED_APPS = (
     "django.contrib.postgres",
     "djangocms_text_ckeditor",  # note this needs to be above the 'cms' entry
     # 'django_select2',
-
-    "admin_auto_filters", # django-admin-autocomplete-filter
+    "admin_auto_filters",  # django-admin-autocomplete-filter
     "djangocms_link",
     "djangocms_file",
     "djangocms_picture",

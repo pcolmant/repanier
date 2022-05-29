@@ -10,7 +10,7 @@ from repanier.const import (
     PERMANENCE_CLOSED,
     DECIMAL_ZERO,
     PERMANENCE_OPENED,
-    PERMANENCE_SEND,
+    PERMANENCE_SEND, TWO_DECIMALS,
 )
 from repanier.models import Permanence
 from repanier.models.customer import Customer
@@ -413,8 +413,13 @@ def select_offer_item(offer_item, result, user):
     )
     if purchase is not None:
         is_open = purchase.status == PERMANENCE_OPENED
+        offer_item = purchase.offer_item
+        price_list_multiplier = offer_item.get_price_list_multiplier(purchase.customer_invoice)
+        customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
+        unit_deposit = offer_item.get_unit_deposit()
+        unit_price_amount = (customer_unit_price + unit_deposit).quantize(TWO_DECIMALS)
         html = get_html_selected_value(
-            offer_item, purchase.quantity_ordered, is_open=is_open
+            offer_item, purchase.quantity_ordered, unit_price_amount=unit_price_amount, is_open=is_open
         )
     else:
         is_open = ProducerInvoice.objects.filter(
@@ -422,7 +427,7 @@ def select_offer_item(offer_item, result, user):
             producer__offeritem=offer_item.id,
             status=PERMANENCE_OPENED,
         ).exists()
-        html = get_html_selected_value(offer_item, DECIMAL_ZERO, is_open=is_open)
+        html = get_html_selected_value(offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=is_open)
     if is_open:
         result.append(
             '<select name="offer_item{id}" id="offer_item{id}" onchange="order_ajax({id})" onmouseover="show_select_order_list_ajax({id})" onmouseout="clear_select_order_list_ajax()" class="form-control">{option}</select>'.format(

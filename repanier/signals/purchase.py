@@ -9,7 +9,6 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_PC_KG,
     TWO_DECIMALS,
     FOUR_DECIMALS,
-    DECIMAL_ONE,
 )
 from repanier.models import (
     Purchase,
@@ -51,29 +50,34 @@ def purchase_pre_save(sender, **kwargs):
     """
 
     purchase = kwargs["instance"]
+    offer_item = purchase.offer_item
     # logger.info("purchase pre save : {}".format(purchase.id))
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:
         quantity = purchase.quantity_ordered
         delta_quantity = quantity - purchase.previous_quantity_ordered
-        if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+        if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
             # This quantity is used to calculate the price
             # The unit price is for 1 kg.
             # 1 = 1 piece of order_average_weight
-            # 2 = 2 pices of order_average_weight
-            quantity *= purchase.offer_item.order_average_weight
+            # 2 = 2 pieces of order_average_weight
+            quantity *= offer_item.order_average_weight
 
     else:
         quantity = purchase.quantity_invoiced
         delta_quantity = quantity - purchase.previous_quantity_invoiced
 
-    purchase.set_customer_price_list_multiplier()
+    price_list_multiplier = (
+        purchase.price_list_multiplier
+    ) = offer_item.get_price_list_multiplier(purchase.customer_invoice)
+    producer_unit_price = offer_item.get_producer_unit_price(price_list_multiplier)
+    customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
+    unit_deposit = offer_item.get_unit_deposit()
 
-    unit_deposit = purchase.get_unit_deposit()
     purchase.purchase_price.amount = (
-        (purchase.get_producer_unit_price() + unit_deposit) * quantity
+        (producer_unit_price + unit_deposit) * quantity
     ).quantize(TWO_DECIMALS)
     purchase.selling_price.amount = (
-        (purchase.get_customer_unit_price() + unit_deposit) * quantity
+        (customer_unit_price + unit_deposit) * quantity
     ).quantize(TWO_DECIMALS)
 
     delta_purchase_price = (
@@ -98,11 +102,9 @@ def purchase_pre_save(sender, **kwargs):
         ).quantize(FOUR_DECIMALS)
 
         purchase.deposit.amount = unit_deposit * quantity
+
         delta_purchase_vat = (
             purchase.producer_vat.amount - purchase.previous_producer_vat
-        )
-        delta_selling_vat = (
-            purchase.customer_vat.amount - purchase.previous_customer_vat
         )
         delta_deposit = purchase.deposit.amount - purchase.previous_deposit
 
@@ -114,11 +116,6 @@ def purchase_pre_save(sender, **kwargs):
         purchase.offer_item = OfferItemReadOnly.objects.filter(
             id=purchase.offer_item_id
         ).first()
-        # CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(
-        #     total_price_with_tax=F("total_price_with_tax") + delta_selling_price,
-        #     total_vat=F("total_vat") + delta_selling_vat,
-        #     total_deposit=F("total_deposit") + delta_deposit,
-        # )
 
         CustomerProducerInvoice.objects.filter(
             id=purchase.customer_producer_invoice_id
@@ -126,10 +123,6 @@ def purchase_pre_save(sender, **kwargs):
             total_purchase_with_tax=F("total_purchase_with_tax") + delta_purchase_price,
             total_selling_with_tax=F("total_selling_with_tax") + delta_selling_price,
         )
-
-        if purchase.price_list_multiplier != DECIMAL_ONE:
-            delta_purchase_price = delta_selling_price
-            delta_purchase_vat = delta_selling_vat
 
         ProducerInvoice.objects.filter(id=purchase.producer_invoice_id).update(
             total_price_with_tax=F("total_price_with_tax") + delta_purchase_price,

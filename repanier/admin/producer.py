@@ -336,6 +336,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 "producer_price_are_wo_vat",
                 "sort_products_by_reference",
                 "invoice_by_basket",
+                "checking_stock",
                 "minimum_order_value",
                 "price_list_multiplier",
                 "permanences",
@@ -351,6 +352,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 "producer_price_are_wo_vat",
                 "sort_products_by_reference",
                 "invoice_by_basket",
+                "checking_stock",
                 "minimum_order_value",
                 "price_list_multiplier",
             ]

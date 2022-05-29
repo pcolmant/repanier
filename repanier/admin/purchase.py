@@ -14,7 +14,6 @@ from django.urls import reverse, path
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
-from repanier.email.email_order import export_order_2_1_customer
 from repanier.middleware import (
     get_request_params,
     set_threading_local,
@@ -23,7 +22,7 @@ from repanier.middleware import (
     get_preserved_filters_as_dict,
     get_preserved_filters_from_dict,
 )
-from repanier.models import Producer, Product
+from repanier.models import Producer
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
@@ -204,23 +203,25 @@ class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
         return item.get_delivery_display()
 
 
-class ProductAutocompleteChoiceField(forms.ModelChoiceField):
+class OfferItemAutocompleteChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.get_long_name_with_customer_price()
 
 
-class ProductAutocomplete(autocomplete.Select2QuerySetView):
+class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
-        qs = Product.objects.filter(is_box=False, is_active=True).order_by(
-            "department_for_customer", "long_name_v2"
-        )
+        permanence_id = self.forwarded.get("permanence", None)
+        qs = OfferItem.objects.filter(
+            permanence_id=permanence_id,
+            is_box_content=False,
+        ).order_by("department_for_customer", "long_name_v2")
 
         if self.q:
             qs = qs.filter(
                 Q(long_name_v2__icontains=self.q)
                 | Q(producer__short_profile_name__icontains=self.q)
-                | Q(department_for_customer__short_name_v2__icontains=self.q)
+                | Q(product__department_for_customer__short_name_v2__icontains=self.q)
             )
 
         return qs
@@ -231,7 +232,7 @@ class ProductAutocomplete(autocomplete.Select2QuerySetView):
         purchase = Purchase.objects.filter(
             permanence_id=permanence_id,
             customer_id=customer_id,
-            offer_item__product_id=item.id,
+            offer_item_id=item.id,
         ).first()
         purchased_symbol = EMPTY_STRING
         if purchase is not None:
@@ -259,6 +260,63 @@ class ProductAutocomplete(autocomplete.Select2QuerySetView):
                 item.producer,
                 item.get_long_name_with_customer_price(),
             )
+
+
+# class ProductAutocompleteChoiceField(forms.ModelChoiceField):
+#     def label_from_instance(self, obj):
+#         return obj.get_long_name_with_customer_price()
+#
+#
+# class ProductAutocomplete(autocomplete.Select2QuerySetView):
+#     def get_queryset(self):
+#         # Don't forget to filter out results depending on the visitor !
+#         qs = Product.objects.filter(is_box=False, is_active=True).order_by(
+#             "department_for_customer", "long_name_v2"
+#         )
+#
+#         if self.q:
+#             qs = qs.filter(
+#                 Q(long_name_v2__icontains=self.q)
+#                 | Q(producer__short_profile_name__icontains=self.q)
+#                 | Q(department_for_customer__short_name_v2__icontains=self.q)
+#             )
+#
+#         return qs
+#
+#     def get_result_label(self, item):
+#         permanence_id = self.forwarded.get("permanence", None)
+#         customer_id = self.forwarded.get("customer", None)
+#         purchase = Purchase.objects.filter(
+#             permanence_id=permanence_id,
+#             customer_id=customer_id,
+#             offer_item__product_id=item.id,
+#         ).first()
+#         purchased_symbol = EMPTY_STRING
+#         if purchase is not None:
+#             if purchase.status < PERMANENCE_SEND:
+#                 qty = _("Quantity requested")
+#                 purchased_symbol = mark_safe(
+#                     "[<b>{} : {:.2f}</b>] ".format(qty, purchase.quantity_ordered)
+#                 )
+#             else:
+#                 qty = _("Quantity prepared")
+#                 purchased_symbol = mark_safe(
+#                     "[<b>{} : {:.4f}</b>] ".format(qty, purchase.quantity_invoiced)
+#                 )
+#
+#         if item.department_for_customer is None:
+#             return "{}{} - {}".format(
+#                 purchased_symbol,
+#                 item.producer,
+#                 item.get_long_name_with_customer_price(),
+#             )
+#         else:
+#             return "{}{} - {} - {}".format(
+#                 purchased_symbol,
+#                 item.department_for_customer,
+#                 item.producer,
+#                 item.get_long_name_with_customer_price(),
+#             )
 
 
 class PurchaseForm(forms.ModelForm):
@@ -291,12 +349,12 @@ class PurchaseForm(forms.ModelForm):
             },
         ),
     )
-    product = ProductAutocompleteChoiceField(
-        label=_("Product Customer rate"),
-        queryset=Product.objects.all(),
+    offer_item = OfferItemAutocompleteChoiceField(
+        label=_("Customer rate"),
+        queryset=OfferItem.objects.all(),
         required=True,
         widget=autocomplete.ModelSelect2(
-            url="admin:repanier_purchase_form_product",
+            url="admin:repanier_purchase_form_offeritem",
             forward=(
                 forward.Field("permanence"),
                 forward.Field("customer"),
@@ -308,11 +366,28 @@ class PurchaseForm(forms.ModelForm):
             },
         ),
     )
-    offer_item = forms.ModelChoiceField(
-        label=_("Customer rate"),
-        queryset=OfferItem.objects.all(),
-        required=False,
-    )
+    # product = ProductAutocompleteChoiceField(
+    #     label=_("Product Customer rate"),
+    #     queryset=Product.objects.all(),
+    #     required=True,
+    #     widget=autocomplete.ModelSelect2(
+    #         url="admin:repanier_purchase_form_product",
+    #         forward=(
+    #             forward.Field("permanence"),
+    #             forward.Field("customer"),
+    #         ),
+    #         attrs={
+    #             "data-dropdown-auto-width": "true",
+    #             "data-width": "80%",
+    #             "data-html": True,
+    #         },
+    #     ),
+    # )
+    # offer_item = forms.ModelChoiceField(
+    #     label=_("Customer rate"),
+    #     queryset=OfferItem.objects.all(),
+    #     required=False,
+    # )
     quantity = forms.DecimalField(
         min_value=DECIMAL_ZERO,
         label=_("Qty"),
@@ -330,8 +405,8 @@ class PurchaseForm(forms.ModelForm):
         customer_field = self.fields["customer"]
         quantity_field = self.fields["quantity"]
         delivery_field = self.fields["delivery"]
-        offer_item_field = self.fields["offer_item"]
-        product_field = self.fields["product"]
+        # offer_item_field = self.fields["offer_item"]
+        # product_field = self.fields["product"]
 
         if purchase.id is None:
             # Add new purchase
@@ -348,7 +423,7 @@ class PurchaseForm(forms.ModelForm):
                 delivery_point_id = customer_invoice.delivery_id
             else:
                 delivery_point_id = None
-            product_field.initial = None
+            # product_field.initial = None
         else:
             # Update existing purchase
             if purchase.status < PERMANENCE_SEND:
@@ -358,15 +433,15 @@ class PurchaseForm(forms.ModelForm):
 
             permanence_id = purchase.permanence_id
             delivery_point_id = purchase.customer_invoice.delivery
-            product_field.initial = purchase.offer_item.product_id
+            # product_field.initial = purchase.offer_item.product_id
 
         permanence_field.widget = forms.HiddenInput()
         permanence_field.widget.attrs["readonly"] = True
         permanence_field.disabled = True
 
-        offer_item_field.widget = forms.HiddenInput()
-        offer_item_field.widget.attrs["readonly"] = True
-        offer_item_field.disabled = True
+        # offer_item_field.widget = forms.HiddenInput()
+        # offer_item_field.widget.attrs["readonly"] = True
+        # offer_item_field.disabled = True
 
         customer_field.widget.can_change_related = False
         customer_field.widget.can_add_related = False
@@ -437,6 +512,7 @@ class PurchaseAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .filter(
                 permanence_id=permanence_id,
+                is_box_content=False,
             )
         )
 
@@ -488,10 +564,15 @@ class PurchaseAdmin(admin.ModelAdmin):
                 name="repanier_purchase_form_delivery",
             ),
             path(
-                "product_autocomplete/",
-                ProductAutocomplete.as_view(),
-                name="repanier_purchase_form_product",
+                "offer_item_autocomplete/",
+                OfferItemAutocomplete.as_view(),
+                name="repanier_purchase_form_offeritem",
             ),
+            # path(
+            #     "product_autocomplete/",
+            #     ProductAutocomplete.as_view(),
+            #     name="repanier_purchase_form_product",
+            # ),
             path(
                 "producer_of_permanence/<int:permanence>/",
                 self.admin_site.admin_view(
@@ -602,7 +683,7 @@ class PurchaseAdmin(admin.ModelAdmin):
             "permanence",
             "customer",
             "delivery",
-            "product",
+            # "product",
             "offer_item",
             "quantity",
             "comment",
@@ -633,8 +714,9 @@ class PurchaseAdmin(admin.ModelAdmin):
             # It is forbidden to change invoiced permanence
             return
 
-        product = form.cleaned_data.get("product")
-        offer_item = product.get_or_create_offer_item(permanence)
+        offer_item = form.cleaned_data.get("offer_item")
+        # product = form.cleaned_data.get("product")
+        # offer_item = product.get_or_create_offer_item(permanence)
         quantity = form.cleaned_data.get("quantity", DECIMAL_ZERO)
         comment = form.cleaned_data.get("comment")
 

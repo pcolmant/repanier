@@ -537,7 +537,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def save_model(self, request, product, form, change):
         super().save_model(request, product, form, change)
-        update_offer_item(product_id=product.id)
+        update_offer_item(product=product)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

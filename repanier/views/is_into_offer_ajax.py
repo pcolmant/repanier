@@ -21,6 +21,6 @@ def is_into_offer(request, product_id):
         if product is not None:
             product.is_into_offer = not product.is_into_offer
             product.save(update_fields=["is_into_offer"])
-            update_offer_item(product_id=product.id)
+            update_offer_item(product=product)
             return HttpResponse(product.get_html_is_into_offer())
     raise Http404
