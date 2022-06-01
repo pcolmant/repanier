@@ -254,10 +254,140 @@ class CustomerInvoice(Invoice):
         return qty_ordered != DECIMAL_ZERO or qty_invoiced != DECIMAL_ZERO
 
     def get_html_my_order_confirmation(
-        self, permanence, is_basket=False, basket_message=EMPTY_STRING
+        self,
+        permanence,
+        is_basket=False,
+        basket_message=EMPTY_STRING,
+        delivery_message=EMPTY_STRING,
     ):
 
-        if permanence.with_delivery_point:
+        msg_confirmation1 = EMPTY_STRING
+        if not is_basket and not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+            # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
+            # If REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER,
+            # then permanence.with_delivery_point is also True
+            msg_html = EMPTY_STRING
+        else:
+            if self.is_order_confirm_send:
+                msg_my_order_confirmation_email_send_to = (
+                    self.customer.my_order_confirmation_email_send_to()
+                )
+                msg_html = """
+                <div class="row">
+                <div class="panel panel-default">
+                <div class="panel-heading">
+                {}<br/>
+                {}
+                <p><font color="#51a351">{}</font><p/>
+                </div>
+                </div>
+                </div>
+                 """.format(
+                    basket_message,
+                    delivery_message,
+                    msg_my_order_confirmation_email_send_to,
+                )
+            else:
+                msg_html = None
+                btn_disabled = (
+                    EMPTY_STRING
+                    if permanence.status == PERMANENCE_OPENED
+                    else "disabled"
+                )
+                msg_confirmation2 = EMPTY_STRING
+                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                    if is_basket:
+                        if self.status == PERMANENCE_OPENED:
+                            if (
+                                permanence.with_delivery_point and self.delivery is None
+                            ) or not self.has_purchase:
+                                btn_disabled = "disabled"
+                            msg_confirmation1 = (
+                                '<span style="color: red; ">{}</span><br>'.format(
+                                    _("⚠ Unconfirmed orders will be canceled.")
+                                )
+                            )
+                            msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;{}'.format(
+                                _(
+                                    " ➜ Confirm this order and receive an email containing its summary."
+                                )
+                            )
+                    else:
+                        href = reverse("repanier:order_view", args=(permanence.id,))
+                        if self.status == PERMANENCE_OPENED:
+                            msg_html = """
+                                <div class="row">
+                                <div class="panel panel-default">
+                                <div class="panel-heading">
+                                {}
+                                <span style="color: red; ">{}</span><br>
+                                <a href="{}?is_basket=yes" class="btn btn-info" {}>{}</a>
+                                </div>
+                                </div>
+                                </div>
+                                 """.format(
+                                delivery_message,
+                                _("⚠ Unconfirmed orders will be canceled."),
+                                href,
+                                btn_disabled,
+                                _("➜ Go to the confirmation step of my order."),
+                            )
+                else:
+                    if is_basket:
+                        msg_confirmation2 = _(
+                            "Receive an email containing this order summary."
+                        )
+                    elif permanence.with_delivery_point:
+                        msg_html = """
+                            <div class="row">
+                            <div class="panel panel-default">
+                            <div class="panel-heading">
+                            {}
+                            </div>
+                            </div>
+                            </div>
+                             """.format(
+                            delivery_message
+                        )
+                    else:
+                        msg_html = EMPTY_STRING
+                if msg_html is None:
+                    if msg_confirmation2 == EMPTY_STRING:
+                        msg_html = """
+                        <div class="row">
+                        <div class="panel panel-default">
+                        <div class="panel-heading">
+                        {}<br/>
+                        {}
+                        </div>
+                        </div>
+                        </div>
+                         """.format(
+                            basket_message, delivery_message
+                        )
+                    else:
+                        msg_html = """
+                        <div class="row">
+                        <div class="panel panel-default">
+                        <div class="panel-heading">
+                        {}<br/>
+                        {}
+                        {}
+                        <button id="btn_confirm_order" class="btn btn-info" {} onclick="btn_receive_order_email();">{}</button>
+                        </div>
+                        </div>
+                        </div>
+                         """.format(
+                            basket_message,
+                            delivery_message,
+                            msg_confirmation1,
+                            btn_disabled,
+                            msg_confirmation2,
+                        )
+        return {"#span_btn_confirm_order": mark_safe(msg_html)}
+
+    def get_html_select_delivery_point(self, permanence, status):
+        if status == PERMANENCE_OPENED and permanence.with_delivery_point:
             if self.delivery is not None:
                 label = self.delivery.get_delivery_customer_display()
                 delivery_id = self.delivery_id
@@ -295,7 +425,7 @@ class CustomerInvoice(Invoice):
                         _("No delivery point is open for you. You can not place order.")
                     )
                     # IMPORTANT :
-                    # 1 / This prohibit to place an order into the customer UI
+                    # 1 / This prohibits to place an order into the customer UI
                     # 2 / task_order.close_send_order will delete any CLOSED orders without any delivery point
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id, customer_id=self.customer_id
@@ -341,130 +471,7 @@ class CustomerInvoice(Invoice):
             )
         else:
             msg_delivery = EMPTY_STRING
-        msg_confirmation1 = EMPTY_STRING
-        if not is_basket and not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-            # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
-            # If REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER,
-            # then permanence.with_delivery_point is also True
-            msg_html = EMPTY_STRING
-        else:
-            if self.is_order_confirm_send:
-                msg_my_order_confirmation_email_send_to = (
-                    self.customer.my_order_confirmation_email_send_to()
-                )
-                msg_html = """
-                <div class="row">
-                <div class="panel panel-default">
-                <div class="panel-heading">
-                {}<br/>
-                {}
-                <p><font color="#51a351">{}</font><p/>
-                </div>
-                </div>
-                </div>
-                 """.format(
-                    basket_message,
-                    msg_delivery,
-                    msg_my_order_confirmation_email_send_to,
-                )
-            else:
-                msg_html = None
-                btn_disabled = (
-                    EMPTY_STRING
-                    if permanence.status == PERMANENCE_OPENED
-                    else "disabled"
-                )
-                msg_confirmation2 = EMPTY_STRING
-                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                    if is_basket:
-                        if self.status == PERMANENCE_OPENED:
-                            if (
-                                permanence.with_delivery_point and self.delivery is None
-                            ) or not self.has_purchase:
-                                btn_disabled = "disabled"
-                            msg_confirmation1 = (
-                                '<span style="color: red; ">{}</span><br>'.format(
-                                    _("⚠ Unconfirmed orders will be canceled.")
-                                )
-                            )
-                            msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;{}'.format(
-                                _(
-                                    " ➜ Confirm this order and receive an email containing its summary."
-                                )
-                            )
-                    else:
-                        href = reverse("repanier:order_view", args=(permanence.id,))
-                        if self.status == PERMANENCE_OPENED:
-                            msg_html = """
-                                <div class="row">
-                                <div class="panel panel-default">
-                                <div class="panel-heading">
-                                {}
-                                <span style="color: red; ">{}</span><br>
-                                <a href="{}?is_basket=yes" class="btn btn-info" {}>{}</a>
-                                </div>
-                                </div>
-                                </div>
-                                 """.format(
-                                msg_delivery,
-                                _("⚠ Unconfirmed orders will be canceled."),
-                                href,
-                                btn_disabled,
-                                _("➜ Go to the confirmation step of my order."),
-                            )
-                else:
-                    if is_basket:
-                        msg_confirmation2 = _(
-                            "Receive an email containing this order summary."
-                        )
-                    elif permanence.with_delivery_point:
-                        msg_html = """
-                            <div class="row">
-                            <div class="panel panel-default">
-                            <div class="panel-heading">
-                            {}
-                            </div>
-                            </div>
-                            </div>
-                             """.format(
-                            msg_delivery
-                        )
-                    else:
-                        msg_html = EMPTY_STRING
-                if msg_html is None:
-                    if msg_confirmation2 == EMPTY_STRING:
-                        msg_html = """
-                        <div class="row">
-                        <div class="panel panel-default">
-                        <div class="panel-heading">
-                        {}<br/>
-                        {}
-                        </div>
-                        </div>
-                        </div>
-                         """.format(
-                            basket_message, msg_delivery
-                        )
-                    else:
-                        msg_html = """
-                        <div class="row">
-                        <div class="panel panel-default">
-                        <div class="panel-heading">
-                        {}<br/>
-                        {}
-                        {}
-                        <button id="btn_confirm_order" class="btn btn-info" {} onclick="btn_receive_order_email();">{}</button>
-                        </div>
-                        </div>
-                        </div>
-                         """.format(
-                            basket_message,
-                            msg_delivery,
-                            msg_confirmation1,
-                            btn_disabled,
-                            msg_confirmation2,
-                        )
-        return {"#span_btn_confirm_order": mark_safe(msg_html)}
+        return msg_delivery
 
     @transaction.atomic
     def confirm_order(self):

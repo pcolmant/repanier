@@ -151,10 +151,14 @@ class OrderView(ListView):
                 basket_message = get_html_basket_message(
                     self.customer, self.permanence, status, customer_invoice
                 )
+                delivery_message = customer_invoice.get_html_select_delivery_point(
+                    self.permanence, status
+                )
                 html = customer_invoice.get_html_my_order_confirmation(
                     permanence=self.permanence,
                     is_basket=True,
                     basket_message=basket_message,
+                    delivery_message=delivery_message,
                 )
                 context["span_btn_confirm_order"] = html["#span_btn_confirm_order"]
         else:

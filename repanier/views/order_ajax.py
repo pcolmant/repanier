@@ -124,12 +124,15 @@ def order_ajax(request):
                 )
             else:
                 basket_message = EMPTY_STRING
-
+            delivery_message = customer_invoice.get_html_select_delivery_point(
+                permanence, PERMANENCE_OPENED
+            )
             json_dict.update(
                 customer_invoice.get_html_my_order_confirmation(
                     permanence=permanence,
                     is_basket=is_basket,
                     basket_message=basket_message,
+                    delivery_message=delivery_message,
                 )
             )
     return JsonResponse(json_dict)
