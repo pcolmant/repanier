@@ -150,6 +150,7 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
     permanence.send_to_producer()
     permanence.calculate_order_amount()
     reorder_purchases(permanence.id)
+
     if send_mail:
         email_order.email_order(
             permanence.id, everything=everything, deliveries_id=deliveries_id

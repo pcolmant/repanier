@@ -3,7 +3,7 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
-from django.db import models, transaction
+from django.db import models, transaction, connection
 from django.db.models import F, Sum, DecimalField
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -816,14 +816,32 @@ class Permanence(models.Model):
     def send_to_producer(self):
         from repanier.models.purchase import PurchaseWoReceiver
 
-        PurchaseWoReceiver.objects.filter(
-            permanence_id=self.id,
-            status=PERMANENCE_WAIT_FOR_SEND,
-            offer_item__order_unit=PRODUCT_ORDER_UNIT_PC_KG,
-        ).update(
-            quantity_invoiced=F("quantity_ordered")
-            * F("offer_item__order_average_weight"),
-        )
+        # PurchaseWoReceiver.objects.filter(
+        #     permanence_id=self.id,
+        #     status=PERMANENCE_WAIT_FOR_SEND,
+        #     offer_item__order_unit=PRODUCT_ORDER_UNIT_PC_KG,
+        # ).update(
+        #     quantity_invoiced=F("quantity_ordered")
+        #     * F("offer_item__order_average_weight"),
+        # )
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE repanier_purchase AS a SET "
+                " quantity_invoiced = quantity_ordered * b.order_average_weight "
+                " FROM repanier_offeritem AS b "
+                " WHERE a.offer_item_id = b.id "
+                " AND a.permanence_id = %s "
+                " AND a.status = %s "
+                " AND b.order_unit = %s ",
+                [self.id, PERMANENCE_WAIT_FOR_SEND, PRODUCT_ORDER_UNIT_PC_KG],
+            )
+        # for p in PurchaseWoReceiver.objects.filter(
+        #     permanence_id=self.id,
+        #     status=PERMANENCE_WAIT_FOR_SEND,
+        #     offer_item__order_unit=PRODUCT_ORDER_UNIT_PC_KG,
+        # ):
+        #     p.quantity_invoiced = p.quantity_ordered * p.offer_item.order_average_weight
+        #     p.save()
         PurchaseWoReceiver.objects.filter(
             permanence_id=self.id,
             status=PERMANENCE_WAIT_FOR_SEND,
