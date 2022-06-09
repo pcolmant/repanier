@@ -205,7 +205,7 @@ def payment_message(customer, permanence, customer_invoice):
 
     if customer_invoice.customer_id != customer_invoice.customer_charged_id:
         customer_on_hold_movement = const.EMPTY_STRING
-        customer_payment_needed = '<font color="#51a351">{}</font>'.format(
+        customer_payment_needed = '{}'.format(
             _(
                 "Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments."
             )
