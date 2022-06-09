@@ -121,5 +121,5 @@ class PermanenceMenu(Menu):
         nodes.append(node)
         return submenu_id
 
-
-menu_pool.register_menu(PermanenceMenu)
+if settings.REPANIER_SETTINGS_SHOW_PERMANENCE_MENU:
+    menu_pool.register_menu(PermanenceMenu)
