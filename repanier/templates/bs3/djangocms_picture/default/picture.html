@@ -1,4 +1,4 @@
-{% load thumbnail %}
+{% load thumbnail l10n %}
 
 {% if picture_link %}
     <a href="{{ picture_link }}"
@@ -20,15 +20,15 @@
     {% if img_srcset_data %}
         srcset="
             {% for size, thumb in img_srcset_data %}
-                {{ thumb.url }} {{ size }}w,
+                {{ thumb.url }} {{ size|unlocalize }}w,
             {% endfor %}
-            {{ instance.img_src }} {{ picture_size.size.0 }}w
+            {{ instance.img_src }} {{ picture_size.size.0|unlocalize }}w
         "
         sizes="
             {% for size, thumb in img_srcset_data %}
-                (max-width: {{ size }}px) {{ size }}px,
+                (max-width: {{ size|unlocalize }}px) {{ size|unlocalize }}px,
             {% endfor %}
-            {{ picture_size.size.0 }}px
+            {{ picture_size.size.0|unlocalize }}px
         "
     {% endif %}
     {{ instance.attributes_str }}
