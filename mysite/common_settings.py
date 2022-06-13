@@ -724,7 +724,7 @@ elif DJANGO_SETTINGS_LANGUAGE == "fr-nl-en":
             {
                 "code": "nl",
                 "name": get_language_info("nl")["name"],
-                "fallbacks": ["en", "fr"],
+                "fallbacks": ["en", LANGUAGE_CODE],
                 "public": True,
             },
             {
@@ -798,7 +798,58 @@ elif DJANGO_SETTINGS_LANGUAGE == "fr-nl":
         SITE_ID: ({"code": "fr"}, {"code": "nl"}),
         "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
     }
+elif DJANGO_SETTINGS_LANGUAGE == "fr-de-en-nl-sv":
 
+    LANGUAGE_CODE = "fr"
+    LANGUAGES = [
+        ("fr", get_language_info("fr")["name_local"]),
+        ("de", get_language_info("de")["name_local"]),
+        ("en", get_language_info("en")["name_local"]),
+        ("nl", get_language_info("nl")["name_local"]),
+        ("sv", get_language_info("sv")["name_local"]),
+
+    ]
+    CMS_LANGUAGES = {
+        SITE_ID: [
+            {
+                "code": "fr",
+                "name": get_language_info("fr")["name"],
+                "public": True,
+                "redirect_on_fallback": False,
+                "hide_untranslated": False,
+            },
+            {
+                "code": "de",
+                "name": get_language_info("de")["name"],
+                "fallbacks": ["en", LANGUAGE_CODE],
+                "public": True,
+            },
+            {
+                "code": "en",
+                "name": get_language_info("en")["name"],
+                "fallbacks": ["de", LANGUAGE_CODE],
+                "public": True,
+            },
+            {
+                "code": "nl",
+                "name": get_language_info("nl")["name"],
+                "fallbacks": ["en", LANGUAGE_CODE],
+                "public": True,
+            },
+            {
+                "code": "sv",
+                "name": get_language_info("sv")["name"],
+                "fallbacks": ["en", "de", LANGUAGE_CODE],
+                "public": True,
+            },
+
+        ]
+    }
+    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
+    PARLER_LANGUAGES = {
+        SITE_ID: ({"code": "fr"}, {"code": "de"}, {"code": "en"}, {"code": "nl"}, {"code": "sv"}),
+        "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
+    }
 DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
 
 ###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)
