@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 
 from repanier.const import *

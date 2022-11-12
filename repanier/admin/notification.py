@@ -11,7 +11,7 @@ class NotificationAdmin(admin.ModelAdmin):
         # There is only one notification record created at application start
         return False
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, notification=None):
         user = request.user
         if user.is_order_manager or user.is_invoice_manager:
             return True

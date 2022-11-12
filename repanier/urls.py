@@ -35,7 +35,7 @@ from repanier.views.forms import (
     AuthRepanierSetPasswordForm,
     AuthRepanierPasswordResetForm,
 )
-from repanier.views.home_info_ajax import home_info_bs3_ajax
+from repanier.views.home_info_ajax import home_info_ajax
 from repanier.views.is_into_offer_ajax import is_into_offer
 from repanier.views.like_ajax import like_ajax
 from repanier.views.login_view import login_view
@@ -139,7 +139,7 @@ urlpatterns = [
     ),
     path("ajax/my-balance/", my_balance_ajax, name="my_balance"),
     path("ajax/order-name/", customer_name_ajax, name="order_name"),
-    path("ajax/home-info-bs3/", home_info_bs3_ajax, name="home_info_bs3"),
+    path("ajax/home-info/", home_info_ajax, name="home_info"),
     path("ajax/order-init/", order_init_ajax, name="order_init_ajax"),
     path("ajax/order-select/", order_select_ajax, name="order_select_ajax"),
     path("ajax/delivery-select/", delivery_select_ajax, name="delivery_select_ajax"),

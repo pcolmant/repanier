@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static "repanier/bs5/css/custom_admin.css" %}"/>
+{% endblock %}
+
+{% block branding %}{% endblock %}
+{% block usertools %}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script src="{% url 'javascript-catalog' %}"></script>
+    <script src="{% url 'admin:jsi18n' %}"></script>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }}{% endblock %}
+{% block pretitle %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block content_subtitle %}{% endblock %}
+
+{% block object-tools %}
+    <div class="repanier-objects-tools">
+        {{ block.super }}
+    </div>
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% translate 'Manage' %}
+    </div>
+{% endblock %}

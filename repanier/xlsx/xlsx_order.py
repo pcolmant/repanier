@@ -1,6 +1,6 @@
 import repanier.apps
 from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import *
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard

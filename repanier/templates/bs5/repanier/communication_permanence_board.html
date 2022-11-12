@@ -1,0 +1,24 @@
+{% load i18n l10n %}{% spaceless %}
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+            <h4 class="modal-title">{% translate "Personnal communication" %}</h4>
+        </div>
+        <div class="modal-body">
+            {% translate "Your are registered to the following task :" %}<br>
+            {% for permanence_board in permanence_boards.all %}
+                <h4>{{ permanence_board.permanence_role.short_name_v2 }}</h4>
+                <b>{{ permanence_board.permanence }}</b><br>
+                {{ permanence_board.permanence_role.description | safe }}<br>
+            {% empty %}
+                <br><b>{% translate "No task found." %}</b><br><br>{% translate "You participated in" %} <b>{{ count_activity}}</b> {% translate "permanence in the last 12 weeks." %}
+            {% endfor %}
+        </div>
+        <div class="clearfix"></div>
+        <div class="modal-footer">
+            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
+        </div>
+    </div>
+</div>
+{% endspaceless %}

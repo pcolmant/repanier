@@ -1,0 +1,34 @@
+{% load static i18n %}
+<link href="{% static "easy_select2/vendor/select2/css/select2.min.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<link href="{% static "easy_select2/css/easy_select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<script>var go_from_select = function(opt) { window.location = window.location.pathname + opt };</script>
+{#<script src="/static_001/easy_select2/vendor/jquery/jquery.min.js"></script>#}
+<script src="{% static "easy_select2/js/init.js" %}"></script>
+<script src="{% static "easy_select2/js/easy_select2.js" %}"></script>
+{#<script src="{% static "easy_select2/js/lookup_override.1.8.js" %}"></script>#}
+<script src="{% static "easy_select2/vendor/select2/js/select2.min.js" %}"></script>
+<h3>{% blocktrans with title as filter_title %} By {{ filter_title }} {% endblocktrans %}</h3>
+<ul class="admin-filter-{{ title|cut:' ' }}">
+{% if choices|slice:"1:" %}
+    <li>
+    <select style="width: 95%;" id="id_filter_department"
+        onchange="go_from_select(this.options[this.selectedIndex].value)">
+    {% for choice in choices %}
+        <option{% if choice.selected %} selected="selected"{% endif %}
+         value="{{ choice.query_string|iriencode }}">{{ choice.display }}</option>
+    {% endfor %}
+    </select>
+    <div class="field-easy-select2"
+                   style="display:none"
+                   id="id_filter_department"
+                   ></div>
+    </li>
+{% else %}
+
+    {% for choice in choices %}
+            <li{% if choice.selected %} class="selected"{% endif %}>
+            <a href="{{ choice.query_string|iriencode }}">{{ choice.display }}</a></li>
+    {% endfor %}
+
+{% endif %}
+</ul>

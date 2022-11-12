@@ -1,8 +1,8 @@
 from django.db.models import F
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
 from repanier.const import ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
-from repanier.models import LUT_DepartmentForCustomer, LUT_ProductionMode
+from repanier.models import LUT_DepartmentForCustomer, LUT_ProductionMode, Customer
 
 
 class LUTAdmin(DjangoMpttAdmin):
@@ -10,10 +10,8 @@ class LUTAdmin(DjangoMpttAdmin):
     list_display_links = ("__str__",)
     mptt_level_indent = 20
     mptt_indent_field = "__str__"
+    list_filter = ("is_active",)
     mptt_level_limit = None
-
-    # def has_module_permission(self, request):
-    #     return False
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -24,7 +22,7 @@ class LUTAdmin(DjangoMpttAdmin):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
-    def has_change_permission(self, request, staff=None):
+    def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -44,22 +42,11 @@ class LUTAdmin(DjangoMpttAdmin):
         if self.mptt_level_limit is not None:
             if position == "inside":
                 if target_instance.level >= self.mptt_level_limit:
-                    raise Exception(
-                        _(
-                            "The maximum level for this model is {}".format(
-                                self.mptt_level_limit
-                            )
-                        )
-                    )
+                    raise Exception("Unknown position")
             else:
+                # position in ["before", "after"]
                 if target_instance.level > self.mptt_level_limit:
-                    raise Exception(
-                        _(
-                            "The maximum level for this model is {}".format(
-                                self.mptt_level_limit
-                            )
-                        )
-                    )
+                    raise Exception("Unknown position")
         super().do_move(instance, position, target_instance)
 
     def get_queryset(self, request):
@@ -115,14 +102,13 @@ class LUTDeliveryPointAdmin(LUTAdmin):
         fields = ["short_name_v2", "is_active", ("transport", "min_transport")]
         return fields
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = qs.filter(group__isnull=True)
-        return qs
-
-    def filter_tree_queryset(self, qs, request):
-        # https://github.com/mbraak/django-mptt-admin/issues/47
-        return qs.filter(group__isnull=True)
+    def save_model(self, request, delivery_point, form, change):
+        super().save_model(request, delivery_point, form, change)
+        if delivery_point.group is not None:
+            Customer.objects.filter(id=delivery_point.group_id, is_group=True).update(
+                short_basket_name=delivery_point.short_name_v2,
+                is_active=delivery_point.is_active,
+            )
 
 
 class LUTDepartmentForCustomerAdmin(LUTAdmin):

@@ -7,7 +7,7 @@ from django.db import transaction
 from django.forms import BaseInlineFormSet
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
@@ -180,7 +180,7 @@ class CustomerPurchaseSendInline(admin.TabularInline):
     def has_add_permission(self, request, obj):
         return True
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, purchase=None):
         return True
 
     def get_formset(self, request, obj=None, **kwargs):
@@ -291,7 +291,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, customer_producer_invoice=None):
         user = request.user
         if user.is_repanier_staff:
             return True

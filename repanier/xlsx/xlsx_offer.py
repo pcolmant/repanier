@@ -1,5 +1,5 @@
 import repanier.apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import PERMANENCE_PLANNED, PERMANENCE_OPENED, LIMIT_ORDER_QTY_ITEM
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer

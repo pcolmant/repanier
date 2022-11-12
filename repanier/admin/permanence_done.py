@@ -2,18 +2,17 @@ import logging
 import threading
 
 import repanier.apps
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy, path
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.admin.admin_filter import AdminFilterPermanenceDoneStatus
 from repanier.admin.forms import (
     InvoiceOrderForm,
@@ -74,66 +73,64 @@ class PermanenceDoneAdmin(SaleAdmin):
     def has_add_permission(self, request):
         return False
 
-    def has_change_permission(self, request, obj=None):
-        if obj is None:
-            return False
+    def has_change_permission(self, request, permanence=None):
         return request.user.is_invoice_manager
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            url(
-                r"^import-new-invoice/$",
+            path(
+                "import-new-invoice/",
                 self.admin_site.admin_view(self.import_new_invoice),
                 name="permanence-import-new-invoice",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-invoice/$",
+            path(
+                "<int:permanence_id>/export-invoice/",
                 self.admin_site.admin_view(self.export_purchases),
                 name="permanence-export-invoice",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/import-invoice/$",
+            path(
+                "<int:permanence_id>/import-invoice/",
                 self.admin_site.admin_view(self.import_updated_purchases),
                 name="permanence-import-invoice",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/invoice/$",
+            path(
+                "<int:permanence_id>/invoice/",
                 self.admin_site.admin_view(self.invoice),
                 name="permanence-invoice",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/send-invoices/$",
+            path(
+                "<int:permanence_id>/send-invoices/",
                 self.admin_site.admin_view(self.send_invoices),
                 name="permanence-send-invoices",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/accounting-report/$",
+            path(
+                "<int:permanence_id>/accounting-report/",
                 self.admin_site.admin_view(self.accounting_report),
                 name="permanence-accounting-report",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/archive/$",
+            path(
+                "<int:permanence_id>/archive/",
                 self.admin_site.admin_view(self.archive),
                 name="permanence-archive",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/cancel-delivery/$",
+            path(
+                "<int:permanence_id>/cancel-delivery/",
                 self.admin_site.admin_view(self.cancel_delivery),
                 name="permanence-cancel-delivery",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/cancel-invoicing/$",
+            path(
+                "<int:permanence_id>/cancel-invoicing/",
                 self.admin_site.admin_view(self.cancel_invoicing),
                 name="permanence-cancel-invoicing",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/cancel-archiving/$",
+            path(
+                "<int:permanence_id>/cancel-archiving/",
                 self.admin_site.admin_view(self.cancel_archiving),
                 name="permanence-cancel-archiving",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/restore-delivery/$",
+            path(
+                "<int:permanence_id>/restore-delivery/",
                 self.admin_site.admin_view(self.restore_delivery),
                 name="permanence-restore-delivery",
             ),

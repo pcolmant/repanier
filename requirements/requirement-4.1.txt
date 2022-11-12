@@ -1,0 +1,59 @@
+# Django~=4.1.0
+Django==4.1.3
+MarkupPy==1.14
+Pillow==9.3.0
+PyYAML==6.0
+# django-filer 2.2.3 depends on Unidecode<1.2 and >=0.04
+Unidecode~=1.1.0
+asgiref==3.5.2
+crispy-bootstrap5==0.7
+defusedxml==0.7.1
+diff-match-patch==20200713
+django-admin-autocomplete-filter==0.7.1
+django-autocomplete-light==3.9.4
+django-classy-tags==3.0.1
+# django-cms~=3.11.0
+https://github.com/django-cms/django-cms/archive/06c9a85df486581f152dbf11bbf40a1c6c5e6cd3.zip
+django-crispy-forms==1.14.0
+django-debug-toolbar==3.7.0
+django-easy-select2==1.5.8
+# django-filer 2.2.3 depends on Unidecode<1.2 and >=0.04
+django-filer==2.2.3
+django-formtools==2.4
+django-import-export==3.0.1
+django-js-asset==2.0.0
+django-mptt-admin==2.3.0
+django-mptt==0.14.0
+django-parler==2.3
+django-polymorphic==3.1.0
+django-recurrence==1.11.1
+django-reversion==5.0.3
+django-sekizai==4.0.0
+# django-cms 3.10.0 depends on django-treebeard>=4.3
+django-treebeard~=4.4.0
+# djangocms-attributes-field 2.1.0 depends on django-treebeard<4.5 and >=4.3
+djangocms-attributes-field==2.1.0
+djangocms-file==3.0.0
+djangocms-link==3.1.0
+# https://github.com/django-cms/djangocms-link/archive/refs/heads/master.zip
+djangocms-picture==4.0.0
+djangocms-text-ckeditor==5.1.1
+djangocms-video==3.0.0
+djangorestframework==3.14.0
+easy-thumbnails==2.8.3
+et-xmlfile==1.1.0
+html5lib==1.1
+
+
+odfpy==1.4.1
+openpyxl==3.0.10
+psycopg2-binary==2.9.5
+python-dateutil==2.8.2
+pytz==2022.6
+six==1.16.0
+sqlparse==0.4.2
+tablib==3.2.1
+uWSGI==2.0.19.1
+webencodings==0.5.1
+xlrd==2.0.1
+xlwt==1.3.0

@@ -4,7 +4,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
 from django.db.models import F, Q
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from repanier.const import (
     DECIMAL_ZERO,

@@ -4,7 +4,7 @@ from threading import local
 
 from django.core.checks import messages
 from django.http import HttpResponseRedirect
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.models import Permanence
 from repanier.models import Product
 

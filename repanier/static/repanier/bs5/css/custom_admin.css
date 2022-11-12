@@ -1,0 +1,288 @@
+/* Repanier */
+
+:root {
+    box-sizing: border-box;
+    font-size: calc(0.5em + (0.5 * 1vw));
+
+    --input-height: 29px;
+    --border-radius: 3px;
+    --border-height: 1px;
+    --info-border-color: dodgerblue;
+    --info-background-color: white;
+    --info-text-color: dodgerblue;
+    --info-hover-border-color: dodgerblue;
+    --info-hover-text-color: white;
+    --cms-blue-color: #00bbff;
+    --cms-blue-hover-color: #00a8e6;
+    --cms-white-color: white;
+    /*--font-size: 14px;*/
+}
+
+body {
+    /* Margin to remove header part of django/.../admin/base.html */
+    margin-top: 30px;
+}
+
+/*td, th {*/
+/*    vertical-align: initial;*/
+/*}*/
+
+#changelist table input {
+    width: 90px;
+    text-align: right;
+}
+
+input[type=number] {
+    width: 90px;
+    text-align: right;
+}
+
+div.repanier-submit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    line-height: var(--input-height);
+    position: sticky;
+    bottom: 0;
+    padding: 10px 0 0 3px;
+    background: 0 0;
+    width: 80%;
+    z-index: 1000;
+}
+
+div.repanier-button-row {
+    display: flex;
+    grid-column-gap: 10px;
+    /*align-items: baseline;*/
+}
+
+a.repanier-a-info:link, a.repanier-a-info:link:visited {
+    background-color: var(--info-background-color);
+    color: var(--info-text-color);
+    border: var(--border-height) solid var(--info-border-color);
+    padding: 6px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+}
+
+a.repanier-a-info:hover, a.repanier-a-info:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+}
+
+a.repanier-a-info-selected:link, a.repanier-a-info-selected:visited {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+    border: var(--border-height) solid var(--info-hover-border-color);
+    padding: 6px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+}
+
+a.repanier-a-info-selected:hover, a.repanier-a-info-selected:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+}
+
+a.repanier-a-cancel:link, a.repanier-a-cancel:link:visited {
+    background-color: var(--info-background-color);
+    color: var(--info-text-color);
+    border: var(--border-height) solid var(--info-border-color);
+    padding: 1px 11px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+}
+
+a.repanier-a-cancel:hover, a.repanier-a-cancel:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+}
+
+a.repanier-a-cancel-selected:link, a.repanier-a-cancel-selected:visited {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+    border: var(--border-height) solid var(--info-hover-border-color);
+    padding: 1px 11px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+}
+
+a.repanier-a-cancel-selected:hover, a.repanier-a-cancel-selected:active {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color);
+}
+
+/*span.repanier-a-container {*/
+/*    width: 100%;*/
+/*    clear: both;*/
+/*}*/
+
+/*tooltip css inspired by : https://designshack.net/articles/css/html5-css3-anchor-link-tooltips/ */
+
+a.repanier-a-tooltip {
+    position: relative;
+    display: inline;
+}
+
+a.repanier-a-tooltip:after {
+    display: block;
+    visibility: hidden;
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    opacity: 0;
+    content: attr(data-repanier-tooltip);
+    height: auto;
+    /*min-width: 150px;*/
+    padding: 5px 8px;
+    z-index: 999;
+    color: var(--cms-white-color);
+    text-decoration: none;
+    text-align: center;
+    background-color: var(--cms-blue-color);
+    -webkit-border-radius: var(--border-radius);
+    -moz-border-radius: var(--border-radius);
+    border-radius: var(--border-radius);
+    transition: all 50ms ease-in-out;
+}
+
+a.repanier-a-tooltip:before {
+    position: absolute;
+    visibility: hidden;
+    width: 0;
+    height: 0;
+    left: 50%;
+    bottom: 0;
+    opacity: 0;
+    content: "";
+    border-style: solid;
+    border-width: 6px 6px 0 6px;
+    border-color: var(--cms-blue-color) transparent transparent transparent;
+    transition: all 50ms ease-in-out;
+}
+
+a.repanier-a-tooltip:hover:after {
+    visibility: visible;
+    opacity: 1;
+    bottom: 35px;
+}
+
+a.repanier-a-tooltip:hover:before {
+    visibility: visible;
+    opacity: 1;
+    bottom: calc(35px - 6px);
+}
+
+input[type="submit"].repanier-submit-info,
+button[type="submit"].repanier-submit-info {
+    border-radius: var(--border-radius);
+    /*background-color: var(--cms-blue-color) !important;*/
+    padding: 6px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    white-space: nowrap;
+    /*border: var(--border-height) solid var(--cms-blue-color) !important;*/
+    /*color: var(--cms-white-color) !important;*/
+    height: var(--input-height);
+}
+
+input[type="submit"].repanier-submit-info:hover,
+input[type="submit"].repanier-submit-info:active,
+button[type="submit"].repanier-submit-info:hover,
+button[type="submit"].repanier-submit-info:active {
+    background-color: var(--cms-blue-hover-color);
+    color: var(--cms-white-color);
+}
+
+div.repanier-objects-tools {
+    margin-right: 100px;
+    margin-top: -5px;
+}
+
+.repanier-money-input-container {
+    display: flex;
+    width: max-content;
+}
+
+.repanier-money-input-icon {
+    padding-top: 6px;
+    background: var(--info-border-color);
+    color: white;
+    min-width: 50px;
+    text-align: center;
+}
+
+.repanier-money-input-field {
+    width: 90px;
+    text-align: right;
+    padding: 10px;
+    border: var(--border-height) solid var(--info-hover-border-color);
+}
+
+.repanier-money-input-field:focus {
+    border: var(--border-height) solid var(--info-hover-border-color);
+}
+
+.repanier-flex-ul-li {
+    border-top: solid 0;
+    padding: 0;
+    font-weight: 400;
+    list-style-type: none;
+}
+
+.repanier-flex-ul {
+    list-style: none;
+    display: flex;
+    align-items: baseline;
+    border-bottom: solid 0;
+    margin: 0;
+}
+
+/*** custom checkboxes ***/
+
+div.form-row input[type=checkbox] {
+    display: none;
+}
+
+div.recurrence-widget input[type=checkbox] {
+    display: inline-block;
+}
+
+/* to hide the checkbox itself */
+input[type=checkbox] + label:before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    display: inline-block;
+}
+
+/* unchecked icon */
+input[type=checkbox] + label:before {
+    content: "\f068";
+    letter-spacing: 12px;
+    color: tomato;
+}
+
+.repanier-ban input[type=checkbox] + label:before {
+    content: "\f05e";
+    letter-spacing: 10px;
+    color: tomato;
+}
+
+/* checked icon */
+input[type=checkbox]:checked + label:before {
+    content: "\f00c";
+    letter-spacing: 10px;
+    color: #1e90ff;
+}

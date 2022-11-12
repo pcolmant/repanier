@@ -1,10 +1,9 @@
 from dal import autocomplete
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
 from django.db.models import F
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import PERMANENCE_PLANNED, PERMANENCE_CLOSED, EMPTY_STRING
 from repanier.middleware import get_query_filters
@@ -55,7 +54,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
         # Create
         return True
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, permanence_board=None):
         return True
 
     def get_formset(self, request, obj=None, **kwargs):
@@ -108,7 +107,7 @@ class DeliveryBoardInline(admin.TabularInline):
         # Create
         return True
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, delivery_board=None):
         return True
 
     def get_formset(self, request, obj=None, **kwargs):
@@ -144,10 +143,6 @@ class SaleForm(forms.ModelForm):
         if "producers" in self.fields:
             producer_field = self.fields["producers"]
             producer_field.widget.can_add_related = False
-        # if settings.REPANIER_SETTINGS_BOX:
-        #     if "boxes" in self.fields:
-        #         boxes_field = self.fields["boxes"]
-        #         boxes_field.widget.can_add_related = False
 
     class Meta:
         model = Permanence
@@ -155,10 +150,6 @@ class SaleForm(forms.ModelForm):
         widgets = {
             "producers": autocomplete.ModelSelect2Multiple(
                 url="admin:producer-autocomplete",
-                attrs={"data-dropdown-auto-width": "true", "data-width": "100%"},
-            ),
-            "boxes": autocomplete.ModelSelect2Multiple(
-                url="admin:boxes-autocomplete",
                 attrs={"data-dropdown-auto-width": "true", "data-width": "100%"},
             ),
         }
@@ -193,9 +184,6 @@ class SaleAdmin(admin.ModelAdmin):
             self.description,
             "producers",
         ]
-
-        # if settings.REPANIER_SETTINGS_BOX:
-        #     fields.append("boxes")
 
         return fields
 

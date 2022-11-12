@@ -1,5 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 
+from django.forms.widgets import TextInput
+
 import repanier.apps
 from django.conf import settings
 from django.db import models
@@ -38,9 +40,7 @@ class RepanierMoney(object):
             build(settings.DECIMAL_SEPARATOR)
 
         # Grouped number
-        if not digits:
-            build("0")
-        else:
+        if digits:
             i = 0
             while digits:
                 build(next())
@@ -48,6 +48,8 @@ class RepanierMoney(object):
                 if i == settings.NUMBER_GROUPING and digits:
                     i = 0
                     build(settings.THOUSAND_SEPARATOR)
+        else:
+            build("0")
 
         # Prefix sign
         if negative:
@@ -57,7 +59,6 @@ class RepanierMoney(object):
         if with_currency:
             if not repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
                 build("{}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
-
         return "".join(reversed(result))
 
     def __float__(self):
@@ -222,6 +223,7 @@ class ModelMoneyField(models.DecimalField):
 
 
 class ModelRepanierMoneyField(models.DecimalField):
+
     def formfield(self, **kwargs):
         kwargs.update({"form_class": FormRepanierMoneyField})
         return super().formfield(**kwargs)

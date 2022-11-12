@@ -1,4 +1,3 @@
-import datetime
 import logging
 import time
 from random import random
@@ -17,9 +16,8 @@ from smtplib import (
 from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives, mail_admins
-from django.utils import timezone
 from django.utils.html import strip_tags
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import EMPTY_STRING
 
 logger = logging.getLogger(__name__)
@@ -54,20 +52,13 @@ class RepanierEmail(EmailMultiAlternatives):
         self.reply_to = [settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO]
 
         customer = Customer.get_customer_from_valid_email(email_to)
-        if customer is not None:
-            if not self.send_even_if_unsubscribed:
-                if not customer.subscribe_to_email:
-                    return False
-                elif customer.user.last_login is not None:
-                    max_2_years_in_the_past = timezone.now() - datetime.timedelta(
-                        days=426
-                    )
-                    if customer.user.last_login < max_2_years_in_the_past:
-                        # Do not spam someone who has never logged in since more than 1 year and 2 months
-                        return False
+        if customer is None or not (
+            self.send_even_if_unsubscribed or customer.subscribe_to_email
+        ):
+            return False
 
         self.alternatives = []
-        if customer is not None and self.show_customer_may_unsubscribe:
+        if self.show_customer_may_unsubscribe:
             self.attach_alternative(
                 "{}{}".format(
                     self.html_body, customer.get_html_unsubscribe_mail_footer()
@@ -88,6 +79,8 @@ class RepanierEmail(EmailMultiAlternatives):
         )
         attempt_counter = 1
         while not email_send and attempt_counter < 3:
+            if attempt_counter > 1:
+                time.sleep(1 + int(random() * 3))
             attempt_counter += 1
             try:
                 if settings.DEBUG:
@@ -106,14 +99,6 @@ class RepanierEmail(EmailMultiAlternatives):
                         self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
                     self.send()
                 email_send = True
-            except SMTPRecipientsRefused as error_str:
-                logger.error(
-                    "################################## send_email SMTPRecipientsRefused"
-                )
-                logger.error(error_str)
-                # reset connection : EmailMessage.get_connection() will get/open a new connection
-                # before next self.send()
-                self.connection = None
             except Exception as error_str:
                 logger.error("################################## send_email error")
                 logger.error(error_str)
@@ -121,12 +106,9 @@ class RepanierEmail(EmailMultiAlternatives):
                 # reset connection : EmailMessage.get_connection() will get/open a new connection
                 # before next self.send()
                 self.connection = None
-            if customer is not None:
-                # customer.valid_email = valid_email
-                # customer.save(update_fields=['valid_email'])
-                # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                Customer.objects.filter(id=customer.id).update(valid_email=email_send)
-            time.sleep(min(1, 1 + int(random())))
+        # customer.save(update_fields=['valid_email'])
+        # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+        Customer.objects.filter(id=customer.id).update(valid_email=email_send)
 
         return email_send
 

@@ -1,0 +1,80 @@
+{% extends 'bs5/cms_order_page.html' %}
+{% load cms_tags sekizai_tags i18n l10n thumbnail filer_image_tags repanier_tags %}
+{#{% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags repanier_tags %}#}
+{% block notification %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock notification %}
+{% block may_order %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock may_order %}
+{% block permanence_description %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock permanence_description %}
+{% block confirm_basket %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock confirm_basket %}
+{% block product_filter %}{% if not page_obj.has_previous %}<div class="hidden-xs">{{ block.super }}</div>{% endif %}{% endblock product_filter %}
+{% block product_list %}{% spaceless %}
+    {% if may_order or display_anonymous_order_form %}
+        {% addtoblock "jshead" %}
+            <script src="{{ STATIC_URL}}repanier/bs5/waypoints/jquery.waypoints.min.js"></script>
+            <script src="{{ STATIC_URL}}repanier/bs5/waypoints/shortcuts/infinite.min.js"></script>
+        {% endaddtoblock %}
+        {% if offeritem_list %}
+            <div class="infinite-container">
+            {% for offer in offeritem_list %}
+                <div class="infinite-item">
+                <div class="col-sm-6 col-lg-3">
+                    {% if offer.picture %}
+                        {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="{{ product_thumbnail.url }}">
+                    {% else %}
+                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="">
+                    {% endif %}
+                    {{ offer.cache_part_a_v2 | safe }}
+                        </div>
+                </div>
+                <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}">
+                    {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
+                    {{ offer.cache_part_b_v2 | safe }}
+                    {% if may_order %}{% repanier_btn_like offer_item=offer %}{% endif %}
+                </div>
+                <div class="clearfix {% cycle 'visible-sm-block visible-md-block' ' ' %}"></div>
+                <hr class="visible-sm visible-xs visible-md {% cycle ' ' 'visible-lg' %}" />
+                </div>
+            {% endfor %}
+            </div>
+            {% if page_obj.has_next %}
+                <div class="loading" style="display: none;">
+                    <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"
+                   class="infinite-more-link btn btn-info not-active"><span class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% translate "Loading..." %}</a>
+                </div>
+            {% endif %}
+            <a class="btn btn-info back-to-top-sticky-button" id="backToTop" href="#top"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span></a>
+            <script>
+{#                https://www.w3schools.com/howto/howto_js_scroll_to_top.asp#}
+                window.onscroll = function() {scrollFunction()};
+                function scrollFunction() {
+                    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                        document.getElementById("backToTop").style.display = "block";
+                    } else {
+                        document.getElementById("backToTop").style.display = "none";
+                    }
+                }
+                var infinite = new Waypoint.Infinite({
+                  element: $('.infinite-container')[0],
+                  offset: function() { return Waypoint.viewportHeight() - this.element.clientHeight + 3500 },
+                  onBeforePageLoad: function () {
+                    $('.loading').show();
+                  },
+                  onAfterPageLoad: function ($items) {
+                    $('.loading').hide();
+                    {#$('.loaded').show();#}
+                  }
+                });
+            </script>
+        {% else %}
+            <h3>{% translate "No offer found" %}</h3>
+        {% endif %}
+        </div>
+    </div>
+    {% endif %} {# may_order or display_anonymous_order_form #}
+
+{% endspaceless %}{% endblock product_list %}
+{% block order_modal %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock order_modal %}
+{% block my_cart_amount_js %}{% endblock my_cart_amount_js %}
+{% block my_order_js %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock my_order_js %}
+{#{% block link_to_filter_js %}{{ block.super }}{% endblock link_to_filter_js %}#}
+{% block link_to_order_js %}{% endblock link_to_order_js %}

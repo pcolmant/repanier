@@ -1,4 +1,4 @@
-{% load cms_tags sekizai_tags menu_tags i18n l10n static repanier_tags %}
+{% load cms_tags menu_tags sekizai_tags i18n l10n static repanier_tags %}
 {% addtoblock "css" %}
     <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endaddtoblock %}
 {% addtoblock "css" %}
@@ -131,7 +131,7 @@
                 {% addtoblock "lastjs" %}{% spaceless %}
                     <script>
                         $(document).ready(function () {
-                            lien = '{% url 'repanier:home_info_bs3' %}';
+                            lien = '{% url 'repanier:home_info' %}';
                             $.ajax({
                                 url: lien,
                                 cache: false,

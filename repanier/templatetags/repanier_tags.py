@@ -1,16 +1,16 @@
 from django import template
 from django.conf import settings
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from repanier.const import (
     EMPTY_STRING,
     PERMANENCE_CLOSED,
     DECIMAL_ZERO,
     PERMANENCE_OPENED,
-    PERMANENCE_SEND, TWO_DECIMALS,
+    PERMANENCE_SEND,
+    TWO_DECIMALS,
 )
 from repanier.models import Permanence
 from repanier.models.customer import Customer
@@ -21,7 +21,6 @@ from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
     sint,
     get_html_selected_value,
-    get_repanier_template_name,
 )
 
 register = template.Library()
@@ -212,48 +211,96 @@ def repanier_user_bs3(context, *args, **kwargs):
 
 
 @register.simple_tag(takes_context=True)
-def repanier_user_bs4(context, *args, **kwargs):
+def repanier_user_bs5(context, *args, **kwargs):
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
     request = context["request"]
     user = request.user
-    producer = None
-    my_balance = EMPTY_STRING
-
-    if user.is_authenticated and user.customer_id is not None:
-
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            last_customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    customer__user_id=request.user.id, invoice_sort_order__isnull=False
-                )
-                .only("balance", "date_balance")
-                .order_by("-invoice_sort_order")
-                .first()
+    nodes = []
+    if user.is_authenticated:
+        nodes = []
+        p_permanence_id = sint(kwargs.get("permanence_id", 0))
+        if p_permanence_id > 0:
+            nodes.append(
+                '<li id="li_my_basket" style="display:none;" class="dropdown">'
             )
-            if (
-                last_customer_invoice is not None
-                and last_customer_invoice.balance < DECIMAL_ZERO
-            ):
-                my_balance = _(
-                    'My balance : <font color="red">%(balance)s</font> at %(date)s'
-                ) % {
-                    "balance": last_customer_invoice.balance,
-                    "date": last_customer_invoice.date_balance.strftime(
-                        settings.DJANGO_SETTINGS_DATE
-                    ),
-                }
-            elif last_customer_invoice:
-                my_balance = _(
-                    'My balance : <font color="green">%(balance)s</font> at %(date)s'
-                ) % {
-                    "balance": last_customer_invoice.balance,
-                    "date": last_customer_invoice.date_balance.strftime(
-                        settings.DJANGO_SETTINGS_DATE
-                    ),
-                }
-            else:
-                my_balance = _("My balance")
+            nodes.append(
+                '<a href="{}?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>'.format(
+                    reverse("repanier:order_view", args=(p_permanence_id,))
+                )
+            )
+            nodes.append("</li>")
+        nodes.append(
+            """
+            <li id="li_my_name" class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}<b class="caret"></b></a>
+            <ul class="dropdown-menu">
+            """.format(
+                # _('Welkom'),
+                user.username
+                or '<span id = "my_name"></ span>'
+            )
+        )
+        nodes.append(
+            '<li><a href="{}">{}</a></li>'.format(
+                reverse("repanier:send_mail_to_coordinators_view"), _("Inform")
+            )
+        )
+        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+            nodes.append(
+                '<li><a href="{}">{}</a></li>'.format(
+                    reverse("repanier:who_is_who_view"), _("Who's who")
+                )
+            )
+        if user.customer_id is not None:
+            nodes.append(
+                '<li><a href="{}">{}</a></li>'.format(
+                    reverse("repanier:my_profile_view"), _("My profile")
+                )
+            )
+            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+                last_customer_invoice = (
+                    CustomerInvoice.objects.filter(
+                        customer__user_id=request.user.id,
+                        invoice_sort_order__isnull=False,
+                    )
+                    .only("balance", "date_balance")
+                    .order_by("-invoice_sort_order")
+                    .first()
+                )
+                if last_customer_invoice is not None:
+                    if last_customer_invoice.balance < DECIMAL_ZERO:
+                        my_balance = _(
+                            'My balance : <font color="red">%(balance)s</font> at %(date)s'
+                        ) % {
+                            "balance": last_customer_invoice.balance,
+                            "date": last_customer_invoice.date_balance.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                        }
+                    else:
+                        my_balance = _(
+                            'My balance : <font color="green">%(balance)s</font> at %(date)s'
+                        ) % {
+                            "balance": last_customer_invoice.balance,
+                            "date": last_customer_invoice.date_balance.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                        }
+                else:
+                    my_balance = _("My balance")
+                nodes.append(
+                    '<li><a href="{}">{}</a></li>'.format(
+                        reverse("repanier:customer_invoice_view", args=(0,)), my_balance
+                    )
+                )
+            nodes.append('<li class="divider"></li>')
+        nodes.append(
+            '<li><a href="{}">{}</a></li>'.format(
+                reverse("repanier:logout"), _("Logout")
+            )
+        )
+        nodes.append("</ul></li>")
 
     else:
         p_offer_uuid = kwargs.get("offer_uuid", None)
@@ -263,19 +310,20 @@ def repanier_user_bs4(context, *args, **kwargs):
                 .only("long_profile_name")
                 .first()
             )
+            if producer is not None:
+                nodes = [
+                    '<li><a href="#">{} {}</a></li>'.format(
+                        _("Welkom"), producer.long_profile_name
+                    )
+                ]
+        else:
+            nodes = [
+                '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
+                    reverse("repanier:login_form"), _("Sign in")
+                )
+            ]
 
-    return mark_safe(
-        render_to_string(
-            get_repanier_template_name("widgets/header_user_dropdown.html"),
-            {
-                "user": user,
-                "my_balance": my_balance,
-                "producer": producer,
-                "display_who_is_who": REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
-                "manage_accounting": settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
-            },
-        )
-    )
+    return mark_safe("".join(nodes))
 
 
 @register.simple_tag(takes_context=False)
@@ -414,12 +462,17 @@ def select_offer_item(offer_item, result, user):
     if purchase is not None:
         is_open = purchase.status == PERMANENCE_OPENED
         offer_item = purchase.offer_item
-        price_list_multiplier = offer_item.get_price_list_multiplier(purchase.customer_invoice)
+        price_list_multiplier = offer_item.get_price_list_multiplier(
+            purchase.customer_invoice
+        )
         customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
         unit_deposit = offer_item.get_unit_deposit()
         unit_price_amount = (customer_unit_price + unit_deposit).quantize(TWO_DECIMALS)
         html = get_html_selected_value(
-            offer_item, purchase.quantity_ordered, unit_price_amount=unit_price_amount, is_open=is_open
+            offer_item,
+            purchase.quantity_ordered,
+            unit_price_amount=unit_price_amount,
+            is_open=is_open,
         )
     else:
         is_open = ProducerInvoice.objects.filter(
@@ -427,7 +480,9 @@ def select_offer_item(offer_item, result, user):
             producer__offeritem=offer_item.id,
             status=PERMANENCE_OPENED,
         ).exists()
-        html = get_html_selected_value(offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=is_open)
+        html = get_html_selected_value(
+            offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=is_open
+        )
     if is_open:
         result.append(
             '<select name="offer_item{id}" id="offer_item{id}" onchange="order_ajax({id})" onmouseover="show_select_order_list_ajax({id})" onmouseout="clear_select_order_list_ajax()" class="form-control">{option}</select>'.format(

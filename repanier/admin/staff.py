@@ -1,5 +1,5 @@
 from django import forms
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from repanier.auth_backend import RepanierAuthBackend
 from repanier.const import ONE_LEVEL_DEPTH
@@ -59,7 +59,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
     item_label_field_name = "get_str_member"
     form = StaffWithUserDataForm
 
-    list_display = ("get_str_member",)
+    list_display = ("get_str_member", "is_active")
     list_display_links = ("get_str_member",)
     list_select_related = ("customer_responsible",)
     list_per_page = 16

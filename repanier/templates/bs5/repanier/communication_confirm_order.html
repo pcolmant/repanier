@@ -1,0 +1,20 @@
+{% load i18n l10n %}{% spaceless %}
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+            <h4 class="modal-title">{% translate "Personnal communication" %}</h4>
+        </div>
+        <div class="modal-body">
+            {% translate "Your order is no longer confirmed because you just changed it." %}
+            <br>{% translate "Do not forget to confirm it again." %}
+            <br><br><span style="color: red; ">{% translate "⚠ Unconfirmed orders will be canceled." %}</span>
+            <br>{% translate "You can increase the order quantities as long as the orders are open." %}
+        </div>
+        <div class="clearfix"></div>
+        <div class="modal-footer">
+            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
+        </div>
+    </div>
+</div>
+{% endspaceless %}

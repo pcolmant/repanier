@@ -1,7 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import EMPTY_STRING
 from repanier.models.configuration import Configuration
 from repanier.widget.button_test_mail_config import ButtonTestMailConfigWidget
@@ -55,7 +55,7 @@ class ConfigurationAdmin(admin.ModelAdmin):
         # There is only one configuration record created at application start
         return False
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, configuration=None):
         # Only a repanier_admin has this permission
         return request.user.is_repanier_admin
 

@@ -175,9 +175,7 @@ class Command(BaseCommand):
                     "WHERE limit_order_quantity_to_stock = false "
                 )
                 cursor.execute(
-                    "UPDATE repanier_product SET "
-                    "stock = 0 "
-                    "WHERE stock > 1000 "
+                    "UPDATE repanier_product SET " "stock = 0 " "WHERE stock > 1000 "
                 )
                 cursor.execute(
                     "UPDATE repanier_staff SET "

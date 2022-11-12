@@ -1,0 +1,17 @@
+{% extends "admin/import_export/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block object-tools-items %}
+    {% include "admin/import_export/change_list_import_item.html" %}
+    {% include "admin/import_export/change_list_export_item.html" %}
+    {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% translate 'Manage' %}
+        &rsaquo; <a href="{% url 'admin:repanier_producer_changelist' %}">{% translate 'Producers' %}</a>
+        &rsaquo; {{ cl.opts.verbose_name_plural|capfirst }}
+    </div>
+{% endblock %}
+

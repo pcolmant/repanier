@@ -1,0 +1,9 @@
+{% extends 'admin/mptt_change_list.html' %}
+{% load i18n %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="{{ tree_url }}">{% translate "Tree view" %}</a>
+</li>
+{% endblock %}

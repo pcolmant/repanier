@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.forms import Textarea, EmailInput, TextInput
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
@@ -341,7 +341,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
-    def has_change_permission(self, request, staff=None):
+    def has_change_permission(self, request, customer=None):
         return self.has_delete_permission(request)
 
     def get_email(self, customer):

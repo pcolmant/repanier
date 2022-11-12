@@ -2,15 +2,14 @@
 from os import sep as os_sep
 
 from django import forms
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy, reverse, path
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
@@ -358,7 +357,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, product=None):
         return self.has_delete_permission(request)
 
     def get_redirect_to_change_list_url(self):
@@ -500,8 +499,8 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            url(
-                r"^(?P<product_id>.+)/duplicate-product/$",
+            path(
+                "<int:product_id>/duplicate-product/",
                 self.admin_site.admin_view(self.duplicate_product),
                 name="duplicate-product",
             )

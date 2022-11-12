@@ -1,8 +1,23 @@
 from admin_auto_filters.filters import AutocompleteFilter
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
-from django.utils.translation import ugettext_lazy as _
-from repanier.const import *
+from django.utils.translation import gettext_lazy as _
+from repanier.const import (
+    DECIMAL_ZERO,
+    BANK_PROFIT,
+    BANK_TAX,
+    PERMANENCE_PLANNED,
+    PERMANENCE_PLANNED_STR,
+    PERMANENCE_OPENED,
+    PERMANENCE_OPENED_STR,
+    PERMANENCE_SEND,
+    PERMANENCE_SEND_STR,
+    PERMANENCE_CANCELLED,
+    PERMANENCE_ARCHIVED,
+    PERMANENCE_CANCELLED_STR,
+    PERMANENCE_ARCHIVED_STR,
+    PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR,
+)
 
 
 class AdminFilterProducer(AutocompleteFilter):

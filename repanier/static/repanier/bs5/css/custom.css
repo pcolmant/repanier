@@ -1,0 +1,427 @@
+/* Sticky footer styles */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    /* Margin bottom by footer height */
+    margin-bottom: 60px;
+}
+
+@media screen and (min-width: 768px) and (max-width: 979px) {
+    body {
+        padding-top: 60px;
+    }
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /* Set the fixed height of the footer here */
+    height: 60px;
+    /* background-color: #f5f5f5; */
+    text-align: center;
+}
+
+/* sidebar */
+.bs-docs-sidebar {
+    padding: 0 0 1px 20px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+/* all links */
+.bs-docs-sidebar .nav > li > a {
+    color: #3c3c3c;
+    padding-top: 0;
+    font-weight: bold;
+    border-left: 2px solid transparent;
+}
+
+/* nested links */
+.bs-docs-sidebar .nav .nav > li > a {
+    padding-left: 30px;
+    /*font-size: 16px;*/
+    font-weight: normal;
+}
+
+/* active & hover links */
+.bs-docs-sidebar .nav > .active > a,
+.bs-docs-sidebar .nav > li > a:hover,
+.bs-docs-sidebar .nav > li > a:focus {
+    color: #51a351;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+/* selected links */
+.bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
+    color: #51a351;
+    text-decoration: none;
+    background-color: transparent;
+    border-left: 2px solid #51a351;
+}
+
+.display_none {
+    display: none;
+}
+
+.panel-heading.accordion-toggle:after {
+    /* symbol for "opening" panels */
+    font-family: 'Glyphicons Halflings';
+    /* essential for enabling glyphicon */
+    content: "\e114";
+    /* adjust as needed, taken from bootstrap.css */
+    float: right;
+    position: relative;
+    bottom: 23px;
+    font-size: 15pt;
+    color: grey;
+}
+
+.panel-heading.accordion-toggle.collapsed:after {
+    /* symbol for "collapsed" panels */
+    content: "\e080";
+}
+
+.panel-heading:hover {
+    cursor: pointer;
+}
+
+.panel-heading:hover h4 {
+    text-decoration: underline;
+}
+
+.offer-description {
+    position: relative;
+    height: 200px;
+    margin-top: 20px;
+    overflow: auto;
+}
+
+body > .container {
+    padding: 0 15px 0;
+}
+
+.container .text-muted {
+    margin: 20px 0;
+}
+
+.footer > .container {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+code {
+    font-size: 80%;
+}
+
+@media only screen and (min-width: 768px) {
+    /* automatically display menu on mouse over if not xs */
+    ul.nav li.dropdown:hover > ul.dropdown-menu {
+        display: block;
+    }
+}
+
+@media only screen and (max-width: 767px) {
+    .sidenav {
+        display: none;
+        height: 100%;
+        max-height: 100% !important;
+        width: 90%;
+        position: fixed;
+        z-index: 1100;
+        top: 0;
+        left: 0;
+        background-color: #4d4d4f;
+        overflow-x: hidden;
+        transition: 0.5s;
+        padding-top: 15px;
+    }
+
+    .sidenav a {
+        padding: 8px 8px 8px 32px;
+        text-decoration: none;
+        color: #818181;
+        display: block;
+        transition: 0.3s;
+        white-space: normal !important;
+        font-size: 18px;
+    }
+
+    .sidenav a:hover, .offcanvas a:focus {
+        color: #f1f1f1;
+    }
+
+    .sidenav .closebtn {
+        position: absolute;
+        top: 0;
+        right: 20px;
+    }
+
+}
+
+a.skip_link {
+    position: absolute;
+    left: -1000px;
+    top: -1000px;
+}
+
+.white, .white a {
+    color: #fff;
+}
+
+@media only screen and (min-width: 768px) {
+    .container-bootstrap {
+        margin-top: 65px;
+    }
+
+    .container-repanier {
+        margin: 75px 0 0;
+    }
+
+    .container-info {
+        margin: 75px 0 -75px 0;
+    }
+
+    .container-menu {
+        padding: 0 15px 0;
+    }
+}
+
+@media only screen and (max-width: 767px) {
+    .container-bootstrap {
+        margin-top: 36px;
+    }
+
+    .container-repanier {
+        margin: 46px 0 0;
+    }
+
+    .container-info {
+        margin: 46px 0 -46px 0;
+    }
+
+    .container-menu {
+    }
+}
+
+/* https://codepen.io/msaetre/pen/Ekyaz */
+.icon-cart {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+    /*margin-left: 25px;*/
+    /*margin-bottom: 25px;*/
+    margin-top: -10px;
+}
+
+.icon-cart .cart-line-1 {
+    width: 15%;
+    height: 7%;
+    position: absolute;
+    left: 8%;
+    top: 25%;
+    -webkit-transform: rotate(5deg);
+    -moz-transform: rotate(5deg);
+    -ms-transform: rotate(5deg);
+    transform: rotate(5deg);
+    border-bottom-left-radius: 35%;
+}
+
+.icon-cart .cart-line-2 {
+    width: 35%;
+    height: 7%;
+    position: absolute;
+    left: 6%;
+    top: 40%;
+    -webkit-transform: rotate(80deg);
+    -moz-transform: rotate(80deg);
+    -ms-transform: rotate(80deg);
+    transform: rotate(80deg);
+}
+
+.icon-cart .cart-line-2:before {
+    content: "";
+    width: 120%;
+    height: 100%;
+    position: absolute;
+    left: 45%;
+    top: -280%;
+    -webkit-transform: rotate(-80deg);
+    -moz-transform: rotate(-80deg);
+    -ms-transform: rotate(-80deg);
+    transform: rotate(-80deg);
+    background-color: inherit;
+}
+
+.icon-cart .cart-line-2:after {
+    content: "";
+    width: 70%;
+    height: 100%;
+    position: absolute;
+    left: 59%;
+    top: -670%;
+    background-color: inherit;
+    -webkit-transform: rotate(40deg);
+    -moz-transform: rotate(40deg);
+    -ms-transform: rotate(40deg);
+    transform: rotate(40deg);
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 25%;
+}
+
+.icon-cart .cart-line-3 {
+    width: 30%;
+    height: 7%;
+    position: absolute;
+    left: 33%;
+    top: 45%;
+}
+
+.icon-cart .cart-line-3:after {
+    content: "";
+    width: 124%;
+    height: 100%;
+    position: absolute;
+    top: -150%;
+    left: -5%;
+    background-color: inherit;
+}
+
+.icon-cart .cart-wheel {
+    width: 12%;
+    height: 12%;
+    border-radius: 100%;
+    position: absolute;
+    left: 28%;
+    bottom: 20%;
+}
+
+.icon-cart .cart-wheel:after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+    border-radius: 100%;
+    position: absolute;
+    left: 200%;
+    bottom: 0;
+}
+
+/* Bootstrap : Let's align right the cart button on small devices */
+.navbar-header {
+    width: 100%;
+}
+
+.navbar-group-name {
+    margin-left: 10px;
+    color: #fff;
+}
+
+/* Bootstrap : Wordwrap button */
+.btn {
+    white-space: normal !important;
+    word-wrap: break-word;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+/* Disable link using css */
+.not-active {
+    pointer-events: none;
+    cursor: default;
+}
+
+/* sticky "Update" button */
+.form-sticky-update-button {
+    position: sticky;
+    bottom: 65px;
+}
+
+/* https://www.w3schools.com/howto/howto_js_scroll_to_top.asp */
+.back-to-top-sticky-button {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    z-index: 2000;
+}
+
+/* Bootstrap refresh animated */
+.gly-spin {
+    -webkit-animation: spin 2s infinite linear;
+    -moz-animation: spin 2s infinite linear;
+    -o-animation: spin 2s infinite linear;
+    animation: spin 2s infinite linear;
+}
+
+@-moz-keyframes spin {
+    0% {
+        -moz-transform: rotate(0deg);
+    }
+    100% {
+        -moz-transform: rotate(359deg);
+    }
+}
+
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+    }
+}
+
+@-o-keyframes spin {
+    0% {
+        -o-transform: rotate(0deg);
+    }
+    100% {
+        -o-transform: rotate(359deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+
+.form-group input[type="checkbox"] {
+    display: none;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span {
+    width: 20px;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span:first-child {
+    display: none;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span:last-child {
+    display: inline-block;
+}
+
+.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
+    display: inline-block;
+}
+
+.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
+    display: none;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    color: initial !important;
+    cursor: initial !important;
+}

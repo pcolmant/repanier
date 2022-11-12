@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.http import HttpResponse, JsonResponse
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from repanier.tools import sint

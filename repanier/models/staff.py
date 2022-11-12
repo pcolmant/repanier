@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from mptt.fields import TreeForeignKey
 from mptt.managers import TreeManager

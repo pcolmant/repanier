@@ -1,5 +1,5 @@
 from django.template import Template, Context as TemplateContext
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
 from repanier.models import Producer

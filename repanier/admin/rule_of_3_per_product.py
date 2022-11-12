@@ -7,7 +7,7 @@ from django.db import transaction
 from django.forms import BaseInlineFormSet
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from easy_select2 import Select2
 from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
@@ -169,7 +169,7 @@ class OfferItemPurchaseSendInline(admin.TabularInline):
     def has_add_permission(self, request, obj):
         return True
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, purchase=None):
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -351,7 +351,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, offer_item=None):
         user = request.user
         if user.is_repanier_staff:
             return True

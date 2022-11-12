@@ -45,3 +45,11 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
                     )
         except:
             pass
+
+    def hashed_name(self, name, content=None, filename=None):
+        try:
+            return super(BigBlindManifestStaticFilesStorage, self).hashed_name(name, content, filename)
+        except ValueError as err:
+            print("##### err = {}".format(err))
+            print("#### return : name = {}".format(name))
+            return name

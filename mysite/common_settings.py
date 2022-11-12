@@ -1,12 +1,12 @@
 import codecs
 import configparser
 import os
-import sys
+from pathlib import Path
 
 from django.urls import reverse_lazy
 from django.utils.text import format_lazy
 from django.utils.translation import get_language_info
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from .settings import *
 
 EMPTY_STRING = ""
@@ -44,7 +44,7 @@ DJANGO_SETTINGS_SITE_NAME = PROJECT_DIR.name
 # PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 # PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
-# print("---- common_settings.py - Python path is : ", sys.path)
+# print("---- common_settings.py - Python path is : ", os.sys.path)
 
 conf_file_name = PROJECT_DIR / (DJANGO_SETTINGS_SITE_NAME + ".ini")
 
@@ -232,11 +232,11 @@ REPANIER_SETTINGS_CUSTOM_CSS_PATH = get_repanier_css_name(
     os.path.join("css", "custom.css")
 )
 
-# print(
-#     "---- common_settings.py - bootstrap css path : {}".format(
-#         REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
-#     )
-# )
+print(
+    "---- common_settings.py - bootstrap css path : {}".format(
+        REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
+    )
+)
 
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
@@ -338,6 +338,7 @@ INSTALLED_APPS = (
     "easy_select2",
     "recurrence",
     "crispy_forms",
+    "crispy_bootstrap5",
     "django.forms",  # must be last! because of the FORM_RENDERER setting below.
     # For the templates we don’t override, we still want the renderer to look in Django’s form app
 )
@@ -466,8 +467,10 @@ else:
 
 if REPANIER_SETTINGS_TEMPLATE == "bs3":
     CRISPY_TEMPLATE_PACK = "bootstrap3"
-else:
+elif REPANIER_SETTINGS_TEMPLATE == "bs4":
     CRISPY_TEMPLATE_PACK = "bootstrap4"
+elif REPANIER_SETTINGS_TEMPLATE == "bs5":
+    CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 CMS_PERMISSION = False
 CMS_PUBLIC_FOR = "all"
@@ -477,6 +480,12 @@ CMS_SEO_FIELDS = False
 CMS_URL_OVERWRITE = True
 CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
+CMS_ENABLE_HELP = False
+CMS_EXTRA_HELP_MENU_ITEMS = (
+    (gettext("Repanier guide"), 'https://repanier.be/fr/documentation/'),
+    (gettext("django CMS guide"), 'https://docs.google.com/document/d/1f5eWyD_sxUSok436fSqDI0NHcpQ88CXQoDoQm9ZXb0s/'),
+)
+
 DJANGOCMS_PICTURE_RESPONSIVE_IMAGES = True
 
 CKEDITOR_SETTINGS = {

@@ -2,7 +2,7 @@ from cms.toolbar_pool import toolbar_pool
 from django.core.cache import cache
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from menus.menu_pool import menu_pool
 
 from repanier.const import (

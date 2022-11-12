@@ -1,0 +1,19 @@
+{% extends "bs5/base.html" %}{% load i18n static %}
+{% block base_content %}
+<div id="content-main" class="container-repanier">
+<div class="container">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="unsubscribeModalLabel">{% translate "Unsubscribe" %}</h4>
+      </div>
+      <div class="modal-body">
+          {% blocktrans %}Your unsubscription is registered. You can go right now on the
+              <a href="/repanier/go_repanier/" class="btn btn-info">sign in page</a> or on the
+              <a href="/" class="btn btn-info">home page</a>.{% endblocktrans %}
+      </div><!-- /form -->
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+</div>
+{% endblock %}

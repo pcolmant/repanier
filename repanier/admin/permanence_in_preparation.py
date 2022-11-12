@@ -2,17 +2,16 @@ import logging
 import threading
 
 import repanier.apps
-from django.conf.urls import url
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy, reverse, path
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.admin.admin_filter import AdminFilterPermanenceInPreparationStatus
 from repanier.admin.forms import (
     OpenAndSendOfferForm,
@@ -75,61 +74,59 @@ class PermanenceInPreparationAdmin(SaleAdmin):
     def has_add_permission(self, request):
         return request.user.is_order_manager
 
-    def has_change_permission(self, request, obj=None):
-        if obj is None:
-            return False
+    def has_change_permission(self, request, permanence=None):
         return request.user.is_order_manager
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            url(
-                r"^producer_autocomplete/$",
+            path(
+                "producer_autocomplete/",
                 ProducerAutocomplete.as_view(),
                 name="producer-autocomplete",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-offer/$",
+            path(
+                "<int:permanence_id>/export-offer/",
                 self.admin_site.admin_view(self.export_offer),
                 name="permanence-export-offer",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-customer-opened-order/$",
+            path(
+                "<int:permanence_id>/export-customer-opened-order/",
                 self.admin_site.admin_view(self.export_customer_opened_order),
                 name="permanence-export-customer-opened-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-customer-closed-order/$",
+            path(
+                "<int:permanence_id>/export-customer-closed-order/",
                 self.admin_site.admin_view(self.export_customer_closed_order),
                 name="permanence-export-customer-closed-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-producer-opened-order/$",
+            path(
+                "<int:permanence_id>/export-producer-opened-order/",
                 self.admin_site.admin_view(self.export_producer_opened_order),
                 name="permanence-export-producer-opened-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-producer-closed-order/$",
+            path(
+                "<int:permanence_id>/export-producer-closed-order/",
                 self.admin_site.admin_view(self.export_producer_closed_order),
                 name="permanence-export-producer-closed-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/open-order/$",
+            path(
+                "<int:permanence_id>/open-order/",
                 self.admin_site.admin_view(self.open_order),
                 name="permanence-open-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/close-order/$",
+            path(
+                "<int:permanence_id>/close-order/",
                 self.admin_site.admin_view(self.close_order),
                 name="permanence-close-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/back-to-scheduled/$",
+            path(
+                "<int:permanence_id>/back-to-scheduled/",
                 self.admin_site.admin_view(self.back_to_scheduled),
                 name="permanence-back-to-scheduled",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/generate-permanence/$",
+            path(
+                "<int:permanence_id>/generate-permanence/",
                 self.admin_site.admin_view(self.generate_permanence),
                 name="generate-permanence",
             ),

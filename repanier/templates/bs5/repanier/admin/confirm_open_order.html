@@ -1,0 +1,103 @@
+{% extends "admin/change_form.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% translate 'Manage' %}
+        &rsaquo; <a
+            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% translate 'Offers in preparation' %}</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
+        <h2>{{ permanence|title }}</h2>
+        <div class="form-row">
+            <h3>{% translate "Please confirm your open order request" %}</h3>
+            <p>&nbsp;</p>
+            <button type="submit" class="repanier-submit-info" name="cancel"
+                    value="cancel">{% translate "No, cancel the action" %}</button>
+            {% if email_will_be_sent %}
+                <button type="submit" class="repanier-submit-info" name="apply" value="apply"
+                        class="default">{% translate "Yes, I'm sure" %}
+                </button>
+            {% endif %}
+            <button type="submit" class="repanier-submit-info" name="apply-wo-mail" value="apply-wo-mail">
+                {% translate "Yes, I'm sure but do not send any mail" %}</button>
+
+        </div>
+        {% if form.template_offer_customer_mail.value %}
+            <div class="form-row">
+                <div>
+                    <h3>{% translate "Contents of the order opening email sent to consumers authorized to order" %}</h3>
+                    <p>&nbsp;</p>{{ email_will_be_sent_to }}
+                    <p>&nbsp;</p>
+                </div>
+                <div class="fieldBox">
+                    {% with id_for_label=form.template_offer_customer_mail.id_for_label %}
+                        <div id="div_{{ id_for_label }}">
+                            <div class="controls col-xs-12">
+                            <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
+                                      name="template_offer_customer_mail">{{ form.template_offer_customer_mail.value }}</textarea>
+                                <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                <script>
+                                    CKEDITOR.replace("{{ id_for_label }}", {
+                                        language: 'fr',
+                                        forcePasteAsPlainText: true,
+                                        toolbar: [
+                                            ['Preview', 'Image', 'Source']
+                                        ],
+                                        contentsCss: '{% static REPANIER_BOOTSTRAP_CSS %}',
+                                        width: '100%',
+                                        height: '24em',
+                                        removePlugins: 'elementspath',
+                                        readOnly: true
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    {% endwith %}
+                </div>
+            </div>
+        {% endif %}
+        {% if form.template_cancel_order_customer_mail.value %}
+            <div class="form-row">
+                <div>
+                    <h3>{% translate "Content of the email in case of cancellation of the order sent to the consumers concerned" %}</h3>
+                    <p>&nbsp;</p>{{ email_will_be_sent_to }}
+                    <p>&nbsp;</p>
+                </div>
+                <div class="fieldBox">
+                    {% with id_for_label=form.template_cancel_order_customer_mail.id_for_label %}
+                        <div id="div_{{ id_for_label }}">
+                            <div class="controls col-xs-12">
+                            <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
+                                      name="template_cancel_order_mail">{{ form.template_cancel_order_customer_mail.value }}</textarea>
+                                <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                <script>
+                                    CKEDITOR.replace("{{ id_for_label }}", {
+                                        language: 'fr',
+                                        forcePasteAsPlainText: true,
+                                        toolbar: [
+                                            ['Preview', 'Image', 'Source']
+                                        ],
+                                        contentsCss: '{% static REPANIER_BOOTSTRAP_CSS %}',
+                                        width: '100%',
+                                        height: '24em',
+                                        removePlugins: 'elementspath',
+                                        readOnly: true
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    {% endwith %}
+                </div>
+            </div>
+        {% endif %}
+
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

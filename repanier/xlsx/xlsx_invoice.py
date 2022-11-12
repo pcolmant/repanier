@@ -2,7 +2,7 @@ import repanier.apps
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import *
 from repanier.models import CustomerInvoice
 from repanier.models.bankaccount import BankAccount

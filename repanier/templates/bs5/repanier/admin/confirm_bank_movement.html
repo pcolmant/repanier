@@ -1,0 +1,32 @@
+{% extends "admin/change_form.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% translate 'Manage' %}
+        &rsaquo; <a href="{% url 'admin:repanier_permanencedone_changelist' %}">{% translate 'Offers in payment' %}</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
+        <h2>{{ permanence|title }}</h2>
+        <div class="form-row">
+            <h3>{% translate "Please make the following payments" %}</h3>
+            <h3>{% translate "The corresponding account transactions have been generated" %}</h3>
+            <p>&nbsp;</p>
+            <button type="submit" class="repanier-submit-info" name="done" value="done" class="default">{% translate "Done" %}</button>
+        </div>
+        {% for bankaccount in bankaccounts %}
+            <div class="form-row">
+                <ul class="repanier-flex-ul">
+                    <li class="repanier-flex-ul-li">
+                        {{ bankaccount.producer.short_profile_name }}, {{ bankaccount.bank_amount_out }}, {{ bankaccount.operation_comment }}
+                    </li>
+                </ul>
+            </div>
+        {% endfor %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

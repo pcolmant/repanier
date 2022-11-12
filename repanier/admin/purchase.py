@@ -12,7 +12,7 @@ from django.forms.widgets import TextInput
 from django.http import HttpResponseRedirect
 from django.urls import reverse, path
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import *
 from repanier.middleware import (
     get_request_params,
@@ -145,7 +145,7 @@ class CustomerAutocomplete(autocomplete.Select2QuerySetView):
 
 class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
     search_fields = [
-        "long_name_v2",
+        "delivery_comment_v2",
     ]
 
     def get_queryset(self):
@@ -176,7 +176,7 @@ class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
                 )
 
             if self.q:
-                qs = qs.filter(long_name_v2__icontains=self.q)
+                qs = qs.filter(delivery_comment_v2__icontains=self.q)
 
         else:
             qs = DeliveryBoard.objects.none()

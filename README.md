@@ -113,7 +113,8 @@ And then create (or migrate) `Repanier` websites.
 2. Create a python virtual environment called `prd1` here. Choose whatever you want, but carefully change it to what you choose everywhere in this tutorial.
     ```commandline
     cd ~
-    virtualenv --python=python3 prd1
+    python -m venv prd1
+    # virtualenv --python=python3 prd1
      ```
 3. Goto the virtualenv and activate it
     ```commandline

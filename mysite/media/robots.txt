@@ -5,6 +5,9 @@ Crawl-delay: 120
 User-agent: googlebot
 Crawl-delay: 30
 
+User-agent: googlebot-image
+Crawl-delay: 30
+
 User-agent: msnbot
 Crawl-delay: 120
 

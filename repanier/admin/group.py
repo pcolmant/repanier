@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.forms import Textarea, EmailInput, TextInput
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from repanier.const import EMPTY_STRING, DECIMAL_ONE
 from repanier.const import REPANIER_MONEY_ZERO
 from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
@@ -243,7 +243,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         user = request.user
         return user.is_order_manager or user.is_invoice_manager
 
-    def has_change_permission(self, request, staff=None):
+    def has_change_permission(self, request, group=None):
         return self.has_delete_permission(request)
 
     def get_email(self, group):
@@ -363,7 +363,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         delivery_point.inform_customer_responsible = form.cleaned_data[
             "inform_customer_responsible"
         ]
-        delivery_point.is_active = True
+        delivery_point.is_active = form.cleaned_data["is_active"]
         delivery_point.transport = form.cleaned_data["transport"]
         delivery_point.min_transport = form.cleaned_data["min_transport"]
         delivery_point.short_name_v2 = form.cleaned_data["short_basket_name"]

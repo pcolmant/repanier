@@ -8,7 +8,7 @@ from django.forms import Textarea, TextInput, EmailInput
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
@@ -239,7 +239,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, producer=None):
         return self.has_delete_permission(request)
 
     def get_redirect_to_change_list_url(self):

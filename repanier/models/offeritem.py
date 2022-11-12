@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import Sum, DecimalField
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 
 from repanier.const import (
