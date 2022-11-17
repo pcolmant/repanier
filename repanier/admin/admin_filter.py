@@ -4,19 +4,8 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from repanier.const import (
     DECIMAL_ZERO,
-    BANK_PROFIT,
-    BANK_TAX,
-    PERMANENCE_PLANNED,
-    PERMANENCE_PLANNED_STR,
-    PERMANENCE_OPENED,
-    PERMANENCE_OPENED_STR,
-    PERMANENCE_SEND,
-    PERMANENCE_SEND_STR,
-    PERMANENCE_CANCELLED,
-    PERMANENCE_ARCHIVED,
-    PERMANENCE_CANCELLED_STR,
-    PERMANENCE_ARCHIVED_STR,
-    PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR,
+    BankMovement,
+    SaleStatus,
 )
 
 
@@ -72,7 +61,9 @@ class AdminFilterBankAccountStatus(SimpleListFilter):
                     producer_id__isnull=True,
                 )
             else:
-                return queryset.filter(operation_status__in=[BANK_PROFIT, BANK_TAX])
+                return queryset.filter(
+                    operation_status__in=[BankMovement.PROFIT, BankMovement.TAX]
+                )
 
         else:
             return queryset
@@ -84,23 +75,23 @@ class AdminFilterPermanenceInPreparationStatus(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR),
-            (PERMANENCE_OPENED, PERMANENCE_OPENED_STR),
-            (PERMANENCE_SEND, PERMANENCE_SEND_STR),
+            (SaleStatus.PLANNED.value, SaleStatus.PLANNED.label),
+            (SaleStatus.OPENED.value, SaleStatus.OPENED.label),
+            (SaleStatus.SEND.value, SaleStatus.SEND.label),
         ]
 
     def queryset(self, request, queryset):
         value = self.value()
         if value:
-            if value == PERMANENCE_PLANNED:
-                return queryset.filter(status__lt=PERMANENCE_OPENED)
-            elif value == PERMANENCE_OPENED:
+            if value == SaleStatus.PLANNED.value:
+                return queryset.filter(status__lt=SaleStatus.OPENED)
+            elif value == SaleStatus.OPENED.value:
                 return queryset.filter(
-                    status=PERMANENCE_OPENED,
+                    status=SaleStatus.OPENED,
                 )
             else:
                 return queryset.filter(
-                    status__gt=PERMANENCE_OPENED,
+                    status__gt=SaleStatus.OPENED,
                 )
         else:
             return queryset
@@ -112,28 +103,28 @@ class AdminFilterPermanenceDoneStatus(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (PERMANENCE_SEND, PERMANENCE_SEND_STR),
-            (PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR),
-            (PERMANENCE_CANCELLED, PERMANENCE_CANCELLED_STR),
-            (PERMANENCE_ARCHIVED, PERMANENCE_ARCHIVED_STR),
+            (SaleStatus.SEND.value, SaleStatus.SEND.label),
+            (SaleStatus.INVOICED.value, SaleStatus.INVOICED.label),
+            (SaleStatus.CANCELLED.value, SaleStatus.CANCELLED.label),
+            (SaleStatus.ARCHIVED.value, SaleStatus.ARCHIVED.label),
         ]
 
     def queryset(self, request, queryset):
         value = self.value()
         if value:
-            if value == PERMANENCE_SEND:
-                return queryset.filter(status__lt=PERMANENCE_INVOICED)
-            elif value == PERMANENCE_INVOICED:
+            if value == SaleStatus.SEND.value:
+                return queryset.filter(status__lt=SaleStatus.INVOICED.value)
+            elif value == SaleStatus.INVOICED.value:
                 return queryset.filter(
-                    status=PERMANENCE_INVOICED,
+                    status=SaleStatus.INVOICED,
                 )
-            elif value == PERMANENCE_CANCELLED:
+            elif value == SaleStatus.CANCELLED.value:
                 return queryset.filter(
-                    status=PERMANENCE_CANCELLED,
+                    status=SaleStatus.CANCELLED,
                 )
             else:
                 return queryset.filter(
-                    status=PERMANENCE_ARCHIVED,
+                    status=SaleStatus.RCHIVED,
                 )
         else:
             return queryset

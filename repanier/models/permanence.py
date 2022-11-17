@@ -3,7 +3,7 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
-from django.db import models, transaction, connection
+from django.db import transaction, connection
 from django.db.models import F, Sum, DecimalField
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -41,11 +41,11 @@ from repanier.tools import (
 logger = logging.getLogger(__name__)
 
 refresh_status = [
-    PERMANENCE_WAIT_FOR_OPEN,
-    PERMANENCE_WAIT_FOR_CLOSED,
-    PERMANENCE_CLOSED,
-    PERMANENCE_WAIT_FOR_SEND,
-    PERMANENCE_WAIT_FOR_INVOICED,
+    SaleStatus.WAIT_FOR_OPEN,
+    SaleStatus.WAIT_FOR_CLOSED,
+    SaleStatus.CLOSED,
+    SaleStatus.WAIT_FOR_SEND,
+    SaleStatus.WAIT_FOR_INVOICED,
 ]
 
 
@@ -73,8 +73,8 @@ class Permanence(models.Model):
     status = models.CharField(
         _("Status"),
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=SaleStatus.choices,
+        default=SaleStatus.PLANNED,
     )
     permanence_date = models.DateField(_("Date"), db_index=True)
     payment_date = models.DateField(
@@ -91,8 +91,8 @@ class Permanence(models.Model):
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True)
     highest_status = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=SaleStatus.choices,
+        default=SaleStatus.PLANNED,
         verbose_name=_("Highest status"),
     )
     master_permanence = models.ForeignKey(
@@ -134,7 +134,7 @@ class Permanence(models.Model):
     get_producers_without_download.short_description = _("Offers from")
 
     def get_producers(self, with_download):
-        if self.status == PERMANENCE_PLANNED:
+        if self.status == SaleStatus.PLANNED:
             download_url = add_filter(
                 reverse("admin:permanence-export-offer", args=[self.id])
             )
@@ -156,7 +156,7 @@ class Permanence(models.Model):
                             p.short_profile_name.replace(" ", "&nbsp;"),
                         )
                     )
-        elif self.status == PERMANENCE_OPENED:
+        elif self.status == SaleStatus.OPENED:
             changelist_url = reverse("admin:repanier_product_changelist")
             download_url = add_filter(
                 reverse("admin:permanence-export-producer-opened-order", args=[self.id])
@@ -180,8 +180,8 @@ class Permanence(models.Model):
                     )
                 )
 
-        elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
-            if self.status == PERMANENCE_SEND:
+        elif self.status in [SaleStatus.SEND, SaleStatus.INVOICED, SaleStatus.ARCHIVED]:
+            if self.status == SaleStatus.SEND:
                 download_url = add_filter(
                     reverse(
                         "admin:permanence-export-producer-closed-order", args=[self.id]
@@ -207,7 +207,7 @@ class Permanence(models.Model):
                 .select_related("producer")
                 .order_by("producer")
             ):
-                if pi.status == PERMANENCE_SEND:
+                if pi.status == SaleStatus.SEND:
                     if pi.producer.invoice_by_basket:
                         changelist_url = send_customer_changelist_url
                     else:
@@ -308,9 +308,9 @@ class Permanence(models.Model):
 
     def get_customers(self, with_download):
         button_add = EMPTY_STRING
-        if self.status in [PERMANENCE_OPENED, PERMANENCE_SEND]:
+        if self.status in [SaleStatus.OPENED, SaleStatus.SEND]:
             changelist_url = reverse("admin:repanier_purchase_changelist")
-            if self.status == PERMANENCE_OPENED:
+            if self.status == SaleStatus.OPENED:
                 download_url = add_filter(
                     reverse(
                         "admin:permanence-export-customer-opened-order", args=[self.id]
@@ -374,7 +374,7 @@ class Permanence(models.Model):
                     )
                 )
                 customers.append(label)
-        elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
+        elif self.status in [SaleStatus.INVOICED, SaleStatus.ARCHIVED]:
             button_download = EMPTY_STRING
             customers = []
             customers_html = []
@@ -601,8 +601,8 @@ class Permanence(models.Model):
     # @debug_parameters
     def set_status(
         self,
-        old_status=None,
-        new_status=None,
+        old_status : SaleStatus,
+        new_status : SaleStatus,
         everything=True,
         deliveries_id=(),
         update_payment_date=False,
@@ -732,7 +732,7 @@ class Permanence(models.Model):
                             create_or_update_one_purchase(
                                 customer_id=customer.id,
                                 offer_item=membership_fee_offer_item,
-                                status=PERMANENCE_OPENED,
+                                status=SaleStatus.OPENED,
                                 q_order=1,
                                 batch_job=True,
                                 comment=EMPTY_STRING,
@@ -775,7 +775,7 @@ class Permanence(models.Model):
                     create_or_update_one_purchase(
                         customer_id=customer.id,
                         offer_item=offer_item,
-                        status=PERMANENCE_OPENED,
+                        status=SaleStatus.OPENED,
                         q_order=1,
                         batch_job=True,
                         comment=EMPTY_STRING,
@@ -783,7 +783,7 @@ class Permanence(models.Model):
                     create_or_update_one_purchase(
                         customer_id=customer.id,
                         offer_item=offer_item,
-                        status=PERMANENCE_OPENED,
+                        status=SaleStatus.OPENED,
                         q_order=0,
                         batch_job=True,
                         comment=EMPTY_STRING,
@@ -807,7 +807,7 @@ class Permanence(models.Model):
                 create_or_update_one_purchase(
                     customer_id=group_id,
                     offer_item=offer_item,
-                    status=PERMANENCE_OPENED,
+                    status=SaleStatus.OPENED,
                     q_order=1,
                     batch_job=True,
                     comment=EMPTY_STRING,
@@ -833,7 +833,7 @@ class Permanence(models.Model):
                 " AND a.permanence_id = %s "
                 " AND a.status = %s "
                 " AND b.order_unit = %s ",
-                [self.id, PERMANENCE_WAIT_FOR_SEND, PRODUCT_ORDER_UNIT_PC_KG],
+                [self.id, SaleStatus.WAIT_FOR_SEND.value, PRODUCT_ORDER_UNIT_PC_KG],
             )
         # for p in PurchaseWoReceiver.objects.filter(
         #     permanence_id=self.id,
@@ -844,7 +844,7 @@ class Permanence(models.Model):
         #     p.save()
         PurchaseWoReceiver.objects.filter(
             permanence_id=self.id,
-            status=PERMANENCE_WAIT_FOR_SEND,
+            status=SaleStatus.WAIT_FOR_SEND,
         ).exclude(offer_item__order_unit=PRODUCT_ORDER_UNIT_PC_KG,).update(
             quantity_invoiced=F("quantity_ordered"),
         )
@@ -867,7 +867,7 @@ class Permanence(models.Model):
         ):
             return
         self.set_status(
-            old_status=PERMANENCE_SEND, new_status=PERMANENCE_WAIT_FOR_INVOICED
+            old_status=SaleStatus.SEND, new_status=SaleStatus.WAIT_FOR_INVOICED
         )
 
         customer_invoice_buyinggroup = CustomerInvoice.get_or_create_invoice(
@@ -905,11 +905,11 @@ class Permanence(models.Model):
                     permanence_id=self.id, producer_id__in=producers_to_move
                 ).values_list("customer_id", flat=True)
             )
-            new_permanence = self.create_child(PERMANENCE_SEND)
+            new_permanence = self.create_child(SaleStatus.SEND)
             new_permanence.producers.add(*producers_to_move)
             ProducerInvoice.objects.filter(
                 permanence_id=self.id, producer_id__in=producers_to_move
-            ).update(permanence_id=new_permanence.id, status=PERMANENCE_SEND)
+            ).update(permanence_id=new_permanence.id, status=SaleStatus.SEND)
             CustomerProducerInvoice.objects.filter(
                 permanence_id=self.id,
                 producer_id__in=producers_to_move
@@ -1127,7 +1127,7 @@ class Permanence(models.Model):
         for bank_account in BankAccount.objects.select_for_update().filter(
             customer_invoice__isnull=True,
             producer_invoice__isnull=True,
-            operation_status__in=[BANK_PROFIT, BANK_TAX],
+            operation_status__in=[BankMovement.PROFIT, BankMovement.TAX],
             customer_id=customer_buyinggroup.id,
             operation_date__lte=payment_date,
         ):
@@ -1227,8 +1227,8 @@ class Permanence(models.Model):
             bank_account.producer_invoice_id = producer_invoice.id
             bank_account.save()
 
-        BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).update(
-            operation_status=BANK_NOT_LATEST_TOTAL
+        BankAccount.objects.filter(operation_status=BankMovement.LATEST_TOTAL).update(
+            operation_status=BankMovement.NOT_LATEST_TOTAL
         )
         # Important : Create a new bank total for this permanence even if there is no bank movement
         bank_account = BankAccount.objects.create(
@@ -1236,7 +1236,7 @@ class Permanence(models.Model):
             producer=None,
             customer=None,
             operation_date=payment_date,
-            operation_status=BANK_LATEST_TOTAL,
+            operation_status=BankMovement.LATEST_TOTAL,
             operation_comment=cap(str(self), 100),
             bank_amount_in=new_bank_latest_total
             if new_bank_latest_total >= DECIMAL_ZERO
@@ -1259,12 +1259,12 @@ class Permanence(models.Model):
         )
 
         new_status = (
-            PERMANENCE_INVOICED
+            SaleStatus.INVOICED
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING
-            else PERMANENCE_ARCHIVED
+            else SaleStatus.ARCHIVED
         )
         self.set_status(
-            old_status=PERMANENCE_WAIT_FOR_INVOICED,
+            old_status=SaleStatus.WAIT_FOR_INVOICED,
             new_status=new_status,
             update_payment_date=True,
             payment_date=payment_date,
@@ -1293,8 +1293,8 @@ class Permanence(models.Model):
     @transaction.atomic
     def cancel_invoice(self, last_bank_account_total):
         self.set_status(
-            old_status=PERMANENCE_INVOICED,
-            new_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE,
+            old_status=SaleStatus.INVOICED,
+            new_status=SaleStatus.WAIT_FOR_CANCEL_INVOICE,
         )
         CustomerInvoice.objects.filter(permanence_id=self.id).update(
             bank_amount_in=DECIMAL_ZERO,
@@ -1355,30 +1355,30 @@ class Permanence(models.Model):
             .first()
         )
         if bank_account is not None:
-            bank_account.operation_status = BANK_LATEST_TOTAL
+            bank_account.operation_status = BankMovement.LATEST_TOTAL
             bank_account.save()
         # Delete also all payments recorded to producers, bank profit, bank tax
         # Delete also all compensation recorded to producers
         BankAccount.objects.filter(
             permanence_id=self.id,
             operation_status__in=[
-                BANK_CALCULATED_INVOICE,
-                BANK_PROFIT,
-                BANK_TAX,
-                BANK_MEMBERSHIP_FEE,
-                BANK_COMPENSATION,  # BANK_COMPENSATION may occurs in previous release of Repanier
+                BankMovement.CALCULATED_INVOICE,
+                BankMovement.PROFIT,
+                BankMovement.TAX,
+                BankMovement.MEMBERSHIP_FEE,
+                BankMovement.COMPENSATION,  # BANK_COMPENSATION may occurs in previous release of Repanier
             ],
         ).delete()
         Permanence.objects.filter(id=self.id).update(
             canceled_invoice_sort_order=F("invoice_sort_order"), invoice_sort_order=None
         )
         self.set_status(
-            old_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE, new_status=PERMANENCE_SEND
+            old_status=SaleStatus.WAIT_FOR_CANCEL_INVOICE, new_status=SaleStatus.SEND
         )
 
     @transaction.atomic
     def cancel_delivery(self):
-        self.set_status(old_status=PERMANENCE_SEND, new_status=PERMANENCE_CANCELLED)
+        self.set_status(old_status=SaleStatus.SEND, new_status=SaleStatus.CANCELLED)
         bank_account = BankAccount.get_closest_to(self.permanence_date)
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
@@ -1386,7 +1386,7 @@ class Permanence(models.Model):
 
     @transaction.atomic
     def archive(self):
-        self.set_status(old_status=PERMANENCE_SEND, new_status=PERMANENCE_ARCHIVED)
+        self.set_status(old_status=SaleStatus.SEND, new_status=SaleStatus.ARCHIVED)
         bank_account = BankAccount.get_closest_to(self.permanence_date)
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
@@ -1481,7 +1481,7 @@ class Permanence(models.Model):
                 delta = (
                     producer_invoice.to_be_invoiced_balance.amount
                     - bank_not_invoiced.amount
-                ).quantize(TWO_DECIMALS)
+                ).quantize(RoundUpTo.TWO_DECIMALS)
                 if delta > DECIMAL_ZERO:
                     if producer_invoice.invoice_reference:
                         operation_comment = producer_invoice.invoice_reference
@@ -1521,7 +1521,7 @@ class Permanence(models.Model):
                         producer_id=producer.id,
                         customer=None,
                         operation_date=payment_date,
-                        operation_status=BANK_CALCULATED_INVOICE,
+                        operation_status=BankMovement.CALCULATED_INVOICE,
                         operation_comment=cap(operation_comment, 100),
                         bank_amount_out=delta,
                         customer_invoice=None,
@@ -1529,7 +1529,7 @@ class Permanence(models.Model):
                     )
             delta = (
                 producer.balance.amount - producer_invoice.to_be_invoiced_balance.amount
-            ).quantize(TWO_DECIMALS)
+            ).quantize(RoundUpTo.TWO_DECIMALS)
             if delta != DECIMAL_ZERO:
                 # Profit or loss for the group
                 customer_buyinggroup = Customer.get_or_create_group()
@@ -1541,7 +1541,7 @@ class Permanence(models.Model):
                     producer=None,
                     customer_id=customer_buyinggroup.id,
                     operation_date=payment_date,
-                    operation_status=BANK_PROFIT,
+                    operation_status=BankMovement.PROFIT,
                     operation_comment=cap(operation_comment, 100),
                     bank_amount_in=delta if delta > DECIMAL_ZERO else DECIMAL_ZERO,
                     bank_amount_out=-delta if delta < DECIMAL_ZERO else DECIMAL_ZERO,
@@ -1557,11 +1557,11 @@ class Permanence(models.Model):
         return
 
     def clean_offer_item(self, offer_item_qs):
-        if self.status > PERMANENCE_SEND:
+        if self.status > SaleStatus.SEND:
             # The purchases are already invoiced.
             # The offer item may not be modified any more
             raise ValueError(
-                "Not offer item may be cleaned when permanence.status > PERMANENCE_SEND"
+                "Not offer item may be cleaned when permanence.status > SaleStatus.SEND"
             )
         permanence_offer_item_qs = offer_item_qs.filter(permanence_id=self.id)
         for offer_item in permanence_offer_item_qs.select_related(
@@ -1687,7 +1687,7 @@ class Permanence(models.Model):
 
     @cached_property
     def get_new_products(self):
-        assert self.status < PERMANENCE_SEND
+        assert self.status < SaleStatus.SEND
         result = []
         for a_producer in self.producers.all():
             current_products = list(
@@ -1702,7 +1702,7 @@ class Permanence(models.Model):
             six_months_ago = timezone.now().date() - datetime.timedelta(days=6 * 30)
             previous_permanence = (
                 Permanence.objects.filter(
-                    status__gte=PERMANENCE_SEND,
+                    status__gte=SaleStatus.SEND,
                     producers=a_producer,
                     permanence_date__gte=six_months_ago,
                 )
@@ -1754,7 +1754,7 @@ class Permanence(models.Model):
 
     def get_html_status_display(self, force_refresh=True):
         need_to_refresh_status = force_refresh or self.status in refresh_status
-        if self.with_delivery_point and self.status < PERMANENCE_INVOICED:
+        if self.with_delivery_point and self.status < SaleStatus.INVOICED:
             status_list = []
             status = None
             status_counter = 0
@@ -1841,7 +1841,7 @@ class Permanence(models.Model):
 
     def get_html_permanence_display(self, align=EMPTY_STRING):
         if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
-            if self.status == PERMANENCE_OPENED:
+            if self.status == SaleStatus.OPENED:
                 return "{} - {}".format(
                     self.get_permanence_display(), self.get_status_display()
                 )
@@ -1850,7 +1850,7 @@ class Permanence(models.Model):
                     self.get_permanence_display(), _("Orders closed")
                 )
         else:
-            if self.status == PERMANENCE_OPENED:
+            if self.status == SaleStatus.OPENED:
                 return mark_safe(
                     '<span class="fa fa-unlock" style="{}color:#cdff60"></span> {}'.format(
                         align, self.get_permanence_display()

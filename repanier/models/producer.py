@@ -19,14 +19,13 @@ from repanier.const import (
     REPANIER_MONEY_ZERO,
     PRODUCT_ORDER_UNIT_DEPOSIT,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-    PERMANENCE_OPENED,
-    PERMANENCE_SEND,
+    SaleStatus,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField, RepanierMoney
-from repanier.models.purchase import PurchaseWoReceiver
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.product import Product
+from repanier.models.purchase import PurchaseWoReceiver
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
 
@@ -203,8 +202,8 @@ class Producer(models.Model):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = ProducerInvoice.objects.filter(
                 producer_id=self.id,
-                status__gte=PERMANENCE_OPENED,
-                status__lte=PERMANENCE_SEND,
+                status__gte=SaleStatus.OPENED,
+                status__lte=SaleStatus.SEND,
             ).aggregate(
                 total_price_with_tax=Sum(
                     "total_price_with_tax",

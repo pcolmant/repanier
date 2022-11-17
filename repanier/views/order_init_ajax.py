@@ -6,14 +6,11 @@ from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 from repanier.const import (
     DECIMAL_ZERO,
-    PERMANENCE_WAIT_FOR_INVOICED,
-    PERMANENCE_OPENED,
-    EMPTY_STRING,
+    EMPTY_STRING, SaleStatus,
 )
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
@@ -133,7 +130,7 @@ def get_html_communication_message(customer):
     permanence_boards = PermanenceBoard.objects.filter(
         customer_id=customer.id,
         permanence_date__gte=now,
-        permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED,
+        permanence__status__lte=SaleStatus.WAIT_FOR_INVOICED,
     ).order_by("permanence_date")[:2]
     from repanier.apps import REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
 

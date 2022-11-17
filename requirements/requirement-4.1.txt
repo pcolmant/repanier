@@ -10,10 +10,11 @@ crispy-bootstrap5==0.7
 defusedxml==0.7.1
 diff-match-patch==20200713
 django-admin-autocomplete-filter==0.7.1
-django-autocomplete-light==3.9.4
+django-autocomplete-light==3.9.5-rc1
 django-classy-tags==3.0.1
+django-cms==3.11.1rc1
 # django-cms~=3.11.0
-https://github.com/django-cms/django-cms/archive/06c9a85df486581f152dbf11bbf40a1c6c5e6cd3.zip
+# https://github.com/django-cms/django-cms/archive/06c9a85df486581f152dbf11bbf40a1c6c5e6cd3.zip
 django-crispy-forms==1.14.0
 django-debug-toolbar==3.7.0
 django-easy-select2==1.5.8

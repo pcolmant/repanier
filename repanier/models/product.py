@@ -64,7 +64,7 @@ class Product(Item):
                 else:
                     q_alert = (
                         self.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM
-                    ).quantize(THREE_DECIMALS)
+                    ).quantize(RoundUpTo.THREE_DECIMALS)
             else:
                 q_alert = (
                     self.customer_minimum_order_quantity
@@ -72,7 +72,7 @@ class Product(Item):
                         self.customer_increment_order_quantity
                         * (LIMIT_ORDER_QTY_ITEM - 1)
                     )
-                ).quantize(THREE_DECIMALS)
+                ).quantize(RoundUpTo.THREE_DECIMALS)
         return q_alert
 
     @transaction.atomic()

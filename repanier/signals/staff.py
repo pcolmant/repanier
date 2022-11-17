@@ -18,7 +18,7 @@ def staff_pre_save(sender, **kwargs):
 #         user = staff.user
 #         user.groups.clear()
 #         if staff.is_webmaster:
-#             group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+#             group_id = Group.objects.filter(name=AuthGroup.WEBMASTER_GROUP).first()
 #             user.groups.add(group_id)
 
 # @receiver(post_delete, sender=Staff)

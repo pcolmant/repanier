@@ -15,11 +15,7 @@ class PermanenceMenu(Menu):
     def get_nodes(self, request):
         from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
 
-        user = request.user
-        if user.is_anonymous or user.is_staff:
-            is_anonymous = True
-        else:
-            is_anonymous = False
+        is_anonymous = request.user.is_anonymous
         nodes = []
         parent_node = NavigationNode(
             "{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
@@ -38,7 +34,7 @@ class PermanenceMenu(Menu):
         displayed_permanence_counter = 0
         first_pass = True
         for permanence in (
-            Permanence.objects.filter(status=PERMANENCE_OPENED)
+            Permanence.objects.filter(status=SaleStatus.OPENED)
             .only("id", "permanence_date", "status")
             .order_by("permanence_date", "id")
         ):
@@ -55,7 +51,7 @@ class PermanenceMenu(Menu):
         if displayed_permanence_counter <= 4:
             for permanence in (
                 Permanence.objects.filter(
-                    status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+                    status__in=[SaleStatus.CLOSED, SaleStatus.SEND],
                     master_permanence__isnull=True,
                 )
                 .only("id", "permanence_date")
@@ -78,7 +74,7 @@ class PermanenceMenu(Menu):
 
     def append_permanence_board(self, nodes, parent_node, submenu_id):
         permanence_board_set = PermanenceBoard.objects.filter(
-            permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
+            permanence__status__lte=SaleStatus.WAIT_FOR_INVOICED
         ).only("id")
         separator_needed = False
         if permanence_board_set.exists():
@@ -100,7 +96,7 @@ class PermanenceMenu(Menu):
     ):
 
         path = reverse("repanier:order_view", args=(permanence.id,))
-        if not is_anonymous and permanence.status > PERMANENCE_OPENED:
+        if not is_anonymous and permanence.status > SaleStatus.OPENED:
             path = path + "?is_basket=yes"
         submenu_id += 1
         node = NavigationNode(
@@ -120,6 +116,7 @@ class PermanenceMenu(Menu):
         )
         nodes.append(node)
         return submenu_id
+
 
 if settings.REPANIER_SETTINGS_SHOW_PERMANENCE_MENU:
     menu_pool.register_menu(PermanenceMenu)

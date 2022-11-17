@@ -54,13 +54,13 @@ class IdWidget(DecimalsWidget):
         if self.is_empty(value):
             return None
         try:
-            return Decimal(value).quantize(ZERO_DECIMAL)
+            return Decimal(value).quantize(RoundUpTo.ZERO_DECIMAL)
         except InvalidOperation:
             # This occurs when text is present in a decimal field
             return None
 
     def render(self, value, obj=None):
-        return super().render_quantize(value, ZERO_DECIMAL)
+        return super().render_quantize(value, RoundUpTo.ZERO_DECIMAL)
 
 
 class ZeroDecimalsWidget(DecimalsWidget):
@@ -69,10 +69,10 @@ class ZeroDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super().clean_quantize(value, ZERO_DECIMAL)
+        return super().clean_quantize(value, RoundUpTo.ZERO_DECIMAL)
 
     def render(self, value, obj=None):
-        return super().render_quantize(value, ZERO_DECIMAL)
+        return super().render_quantize(value, RoundUpTo.ZERO_DECIMAL)
 
 
 class TwoDecimalsWidget(DecimalsWidget):
@@ -81,10 +81,10 @@ class TwoDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super().clean_quantize(value, TWO_DECIMALS)
+        return super().clean_quantize(value, RoundUpTo.TWO_DECIMALS)
 
     def render(self, value, obj=None):
-        return super().render_quantize(value, TWO_DECIMALS)
+        return super().render_quantize(value, RoundUpTo.TWO_DECIMALS)
 
 
 class ThreeDecimalsWidget(DecimalsWidget):
@@ -93,10 +93,10 @@ class ThreeDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super().clean_quantize(value, THREE_DECIMALS)
+        return super().clean_quantize(value, RoundUpTo.THREE_DECIMALS)
 
     def render(self, value, obj=None):
-        return super().render_quantize(value, THREE_DECIMALS)
+        return super().render_quantize(value, RoundUpTo.THREE_DECIMALS)
 
 
 class FourDecimalsWidget(DecimalsWidget):
@@ -105,10 +105,10 @@ class FourDecimalsWidget(DecimalsWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super().clean_quantize(value, FOUR_DECIMALS)
+        return super().clean_quantize(value, RoundUpTo.FOUR_DECIMALS)
 
     def render(self, value, obj=None):
-        return super().render_quantize(value, FOUR_DECIMALS)
+        return super().render_quantize(value, RoundUpTo.FOUR_DECIMALS)
 
 
 class MoneysWidget(DecimalWidget):
@@ -131,10 +131,10 @@ class TwoMoneysWidget(MoneysWidget):
     """
 
     def clean(self, value, row=None, *args, **kwargs):
-        return super().clean_quantize(value, TWO_DECIMALS)
+        return super().clean_quantize(value, RoundUpTo.TWO_DECIMALS)
 
     def render(self, value, obj=None):
-        return super().render_quantize(value, TWO_DECIMALS)
+        return super().render_quantize(value, RoundUpTo.TWO_DECIMALS)
 
 
 class ProducerNameWidget(ForeignKeyWidget):

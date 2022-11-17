@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from repanier.auth_backend import RepanierAuthBackend
-from repanier.const import ONE_LEVEL_DEPTH
+from repanier.const import MpttLevelDepth
 from repanier.models.staff import Staff
 from .lut import LUTAdmin
 
@@ -55,7 +55,7 @@ class StaffWithUserDataForm(UserDataForm):
 
 
 class StaffWithUserDataAdmin(LUTAdmin):
-    mptt_level_limit = ONE_LEVEL_DEPTH
+    mptt_level_limit = MpttLevelDepth.ONE
     item_label_field_name = "get_str_member"
     form = StaffWithUserDataForm
 

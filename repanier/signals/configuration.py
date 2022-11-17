@@ -6,13 +6,8 @@ from django.utils.translation import gettext_lazy as _
 from menus.menu_pool import menu_pool
 
 from repanier.const import (
-    PERMANENCE_NAME_PERMANENCE,
-    PERMANENCE_NAME_CLOSURE,
-    PERMANENCE_NAME_DELIVERY,
-    PERMANENCE_NAME_ORDER,
-    PERMANENCE_NAME_OPENING,
-    CURRENCY_LOC,
-    CURRENCY_CHF,
+    PermanenceName,
+    Currency,
 )
 from repanier.models import Configuration
 
@@ -42,19 +37,19 @@ def configuration_post_save(sender, **kwargs):
     config = kwargs["instance"]
     if config.id is not None:
         apps.REPANIER_SETTINGS_CONFIG = config
-        if config.name == PERMANENCE_NAME_PERMANENCE:
+        if config.name == PermanenceName.PERMANENCE:
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence of ")
-        elif config.name == PERMANENCE_NAME_CLOSURE:
+        elif config.name == PermanenceName.CLOSURE:
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Closures")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Closure of ")
-        elif config.name == PERMANENCE_NAME_DELIVERY:
+        elif config.name == PermanenceName.DELIVERY:
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Deliveries")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Delivery of ")
-        elif config.name == PERMANENCE_NAME_ORDER:
+        elif config.name == PermanenceName.ORDER:
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Orders")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Order of ")
-        elif config.name == PERMANENCE_NAME_OPENING:
+        elif config.name == PermanenceName.OPENING:
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Openings")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Opening of ")
         else:
@@ -80,42 +75,29 @@ def configuration_post_save(sender, **kwargs):
         )
         apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
         apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
-        # if config.bank_account is not None and len(config.bank_account.strip()) == 0:
-        #     apps.REPANIER_SETTINGS_BANK_ACCOUNT = None
-        # else:
         apps.REPANIER_SETTINGS_BANK_ACCOUNT = config.bank_account
-        # if config.vat_id is not None and len(config.vat_id.strip()) == 0:
-        #     apps.REPANIER_SETTINGS_VAT_ID = None
-        # else:
         apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
-        # apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = (
-        #     config.page_break_on_customer_check
-        # )
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION = config.membership_fee_duration
-        if config.currency == CURRENCY_LOC:
-            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "✿"
-            apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            apps.REPANIER_SETTINGS_CURRENCY_XLSX = (
-                '_ ✿ * #,##0.00_ ;_ ✿ * -#,##0.00_ ;_ ✿ * "-"??_ ;_ @_ '
-            )
-        elif config.currency == CURRENCY_CHF:
-            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "Fr."
-            apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            apps.REPANIER_SETTINGS_CURRENCY_XLSX = (
-                '_ Fr\. * #,##0.00_ ;_ Fr\. * -#,##0.00_ ;_ Fr\. * "-"??_ ;_ @_ '
-            )
-        else:
-            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "€"
+
+        if config.currency == Currency.EUR:
+            currency_display = Currency.EUR.label
             apps.REPANIER_SETTINGS_AFTER_AMOUNT = True
-            apps.REPANIER_SETTINGS_CURRENCY_XLSX = (
-                '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
-            )
+        elif config.currency == Currency.LOC:
+            currency_display = Currency.LOC.label
+            apps.REPANIER_SETTINGS_AFTER_AMOUNT = True
+        else:
+            currency_display = Currency.CHF.label
+            apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
+
+        apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = currency_display
+        currency_display_xlsx = currency_display.replace(".", "\.")
+        apps.REPANIER_SETTINGS_CURRENCY_XLSX = f'_ {currency_display_xlsx} * #,##0.00_ ;_ {currency_display_xlsx} * -#,##0.00_ ;_ {currency_display_xlsx} * "-"??_ ;_ @_ '
+
         if config.home_site:
             apps.REPANIER_SETTINGS_HOME_SITE = config.home_site
         else:
             apps.REPANIER_SETTINGS_HOME_SITE = "/"
-        # config.email = settings.DJANGO_SETTINGS_EMAIL_HOST_USER
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)
         toolbar_pool.register(repanier.cms_toolbar.RepanierToolbar)

@@ -19,17 +19,24 @@ from repanier.tools import rule_of_3_reload_purchase
 
 
 class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
+    model = OfferItem
+
+    search_fields = [
+        "long_name_v2_",
+    ]
+
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
+        if not self.request.user.is_staff:
+            return OfferItem.objects.none()
+
+        qs = super().get_queryset()
         permanence_id = self.forwarded.get("permanence", None)
         producer_id = self.forwarded.get("producer", None)
-        qs = OfferItem.objects.filter(
+        qs = qs.filter(
             permanence_id=permanence_id,
             producer_id=producer_id,
         ).order_by("department_for_customer", "long_name_v2")
-
-        if self.q:
-            qs = qs.filter(long_name_v2__icontains=self.q)
 
         return qs
 
@@ -423,7 +430,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
                     if producer_unit_price != DECIMAL_ZERO:
                         purchase.quantity_invoiced = (
                             purchase.purchase_price.amount / producer_unit_price
-                        ).quantize(FOUR_DECIMALS)
+                        ).quantize(RoundUpTo.FOUR_DECIMALS)
                     else:
                         purchase.quantity_invoiced = DECIMAL_ZERO
                 purchase.save()
@@ -432,12 +439,12 @@ class CustomerSendAdmin(admin.ModelAdmin):
             if customer_producer_invoice.producer.price_list_multiplier >= DECIMAL_ONE:
                 rule_of_3_target = form.cleaned_data[
                     "offer_purchase_price"
-                ].amount.quantize(TWO_DECIMALS)
+                ].amount.quantize(RoundUpTo.TWO_DECIMALS)
                 selling_price = False
             else:
                 rule_of_3_target = form.cleaned_data[
                     "offer_selling_price"
-                ].amount.quantize(TWO_DECIMALS)
+                ].amount.quantize(RoundUpTo.TWO_DECIMALS)
                 selling_price = True
             rule_of_3_source = DECIMAL_ZERO
             max_purchase_counter = 0
@@ -451,7 +458,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
             if rule_of_3_target is not None and rule_of_3_target != rule_of_3_source:
                 if rule_of_3_source != DECIMAL_ZERO:
                     ratio = (rule_of_3_target / rule_of_3_source).quantize(
-                        FOUR_DECIMALS
+                        RoundUpTo.FOUR_DECIMALS
                     )
                 else:
                     if rule_of_3_target == DECIMAL_ZERO:
@@ -471,17 +478,17 @@ class CustomerSendAdmin(admin.ModelAdmin):
                                     if selling_price:
                                         purchase.quantity_invoiced = (
                                             delta / purchase.get_customer_unit_price()
-                                        ).quantize(FOUR_DECIMALS)
+                                        ).quantize(RoundUpTo.FOUR_DECIMALS)
                                     else:
                                         purchase.quantity_invoiced = (
                                             delta / purchase.get_producer_unit_price()
-                                        ).quantize(FOUR_DECIMALS)
+                                        ).quantize(RoundUpTo.FOUR_DECIMALS)
                                 else:
                                     purchase.quantity_invoiced = DECIMAL_ZERO
                             else:
                                 purchase.quantity_invoiced = (
                                     purchase.quantity_invoiced * ratio
-                                ).quantize(FOUR_DECIMALS)
+                                ).quantize(RoundUpTo.FOUR_DECIMALS)
 
                             purchase.save()
                             if selling_price:

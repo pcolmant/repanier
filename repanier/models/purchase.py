@@ -1,7 +1,6 @@
 import logging
 
 from django.core.validators import MinValueValidator
-from django.db import models
 from django.db import transaction
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -45,8 +44,8 @@ class Purchase(models.Model):
     )
     status = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=SaleStatus.choices,
+        default=SaleStatus.PLANNED,
         verbose_name=_("Invoice status"),
     )
     offer_item = models.ForeignKey(
@@ -156,7 +155,7 @@ class Purchase(models.Model):
         else:
             return (
                 offer_item.customer_vat.amount * self.price_list_multiplier
-            ).quantize(FOUR_DECIMALS)
+            ).quantize(RoundUpTo.FOUR_DECIMALS)
 
     def get_producer_unit_vat(self):
         offer_item = self.offer_item
@@ -207,7 +206,7 @@ class Purchase(models.Model):
     get_delivery_display.short_description = _("Delivery point")
 
     def get_quantity(self):
-        if self.status < PERMANENCE_WAIT_FOR_SEND:
+        if self.status < SaleStatus.WAIT_FOR_SEND:
             return self.quantity_ordered
         else:
             return self.quantity_invoiced
@@ -215,7 +214,7 @@ class Purchase(models.Model):
     get_quantity.short_description = _("Quantity invoiced")
 
     def get_producer_quantity(self):
-        if self.status < PERMANENCE_WAIT_FOR_SEND:
+        if self.status < SaleStatus.WAIT_FOR_SEND:
             return self.quantity_ordered
         else:
             offer_item = self.offer_item
@@ -223,7 +222,7 @@ class Purchase(models.Model):
                 if offer_item.order_average_weight != 0:
                     return (
                         self.quantity_invoiced / offer_item.order_average_weight
-                    ).quantize(FOUR_DECIMALS)
+                    ).quantize(RoundUpTo.FOUR_DECIMALS)
             return self.quantity_invoiced
 
     def get_long_name_with_customer_price(self):

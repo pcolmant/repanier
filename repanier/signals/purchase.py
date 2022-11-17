@@ -5,10 +5,8 @@ from django.dispatch import receiver
 from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
-    PERMANENCE_WAIT_FOR_SEND,
     PRODUCT_ORDER_UNIT_PC_KG,
-    TWO_DECIMALS,
-    FOUR_DECIMALS,
+    RoundUpTo, SaleStatus,
 )
 from repanier.models import (
     Purchase,
@@ -52,7 +50,7 @@ def purchase_pre_save(sender, **kwargs):
     purchase = kwargs["instance"]
     offer_item = purchase.offer_item
     # logger.info("purchase pre save : {}".format(purchase.id))
-    if purchase.status < PERMANENCE_WAIT_FOR_SEND:
+    if purchase.status < SaleStatus.WAIT_FOR_SEND:
         quantity = purchase.quantity_ordered
         delta_quantity = quantity - purchase.previous_quantity_ordered
         if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
@@ -75,10 +73,10 @@ def purchase_pre_save(sender, **kwargs):
 
     purchase.purchase_price.amount = (
         (producer_unit_price + unit_deposit) * quantity
-    ).quantize(TWO_DECIMALS)
+    ).quantize(RoundUpTo.TWO_DECIMALS)
     purchase.selling_price.amount = (
         (customer_unit_price + unit_deposit) * quantity
-    ).quantize(TWO_DECIMALS)
+    ).quantize(RoundUpTo.TWO_DECIMALS)
 
     delta_purchase_price = (
         purchase.purchase_price.amount - purchase.previous_purchase_price
@@ -96,10 +94,10 @@ def purchase_pre_save(sender, **kwargs):
         purchase.vat_level = purchase.offer_item.vat_level
         purchase.producer_vat.amount = (
             purchase.get_producer_unit_vat() * quantity
-        ).quantize(FOUR_DECIMALS)
+        ).quantize(RoundUpTo.FOUR_DECIMALS)
         purchase.customer_vat.amount = (
             purchase.get_customer_unit_vat() * quantity
-        ).quantize(FOUR_DECIMALS)
+        ).quantize(RoundUpTo.FOUR_DECIMALS)
 
         purchase.deposit.amount = unit_deposit * quantity
 

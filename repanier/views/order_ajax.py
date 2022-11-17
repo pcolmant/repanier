@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO, EMPTY_STRING, TWO_DECIMALS
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING, RoundUpTo, SaleStatus
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
@@ -40,14 +40,14 @@ def order_ajax(request):
     qs = CustomerInvoice.objects.filter(
         permanence__offeritem=offer_item_id,
         customer_id=customer.id,
-        status=PERMANENCE_OPENED,
+        status=SaleStatus.OPENED,
     )
     json_dict = {}
     if qs.exists():
         qs = ProducerInvoice.objects.filter(
             permanence__offeritem=offer_item_id,
             producer__offeritem=offer_item_id,
-            status=PERMANENCE_OPENED,
+            status=SaleStatus.OPENED,
         )
         if qs.exists():
             purchase, updated = create_or_update_one_cart_item(
@@ -68,7 +68,7 @@ def order_ajax(request):
                 )
                 unit_deposit = offer_item.get_unit_deposit()
                 unit_price_amount = (customer_unit_price + unit_deposit).quantize(
-                    TWO_DECIMALS
+                    RoundUpTo.TWO_DECIMALS
                 )
                 json_dict[
                     "#offer_item{}".format(offer_item.id)
@@ -120,12 +120,12 @@ def order_ajax(request):
             permanence = Permanence.objects.filter(id=offer_item.permanence_id).first()
             if is_basket:
                 basket_message = get_html_basket_message(
-                    customer, permanence, PERMANENCE_OPENED, customer_invoice
+                    customer, permanence, SaleStatus.OPENED, customer_invoice
                 )
             else:
                 basket_message = EMPTY_STRING
             delivery_message = customer_invoice.get_html_select_delivery_point(
-                permanence, PERMANENCE_OPENED
+                permanence, SaleStatus.OPENED
             )
             json_dict.update(
                 customer_invoice.get_html_my_order_confirmation(

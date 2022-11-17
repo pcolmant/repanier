@@ -15,7 +15,6 @@ from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
-from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from repanier import apps
@@ -123,11 +122,11 @@ def permanence_ok_or_404(permanence):
     if permanence is None:
         raise Http404
     if permanence.status not in [
-        const.PERMANENCE_OPENED,
-        const.PERMANENCE_CLOSED,
-        const.PERMANENCE_SEND,
+        const.SaleStatus.OPENED,
+        const.SaleStatus.CLOSED,
+        const.SaleStatus.SEND,
     ]:
-        if permanence.status in [const.PERMANENCE_INVOICED, const.PERMANENCE_ARCHIVED]:
+        if permanence.status in [const.SaleStatus.INVOICED, const.SaleStatus.ARCHIVED]:
             if (
                 permanence.permanence_date
                 < (
@@ -205,7 +204,7 @@ def payment_message(customer, permanence, customer_invoice):
 
     if customer_invoice.customer_id != customer_invoice.customer_charged_id:
         customer_on_hold_movement = const.EMPTY_STRING
-        customer_payment_needed = '{}'.format(
+        customer_payment_needed = "{}".format(
             _(
                 "Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments."
             )
@@ -336,10 +335,10 @@ def create_or_update_one_purchase(
                 producer_id=offer_item.producer_id,
                 customer_id=customer_id,
                 quantity_ordered=q_order
-                if status < const.PERMANENCE_SEND
+                if status < const.SaleStatus.SEND
                 else const.DECIMAL_ZERO,
                 quantity_invoiced=q_order
-                if status >= const.PERMANENCE_SEND
+                if status >= const.SaleStatus.SEND
                 else const.DECIMAL_ZERO,
                 status=status,
                 comment=comment,
@@ -347,7 +346,7 @@ def create_or_update_one_purchase(
         else:
             purchase.set_comment(comment)
             purchase.status = status
-            if status < const.PERMANENCE_SEND:
+            if status < const.SaleStatus.SEND:
                 purchase.quantity_ordered = q_order
             else:
                 # purchase.quantity_ordered = q_order
@@ -448,7 +447,7 @@ def create_or_update_one_cart_item(
     return create_or_update_one_purchase(
         customer_id=customer.id,
         offer_item=offer_item,
-        status=const.PERMANENCE_OPENED,
+        status=const.SaleStatus.OPENED,
         q_order=q_order,
         batch_job=batch_job,
         comment=comment,
@@ -570,7 +569,7 @@ def update_offer_item(product=None, producer_id=None):
 
     # The user can also modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in Permanence.objects.filter(
-        status=const.PERMANENCE_OPENED,
+        status=const.SaleStatus.OPENED,
     ):
         if product is not None:
             offer_item_qs = OfferItem.objects.filter(product_id=product.id)
@@ -580,7 +579,7 @@ def update_offer_item(product=None, producer_id=None):
         permanence.update_offer_item(offer_item_qs=offer_item_qs)
 
     for permanence in Permanence.objects.filter(
-        status=const.PERMANENCE_SEND,
+        status=const.SaleStatus.SEND,
     ):
         if product is not None:
             if product.is_into_offer:
@@ -628,7 +627,7 @@ def get_html_basket_message(customer, permanence, status, customer_invoice):
     if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None and customer_payment_needed:
         payment_msg = "<br>{}".format(customer_payment_needed)
 
-    if status == const.PERMANENCE_OPENED:
+    if status == const.SaleStatus.OPENED:
         if customer_invoice.is_order_confirm_send:
             if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                 you_can_change = "<br>{}".format(
@@ -678,7 +677,7 @@ def rule_of_3_reload_purchase(
             quantity_ordered=const.DECIMAL_ZERO,
             quantity_invoiced=const.DECIMAL_ZERO,
             comment=purchase_form_instance.comment,
-            status=const.PERMANENCE_SEND,
+            status=const.SaleStatus.SEND,
         )
     # And set the form's values
     purchase.quantity_invoiced = purchase_form_instance.quantity_invoiced
@@ -714,4 +713,4 @@ def round_gov_be(number):
 
 
 def round_tva(number):
-    return number.quantize(const.THREE_DECIMALS)
+    return number.quantize(const.RoundUpTo.THREE_DECIMALS)

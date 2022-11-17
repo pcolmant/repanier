@@ -1,7 +1,6 @@
 from django.db.models import F
-from django.utils.translation import gettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
-from repanier.const import ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
+from repanier.const import MpttLevelDepth
 from repanier.models import LUT_DepartmentForCustomer, LUT_ProductionMode, Customer
 
 
@@ -68,7 +67,7 @@ class LUTAdmin(DjangoMpttAdmin):
 
 
 class LUTProductionModeAdmin(LUTAdmin):
-    mptt_level_limit = TWO_LEVEL_DEPTH
+    mptt_level_limit = MpttLevelDepth.TWO
     search_fields = ("short_name_v2",)
 
     def has_add_permission(self, request):
@@ -95,7 +94,7 @@ class LUTProductionModeAdmin(LUTAdmin):
 
 
 class LUTDeliveryPointAdmin(LUTAdmin):
-    mptt_level_limit = ONE_LEVEL_DEPTH
+    mptt_level_limit = MpttLevelDepth.ONE
     search_fields = ("short_name_v2",)
 
     def get_fields(self, request, obj=None):
@@ -112,7 +111,7 @@ class LUTDeliveryPointAdmin(LUTAdmin):
 
 
 class LUTDepartmentForCustomerAdmin(LUTAdmin):
-    mptt_level_limit = TWO_LEVEL_DEPTH
+    mptt_level_limit = MpttLevelDepth.TWO
     search_fields = ("short_name_v2",)
 
     def get_fields(self, request, obj=None):
@@ -132,7 +131,7 @@ class LUTDepartmentForCustomerAdmin(LUTAdmin):
 
 
 class LUTPermanenceRoleAdmin(LUTAdmin):
-    mptt_level_limit = ONE_LEVEL_DEPTH
+    mptt_level_limit = MpttLevelDepth.ONE
     search_fields = ("short_name_v2",)
 
     def get_fields(self, request, obj=None):

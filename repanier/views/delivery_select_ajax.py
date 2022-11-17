@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
+from repanier.const import EMPTY_STRING, SaleStatus
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
@@ -35,19 +35,19 @@ def delivery_select_ajax(request):
             Q(
                 permanence_id=permanence_id,
                 delivery_point__group_id=customer.group_id,
-                status=PERMANENCE_OPENED,
+                status=SaleStatus.OPENED,
             )
             | Q(
                 permanence_id=permanence_id,
                 delivery_point__group__isnull=True,
-                status=PERMANENCE_OPENED,
+                status=SaleStatus.OPENED,
             )
         )
     else:
         qs = DeliveryBoard.objects.filter(
             permanence_id=permanence_id,
             delivery_point__group__isnull=True,
-            status=PERMANENCE_OPENED,
+            status=SaleStatus.OPENED,
         )
     is_selected = False
     delivery_counter = 0
@@ -61,8 +61,8 @@ def delivery_select_ajax(request):
                 delivery.id, delivery.get_delivery_customer_display()
             )
         elif (
-            delivery.status == PERMANENCE_OPENED
-            and customer_invoice.status == PERMANENCE_OPENED
+            delivery.status == SaleStatus.OPENED
+            and customer_invoice.status == SaleStatus.OPENED
         ):
             delivery_counter += 1
             html += '<option value="{}">{}</option>'.format(

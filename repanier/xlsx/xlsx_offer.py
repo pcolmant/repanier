@@ -1,6 +1,6 @@
 import repanier.apps
 from django.utils.translation import gettext_lazy as _
-from repanier.const import PERMANENCE_PLANNED, PERMANENCE_OPENED, LIMIT_ORDER_QTY_ITEM
+from repanier.const import LIMIT_ORDER_QTY_ITEM, SaleStatus
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -11,7 +11,7 @@ def export_offer(permanence, wb=None):
     wb, ws = new_landscape_a4_sheet(wb, permanence, permanence)
     row_num = 0
 
-    if permanence.status == PERMANENCE_PLANNED:
+    if permanence.status == SaleStatus.PLANNED.value:
         producers_in_this_permanence = Producer.objects.filter(
             permanence=permanence, is_active=True
         )
@@ -37,7 +37,7 @@ def export_offer(permanence, wb=None):
         # ):
         #     row_num = export_offer_row(product, row_num, ws)
 
-    elif permanence.status == PERMANENCE_OPENED:
+    elif permanence.status == SaleStatus.OPENED.value:
         for offer_item in (
             OfferItem.objects.prefetch_related("producer", "department_for_customer")
             .filter(

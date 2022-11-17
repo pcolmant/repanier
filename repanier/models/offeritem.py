@@ -10,9 +10,8 @@ from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
     PRODUCT_ORDER_UNIT_KG,
-    PERMANENCE_SEND,
     DECIMAL_ONE,
-    TWO_DECIMALS,
+    RoundUpTo, SaleStatus,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.item import Item
@@ -107,7 +106,7 @@ class OfferItem(Item):
             return self.customer_unit_price.amount
         else:
             return (self.customer_unit_price.amount * price_list_multiplier).quantize(
-                TWO_DECIMALS
+                RoundUpTo.TWO_DECIMALS
             )
 
     def get_producer_unit_price(self, price_list_multiplier=None):
@@ -189,7 +188,7 @@ class OfferItemReadOnly(OfferItem):
         from repanier.models.purchase import PurchaseWoReceiver
 
         query_set = PurchaseWoReceiver.objects.filter(
-            offer_item_id=self.id, status__lt=PERMANENCE_SEND
+            offer_item_id=self.id, status__lt=SaleStatus.SEND
         )
 
         result_set = query_set.aggregate(
@@ -229,7 +228,7 @@ class OfferItemReadOnly(OfferItem):
         )
 
         query_set = PurchaseWoReceiver.objects.filter(
-            offer_item_id=self.id, status__gte=PERMANENCE_SEND
+            offer_item_id=self.id, status__gte=SaleStatus.SEND
         )
 
         result_set = query_set.aggregate(

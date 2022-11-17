@@ -150,7 +150,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             form_klass=ImportInvoiceForm,
         )
 
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SaleStatus.SEND)
     def export_purchases(self, request, permanence_id, permanence=None):
         wb = export_purchase(permanence=permanence, wb=None)
         if wb is not None:
@@ -166,7 +166,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SaleStatus.SEND)
     def import_updated_purchases(self, request, permanence_id, permanence=None):
         return import_xslx_view(
             self,
@@ -180,7 +180,7 @@ class PermanenceDoneAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SaleStatus.SEND)
     def cancel_delivery(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             permanence.cancel_delivery()
@@ -202,7 +202,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             },
         )
 
-    @check_permanence(PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR)
+    @check_permanence(SaleStatus.INVOICED)
     def accounting_report(self, request, permanence_id, permanence=None):
         wb = export_bank(permanence=permanence, wb=None, sheet_name=permanence)
         wb = export_invoice(permanence=permanence, wb=wb, sheet_name=permanence)
@@ -229,11 +229,11 @@ class PermanenceDoneAdmin(SaleAdmin):
 
     @check_done_in_post
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SaleStatus.SEND)
     def invoice(self, request, permanence_id, permanence=None):
         max_payment_date = timezone.now().date()
         bank_account = (
-            BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
+            BankAccount.objects.filter(operation_status=BankMovement.LATEST_TOTAL)
             .only("operation_date")
             .order_by("-id")
             .first()
@@ -314,7 +314,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                         permanence.invoice(payment_date=payment_date)
                         previous_latest_total = (
                             BankAccount.objects.filter(
-                                operation_status=BANK_NOT_LATEST_TOTAL,
+                                operation_status=BankMovement.LATEST_TOTAL,
                                 producer__isnull=True,
                                 customer__isnull=True,
                             )
@@ -341,7 +341,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                                     producer__isnull=False,
                                     producer__represent_this_buyinggroup=False,
                                     customer__isnull=True,
-                                    operation_status=BANK_CALCULATED_INVOICE,
+                                    operation_status=BankMovement.CALCULATED_INVOICE,
                                 ).order_by("producer", "-operation_date", "-id"),
                                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
                             },
@@ -425,7 +425,7 @@ class PermanenceDoneAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SaleStatus.SEND)
     def archive(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             permanence.archive()
@@ -451,9 +451,11 @@ class PermanenceDoneAdmin(SaleAdmin):
         self, request, permanence, action, sub_title
     ):
         if "apply" in request.POST:
-            if permanence.status == PERMANENCE_INVOICED:
+            if permanence.status == SaleStatus.INVOICED:
                 last_bank_account_total = (
-                    BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
+                    BankAccount.objects.filter(
+                        operation_status=BankMovement.LATEST_TOTAL
+                    )
                     .only("permanence")
                     .first()
                 )
@@ -484,16 +486,16 @@ class PermanenceDoneAdmin(SaleAdmin):
                     user_message = _("The selected invoice has been canceled.")
                     user_message_level = messages.INFO
                     permanence.set_status(
-                        old_status=PERMANENCE_INVOICED, new_status=PERMANENCE_SEND
+                        old_status=SaleStatus.INVOICED, new_status=SaleStatus.SEND
                     )
             else:
-                if permanence.status == PERMANENCE_ARCHIVED:
+                if permanence.status == SaleStatus.ARCHIVED:
                     permanence.set_status(
-                        old_status=PERMANENCE_ARCHIVED, new_status=PERMANENCE_SEND
+                        old_status=SaleStatus.ARCHIVED, new_status=SaleStatus.SEND
                     )
-                if permanence.status == PERMANENCE_CANCELLED:
+                if permanence.status == SaleStatus.CANCELLED:
                     permanence.set_status(
-                        old_status=PERMANENCE_CANCELLED, new_status=PERMANENCE_SEND
+                        old_status=SaleStatus.CANCELLED, new_status=SaleStatus.SEND
                     )
                 user_message = _("The selected invoice has been restored.")
                 user_message_level = messages.INFO
@@ -514,7 +516,7 @@ class PermanenceDoneAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR)
+    @check_permanence(SaleStatus.INVOICED)
     def cancel_invoicing(self, request, permanence_id, permanence=None):
         return self.cancel_invoice_or_archive_or_cancelled(
             request,
@@ -524,7 +526,7 @@ class PermanenceDoneAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_ARCHIVED, PERMANENCE_ARCHIVED_STR)
+    @check_permanence(SaleStatus.ARCHIVED)
     def cancel_archiving(self, request, permanence_id, permanence=None):
         return self.cancel_invoice_or_archive_or_cancelled(
             request,
@@ -534,7 +536,7 @@ class PermanenceDoneAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_CANCELLED, PERMANENCE_CANCELLED_STR)
+    @check_permanence(SaleStatus.CANCELLED)
     def restore_delivery(self, request, permanence_id, permanence=None):
         return self.cancel_invoice_or_archive_or_cancelled(
             request,
@@ -544,7 +546,7 @@ class PermanenceDoneAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR)
+    @check_permanence(SaleStatus.INVOICED)
     def send_invoices(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             t = threading.Thread(
@@ -675,7 +677,7 @@ class PermanenceDoneAdmin(SaleAdmin):
 
     def get_row_actions(self, permanence):
 
-        if permanence.status == PERMANENCE_SEND:
+        if permanence.status == SaleStatus.SEND:
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 return format_html(
                     '<div class="repanier-button-row">'
@@ -722,9 +724,9 @@ class PermanenceDoneAdmin(SaleAdmin):
                     _("To archive"),
                 )
 
-        elif permanence.status == PERMANENCE_INVOICED:
+        elif permanence.status == SaleStatus.INVOICED:
             if BankAccount.objects.filter(
-                operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
+                operation_status=BankMovement.LATEST_TOTAL, permanence_id=permanence.id
             ).exists():
                 # This is the latest invoiced permanence
                 # Invoicing can be cancelled
@@ -757,7 +759,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                 cancel_invoice,
             )
 
-        elif permanence.status == PERMANENCE_ARCHIVED:
+        elif permanence.status == SaleStatus.ARCHIVED:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a>'
@@ -768,7 +770,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                 _("Restore"),
             )
 
-        elif permanence.status == PERMANENCE_CANCELLED:
+        elif permanence.status == SaleStatus.CANCELLED:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a>'
@@ -785,4 +787,4 @@ class PermanenceDoneAdmin(SaleAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(status__gte=PERMANENCE_SEND)
+        return qs.filter(status__gte=SaleStatus.SEND)

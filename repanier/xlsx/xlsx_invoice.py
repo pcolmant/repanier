@@ -562,8 +562,8 @@ def import_invoice_sheet(
             permanence = Permanence.objects.create(
                 permanence_date=now,
                 short_name_v2=invoice_reference,
-                status=PERMANENCE_SEND,
-                highest_status=PERMANENCE_SEND,
+                status=SaleStatus.SEND,
+                highest_status=SaleStatus.SEND,
             )
             permanence.producers.add(producer)
             row = get_row(worksheet, header, row_num)
@@ -622,7 +622,7 @@ def import_invoice_sheet(
                     create_or_update_one_purchase(
                         customer_id=customer_id,
                         offer_item=offer_item,
-                        status=PERMANENCE_SEND,
+                        status=SaleStatus.SEND,
                         q_order=Decimal(qty),
                         batch_job=True,
                         comment=comment or EMPTY_STRING,

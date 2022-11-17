@@ -1,7 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-from repanier.const import PERMANENCE_OPENED
+from repanier.const import SaleStatus
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from rest_framework import serializers
@@ -29,7 +29,7 @@ class PermanenceSerializer(serializers.Serializer):
 @csrf_exempt
 @require_GET
 def permanences_rest(request):
-    permanences = Permanence.objects.filter(status=PERMANENCE_OPENED)
+    permanences = Permanence.objects.filter(status=SaleStatus.OPENED)
     serializer = PermanenceSerializer(permanences, many=True)
     return JsonResponse(serializer.data)
 
@@ -51,7 +51,7 @@ def permanence_producer_rest(request, permanence_id, producer_name):
     offer_item = OfferItemReadOnly.objects.filter(
         permanence_id=permanence_id,
         producer__short_profile_name=producer_name.decode("unicode-escape"),
-        status=PERMANENCE_OPENED,
+        status=SaleStatus.OPENED,
     )
     if offer_item.exists():
         serializer = OfferItemSerializer(offer_item, many=True)
@@ -68,7 +68,7 @@ def permanence_producer_product_rest(request, permanence_id, producer_name, refe
             permanence_id=permanence_id,
             producer__short_profile_name=producer_name.decode("unicode-escape"),
             reference=reference.decode("unicode-escape"),
-            status=PERMANENCE_OPENED,
+            status=SaleStatus.OPENED,
         )
         if offer_item.exists():
             serializer = OfferItemSerializer(offer_item)

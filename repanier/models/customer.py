@@ -4,7 +4,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
-from django.db import models, connection
+from django.db import connection
 from django.db.models import Q, Sum, DecimalField
 from django.urls import reverse
 from django.utils import timezone
@@ -258,7 +258,7 @@ class Customer(models.Model):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = CustomerInvoice.objects.filter(
                 customer_id=self.id,
-                status__lte=PERMANENCE_SEND,
+                status__lte=SaleStatus.SEND,
                 customer_charged_id=self.id,
             ).aggregate(
                 total_price=Sum(

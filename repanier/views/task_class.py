@@ -1,7 +1,7 @@
 from django.db.models import F
 from django.views.generic import ListView
 
-from repanier.const import PERMANENCE_SEND
+from repanier.const import SaleStatus
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.tools import get_repanier_template_name
 
@@ -18,7 +18,7 @@ class PermanenceView(ListView):
 
     def get_queryset(self):
         qs = PermanenceBoard.objects.filter(
-            permanence__status__lte=PERMANENCE_SEND,
+            permanence__status__lte=SaleStatus.SEND,
             permanence__master_permanence__isnull=True,
             permanence_role__rght=F("permanence_role__lft") + 1,
             permanence_role__is_active=True,

@@ -36,8 +36,8 @@ class BankAccount(models.Model):
     )
     operation_status = models.CharField(
         max_length=3,
-        choices=LUT_BANK_TOTAL,
-        default=BANK_NOT_LATEST_TOTAL,
+        choices=BankMovement.choices,
+        default=BankMovement.NOT_LATEST_TOTAL,
         verbose_name=_("Account balance status"),
         db_index=True,
     )
@@ -80,7 +80,7 @@ class BankAccount(models.Model):
         bank_account = BankAccount.objects.filter()
         if not bank_account.exists():
             BankAccount.objects.create(
-                operation_status=BANK_LATEST_TOTAL,
+                operation_status=BankMovement.LATEST_TOTAL,
                 operation_date=timezone.now().date(),
                 operation_comment=_("Account opening"),
             )
@@ -129,10 +129,10 @@ class BankAccount(models.Model):
 
     @classmethod
     def get_latest_total(cls):
-        return BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).first()
+        return BankAccount.objects.filter(operation_status=BankMovement.LATEST_TOTAL).first()
 
     def get_bank_amount_in(self):
-        if self.operation_status in [BANK_PROFIT, BANK_TAX]:
+        if self.operation_status in [BankMovement.PROFIT, BankMovement.TAX]:
             return format_html(
                 "<i>{}</i>",
                 self.bank_amount_in
@@ -150,7 +150,7 @@ class BankAccount(models.Model):
     get_bank_amount_in.admin_order_field = "bank_amount_in"
 
     def get_bank_amount_out(self):
-        if self.operation_status in [BANK_PROFIT, BANK_TAX]:
+        if self.operation_status in [BankMovement.PROFIT, BankMovement.TAX]:
             return format_html(
                 "<i>{}</i>",
                 self.bank_amount_out
@@ -173,7 +173,7 @@ class BankAccount(models.Model):
         else:
             if self.customer is None:
                 # This is a total, show it
-                if self.operation_status == BANK_LATEST_TOTAL:
+                if self.operation_status == BankMovement.LATEST_TOTAL:
                     return format_html(
                         "<b>=== {}</b>", settings.REPANIER_SETTINGS_GROUP_NAME
                     )

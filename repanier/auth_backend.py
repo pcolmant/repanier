@@ -10,8 +10,7 @@ from repanier.const import (
     DECIMAL_ZERO,
     DECIMAL_ONE,
     DECIMAL_THREE,
-    WEBMASTER_GROUP,
-    REPANIER_GROUP,
+    AuthGroup,
 )
 from repanier.models import Customer, Staff, Configuration
 
@@ -96,14 +95,14 @@ class RepanierAuthBackend(ModelBackend):
         user.is_staff = True
         user.groups.clear()
         if as_staff.is_webmaster:
-            group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+            group_id = Group.objects.filter(name=AuthGroup.WEBMASTER).first()
             user.groups.add(group_id)
         if (
             as_staff.is_order_manager
             or as_staff.is_invoice_manager
             or as_staff.is_repanier_admin
         ):
-            group_id = Group.objects.filter(name=REPANIER_GROUP).first()
+            group_id = Group.objects.filter(name=AuthGroup.REPANIER).first()
             user.groups.add(group_id)
         user.save()
         auth_login(request, user)

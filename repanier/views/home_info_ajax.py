@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
-from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
+from repanier.const import EMPTY_STRING, SaleStatus
 from repanier.models.permanence import Permanence
 
 
@@ -20,7 +20,7 @@ def home_info_ajax(request):
 def home_info_bs3_ajax(request):
     permanences = []
     for permanence in (
-        Permanence.objects.filter(status=PERMANENCE_OPENED)
+        Permanence.objects.filter(status=SaleStatus.OPENED)
         .only("id", "permanence_date", "with_delivery_point")
         .order_by("-permanence_date", "-id")
     ):
@@ -84,7 +84,7 @@ def home_info_bs3_ajax(request):
 def home_info_bs5_ajax(request):
     permanences = []
     for permanence in (
-        Permanence.objects.filter(status=PERMANENCE_OPENED)
+        Permanence.objects.filter(status=SaleStatus.OPENED)
         .only("id", "permanence_date", "with_delivery_point")
         .order_by("-permanence_date", "-id")
     ):

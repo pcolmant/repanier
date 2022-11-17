@@ -62,13 +62,13 @@ class BankAccountResource(resources.ModelResource):
                     and instance.bank_amount_out != DECIMAL_ZERO
                 ):
                     only_one_target = ProducerInvoice.objects.filter(
-                        status=PERMANENCE_SEND,
+                        status=SaleStatus.SEND,
                         total_price_with_tax=instance.bank_amount_out,
                     ).count()
                     if only_one_target == 1:
                         instance.producer = (
                             ProducerInvoice.objects.filter(
-                                status=PERMANENCE_SEND,
+                                status=SaleStatus.SEND,
                                 total_price_with_tax=instance.bank_amount_out,
                             )
                             .first()
@@ -79,13 +79,13 @@ class BankAccountResource(resources.ModelResource):
                     and instance.bank_amount_in != DECIMAL_ZERO
                 ):
                     only_one_target = CustomerInvoice.objects.filter(
-                        status=PERMANENCE_SEND,
+                        status=SaleStatus.SEND,
                         total_price_with_tax=instance.bank_amount_in,
                     ).count()
                     if only_one_target == 1:
                         instance.customer = (
                             CustomerInvoice.objects.filter(
-                                status=PERMANENCE_SEND,
+                                status=SaleStatus.SEND,
                                 total_price_with_tax=instance.bank_amount_in,
                             )
                             .first()
@@ -159,21 +159,24 @@ class BankAccountResource(resources.ModelResource):
 
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
+    model = Customer
+
+    search_fields = [
+        "short_basket_name",
+        "long_basket_name",
+        "user__email",
+        "bank_account1",
+        "bank_account2",
+    ]
+
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
-        # if not self.request.user.is_staff:
-        #     return OfferItem.objects.none()
-        qs = Customer.objects.filter(is_active=True)
+        if not self.request.user.is_staff:
+            return Customer.objects.none()
 
-        if self.q:
-            qs = qs.filter(
-                Q(short_basket_name__icontains=self.q)
-                | Q(long_basket_name__icontains=self.q)
-                | Q(user__email__icontains=self.q)
-                | Q(bank_account1__icontains=self.q)
-                | Q(bank_account2__icontains=self.q)
-                # | Q(email2__icontains=self.q)
-            )
+        qs = super().get_queryset()
+        qs = qs.filter(is_active=True)
+
         return qs
 
     def get_result_label(self, item):
@@ -189,20 +192,23 @@ class CustomerAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class ProducerAutocomplete(autocomplete.Select2QuerySetView):
+    model = Producer
+
+    search_fields = [
+        "short_profile_name",
+        "long_profile_name",
+        "user__email",
+        "bank_account",
+    ]
+
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
-        # if not self.request.user.is_staff:
-        #     return OfferItem.objects.none()
-        qs = Producer.objects.filter(is_active=True)
+        if not self.request.user.is_staff:
+            return Producer.objects.none()
 
-        if self.q:
-            qs = qs.filter(
-                Q(short_profile_name=self.q)
-                | Q(long_profile_name__icontains=self.q)
-                | Q(user__email__icontains=self.q)
-                | Q(bank_account__icontains=self.q)
-                # | Q(email2__icontains=self.q)
-            )
+        qs = super().get_queryset()
+        qs = qs.filter(is_active=True)
+
         return qs
 
     def get_result_label(self, item):
@@ -307,7 +313,7 @@ class BankAccountDataForm(forms.ModelForm):
                     )
             else:
                 bank_account = BankAccount.objects.filter(
-                    operation_status=BANK_LATEST_TOTAL
+                    operation_status=BankMovement.LATEST_TOTAL
                 ).first()
                 if bank_account:
                     # You may only insert the first latest bank total at initialisation of the website
@@ -333,7 +339,7 @@ class BankAccountDataForm(forms.ModelForm):
                 "producer", _("Only one customer or one producer must be given.")
             )
         latest_total = BankAccount.objects.filter(
-            operation_status=BANK_LATEST_TOTAL
+            operation_status=BankMovement.LATEST_TOTAL
         ).first()
         if latest_total is not None:
             operation_date = self.cleaned_data.get("operation_date")

@@ -24,16 +24,19 @@ from repanier.tools import rule_of_3_reload_purchase
 
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
+    model = Customer
+
+    search_fields = [
+        "short_basket_name",
+    ]
+
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
-        # permanence_id = self.forwarded.get("permanence", None)
-        # producer_id = self.forwarded.get("producer", None)
-        qs = Customer.objects.filter(
-            may_order=True,
-        )
+        if not self.request.user.is_staff:
+            return Customer.objects.none()
 
-        if self.q:
-            qs = qs.filter(short_basket_name__icontains=self.q)
+        qs = super().get_queryset()
+        qs = qs.filter(may_order=True)
 
         return qs
 
@@ -107,7 +110,7 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
                         values.add(value)
                     qty_invoiced += form.cleaned_data.get(
                         "quantity_invoiced", DECIMAL_ZERO
-                    ).quantize(THREE_DECIMALS)
+                    ).quantize(RoundUpTo.THREE_DECIMALS)
 
 
 class OfferItemPurchaseSendInlineForm(forms.ModelForm):
@@ -486,14 +489,14 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                         purchase.quantity_invoiced = (
                             purchase_price.amount
                             / offer_item.producer_unit_price.amount
-                        ).quantize(FOUR_DECIMALS)
+                        ).quantize(RoundUpTo.FOUR_DECIMALS)
                     else:
                         purchase.quantity_invoiced = DECIMAL_ZERO
                 else:
                     purchase.purchase_price.amount = (
                         purchase.quantity_invoiced
                         * offer_item.producer_unit_price.amount
-                    ).quantize(TWO_DECIMALS)
+                    ).quantize(RoundUpTo.TWO_DECIMALS)
 
         if not offer_item.wrapped and offer_item.order_unit in [
             PRODUCT_ORDER_UNIT_KG,
@@ -503,7 +506,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             if rule_of_3:
                 rule_of_3_target = form.cleaned_data[
                     "offer_purchase_price"
-                ].amount.quantize(TWO_DECIMALS)
+                ].amount.quantize(RoundUpTo.TWO_DECIMALS)
                 rule_of_3_source = DECIMAL_ZERO
                 max_purchase_counter = 0
                 for purchase_form in formset:
@@ -538,17 +541,17 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                                         purchase.quantity_invoiced = (
                                             delta
                                             / offer_item.producer_unit_price.amount
-                                        ).quantize(FOUR_DECIMALS)
+                                        ).quantize(RoundUpTo.FOUR_DECIMALS)
                                     else:
                                         purchase.quantity_invoiced = DECIMAL_ZERO
                                 else:
                                     purchase.quantity_invoiced = (
                                         purchase.quantity_invoiced * ratio
-                                    ).quantize(FOUR_DECIMALS)
+                                    ).quantize(RoundUpTo.FOUR_DECIMALS)
                                     adjusted_invoice += (
                                         purchase.quantity_invoiced
                                         * offer_item.producer_unit_price.amount
-                                    ).quantize(TWO_DECIMALS)
+                                    ).quantize(RoundUpTo.TWO_DECIMALS)
                                 purchase.save()
 
         for purchase_form in formset:

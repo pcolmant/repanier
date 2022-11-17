@@ -1,7 +1,6 @@
 import datetime
 
 from django.core.validators import MinValueValidator
-from django.db import models
 from django.db import transaction
 from django.db.models import F, Sum, Q, DecimalField
 from django.urls import reverse
@@ -21,8 +20,8 @@ class Invoice(models.Model):
     )
     status = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=SaleStatus.choices,
+        default=SaleStatus.PLANNED,
         verbose_name=_("Status"),
     )
     date_previous_balance = models.DateField(
@@ -187,7 +186,7 @@ class CustomerInvoice(Invoice):
                 + self.delta_transport
             )
         else:
-            if self.status < PERMANENCE_INVOICED or not customer_charged:
+            if self.status < SaleStatus.INVOICED or not customer_charged:
                 return self.total_price_with_tax
             else:
                 return self.customer_charged
@@ -279,7 +278,7 @@ class CustomerInvoice(Invoice):
             else:
                 msg_my_order_confirmation_email_send_to = EMPTY_STRING
 
-                if self.status == PERMANENCE_OPENED:
+                if self.status == SaleStatus.OPENED:
                     if (
                             permanence.with_delivery_point and self.delivery is None
                     ) or not self.has_purchase:
@@ -289,7 +288,7 @@ class CustomerInvoice(Invoice):
                 else:
                     confirm_basket_disabled = "disabled"
                 if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                    if self.status == PERMANENCE_OPENED:
+                    if self.status == SaleStatus.OPENED:
                         msg_unconfirmed_order_will_be_cancelled = (
                             '<span style="color: red; ">{}</span><br>'.format(
                                 _("⚠ Unconfirmed orders will be canceled.")
@@ -348,7 +347,7 @@ class CustomerInvoice(Invoice):
         return {"#span_btn_confirm_order": mark_safe(msg_html)}
 
     def get_html_select_delivery_point(self, permanence, status):
-        if status == PERMANENCE_OPENED and permanence.with_delivery_point:
+        if status == SaleStatus.OPENED and permanence.with_delivery_point:
             if self.delivery is not None:
                 label = self.delivery.get_delivery_customer_display()
                 delivery_id = self.delivery_id
@@ -360,12 +359,12 @@ class CustomerInvoice(Invoice):
                         Q(
                             permanence_id=permanence.id,
                             delivery_point__group_id=self.customer.group_id,
-                            status=PERMANENCE_OPENED,
+                            status=SaleStatus.OPENED,
                         )
                         | Q(
                             permanence_id=permanence.id,
                             delivery_point__group__isnull=True,
-                            status=PERMANENCE_OPENED,
+                            status=SaleStatus.OPENED,
                         )
                     )
 
@@ -373,14 +372,14 @@ class CustomerInvoice(Invoice):
                     qs = DeliveryBoard.objects.filter(
                         permanence_id=permanence.id,
                         delivery_point__group__isnull=True,
-                        status=PERMANENCE_OPENED,
+                        status=SaleStatus.OPENED,
                     )
 
                 if qs.exists():
                     label = "{}".format(_("Please, select a delivery point"))
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id, customer_id=self.customer_id
-                    ).update(status=PERMANENCE_OPENED)
+                    ).update(status=SaleStatus.OPENED)
                 else:
                     label = "{}".format(
                         _("No delivery point is open for you. You can not place order.")
@@ -390,7 +389,7 @@ class CustomerInvoice(Invoice):
                     # 2 / task_order.close_send_order will delete any CLOSED orders without any delivery point
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id, customer_id=self.customer_id
-                    ).update(status=PERMANENCE_CLOSED)
+                    ).update(status=SaleStatus.CLOSED)
 
             if self.customer_id != self.customer_charged_id:
                 msg_transport = EMPTY_STRING

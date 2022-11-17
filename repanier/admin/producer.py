@@ -13,7 +13,7 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget
-from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
+from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING, SaleStatus
 from repanier.middleware import get_query_filters
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
@@ -129,7 +129,7 @@ def create__producer_action(year):
 
 class ProducerDataForm(forms.ModelForm):
     permanences = forms.ModelMultipleChoiceField(
-        Permanence.objects.filter(status=PERMANENCE_PLANNED),
+        Permanence.objects.filter(status=SaleStatus.PLANNED),
         label=_("Sales"),
         widget=FilteredSelectMultiple(_("Sales"), False),
         required=False,
@@ -187,7 +187,7 @@ class ProducerDataForm(forms.ModelForm):
         if instance.id is not None:
             updated_permanences = Permanence.objects.filter(
                 producers=instance.pk
-            ).exclude(status=PERMANENCE_PLANNED)
+            ).exclude(status=SaleStatus.PLANNED)
             instance.permanence_set.set(updated_permanences)
             instance.permanence_set.add(*self.cleaned_data["permanences"])
             # The previous save is called with "commit=False"

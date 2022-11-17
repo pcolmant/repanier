@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED
+from repanier.const import SaleStatus
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
@@ -44,7 +44,7 @@ def delivery_ajax(request):
     ).first()
     if customer_invoice is None:
         raise Http404
-    if customer_invoice.status != PERMANENCE_OPENED:
+    if customer_invoice.status != SaleStatus.OPENED:
         raise Http404
 
     delivery_id = sint(request.GET.get("delivery", 0))
@@ -55,13 +55,13 @@ def delivery_ajax(request):
                 id=delivery_id,
                 permanence_id=permanence_id,
                 delivery_point__group_id=customer.group_id,
-                status=PERMANENCE_OPENED,
+                status=SaleStatus.OPENED,
             )
             | Q(
                 id=delivery_id,
                 permanence_id=permanence_id,
                 delivery_point__group__isnull=True,
-                status=PERMANENCE_OPENED,
+                status=SaleStatus.OPENED,
             )
         )
     else:
@@ -69,7 +69,7 @@ def delivery_ajax(request):
             id=delivery_id,
             permanence_id=permanence_id,
             delivery_point__group__isnull=True,
-            status=PERMANENCE_OPENED,
+            status=SaleStatus.OPENED,
         )
     delivery = qs.first()
     if delivery is None or customer_invoice.delivery == delivery:

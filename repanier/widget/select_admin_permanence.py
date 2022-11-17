@@ -2,10 +2,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from repanier.const import (
-    PERMANENCE_OPENED,
-    PERMANENCE_CLOSED,
-    PERMANENCE_SEND,
-    PERMANENCE_PLANNED,
+    SaleStatus,
 )
 from repanier.models.permanence import Permanence
 from repanier.tools import get_repanier_template_name
@@ -25,9 +22,9 @@ class SelectAdminPermanenceWidget(forms.Select):
             )
             if permanence is not None:
                 status = permanence.status
-                if status in [PERMANENCE_PLANNED, PERMANENCE_OPENED, PERMANENCE_CLOSED]:
+                if status in [SaleStatus.PLANNED.value, SaleStatus.OPENED.value, SaleStatus.CLOSED.value]:
                     case_show_hide += 'case "{}": '.format(option_value)
-                elif status == PERMANENCE_SEND:
+                elif status == SaleStatus.SEND:
                     case_hide_show += 'case "{}": '.format(option_value)
                 else:
                     case_show_show += 'case "{}": '.format(option_value)

@@ -122,7 +122,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     if customer is None:
                         purchases = (
                             Purchase.objects.filter(
-                                permanence__status__gte=PERMANENCE_INVOICED,
+                                permanence__status__gte=SaleStatus.INVOICED,
                                 permanence__permanence_date__year=year,
                                 producer_id=producer.id,
                             )
@@ -136,7 +136,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     else:
                         purchases = (
                             Purchase.objects.filter(
-                                permanence__status__gte=PERMANENCE_INVOICED,
+                                permanence__status__gte=SaleStatus.INVOICED,
                                 permanence__permanence_date__year=year,
                                 customer_id=customer.id,
                                 producer_id=producer.id,
@@ -261,7 +261,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                             purchase.get_producer_unit_price()
                                             + purchase.offer_item.unit_deposit.amount
                                         )
-                                    ).quantize(TWO_DECIMALS)
+                                    ).quantize(RoundUpTo.TWO_DECIMALS)
                                     purchases_price += purchase_price
                                     c.style.font.color = Color(Color.BLUE)
                                     ws.conditional_formatting.addCellIs(
@@ -426,7 +426,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     if customer is None:
                         purchases = (
                             Purchase.objects.filter(
-                                permanence__status__gte=PERMANENCE_INVOICED,
+                                permanence__status__gte=SaleStatus.INVOICED,
                                 permanence__permanence_date__year=year,
                                 producer_id=producer.id,
                             )
@@ -441,7 +441,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     else:
                         purchases = (
                             Purchase.objects.filter(
-                                permanence__status__gte=PERMANENCE_INVOICED,
+                                permanence__status__gte=SaleStatus.INVOICED,
                                 permanence__permanence_date__year=year,
                                 customer_id=customer.id,
                                 producer_id=producer.id,
@@ -591,7 +591,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                             purchase.get_producer_unit_price()
                                             + purchase.offer_item.unit_deposit.amount
                                         )
-                                    ).quantize(TWO_DECIMALS)
+                                    ).quantize(RoundUpTo.TWO_DECIMALS)
                                     offer_items_price += offer_item_price
                                     if offer_item_save.order_unit in [
                                         PRODUCT_ORDER_UNIT_KG,
@@ -839,7 +839,7 @@ def import_purchase_sheet(
                     producer_row_price = row[_("Purchase price")]
                     if producer_row_price is not None:
                         producer_row_price = Decimal(producer_row_price).quantize(
-                            TWO_DECIMALS
+                            RoundUpTo.TWO_DECIMALS
                         )
                         if purchase.purchase_price.amount != producer_row_price:
                             quantity_has_been_modified = True
@@ -851,11 +851,11 @@ def import_purchase_sheet(
                             producer_unit_price = (
                                 purchase.offer_item.producer_unit_price.amount
                                 + purchase.offer_item.unit_deposit.amount
-                            ).quantize(TWO_DECIMALS)
+                            ).quantize(RoundUpTo.TWO_DECIMALS)
                             if producer_unit_price != DECIMAL_ZERO:
                                 purchase.quantity_invoiced = (
                                     producer_row_price / producer_unit_price
-                                ).quantize(FOUR_DECIMALS)
+                                ).quantize(RoundUpTo.FOUR_DECIMALS)
                             else:
                                 purchase.quantity_invoiced = DECIMAL_ZERO
 
@@ -864,7 +864,7 @@ def import_purchase_sheet(
                             DECIMAL_ZERO
                             if row[_("Quantity invoiced")] is None
                             else Decimal(row[_("Quantity invoiced")]).quantize(
-                                FOUR_DECIMALS
+                                RoundUpTo.FOUR_DECIMALS
                             )
                         )
                         if purchase.quantity_invoiced != quantity_invoiced:
@@ -894,7 +894,7 @@ def import_purchase_sheet(
                     rule_of_3_target = row[_("Rule of 3")]
                     if rule_of_3_target is not None:
                         rule_of_3_target = Decimal(rule_of_3_target).quantize(
-                            TWO_DECIMALS
+                            RoundUpTo.TWO_DECIMALS
                         )
                         if rule_of_3_target != rule_of_3_source:
                             max_purchase_counter = len(array_purchase)
@@ -926,7 +926,7 @@ def import_purchase_sheet(
                                             if producer_unit_price != DECIMAL_ZERO:
                                                 purchase.quantity_invoiced = (
                                                     delta / producer_unit_price
-                                                ).quantize(FOUR_DECIMALS)
+                                                ).quantize(RoundUpTo.FOUR_DECIMALS)
                                             else:
                                                 purchase.quantity_invoiced = (
                                                     DECIMAL_ZERO
@@ -934,11 +934,11 @@ def import_purchase_sheet(
                                         else:
                                             purchase.quantity_invoiced = (
                                                 purchase.quantity_invoiced * ratio
-                                            ).quantize(FOUR_DECIMALS)
+                                            ).quantize(RoundUpTo.FOUR_DECIMALS)
                                             adjusted_invoice += (
                                                 purchase.quantity_invoiced
                                                 * producer_unit_price
-                                            ).quantize(TWO_DECIMALS)
+                                            ).quantize(RoundUpTo.TWO_DECIMALS)
                                         purchase.save()
 
                 row_num += 1
@@ -980,7 +980,7 @@ def handle_uploaded_purchase(request, permanence, file_to_import, *args):
 
     if not error:
         if permanence is not None:
-            if permanence.status == PERMANENCE_SEND:
+            if permanence.status == SaleStatus.SEND:
                 ws = wb.get_sheet_by_name(format_worksheet_title(permanence))
                 error, error_msg = import_purchase_sheet(
                     ws,

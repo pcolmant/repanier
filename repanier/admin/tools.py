@@ -5,6 +5,7 @@ from threading import local
 from django.core.checks import messages
 from django.http import HttpResponseRedirect
 from django.utils.translation import gettext_lazy as _
+from repanier.const import SaleStatus
 from repanier.models import Permanence
 from repanier.models import Product
 
@@ -44,7 +45,7 @@ def check_done_in_post(func):
     return func_wrapper
 
 
-def check_permanence(status, status_str):
+def check_permanence(status: SaleStatus):
     def actual_decorator(func):
         @wraps(func)
         def func_wrapper(*args, **kwargs):
@@ -59,11 +60,11 @@ def check_permanence(status, status_str):
                 user_message_level = messages.INFO
                 args[0].message_user(args[1], user_message, user_message_level)
                 return HttpResponseRedirect(args[0].get_redirect_to_change_list_url())
-            if permanence.status != status:
+            if permanence.status != status.value:
                 # logger.debug("check_permanence, permanence.status != status")
                 user_message = _(
-                    "To perform this action, the status of {permanence} must be '{status}.'."
-                ).format(permanence=permanence, status=status_str)
+                    "To perform this action, the status of {permanence} must be '{status.label}.'."
+                ).format(permanence=permanence, status=status.label)
                 user_message_level = messages.ERROR
                 args[0].message_user(args[1], user_message, user_message_level)
                 return HttpResponseRedirect(args[0].get_redirect_to_change_list_url())

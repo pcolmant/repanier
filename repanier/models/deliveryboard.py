@@ -4,10 +4,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from repanier.const import (
-    LUT_PERMANENCE_STATUS,
-    PERMANENCE_PLANNED,
-    PERMANENCE_SEND,
-    EMPTY_STRING,
+    EMPTY_STRING, SaleStatus,
 )
 
 
@@ -30,19 +27,19 @@ class DeliveryBoard(models.Model):
 
     status = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=SaleStatus.choices,
+        default=SaleStatus.PLANNED,
         verbose_name=_("Status"),
     )
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True)
     highest_status = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=SaleStatus.choices,
+        default=SaleStatus.PLANNED,
         verbose_name=_("Highest status"),
     )
 
-    def set_status(self, new_status):
+    def set_status(self, new_status : SaleStatus):
         from repanier.models.invoice import CustomerInvoice
         from repanier.models.purchase import PurchaseWoReceiver
 
@@ -76,7 +73,7 @@ class DeliveryBoard(models.Model):
         return "{} - {}".format(self, self.get_status_display())
 
     def get_delivery_customer_display(self):
-        if self.status != PERMANENCE_SEND:
+        if self.status != SaleStatus.SEND:
             return "{} - {}".format(self, self.get_status_display())
         else:
             return "{} - {}".format(self, _("Orders closed"))

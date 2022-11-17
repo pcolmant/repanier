@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils.translation import gettext_lazy as _
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
-from repanier.const import PERMANENCE_PLANNED, PERMANENCE_CLOSED, EMPTY_STRING
+from repanier.const import EMPTY_STRING, SaleStatus
 from repanier.middleware import get_query_filters
 from repanier.models import (
     PermanenceBoard,
@@ -19,11 +19,19 @@ from repanier.models import (
 
 
 class ProducerAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        qs = Producer.objects.filter(is_active=True)
+    model = Producer
 
-        if self.q:
-            qs = qs.filter(short_profile_name__istartswith=self.q)
+    search_fields = [
+        "short_profile_name",
+    ]
+
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        if not self.request.user.is_staff:
+            return Producer.objects.none()
+
+        qs = super().get_queryset()
+        qs = qs.filter(is_active=True)
 
         return qs
 
@@ -39,7 +47,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
         if object_id:
             # Update
             return Permanence.objects.filter(
-                id=object_id, highest_status=PERMANENCE_PLANNED
+                id=object_id, highest_status=SaleStatus.PLANNED
             ).exists()
         # Create
         return True
@@ -49,7 +57,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
         if object_id:
             # Update
             return Permanence.objects.filter(
-                id=object_id, highest_status=PERMANENCE_PLANNED
+                id=object_id, highest_status=SaleStatus.PLANNED
             ).exists()
         # Create
         return True
@@ -92,7 +100,7 @@ class DeliveryBoardInline(admin.TabularInline):
         if object_id:
             # Update
             return Permanence.objects.filter(
-                id=object_id, highest_status=PERMANENCE_PLANNED
+                id=object_id, highest_status=SaleStatus.PLANNED
             ).exists()
         # Create
         return True
@@ -102,7 +110,7 @@ class DeliveryBoardInline(admin.TabularInline):
         if object_id:
             # Update
             return Permanence.objects.filter(
-                id=object_id, highest_status=PERMANENCE_PLANNED
+                id=object_id, highest_status=SaleStatus.PLANNED
             ).exists()
         # Create
         return True
@@ -192,11 +200,11 @@ class SaleAdmin(admin.ModelAdmin):
             "status",
         ]
         if permanence is not None:
-            if permanence.status > PERMANENCE_PLANNED:
+            if permanence.status > SaleStatus.PLANNED.value:
                 readonly_fields.append("producers")
                 # if settings.REPANIER_SETTINGS_BOX:
                 #     readonly_fields.append("boxes")
-            elif permanence.status >= PERMANENCE_CLOSED:
+            elif permanence.status >= SaleStatus.CLOSED.value:
                 readonly_fields.append("automatically_closed")
         return readonly_fields
 

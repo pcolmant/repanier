@@ -6,11 +6,8 @@ from django.utils.translation import gettext_lazy as _
 
 from repanier.const import (
     EMPTY_STRING,
-    PERMANENCE_CLOSED,
     DECIMAL_ZERO,
-    PERMANENCE_OPENED,
-    PERMANENCE_SEND,
-    TWO_DECIMALS,
+    RoundUpTo, SaleStatus,
 )
 from repanier.models import Permanence
 from repanier.models.customer import Customer
@@ -49,7 +46,7 @@ def repanier_notification(*args, **kwargs):
 def repanier_permanences(*args, **kwargs):
     permanences_cards = []
     for permanence in (
-        Permanence.objects.filter(status=PERMANENCE_OPENED)
+        Permanence.objects.filter(status=SaleStatus.OPENED)
         .only("id", "permanence_date", "with_delivery_point")
         .order_by("permanence_date", "id")
     ):
@@ -58,7 +55,7 @@ def repanier_permanences(*args, **kwargs):
     displayed_permanence_counter = 0
     for permanence in (
         Permanence.objects.filter(
-            status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+            status__in=[SaleStatus.CLOSED, SaleStatus.SEND],
             master_permanence__isnull=True,
         )
         .only("id", "permanence_date")
@@ -388,7 +385,7 @@ def repanier_select_task(context, *args, **kwargs):
                 if permanence_board.customer is not None:
                     if (
                         permanence_board.customer_id == customer.id
-                        and permanence_board.permanence.status <= PERMANENCE_CLOSED
+                        and permanence_board.permanence.status <= SaleStatus.CLOSED
                     ):
                         result = """
                         <b><i>
@@ -414,7 +411,7 @@ def repanier_select_task(context, *args, **kwargs):
                         )
                 else:
                     if permanence_board.permanence_role.customers_may_register:
-                        if permanence_board.permanence.status <= PERMANENCE_CLOSED:
+                        if permanence_board.permanence.status <= SaleStatus.CLOSED:
                             result = """
                             <b><i>
                             <select name="value" id="task{task_id}"
@@ -460,14 +457,14 @@ def select_offer_item(offer_item, result, user):
         .first()
     )
     if purchase is not None:
-        is_open = purchase.status == PERMANENCE_OPENED
+        is_open = purchase.status == SaleStatus.OPENED
         offer_item = purchase.offer_item
         price_list_multiplier = offer_item.get_price_list_multiplier(
             purchase.customer_invoice
         )
         customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
         unit_deposit = offer_item.get_unit_deposit()
-        unit_price_amount = (customer_unit_price + unit_deposit).quantize(TWO_DECIMALS)
+        unit_price_amount = (customer_unit_price + unit_deposit).quantize(RoundUpTo.TWO_DECIMALS)
         html = get_html_selected_value(
             offer_item,
             purchase.quantity_ordered,
@@ -478,7 +475,7 @@ def select_offer_item(offer_item, result, user):
         is_open = ProducerInvoice.objects.filter(
             permanence__offeritem=offer_item.id,
             producer__offeritem=offer_item.id,
-            status=PERMANENCE_OPENED,
+            status=SaleStatus.OPENED,
         ).exists()
         html = get_html_selected_value(
             offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=is_open

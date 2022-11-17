@@ -12,18 +12,16 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_PC_PRICE_KG,
     PRODUCT_ORDER_UNIT_PC_PRICE_LT,
     PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-    TWO_DECIMALS,
     PRODUCT_ORDER_UNIT_LT,
     DICT_VAT,
     DICT_VAT_RATE,
-    FOUR_DECIMALS,
     PRODUCT_ORDER_UNIT_DEPOSIT,
     LUT_PRODUCT_ORDER_UNIT,
     PRODUCT_ORDER_UNIT_PC,
     LUT_PRODUCT_PLACEMENT,
     PRODUCT_PLACEMENT_BASKET,
     LUT_ALL_VAT,
-    DICT_VAT_DEFAULT,
+    DICT_VAT_DEFAULT, RoundUpTo,
 )
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelRepanierMoneyField
 from repanier.picture.const import SIZE_L
@@ -140,30 +138,30 @@ class Item(models.Model):
         if producer.producer_price_are_wo_vat:
             self.producer_vat.amount = (
                 self.producer_unit_price.amount * vat_rate
-            ).quantize(FOUR_DECIMALS)
+            ).quantize(RoundUpTo.FOUR_DECIMALS)
             if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                 self.customer_unit_price.amount = (
                     self.producer_unit_price.amount * producer.price_list_multiplier
-                ).quantize(TWO_DECIMALS)
+                ).quantize(RoundUpTo.TWO_DECIMALS)
             else:
                 self.customer_unit_price = self.producer_unit_price
             self.customer_vat.amount = (
                 self.customer_unit_price.amount * vat_rate
-            ).quantize(FOUR_DECIMALS)
+            ).quantize(RoundUpTo.FOUR_DECIMALS)
             self.customer_unit_price += self.customer_vat
         else:
             self.producer_vat.amount = self.producer_unit_price.amount - (
                 self.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)
-            ).quantize(FOUR_DECIMALS)
+            ).quantize(RoundUpTo.FOUR_DECIMALS)
             if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                 self.customer_unit_price.amount = (
                     self.producer_unit_price.amount * producer.price_list_multiplier
-                ).quantize(TWO_DECIMALS)
+                ).quantize(RoundUpTo.TWO_DECIMALS)
             else:
                 self.customer_unit_price = self.producer_unit_price
             self.customer_vat.amount = self.customer_unit_price.amount - (
                 self.customer_unit_price.amount / (DECIMAL_ONE + vat_rate)
-            ).quantize(FOUR_DECIMALS)
+            ).quantize(RoundUpTo.FOUR_DECIMALS)
 
     def get_unit_price(self, customer_price=True):
         if customer_price:

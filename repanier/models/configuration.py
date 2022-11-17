@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class Configuration(models.Model):
+
     group_name = models.CharField(
         _("Name of the group"),
         max_length=50,
@@ -31,14 +32,14 @@ class Configuration(models.Model):
     )
     name = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_NAME,
-        default=PERMANENCE_NAME_PERMANENCE,
+        choices=PermanenceName.choices,
+        default=PermanenceName.PERMANENCE,
         verbose_name=_("Offers name"),
     )
     currency = models.CharField(
         max_length=3,
-        choices=LUT_CURRENCY,
-        default=CURRENCY_EUR,
+        choices=Currency.choices,
+        default=Currency.EUR,
         verbose_name=_("Currency"),
     )
     max_week_wo_participation = models.DecimalField(
@@ -208,7 +209,7 @@ class Configuration(models.Model):
 
     @classmethod
     def init_repanier(cls):
-        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR
+        from repanier.const import DECIMAL_ONE
 
         site = Site.objects.get_current()
         if site is not None:
@@ -224,9 +225,9 @@ class Configuration(models.Model):
         if config is None:
             config = Configuration.objects.create(
                 group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
-                name=PERMANENCE_NAME_PERMANENCE,
+                name=PermanenceName.PERMANENCE.label,
                 bank_account="BE99 9999 9999 9999",
-                currency=CURRENCY_EUR,
+                currency=Currency.EUR,
             )
             config.init_email()
             config.save()
@@ -246,9 +247,9 @@ class Configuration(models.Model):
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
 
-        webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only("id").first()
+        webmaster_group = Group.objects.filter(name=AuthGroup.WEBMASTER).only("id").first()
         if webmaster_group is None:
-            webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
+            webmaster_group = Group.objects.create(name=AuthGroup.WEBMASTER)
         content_types = ContentType.objects.exclude(
             app_label__in=[
                 "admin",
@@ -273,9 +274,9 @@ class Configuration(models.Model):
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
 
-        repanier_group = Group.objects.filter(name=REPANIER_GROUP).only("id").first()
+        repanier_group = Group.objects.filter(name=AuthGroup.REPANIER).only("id").first()
         if repanier_group is None:
-            repanier_group = Group.objects.create(name=REPANIER_GROUP)
+            repanier_group = Group.objects.create(name=AuthGroup.REPANIER)
         content_types = ContentType.objects.filter(
             app_label__in=[
                 "repanier",
@@ -368,7 +369,7 @@ class Configuration(models.Model):
         )
         user = coordinator.customer_responsible.user
         user.groups.clear()
-        group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+        group_id = Group.objects.filter(name=AuthGroup.WEBMASTER).first()
         user.groups.add(group_id)
         api.publish_page(page=page, user=user, language=settings.LANGUAGE_CODE)
         user.groups.remove(group_id)

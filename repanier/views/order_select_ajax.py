@@ -7,15 +7,13 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.const import (
-    PERMANENCE_OPENED,
-    PERMANENCE_SEND,
     LIMIT_ORDER_QTY_ITEM,
     DECIMAL_ZERO,
     EMPTY_STRING,
-    TWO_DECIMALS,
+    RoundUpTo, SaleStatus,
 )
 from repanier.models.customer import Customer
-from repanier.models.invoice import ProducerInvoice, CustomerInvoice
+from repanier.models.invoice import CustomerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import sint, get_html_selected_value
@@ -49,18 +47,18 @@ def order_select_ajax(request):
         .first()
     )
     status = customer_invoice.status
-    if offer_item.may_order and status == PERMANENCE_OPENED:
+    if offer_item.may_order and status == SaleStatus.OPENED:
         product = offer_item.product
         price_list_multiplier = offer_item.get_price_list_multiplier(customer_invoice)
         customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
         unit_deposit = offer_item.get_unit_deposit()
-        unit_price_amount = (customer_unit_price + unit_deposit).quantize(TWO_DECIMALS)
+        unit_price_amount = (customer_unit_price + unit_deposit).quantize(RoundUpTo.TWO_DECIMALS)
         q_min = product.customer_minimum_order_quantity
         if purchase is not None:
             q_previous_order = purchase.quantity_ordered
         else:
             q_previous_order = DECIMAL_ZERO
-        if status == PERMANENCE_OPENED and product.stock > DECIMAL_ZERO:
+        if status == SaleStatus.OPENED and product.stock > DECIMAL_ZERO:
             q_alert = offer_item.get_q_alert() + q_previous_order
         else:
             q_alert = offer_item.get_q_alert()
@@ -75,13 +73,13 @@ def order_select_ajax(request):
         q_valid = q_min
         html = EMPTY_STRING
         if q_valid <= q_alert:
-            if status == PERMANENCE_OPENED or (
-                status <= PERMANENCE_SEND and selected == "selected"
+            if status == SaleStatus.OPENED or (
+                status <= SaleStatus.SEND and selected == "selected"
             ):
                 html = '<option value="0" {}>---</option>'.format(selected)
         else:
-            if status == PERMANENCE_OPENED or (
-                status <= PERMANENCE_SEND and selected == "selected"
+            if status == SaleStatus.OPENED or (
+                status <= SaleStatus.SEND and selected == "selected"
             ):
                 html = '<option value="0" {}>{}</option>'.format(
                     selected, _("Sold out")
@@ -95,8 +93,8 @@ def order_select_ajax(request):
                 if q_previous_order <= q_valid:
                     q_order_is_displayed = True
                     selected = "selected"
-            if status == PERMANENCE_OPENED or (
-                status <= PERMANENCE_SEND and selected == "selected"
+            if status == SaleStatus.OPENED or (
+                status <= SaleStatus.SEND and selected == "selected"
             ):
                 display = product.get_display(
                     qty=q_valid,
@@ -126,7 +124,7 @@ def order_select_ajax(request):
             html = '<option value="{}" selected>{}</option>'.format(
                 q_select_id, display
             )
-        if status == PERMANENCE_OPENED:
+        if status == SaleStatus.OPENED:
             html += '<option value="other_qty">{}</option>'.format(_("Other qty"))
         else:
             html = '<option value="0" selected>---</option>'
@@ -142,7 +140,7 @@ def order_select_ajax(request):
             )
             unit_deposit = offer_item.get_unit_deposit()
             unit_price_amount = (customer_unit_price + unit_deposit).quantize(
-                TWO_DECIMALS
+                RoundUpTo.TWO_DECIMALS
             )
             html = get_html_selected_value(
                 offer_item,

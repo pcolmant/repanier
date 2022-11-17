@@ -105,19 +105,22 @@ class AdminFilterCustomerOfPermanence(AutocompleteFilter):
 
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
+    model = Customer
+
+    search_fields = [
+        "short_basket_name",
+        "long_basket_name",
+        "user__email",
+    ]
+
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
-        # if not self.request.user.is_staff:
-        #     return OfferItem.objects.none()
-        qs = Customer.objects.filter(may_order=True)
+        if not self.request.user.is_staff:
+            return Customer.objects.none()
 
-        if self.q:
-            qs = qs.filter(
-                Q(short_basket_name__icontains=self.q)
-                | Q(long_basket_name__icontains=self.q)
-                | Q(user__email__icontains=self.q)
-                # | Q(email2__icontains=self.q)
-            )
+        qs = super().get_queryset()
+        qs = qs.filter(may_order=True)
+
         return qs
 
     def get_result_label(self, item):
@@ -143,15 +146,30 @@ class CustomerAutocomplete(autocomplete.Select2QuerySetView):
         return result
 
 
-class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
+class ProducerAutocomplete(autocomplete.Select2QuerySetView):
+    model = Producer
+
     search_fields = [
-        "delivery_comment_v2",
+        "short_profile_name",
     ]
 
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
-        # if not self.request.user.is_staff:
-        #     return OfferItem.objects.none()
+        if not self.request.user.is_staff:
+            return Producer.objects.none()
+
+        qs = super().get_queryset()
+        qs = qs.filter(is_active=True)
+
+        return qs
+
+
+class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        if not self.request.user.is_staff:
+            return DeliveryBoard.objects.none()
+
         permanence_id = self.forwarded.get("permanence", None)
         customer_id = self.forwarded.get("customer", None)
         customer = Customer.objects.filter(id=customer_id).first()
@@ -175,8 +193,8 @@ class DeliveryAutocomplete(autocomplete.Select2QuerySetView):
                     delivery_point__group__isnull=True,
                 )
 
-            if self.q:
-                qs = qs.filter(delivery_comment_v2__icontains=self.q)
+            # if self.q:
+            #     qs = qs.filter(delivery_comment_v2__icontains=self.q)
 
         else:
             qs = DeliveryBoard.objects.none()
@@ -211,11 +229,18 @@ class OfferItemAutocompleteChoiceField(forms.ModelChoiceField):
 class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !
+        if not self.request.user.is_staff:
+            return OfferItem.objects.none()
+
         permanence_id = self.forwarded.get("permanence", None)
+        producer_id = self.forwarded.get("producer", None)
         qs = OfferItem.objects.filter(
             permanence_id=permanence_id,
             is_box_content=False,
         ).order_by("department_for_customer", "long_name_v2")
+
+        if producer_id:
+            qs = qs.filter(producer_id=producer_id)
 
         if self.q:
             qs = qs.filter(
@@ -236,7 +261,7 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
         ).first()
         purchased_symbol = EMPTY_STRING
         if purchase is not None:
-            if purchase.status < PERMANENCE_SEND:
+            if purchase.status < SaleStatus.SEND:
                 qty = _("Quantity requested")
                 purchased_symbol = mark_safe(
                     "[<b>{} : {:.2f}</b>] ".format(qty, purchase.quantity_ordered)
@@ -260,63 +285,6 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
                 item.producer,
                 item.get_long_name_with_customer_price(),
             )
-
-
-# class ProductAutocompleteChoiceField(forms.ModelChoiceField):
-#     def label_from_instance(self, obj):
-#         return obj.get_long_name_with_customer_price()
-#
-#
-# class ProductAutocomplete(autocomplete.Select2QuerySetView):
-#     def get_queryset(self):
-#         # Don't forget to filter out results depending on the visitor !
-#         qs = Product.objects.filter(is_box=False, is_active=True).order_by(
-#             "department_for_customer", "long_name_v2"
-#         )
-#
-#         if self.q:
-#             qs = qs.filter(
-#                 Q(long_name_v2__icontains=self.q)
-#                 | Q(producer__short_profile_name__icontains=self.q)
-#                 | Q(department_for_customer__short_name_v2__icontains=self.q)
-#             )
-#
-#         return qs
-#
-#     def get_result_label(self, item):
-#         permanence_id = self.forwarded.get("permanence", None)
-#         customer_id = self.forwarded.get("customer", None)
-#         purchase = Purchase.objects.filter(
-#             permanence_id=permanence_id,
-#             customer_id=customer_id,
-#             offer_item__product_id=item.id,
-#         ).first()
-#         purchased_symbol = EMPTY_STRING
-#         if purchase is not None:
-#             if purchase.status < PERMANENCE_SEND:
-#                 qty = _("Quantity requested")
-#                 purchased_symbol = mark_safe(
-#                     "[<b>{} : {:.2f}</b>] ".format(qty, purchase.quantity_ordered)
-#                 )
-#             else:
-#                 qty = _("Quantity prepared")
-#                 purchased_symbol = mark_safe(
-#                     "[<b>{} : {:.4f}</b>] ".format(qty, purchase.quantity_invoiced)
-#                 )
-#
-#         if item.department_for_customer is None:
-#             return "{}{} - {}".format(
-#                 purchased_symbol,
-#                 item.producer,
-#                 item.get_long_name_with_customer_price(),
-#             )
-#         else:
-#             return "{}{} - {} - {}".format(
-#                 purchased_symbol,
-#                 item.department_for_customer,
-#                 item.producer,
-#                 item.get_long_name_with_customer_price(),
-#             )
 
 
 class PurchaseForm(forms.ModelForm):
@@ -349,6 +317,18 @@ class PurchaseForm(forms.ModelForm):
             },
         ),
     )
+    producer = forms.ModelChoiceField(
+        label=_("Producer"),
+        queryset=Producer.objects.all(),
+        required=True,
+        widget=autocomplete.ModelSelect2(
+            url="admin:repanier_purchase_form_producer",
+            attrs={
+                "data-dropdown-auto-width": "true",
+                "data-width": "80%",
+            },
+        ),
+    )
     offer_item = OfferItemAutocompleteChoiceField(
         label=_("Customer rate"),
         queryset=OfferItem.objects.all(),
@@ -357,6 +337,7 @@ class PurchaseForm(forms.ModelForm):
             url="admin:repanier_purchase_form_offeritem",
             forward=(
                 forward.Field("permanence"),
+                forward.Field("producer"),
                 forward.Field("customer"),
             ),
             attrs={
@@ -366,28 +347,6 @@ class PurchaseForm(forms.ModelForm):
             },
         ),
     )
-    # product = ProductAutocompleteChoiceField(
-    #     label=_("Product Customer rate"),
-    #     queryset=Product.objects.all(),
-    #     required=True,
-    #     widget=autocomplete.ModelSelect2(
-    #         url="admin:repanier_purchase_form_product",
-    #         forward=(
-    #             forward.Field("permanence"),
-    #             forward.Field("customer"),
-    #         ),
-    #         attrs={
-    #             "data-dropdown-auto-width": "true",
-    #             "data-width": "80%",
-    #             "data-html": True,
-    #         },
-    #     ),
-    # )
-    # offer_item = forms.ModelChoiceField(
-    #     label=_("Customer rate"),
-    #     queryset=OfferItem.objects.all(),
-    #     required=False,
-    # )
     quantity = forms.DecimalField(
         min_value=DECIMAL_ZERO,
         label=_("Qty"),
@@ -403,10 +362,9 @@ class PurchaseForm(forms.ModelForm):
 
         permanence_field = self.fields["permanence"]
         customer_field = self.fields["customer"]
-        quantity_field = self.fields["quantity"]
+        producer_field = self.fields["producer"]
         delivery_field = self.fields["delivery"]
-        # offer_item_field = self.fields["offer_item"]
-        # product_field = self.fields["product"]
+        quantity_field = self.fields["quantity"]
 
         if purchase.id is None:
             # Add new purchase
@@ -423,29 +381,31 @@ class PurchaseForm(forms.ModelForm):
                 delivery_point_id = customer_invoice.delivery_id
             else:
                 delivery_point_id = None
-            # product_field.initial = None
+            producer_id = query_params.get("producer", None)
+            producer_field.initial = producer_id
         else:
             # Update existing purchase
-            if purchase.status < PERMANENCE_SEND:
+            if purchase.status < SaleStatus.SEND:
                 quantity_field.initial = purchase.quantity_ordered
             else:
                 quantity_field.initial = purchase.quantity_invoiced
 
             permanence_id = purchase.permanence_id
             delivery_point_id = purchase.customer_invoice.delivery
-            # product_field.initial = purchase.offer_item.product_id
 
         permanence_field.widget = forms.HiddenInput()
         permanence_field.widget.attrs["readonly"] = True
         permanence_field.disabled = True
 
-        # offer_item_field.widget = forms.HiddenInput()
-        # offer_item_field.widget.attrs["readonly"] = True
-        # offer_item_field.disabled = True
-
         customer_field.widget.can_change_related = False
         customer_field.widget.can_add_related = False
         customer_field.widget.can_delete_related = False
+        customer_field.widget.can_view_related = True
+
+        producer_field.widget.can_change_related = False
+        producer_field.widget.can_add_related = False
+        producer_field.widget.can_delete_related = False
+        producer_field.widget.can_view_related = True
 
         if Permanence.objects.filter(
             id=permanence_id, with_delivery_point=True
@@ -527,7 +487,7 @@ class PurchaseAdmin(admin.ModelAdmin):
         permanence_id = query_params.get("permanence", None)
         if permanence_id is not None:
             if Permanence.objects.filter(
-                id=permanence_id, status__gt=PERMANENCE_SEND
+                id=permanence_id, status__gt=SaleStatus.SEND
             ).exists():
                 return False
             user = request.user
@@ -539,7 +499,7 @@ class PurchaseAdmin(admin.ModelAdmin):
         query_params = get_request_params()
         permanence_id = query_params.get("permanence", None)
         if permanence_id is not None:
-            if purchase is not None and purchase.status > PERMANENCE_SEND:
+            if purchase is not None and purchase.status > SaleStatus.SEND:
                 return False
             user = request.user
             if user.is_repanier_staff:
@@ -564,15 +524,15 @@ class PurchaseAdmin(admin.ModelAdmin):
                 name="repanier_purchase_form_delivery",
             ),
             path(
+                "producer_autocomplete/",
+                ProducerAutocomplete.as_view(),
+                name="repanier_purchase_form_producer",
+            ),
+            path(
                 "offer_item_autocomplete/",
                 OfferItemAutocomplete.as_view(),
                 name="repanier_purchase_form_offeritem",
             ),
-            # path(
-            #     "product_autocomplete/",
-            #     ProductAutocomplete.as_view(),
-            #     name="repanier_purchase_form_product",
-            # ),
             path(
                 "producer_of_permanence/<int:permanence>/",
                 self.admin_site.admin_view(
@@ -683,14 +643,14 @@ class PurchaseAdmin(admin.ModelAdmin):
             "permanence",
             "customer",
             "delivery",
-            # "product",
+            "producer",
             "offer_item",
             "quantity",
             "comment",
         ]
 
     def get_readonly_fields(self, request, purchase=None):
-        if purchase is not None and purchase.status > PERMANENCE_SEND:
+        if purchase is not None and purchase.status > SaleStatus.SEND:
             return [
                 "quantity",
             ]
@@ -708,15 +668,13 @@ class PurchaseAdmin(admin.ModelAdmin):
             if delivery is not None:
                 status = delivery.status
 
-        if status > PERMANENCE_SEND:
+        if status > SaleStatus.SEND:
             # The purchase is maybe already invoiced
             # Do not update it
             # It is forbidden to change invoiced permanence
             return
 
         offer_item = form.cleaned_data.get("offer_item")
-        # product = form.cleaned_data.get("product")
-        # offer_item = product.get_or_create_offer_item(permanence)
         quantity = form.cleaned_data.get("quantity", DECIMAL_ZERO)
         comment = form.cleaned_data.get("comment")
 

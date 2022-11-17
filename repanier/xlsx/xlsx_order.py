@@ -647,7 +647,7 @@ def export_preparation_for_a_delivery(
                                         customer_unit_price
                                         + purchase.offer_item.unit_deposit.amount
                                     )
-                                ).quantize(TWO_DECIMALS)
+                                ).quantize(RoundUpTo.TWO_DECIMALS)
                                 count_purchase += 1
                                 delta = 6
                                 for col_num in range(4):
@@ -1041,7 +1041,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 )
                             purchase_price = (
                                 price_qty * (unit_price + unit_deposit)
-                            ).quantize(TWO_DECIMALS)
+                            ).quantize(RoundUpTo.TWO_DECIMALS)
                             c.style.number_format.format_code = (
                                 repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
@@ -1067,7 +1067,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                         if offer_item.use_order_unit_converted:
                             if offer_item.order_average_weight > DECIMAL_ZERO:
                                 qty = (qty / offer_item.order_average_weight).quantize(
-                                    TWO_DECIMALS
+                                    RoundUpTo.TWO_DECIMALS
                                 )
                         base_unit = get_base_unit(offer_item.order_unit, qty)
                         c = ws.cell(row=row_num, column=0)
@@ -1147,7 +1147,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             )
                         purchase_price = (
                             price_qty * (unit_price + unit_deposit)
-                        ).quantize(TWO_DECIMALS)
+                        ).quantize(RoundUpTo.TWO_DECIMALS)
                         c.style.number_format.format_code = (
                             repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                         )
@@ -1761,7 +1761,7 @@ def export_customer_for_a_delivery(
                             )
                         purchases_price = (
                             price_qty * (customer_unit_price + unit_deposit)
-                        ).quantize(TWO_DECIMALS)
+                        ).quantize(RoundUpTo.TWO_DECIMALS)
                         if not xlsx_formula:
                             c.value = purchases_price
                             total_price += purchases_price

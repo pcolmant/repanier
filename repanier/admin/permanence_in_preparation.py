@@ -67,7 +67,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         if obj is None:
             return False
         if request.user.is_order_manager:
-            if obj.highest_status == PERMANENCE_PLANNED:
+            if obj.highest_status == SaleStatus.PLANNED.value:
                 return True
         return False
 
@@ -133,7 +133,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         ]
         return custom_urls + urls
 
-    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    @check_permanence(SaleStatus.PLANNED)
     def export_offer(self, request, permanence_id, permanence=None):
         wb = export_offer(permanence=permanence, wb=None)
         if wb is not None:
@@ -153,14 +153,14 @@ class PermanenceInPreparationAdmin(SaleAdmin):
     export_offer.short_description = _("1 --- Check the offer")
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SaleStatus.OPENED)
     def export_customer_opened_order(self, request, permanence_id, permanence=None):
         return self.export_customer_order(
             request, permanence, action="export_customer_opened_order"
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SaleStatus.SEND)
     def export_customer_closed_order(self, request, permanence_id, permanence=None):
         return self.export_customer_order(
             request, permanence, action="export_customer_closed_order"
@@ -221,11 +221,11 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             },
         )
 
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SaleStatus.OPENED)
     def export_producer_opened_order(self, request, permanence_id, permanence=None):
         return self.export_producer_order(request, permanence)
 
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SaleStatus.SEND)
     def export_producer_closed_order(self, request, permanence_id, permanence=None):
         return self.export_producer_order(request, permanence)
 
@@ -250,7 +250,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         return response
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    @check_permanence(SaleStatus.PLANNED)
     def open_order(self, request, permanence_id, permanence=None):
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             send_mail = not ("apply-wo-mail" in request.POST)
@@ -349,7 +349,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SaleStatus.OPENED)
     def close_order(self, request, permanence_id, permanence=None):
 
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
@@ -524,7 +524,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         if permanence.with_delivery_point:
             deliveries = DeliveryBoard.objects.filter(
                 permanence_id=permanence.id,
-                status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED],
+                status__in=[SaleStatus.OPENED, SaleStatus.CLOSED],
             )
         else:
             deliveries = DeliveryBoard.objects.none()
@@ -547,7 +547,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SaleStatus.OPENED)
     def back_to_scheduled(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             task_order.back_to_scheduled(permanence)
@@ -570,7 +570,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    @check_permanence(SaleStatus.PLANNED)
     def generate_permanence(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             form = GeneratePermanenceForm(request.POST)
@@ -612,7 +612,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
 
     def get_row_actions(self, permanence):
 
-        if permanence.status == PERMANENCE_PLANNED:
+        if permanence.status == SaleStatus.PLANNED.value:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a> '
@@ -625,7 +625,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 ),
                 _("Open orders"),
             )
-        elif permanence.status == PERMANENCE_OPENED:
+        elif permanence.status == SaleStatus.OPENED.value:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a> '
@@ -646,4 +646,4 @@ class PermanenceInPreparationAdmin(SaleAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(status__lte=PERMANENCE_SEND)
+        return qs.filter(status__lte=SaleStatus.SEND.value)

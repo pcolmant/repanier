@@ -17,7 +17,7 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget, ForeignKeyWidget
-from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
+from repanier.const import EMPTY_STRING, DECIMAL_ONE, RoundUpTo
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
 from repanier.xlsx.widget import (
@@ -527,7 +527,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 ) % {
                     "discount": Decimal(
                         (DECIMAL_ONE - customer.price_list_multiplier) * 100
-                    ).quantize(TWO_DECIMALS)
+                    ).quantize(RoundUpTo.TWO_DECIMALS)
                 }
             elif customer.price_list_multiplier > DECIMAL_ONE:
                 customer_price = _(
@@ -535,7 +535,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 ) % {
                     "surcharge": Decimal(
                         (customer.price_list_multiplier - DECIMAL_ONE) * 100
-                    ).quantize(TWO_DECIMALS)
+                    ).quantize(RoundUpTo.TWO_DECIMALS)
                 }
             if customer.group.price_list_multiplier < DECIMAL_ONE:
                 messages.add_message(
@@ -547,7 +547,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     % {
                         "discount": Decimal(
                             (DECIMAL_ONE - customer.group.price_list_multiplier) * 100
-                        ).quantize(TWO_DECIMALS),
+                        ).quantize(RoundUpTo.TWO_DECIMALS),
                         "group": customer.group,
                         "customer_price": customer_price,
                     },
@@ -562,7 +562,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     % {
                         "surcharge": Decimal(
                             (customer.group.price_list_multiplier - DECIMAL_ONE) * 100
-                        ).quantize(TWO_DECIMALS),
+                        ).quantize(RoundUpTo.TWO_DECIMALS),
                         "group": customer.group,
                         "customer_price": customer_price,
                     },

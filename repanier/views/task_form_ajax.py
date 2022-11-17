@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
-from repanier.const import PERMANENCE_CLOSED, PERMANENCE_SEND, PERMANENCE_OPENED
+from repanier.const import SaleStatus
 from repanier.models import Customer
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.tools import sint
@@ -33,14 +33,14 @@ def task_form_ajax(request):
             row_counter = PermanenceBoard.objects.filter(
                 id=p_permanence_board_id,
                 customer_id=customer.id,
-                permanence__status__lt=PERMANENCE_OPENED,
+                permanence__status__lt=SaleStatus.OPENED,
                 permanence_role__customers_may_register=True,
             ).update(customer=None)
             if row_counter == 0:
                 row_counter = PermanenceBoard.objects.filter(
                     id=p_permanence_board_id,
                     customer_id=customer.id,
-                    permanence__status__lt=PERMANENCE_CLOSED,
+                    permanence__status__lt=SaleStatus.CLOSED,
                     permanence_role__customers_may_register=True,
                     is_registered_on__gte=timezone.now() - datetime.timedelta(days=1),
                 ).update(customer=None)
@@ -49,7 +49,7 @@ def task_form_ajax(request):
             row_counter = PermanenceBoard.objects.filter(
                 id=p_permanence_board_id,
                 customer__isnull=True,
-                permanence__status__lte=PERMANENCE_SEND,
+                permanence__status__lte=SaleStatus.SEND,
                 permanence_role__customers_may_register=True,
             ).update(customer_id=customer.id, is_registered_on=timezone.now())
         else:
