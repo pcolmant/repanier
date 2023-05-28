@@ -1,17 +1,20 @@
+from email.mime.image import MIMEImage
+
 from django.template import Template, Context as TemplateContext
-
-# AttributeError: 'Context' object has no attribute 'render_context'
-# OK, i got the solution:
-# from decimal import *
-# is the "bad One" this lib has a Context object too. Thanks for anyone reading!
-
-from repanier.const import PRODUCT_ORDER_UNIT_DEPOSIT
+from django.utils.html import format_html
+from repanier.const import OrderUnit
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from repanier.models.staff import Staff
 from repanier.tools import *
+
+
+# AttributeError: 'Context' object has no attribute 'render_context'
+# OK, i got the solution:
+# from decimal import *
+# is the "bad One" this lib has a Context object too.
 
 
 def send_open_order(permanence_id):
@@ -24,12 +27,11 @@ def send_open_order(permanence_id):
 
     to_email = []
     for customer in Customer.objects.filter(
+        # id=3,
         represent_this_buyinggroup=False,
         may_order=True,
     ):
         to_email.append(customer.user.email)
-        if customer.email2:
-            to_email.append(customer.email2)
     offer_description = permanence.offer_description_v2
     offer_customer_mail = config.offer_customer_mail_v2
     offer_customer_mail_subject = "{} - {}".format(
@@ -41,7 +43,7 @@ def send_open_order(permanence_id):
     qs = OfferItemReadOnly.objects.filter(
         permanence_id=permanence_id,
         is_active=True,
-        order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+        order_unit__lt=OrderUnit.DEPOSIT,  # Don't display technical products.
     ).order_by("order_sort_order_v2")
     offer_detail = "<ul>{}</ul>".format(
         "".join(
@@ -53,20 +55,18 @@ def send_open_order(permanence_id):
         ),
     )
     if permanence.picture:
-        permanence_picture = format_html(
+        offer_description = format_html(
             """
+            <hr/>
              <img
-                alt="{0}" title="{0}"
+                alt="{label}" title="{label}"
                 style="float: left; margin: 5px;"
-                src="https:/{1}{2}{3}"/>
+                src="cid:id1"/>
+            <hr/>
+            {body}
             """,
-            permanence.get_permanence_display(),
-            settings.ALLOWED_HOSTS[0],
-            settings.MEDIA_URL,
-            permanence.picture,
-        )
-        offer_description = "<hr/>{}<hr/>{}".format(
-            permanence_picture, offer_description
+            label=permanence.get_permanence_display(),
+            body=offer_description,
         )
 
     template = Template(offer_customer_mail)
@@ -96,4 +96,13 @@ def send_open_order(permanence_id):
         to=to_email,
         show_customer_may_unsubscribe=True,
     )
+
+    if permanence.picture:
+        with open(settings.MEDIA_ROOT / permanence.picture.name, "rb") as fp:
+            msgImage = MIMEImage(fp.read(), name="repanier.jpg")
+            # Define the image's ID in header
+            msgImage.add_header("Content-ID", "<id1>")
+            # attach it to root
+            email.attach(msgImage)
+
     email.send_email()

@@ -1,5 +1,6 @@
 import logging
 import time
+from email.mime.image import MIMEImage
 from random import random
 from smtplib import (
     SMTPAuthenticationError,
@@ -16,7 +17,7 @@ from smtplib import (
 from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives, mail_admins
-from django.utils.html import strip_tags
+from django.utils.html import strip_tags, format_html
 from django.utils.translation import gettext_lazy as _
 from repanier.const import EMPTY_STRING
 
@@ -113,17 +114,18 @@ class RepanierEmail(EmailMultiAlternatives):
         return email_send
 
     @classmethod
-    def send_test_email(cls, to_email, subject=EMPTY_STRING, body=EMPTY_STRING):
+    def send_test_email(cls, to_email, subject=EMPTY_STRING, html_body=EMPTY_STRING):
         try:
             # Avoid : string payload expected: <class 'django.utils.functional.__proxy__'>
             subject = subject or "{}".format(
                 _("Test mail server configuration from Repanier")
             )
-            body = body or "{}".format(
-                _(
-                    "The mail server configuration is working on your website {}."
-                ).format(settings.REPANIER_SETTINGS_GROUP_NAME)
+            html_body = html_body or format_html(
+                _("The mail server configuration is working on your website {}."),
+                settings.REPANIER_SETTINGS_GROUP_NAME,
             )
+            body = strip_tags(html_body)
+
             # to_email = list({to_email, host_user})
             email = EmailMultiAlternatives(
                 subject=subject,
@@ -132,6 +134,32 @@ class RepanierEmail(EmailMultiAlternatives):
                 to=[to_email, settings.ADMIN_EMAIL],
                 reply_to=[settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO],
             )
+
+            with open(settings.MEDIA_ROOT / "android-chrome-192x192.png", "rb") as fp:
+                msgImage = MIMEImage(fp.read(), name="repanier.jpg")
+                # Define the image's ID in header
+                msgImage.add_header("Content-ID", "<id1>")
+                # attach it to root
+                email.attach(msgImage)
+                html_body = format_html(
+                    """
+                    <hr/>
+                     <img
+                        alt="{label}" title="{label}"
+                        style="float: left; margin: 5px;"
+                        src="cid:id1"/>
+                    <hr/>
+                    {body}
+                    """,
+                    label="label",
+                    body=html_body,
+                )
+
+            email.attach_alternative(
+                html_body,
+                "text/html",
+            )
+
             email.send()
             return _(
                 "An email has been send from {} to {}.".format(
@@ -200,7 +228,7 @@ class RepanierEmail(EmailMultiAlternatives):
                 REPANIER_SETTINGS_TEMPLATE=settings.REPANIER_SETTINGS_TEMPLATE,
             )
             RepanierEmail.send_test_email(
-                settings.ADMIN_EMAIL, subject=subject, body=body
+                settings.ADMIN_EMAIL, subject=subject, html_body=body
             )
 
     @classmethod

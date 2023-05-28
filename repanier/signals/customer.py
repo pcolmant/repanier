@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db.models import Q
 from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
@@ -15,8 +14,6 @@ def customer_pre_save(sender, **kwargs):
         # The buying group may not be de activated
         customer.is_active = True
         customer.is_group = False
-    if customer.email2 is not None:
-        customer.email2 = customer.email2.lower()
     if customer.bank_account1:
         # Prohibit to have two customers with same bank account
         other_bank_account1 = Customer.objects.filter(

@@ -1,6 +1,5 @@
 from decimal import *
 from enum import Enum
-from typing import Any, Union
 
 from django.conf import settings
 from django.db import models
@@ -12,10 +11,15 @@ class AuthGroup(str, Enum):
     WEBMASTER = "webmaster"
     REPANIER = "repanier"
 
+
 EMPTY_STRING = ""
 ONE_YEAR = 365
+LIMIT_ORDER_QTY_ITEM = 25
+LIMIT_DISPLAYED_PERMANENCE = 25
+DECIMAL_MAX_STOCK = Decimal("999999")
+REPANIER_MONEY_ZERO = RepanierMoney()
 
-DECIMAL_ZERO = Decimal("0")  # type: Union[Union[Decimal, Decimal], Any]
+DECIMAL_ZERO = Decimal("0")
 DECIMAL_ONE = Decimal("1")
 DECIMAL_TWO = Decimal("2")
 DECIMAL_THREE = Decimal("3")
@@ -39,7 +43,6 @@ DECIMAL_0_12 = Decimal("0.12")
 DECIMAL_0_20 = Decimal("0.20")
 DECIMAL_0_21 = Decimal("0.21")
 
-DECIMAL_MAX_STOCK = Decimal("999999")
 
 class RoundUpTo(Decimal, Enum):
     ZERO_DECIMAL = Decimal("0")
@@ -48,11 +51,11 @@ class RoundUpTo(Decimal, Enum):
     THREE_DECIMALS = Decimal("0.001")
     FOUR_DECIMALS = Decimal("0.0001")
 
+
 class MpttLevelDepth(int, Enum):
     ONE = 0
     TWO = 1
 
-REPANIER_MONEY_ZERO = RepanierMoney()
 
 class SaleStatus(models.TextChoices):
     PLANNED = "100", _("Scheduled")
@@ -68,260 +71,126 @@ class SaleStatus(models.TextChoices):
     ARCHIVED = "900", _("Archived")
     CANCELLED = "950", _("Cancelled")
 
-# PERMANENCE_PLANNED = "100"
-# PERMANENCE_WAIT_FOR_OPEN = "200"
-# PERMANENCE_OPENED = "300"
-# PERMANENCE_WAIT_FOR_CLOSED = "350"
-# PERMANENCE_CLOSED = "370"
-# PERMANENCE_WAIT_FOR_SEND = "400"
-# PERMANENCE_SEND = "500"
-# PERMANENCE_WAIT_FOR_INVOICED = "600"
-# PERMANENCE_WAIT_FOR_CANCEL_INVOICE = "700"
-# PERMANENCE_INVOICED = "800"
-# PERMANENCE_ARCHIVED = "900"
-# PERMANENCE_CANCELLED = "950"
 
-# PERMANENCE_PLANNED_STR = _("Scheduled")
-# PERMANENCE_WAIT_FOR_OPEN_STR = _("Being opened")
-# PERMANENCE_OPENED_STR = _("Orders opened")
-# PERMANENCE_WAIT_FOR_CLOSED_STR = _("Being closed (step1)")
-# PERMANENCE_CLOSED_STR = _("Being closed (step 2)")
-# PERMANENCE_WAIT_FOR_SEND_STR = _("Being closed (step 3)")
-# PERMANENCE_SEND_STR = _("Orders closed")
-# PERMANENCE_WAIT_FOR_INVOICED_STR = _("Being booked")
-# PERMANENCE_WAIT_FOR_CANCEL_INVOICE_STR = _("Being cancelled")
-# PERMANENCE_INVOICED_STR = _("Booked")
-# PERMANENCE_ARCHIVED_STR = _("Archived")
-# PERMANENCE_CANCELLED_STR = _("Cancelled")
+class Placement(models.TextChoices):
+    FREEZER = "100", _("Freezer")
+    FRIDGE = "200", _("Fridge")
+    OUT_OF_BASKET = "300", _("Loose, out of the basket")
+    BASKET = "400", _("Into the basket")
 
-# LUT_PERMANENCE_STATUS = (
-#     (PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR),
-#     (PERMANENCE_WAIT_FOR_OPEN, PERMANENCE_WAIT_FOR_OPEN_STR),
-#     (PERMANENCE_OPENED, PERMANENCE_OPENED_STR),
-#     (PERMANENCE_WAIT_FOR_CLOSED, PERMANENCE_WAIT_FOR_CLOSED_STR),
-#     (PERMANENCE_CLOSED, PERMANENCE_CLOSED_STR),
-#     (PERMANENCE_WAIT_FOR_SEND, PERMANENCE_WAIT_FOR_SEND_STR),
-#     (PERMANENCE_SEND, PERMANENCE_SEND_STR),
-#     (PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_WAIT_FOR_INVOICED_STR),
-#     (PERMANENCE_WAIT_FOR_CANCEL_INVOICE, PERMANENCE_WAIT_FOR_CANCEL_INVOICE_STR),
-#     (PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR),
-#     (PERMANENCE_ARCHIVED, PERMANENCE_ARCHIVED_STR),
-#     (PERMANENCE_CANCELLED, PERMANENCE_CANCELLED_STR),
-# )
 
-PRODUCT_PLACEMENT_FREEZER = "100"
-PRODUCT_PLACEMENT_FRIDGE = "200"
-PRODUCT_PLACEMENT_OUT_OF_BASKET = "300"
-PRODUCT_PLACEMENT_BASKET = "400"
+class OrderUnit(models.TextChoices):
+    PC = "100", _(
+        "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."
+    )
+    PC_PRICE_KG = "105", _(
+        "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."
+    )
+    PC_PRICE_LT = "110", _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")
+    PC_PRICE_PC = "115", _(
+        "Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."
+    )
+    KG = "120", _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ...")
+    PC_KG = "140", _(
+        "Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."
+    )
+    LT = "150", _("Sold in volume (in ℓ): non-conditioned liquids")
+    DEPOSIT = "300", _("Deposit taken back at the permanence")
+    MEMBERSHIP_FEE = "400", _("Membership fee")
 
-PRODUCT_PLACEMENT_FREEZER_STR = _("Freezer")
-PRODUCT_PLACEMENT_FRIDGE_STR = _("Fridge")
-PRODUCT_PLACEMENT_OUT_OF_BASKET_STR = _("Loose, out of the basket")
-PRODUCT_PLACEMENT_BASKET_STR = _("Into the basket")
-
-LUT_PRODUCT_PLACEMENT = (
-    (PRODUCT_PLACEMENT_FREEZER, PRODUCT_PLACEMENT_FREEZER_STR),
-    (PRODUCT_PLACEMENT_FRIDGE, PRODUCT_PLACEMENT_FRIDGE_STR),
-    (PRODUCT_PLACEMENT_OUT_OF_BASKET, PRODUCT_PLACEMENT_OUT_OF_BASKET_STR),
-    (PRODUCT_PLACEMENT_BASKET, PRODUCT_PLACEMENT_BASKET_STR),
-)
-
-LUT_PRODUCT_PLACEMENT_REVERSE = (
-    (PRODUCT_PLACEMENT_FREEZER_STR, PRODUCT_PLACEMENT_FREEZER),
-    (PRODUCT_PLACEMENT_FRIDGE_STR, PRODUCT_PLACEMENT_FRIDGE),
-    (PRODUCT_PLACEMENT_OUT_OF_BASKET_STR, PRODUCT_PLACEMENT_OUT_OF_BASKET),
-    (PRODUCT_PLACEMENT_BASKET_STR, PRODUCT_PLACEMENT_BASKET),
-)
-
-PRODUCT_ORDER_UNIT_PC = "100"
-PRODUCT_ORDER_UNIT_PC_PRICE_KG = "105"
-PRODUCT_ORDER_UNIT_PC_PRICE_LT = "110"
-PRODUCT_ORDER_UNIT_PC_PRICE_PC = "115"
-PRODUCT_ORDER_UNIT_KG = "120"
-PRODUCT_ORDER_UNIT_PC_KG = "140"
-PRODUCT_ORDER_UNIT_LT = "150"
-PRODUCT_ORDER_UNIT_DEPOSIT = "300"
-PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE = "400"
-PRODUCT_ORDER_UNIT_TRANSPORTATION = "500"
-
-PRODUCT_ORDER_UNIT_PC_STR = _(
-    "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."
-)
-PRODUCT_ORDER_UNIT_PC_PRICE_KG_STR = _(
-    "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."
-)
-PRODUCT_ORDER_UNIT_PC_PRICE_KG_SHORT_STR = _("Sold by weight")
-PRODUCT_ORDER_UNIT_PC_PRICE_LT_STR = _(
-    "Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ..."
-)
-PRODUCT_ORDER_UNIT_PC_PRICE_LT_SHORT_STR = _("Sold by l")
-PRODUCT_ORDER_UNIT_PC_PRICE_PC_STR = _(
-    "Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."
-)
-PRODUCT_ORDER_UNIT_PC_PRICE_PC_SHORT_STR = _("Sold by piece")
-PRODUCT_ORDER_UNIT_KG_STR = _(
-    "Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ..."
-)
-PRODUCT_ORDER_UNIT_PC_KG_STR = _(
-    "Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."
-)
-PRODUCT_ORDER_UNIT_PC_KG_SHORT_STR = _("Sold by piece, invoiced following the weight")
-PRODUCT_ORDER_UNIT_LT_STR = _("Sold in volume (in ℓ): non-conditioned liquids")
-PRODUCT_ORDER_UNIT_DEPOSIT_STR = _("Deposit taken back at the permanence")
-PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE_STR = _("Membership fee")
-PRODUCT_ORDER_UNIT_TRANSPORTATION_STR = _("Shipping cost")
-
-LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST = (
-    (PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_STR),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG_STR),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_LT_STR),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, PRODUCT_ORDER_UNIT_PC_PRICE_PC_STR),
-    (PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_KG_STR),
-    (PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_KG_STR),
-    (PRODUCT_ORDER_UNIT_LT, PRODUCT_ORDER_UNIT_LT_STR),
-    (PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_DEPOSIT_STR),
-)
-
-LUT_PRODUCT_ORDER_UNIT = LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST + (
-    (PRODUCT_ORDER_UNIT_TRANSPORTATION, PRODUCT_ORDER_UNIT_TRANSPORTATION_STR),
-)
-
-LUT_PRODUCT_ORDER_UNIT_ALL = LUT_PRODUCT_ORDER_UNIT + (
-    (PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE_STR),
-    (PRODUCT_ORDER_UNIT_TRANSPORTATION, PRODUCT_ORDER_UNIT_TRANSPORTATION_STR),
-)
-
-LUT_PRODUCT_ORDER_UNIT_REVERSE = (
-    (PRODUCT_ORDER_UNIT_PC_STR, PRODUCT_ORDER_UNIT_PC),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG_STR, PRODUCT_ORDER_UNIT_PC_PRICE_KG),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT_STR, PRODUCT_ORDER_UNIT_PC_PRICE_LT),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC_STR, PRODUCT_ORDER_UNIT_PC_PRICE_PC),
-    (PRODUCT_ORDER_UNIT_KG_STR, PRODUCT_ORDER_UNIT_KG),
-    (PRODUCT_ORDER_UNIT_PC_KG_STR, PRODUCT_ORDER_UNIT_PC_KG),
-    (PRODUCT_ORDER_UNIT_LT_STR, PRODUCT_ORDER_UNIT_LT),
-    (PRODUCT_ORDER_UNIT_DEPOSIT_STR, PRODUCT_ORDER_UNIT_DEPOSIT),
-    (PRODUCT_ORDER_UNIT_TRANSPORTATION_STR, PRODUCT_ORDER_UNIT_TRANSPORTATION),
-)
-
-LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL = LUT_PRODUCT_ORDER_UNIT_REVERSE + (
-    (PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE_STR, PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE),
-    (PRODUCT_ORDER_UNIT_TRANSPORTATION_STR, PRODUCT_ORDER_UNIT_TRANSPORTATION),
-)
-
-LUT_PRODUCER_PRODUCT_ORDER_UNIT = (
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, PRODUCT_ORDER_UNIT_PC_PRICE_PC_SHORT_STR),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG_SHORT_STR),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_LT_SHORT_STR),
-    (PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_KG_SHORT_STR),
-)
-
-VAT_100 = "100"
-VAT_200 = "200"
-VAT_300 = "300"
-VAT_315 = "315"
-VAT_325 = "325"
-VAT_360 = "360"
-VAT_375 = "375"
-VAT_350 = "350"
-VAT_400 = "400"
-VAT_430 = "430"
-VAT_460 = "460"
-VAT_500 = "500"
-VAT_590 = "590"
-VAT_600 = "600"
-
-DICT_VAT_LABEL = 0
-DICT_VAT_RATE = 1
-
-DICT_VAT = {
-    VAT_100: ("---------", DECIMAL_ZERO),
-    VAT_315: ("2,1%", DECIMAL_0_021),
-    VAT_325: ("2,5%", DECIMAL_0_025),
-    VAT_350: ("3,8%", DECIMAL_0_038),
-    VAT_360: ("4%", DECIMAL_0_04),
-    VAT_375: ("5,5%", DECIMAL_0_055),
-    VAT_400: ("6%", DECIMAL_0_06),
-    VAT_430: ("8%", DECIMAL_0_08),
-    VAT_460: ("10%", DECIMAL_0_10),
-    VAT_500: ("12%", DECIMAL_0_12),
-    VAT_590: ("20%", DECIMAL_0_20),
-    VAT_600: ("21%", DECIMAL_0_21),
-}
-
-LUT_ALL_VAT = (
-    (VAT_100, DECIMAL_ZERO),
-    (VAT_315, DECIMAL_0_021),
-    (VAT_325, DECIMAL_0_025),
-    (VAT_350, DECIMAL_0_038),
-    (VAT_360, DECIMAL_0_04),
-    (VAT_375, DECIMAL_0_055),
-    (VAT_400, DECIMAL_0_06),
-    (VAT_430, DECIMAL_0_08),
-    (VAT_460, DECIMAL_0_10),
-    (VAT_500, DECIMAL_0_12),
-    (VAT_590, DECIMAL_0_20),
-    (VAT_600, DECIMAL_0_21),
-)
-
-LUT_ALL_VAT_REVERSE = (
-    (DECIMAL_ZERO, VAT_100),
-    (DECIMAL_0_021, VAT_315),
-    (DECIMAL_0_025, VAT_325),
-    (DECIMAL_0_038, VAT_350),
-    (DECIMAL_0_04, VAT_360),
-    (DECIMAL_0_055, VAT_375),
-    (DECIMAL_0_06, VAT_400),
-    (DECIMAL_0_08, VAT_430),
-    (DECIMAL_0_10, VAT_460),
-    (DECIMAL_0_12, VAT_500),
-    (DECIMAL_0_20, VAT_590),
-    (DECIMAL_0_21, VAT_600),
-)
 
 ##################### REPANIER VAT/RATE
 
+
+class Vat(models.TextChoices):
+    VAT_100 = "100", "---------"
+    VAT_200 = "200", "2,5%"
+    VAT_300 = "300", "3,8%"
+    VAT_400 = "400", "6%"
+    VAT_450 = "450", "8%"
+    VAT_500 = "500", "12%"
+    VAT_600 = "600", "21%"
+
+
+class VatDecimal(Decimal, Enum):
+    VAT_100 = DECIMAL_ZERO
+    VAT_200 = DECIMAL_0_025
+    VAT_300 = DECIMAL_0_038
+    VAT_400 = DECIMAL_0_06
+    VAT_450 = DECIMAL_0_08
+    VAT_500 = DECIMAL_0_12
+    VAT_600 = DECIMAL_0_21
+
+
+LUT_ALL_VAT = (
+    (Vat.VAT_100, VatDecimal.VAT_100),
+    (Vat.VAT_200, VatDecimal.VAT_200),
+    (Vat.VAT_300, VatDecimal.VAT_300),
+    (Vat.VAT_400, VatDecimal.VAT_400),
+    (Vat.VAT_450, VatDecimal.VAT_450),
+    (Vat.VAT_500, VatDecimal.VAT_500),
+    (Vat.VAT_600, VatDecimal.VAT_600),
+)
+
+DICT_ALL_VAT = dict(LUT_ALL_VAT)
+
+LUT_ALL_VAT_REVERSE = (
+    (VatDecimal.VAT_100, Vat.VAT_100),
+    (VatDecimal.VAT_200, Vat.VAT_200),
+    (VatDecimal.VAT_300, Vat.VAT_300),
+    (VatDecimal.VAT_400, Vat.VAT_400),
+    (VatDecimal.VAT_450, Vat.VAT_450),
+    (VatDecimal.VAT_500, Vat.VAT_500),
+    (VatDecimal.VAT_600, Vat.VAT_600),
+)
+
+DICT_ALL_VAT_REVERSE = dict(DICT_ALL_VAT)
+
+
 if settings.REPANIER_SETTINGS_COUNTRY == "ch":
     # Switzerland
-    DICT_VAT_DEFAULT = VAT_325
+    VAT_DEFAULT = Vat.VAT_200
     LUT_VAT = (
-        (VAT_100, "---------"),
-        (VAT_325, "2,5%"),
-        (VAT_350, "3,8%"),
-        (VAT_430, "8%"),
+        (Vat.VAT_100, Vat.VAT_100.label),
+        (Vat.VAT_200, Vat.VAT_200.label),
+        (Vat.VAT_300, Vat.VAT_300.label),
+        (Vat.VAT_450, Vat.VAT_450.label),
     )
 
     LUT_VAT_REVERSE = (
-        ("---------", VAT_100),
-        ("2,5%", VAT_325),
-        ("3,8%", VAT_350),
-        ("8%", VAT_430),
+        (Vat.VAT_100.label, Vat.VAT_100),
+        (Vat.VAT_200.label, Vat.VAT_200),
+        (Vat.VAT_300.label, Vat.VAT_300),
+        (Vat.VAT_450.label, Vat.VAT_450),
     )
 else:
     # Belgium
-    DICT_VAT_DEFAULT = VAT_400
+    VAT_DEFAULT = Vat.VAT_400
     LUT_VAT = (
-        (VAT_100, "---------"),
-        (VAT_400, "6%"),
-        (VAT_500, "12%"),
-        (VAT_600, "21%"),
+        (Vat.VAT_100, Vat.VAT_100.label),
+        (Vat.VAT_400, Vat.VAT_400.label),
+        (Vat.VAT_500, Vat.VAT_500.label),
+        (Vat.VAT_600, Vat.VAT_600.label),
     )
 
     LUT_VAT_REVERSE = (
-        ("---------", VAT_100),
-        ("6%", VAT_400),
-        ("12%", VAT_500),
-        ("21%", VAT_600),
+        (Vat.VAT_100.label, Vat.VAT_100),
+        (Vat.VAT_400.label, Vat.VAT_400),
+        (Vat.VAT_500.label, Vat.VAT_500),
+        (Vat.VAT_600.label, Vat.VAT_600),
     )
+
 
 class BankMovement(models.TextChoices):
     NOT_LATEST_TOTAL = "100", _("This is not the latest total")
     MEMBERSHIP_FEE = "150", "N/A 150"
-    COMPENSATION =  "200", "N/A 200"
+    COMPENSATION = "200", "N/A 200"
     PROFIT = "210", "N/A 210"
     TAX = "220", "N/A 220"
     CALCULATED_INVOICE = "250", "N/A 250"
     NEXT_LATEST_TOTAL = "300", _("This is the next latest bank total.")
     LATEST_TOTAL = "400", _("This is the latest bank total.")
+
 
 class PermanenceName(models.TextChoices):
     PERMANENCE = "100", _("Permanence")
@@ -331,18 +200,12 @@ class PermanenceName(models.TextChoices):
     OPENING = "500", _("Opening")
     DISTRIBUTION = "600", _("Distribution")
 
-LIMIT_ORDER_QTY_ITEM = 25
-LIMIT_DISPLAYED_PERMANENCE = 25
 
-# VALID_UNICODE = "✓"
 BANK_NOTE_UNICODE = "💶"
-LINK_UNICODE = "⛓"
 
-# LUT_VALID = (
-#     (True, VALID_UNICODE), (False, EMPTY_STRING)
-# )
 
 LUT_BANK_NOTE = ((True, BANK_NOTE_UNICODE), (False, EMPTY_STRING))
+
 
 class Currency(models.TextChoices):
     EUR = "100", "€"

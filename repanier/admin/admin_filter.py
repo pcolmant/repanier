@@ -124,7 +124,7 @@ class AdminFilterPermanenceDoneStatus(SimpleListFilter):
                 )
             else:
                 return queryset.filter(
-                    status=SaleStatus.RCHIVED,
+                    status=SaleStatus.ARCHIVED,
                 )
         else:
             return queryset

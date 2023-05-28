@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
 from django.db import connection
-from django.db.models import Q, Sum, DecimalField
+from django.db.models import Sum, DecimalField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -40,9 +40,6 @@ class Customer(models.Model):
     )
     long_basket_name = models.CharField(
         _("Long name"), max_length=100, blank=True, default=EMPTY_STRING
-    )
-    email2 = models.EmailField(
-        _("Second email address"), null=True, blank=True, default=EMPTY_STRING
     )
     language = models.CharField(
         max_length=5,
@@ -194,14 +191,8 @@ class Customer(models.Model):
 
     @classmethod
     def get_customer_from_valid_email(cls, email_address):
-        # try to find a customer based on user__email or customer__email2
-        customer = (
-            Customer.objects.filter(
-                Q(user__email=email_address) | Q(email2=email_address)
-            )
-            # .exclude(valid_email=False)
-            .first()
-        )
+        # try to find a customer based on user__email
+        customer = Customer.objects.filter(user__email=email_address).first()
         return customer
 
     def get_admin_date_balance(self):
@@ -236,23 +227,17 @@ class Customer(models.Model):
         return self.phone2 or EMPTY_STRING
 
     def get_phones(self, sep=", "):
-        return (
-            sep.join([self.phone1, self.phone2, EMPTY_STRING])
-            if self.phone2
-            else sep.join([self.phone1, EMPTY_STRING])
-        )
+        return sep.join([self.phone1, self.phone2]) if self.phone2 else self.phone1
 
-    def get_email1(self, prefix=EMPTY_STRING):
+    def get_email_prefixed(self, prefix=EMPTY_STRING):
         if not self.user.email:
             return EMPTY_STRING
         return "{}{}".format(prefix, self.user.email)
 
-    def get_emails(self, sep="; "):
-        return (
-            sep.join([self.user.email, self.email2, EMPTY_STRING])
-            if self.email2
-            else sep.join([self.user.email, EMPTY_STRING])
-        )
+    def get_email_postfixed(self, postfix="; "):
+        if not self.user.email:
+            return EMPTY_STRING
+        return "{}{}".format(self.user.email, postfix)
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
@@ -421,7 +406,7 @@ class Customer(models.Model):
 
         last_membership_fee = Purchase.objects.filter(
             customer_id=self.id,
-            offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+            offer_item__order_unit=OrderUnit.MEMBERSHIP_FEE,
         ).order_by("-id")
         if last_membership_fee.exists():
             return last_membership_fee.first().selling_price
@@ -434,7 +419,7 @@ class Customer(models.Model):
         last_membership_fee = (
             Purchase.objects.filter(
                 customer_id=self.id,
-                offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+                offer_item__order_unit=OrderUnit.MEMBERSHIP_FEE,
             )
             .order_by("-id")
             .prefetch_related("customer_invoice")
@@ -497,10 +482,7 @@ class Customer(models.Model):
     get_purchase_counter.short_description = _("Purchases in the last 12 months")
 
     def my_order_confirmation_email_send_to(self):
-        if self.email2:
-            to_email = (self.user.email, self.email2)
-        else:
-            to_email = (self.user.email,)
+        to_email = (self.user.email,)
         sent_to = ", ".join(to_email) if to_email is not None else EMPTY_STRING
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             msg_confirmation = _(
@@ -555,7 +537,6 @@ class Customer(models.Model):
         self.long_basket_name = self.short_basket_name = "{}({})".format(
             _("nameless"), self.id
         ).lower()
-        self.email2 = EMPTY_STRING
         self.group = None
         self.picture = EMPTY_STRING
         self.phone1 = EMPTY_STRING

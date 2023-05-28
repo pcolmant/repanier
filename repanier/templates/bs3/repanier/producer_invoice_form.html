@@ -13,18 +13,17 @@
             <div class="col-lg-12">
                 <div class="btn-group">
                     {% if previous_producer_invoice_id %}
-                        <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'repanier:producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+                        <a href="{% url 'repanier:producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}"
                            class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                     {% endif %}
                     {% if next_producer_invoice_id %}
-                        <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'repanier:producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
+                        <a href="{% url 'repanier:producer_invoice_view' 0 %}?producer={{ object.producer.id }}"
                            class="btn btn-disabled"> {% translate "Invoice" %} </a>
                     {% else %}
                         <span class="btn btn-disabled">{% translate "Invoice" %}</span>
                     {% endif %}
                     {% if next_producer_invoice_id %}
-                        <a href="
-                                {% if uuid %}{% url 'repanier:producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'repanier:producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+                        <a href="{% url 'repanier:producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}"
                            class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                     {% endif %}
                 </div>
@@ -184,7 +183,7 @@
 {% if not next_producer_invoice_id %}
 <script>
     $(document).ready(function () {
-        var lien = '{% url 'repanier:producer_basket_message_form_ajax' producer.id producer.uuid %}';
+        var lien = '{% url 'repanier:producer_basket_message_form_ajax' producer.id %}';
         $.ajax({
             url: lien,
             cache: false,

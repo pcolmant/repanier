@@ -19,7 +19,6 @@ from repanier.rest.version import version_rest
 from repanier.tools import get_repanier_template_name
 from repanier.views.basket_message_form_ajax import (
     customer_basket_message_form_ajax,
-    producer_basket_message_form_ajax,
 )
 from repanier.views.btn_confirm_order_ajax import btn_confirm_order_ajax
 from repanier.views.customer_invoice_class import CustomerInvoiceView
@@ -150,11 +149,6 @@ urlpatterns = [
         name="customer_basket_message_form_ajax",
     ),
     path(
-        "ajax/producer-basket-message/<int:pk>/<uuid:uuid>/",
-        producer_basket_message_form_ajax,
-        name="producer_basket_message_form_ajax",
-    ),
-    path(
         "ajax/customer-product-description/",
         order_product_description_ajax,
         name="order_product_description_ajax",
@@ -185,11 +179,6 @@ urlpatterns = [
         "customer-invoice/<int:pk>/",
         login_required(CustomerInvoiceView.as_view()),
         name="customer_invoice_view",
-    ),
-    path(
-        "producer-invoice/<int:pk>/<uuid:uuid>/",
-        ProducerInvoiceView.as_view(),
-        name="producer_invoice_uuid_view",
     ),
     path(
         "producer-invoice/<int:pk>/",

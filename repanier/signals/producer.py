@@ -1,5 +1,3 @@
-import uuid
-
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from repanier.const import DECIMAL_ZERO, DECIMAL_ONE
@@ -21,8 +19,6 @@ def producer_pre_save(sender, **kwargs):
         producer.email3 = producer.email3.lower()
     if producer.price_list_multiplier <= DECIMAL_ZERO:
         producer.price_list_multiplier = DECIMAL_ONE
-    if not producer.uuid:
-        producer.uuid = uuid.uuid1()
 
 
 @receiver(post_save, sender=Producer)

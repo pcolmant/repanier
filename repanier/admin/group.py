@@ -7,7 +7,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db.models import Q
-from django.forms import Textarea, EmailInput, TextInput
+from django.forms import Textarea, TextInput
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -204,7 +204,6 @@ class GroupWithUserDataForm(UserDataForm):
     class Meta:
         widgets = {
             "long_basket_name": TextInput(attrs={"style": "width: 70%;"}),
-            "email2": EmailInput(attrs={"style": "width: 70%;"}),
             "address": Textarea(
                 attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 95%;"}
             ),
@@ -230,7 +229,6 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         "short_basket_name",
         "long_basket_name",
         "user__email",
-        "email2",
     )
     list_filter = ("is_active",)
     list_per_page = 16
@@ -281,7 +279,6 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             "short_basket_name",
             "long_basket_name",
             "email",
-            "email2",
             "phone1",
             "phone2",
             "memo",

@@ -1,6 +1,6 @@
 from django.core.validators import MinValueValidator
 
-from django.db import models, transaction
+from django.db import transaction
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -55,11 +55,11 @@ class Product(Item):
             q_alert = min(LIMIT_ORDER_QTY_ITEM, available)
         else:
             if self.order_unit not in [
-                PRODUCT_ORDER_UNIT_PC_KG,
-                PRODUCT_ORDER_UNIT_KG,
-                PRODUCT_ORDER_UNIT_LT,
+                OrderUnit.PC_KG,
+                OrderUnit.KG,
+                OrderUnit.LT,
             ]:
-                if self.order_unit == PRODUCT_ORDER_UNIT_PC:
+                if self.order_unit == OrderUnit.PC:
                     q_alert = LIMIT_ORDER_QTY_ITEM
                 else:
                     q_alert = (

@@ -64,12 +64,6 @@ def configuration_post_save(sender, **kwargs):
         apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = (
             config.send_order_mail_to_board
         )
-        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = (
-            config.send_invoice_mail_to_customer
-        )
-        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = (
-            config.send_invoice_mail_to_producer
-        )
         apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = (
             config.display_anonymous_order_form
         )

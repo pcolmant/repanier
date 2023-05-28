@@ -252,8 +252,6 @@ def export_order_2_1_group(
         html_body = template.render(context)
 
         to_email = [group.user.email]
-        if group.email2:
-            to_email.append(group.email2)
         # to_email = list(set(to_email + order_responsible["to_email"]))
 
         email = RepanierEmail(
@@ -295,8 +293,6 @@ def export_order_2_1_customer(
         )[0]
         if wb is not None:
             to_email = [customer.user.email]
-            if customer.email2:
-                to_email.append(customer.email2)
             if customer_invoice.delivery is not None:
                 delivery_point = customer_invoice.delivery
                 if (
@@ -306,8 +302,6 @@ def export_order_2_1_customer(
                     group = delivery_point.delivery_point.group
                     if group.id != customer.id:
                         to_email.append(group.user.email)
-                        if group.email2:
-                            to_email.append(group.email2)
             else:
                 delivery_point = EMPTY_STRING
 

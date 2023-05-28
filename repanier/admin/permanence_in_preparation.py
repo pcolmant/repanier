@@ -279,7 +279,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             qs = Product.objects.filter(
                 producer=permanence.producers.first(),
                 is_into_offer=True,
-                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+                order_unit__lt=OrderUnit.DEPOSIT,  # Don't display technical products.
             ).order_by("long_name_v2")[:5]
             offer_detail = "<ul>{}</ul>".format(
                 "".join(

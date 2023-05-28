@@ -140,9 +140,9 @@ def permanence_ok_or_404(permanence):
 
 
 def get_invoice_unit(order_unit, qty=0):
-    if order_unit in [const.PRODUCT_ORDER_UNIT_KG, const.PRODUCT_ORDER_UNIT_PC_KG]:
+    if order_unit in [const.OrderUnit.KG, const.OrderUnit.PC_KG]:
         unit = _("/ kg")
-    elif order_unit == const.PRODUCT_ORDER_UNIT_LT:
+    elif order_unit == const.OrderUnit.LT:
         unit = _("/ l")
     else:
         if qty < 2:
@@ -155,21 +155,21 @@ def get_invoice_unit(order_unit, qty=0):
 def get_reverse_invoice_unit(unit):
     # reverse of tools get_invoice_unit
     if unit == _("/ kg"):
-        order_unit = const.PRODUCT_ORDER_UNIT_KG
+        order_unit = const.OrderUnit.KG
     elif unit == _("/ l"):
-        order_unit = const.PRODUCT_ORDER_UNIT_LT
+        order_unit = const.OrderUnit.LT
     else:
-        order_unit = const.PRODUCT_ORDER_UNIT_PC
+        order_unit = const.OrderUnit.PC
     return order_unit
 
 
 def get_base_unit(order_unit, qty=0):
-    if order_unit == const.PRODUCT_ORDER_UNIT_KG:
+    if order_unit == const.OrderUnit.KG:
         if qty == const.DECIMAL_ZERO:
             base_unit = const.EMPTY_STRING
         else:
             base_unit = _("kg")
-    elif order_unit == const.PRODUCT_ORDER_UNIT_LT:
+    elif order_unit == const.OrderUnit.LT:
         if qty == const.DECIMAL_ZERO:
             base_unit = const.EMPTY_STRING
         else:
@@ -524,8 +524,8 @@ def reorder_purchases(permanence_id):
         permanence_id=permanence_id,
         offer_item__wrapped=False,
         offer_item__order_unit__in=[
-            const.PRODUCT_ORDER_UNIT_KG,
-            const.PRODUCT_ORDER_UNIT_PC_KG,
+            const.OrderUnit.KG,
+            const.OrderUnit.KG,
         ],
     ).update(quantity_for_preparation_sort_order=F("quantity_invoiced"))
 

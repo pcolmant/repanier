@@ -3,7 +3,6 @@ import logging
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
 from django.template import Template
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -56,12 +55,6 @@ class Configuration(models.Model):
     send_order_mail_to_board = models.BooleanField(
         _("Send an order distribution email to members registered for a task"),
         default=True,
-    )
-    send_invoice_mail_to_customer = models.BooleanField(
-        _("Send invoice mail to customers"), default=True
-    )
-    send_invoice_mail_to_producer = models.BooleanField(
-        _("Send invoice mail to producers"), default=False
     )
     invoice = models.BooleanField(_("Enable accounting module"), default=True)
     display_anonymous_order_form = models.BooleanField(
@@ -149,20 +142,6 @@ class Configuration(models.Model):
         default=EMPTY_STRING,
         blank=True,
     )
-    invoice_customer_mail_v2 = HTMLField(
-        _("Content of the invoice confirmation email sent to the customers concerned"),
-        help_text=EMPTY_STRING,
-        configuration="CKEDITOR_SETTINGS_MODEL2",
-        default=EMPTY_STRING,
-        blank=True,
-    )
-    invoice_producer_mail_v2 = HTMLField(
-        _("Content of the payment confirmation email sent to the producers concerned"),
-        help_text=EMPTY_STRING,
-        configuration="CKEDITOR_SETTINGS_MODEL2",
-        default=EMPTY_STRING,
-        blank=True,
-    )
 
     def clean(self):
         try:
@@ -189,23 +168,6 @@ class Configuration(models.Model):
             raise ValidationError(
                 mark_safe("{} : {}".format(self.order_producer_mail_v2, error_str))
             )
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            try:
-                _ = Template(self.invoice_customer_mail_v2)
-            except Exception as error_str:
-                raise ValidationError(
-                    mark_safe(
-                        "{} : {}".format(self.invoice_customer_mail_v2, error_str)
-                    )
-                )
-            try:
-                _ = Template(self.invoice_producer_mail_v2)
-            except Exception as error_str:
-                raise ValidationError(
-                    mark_safe(
-                        "{} : {}".format(self.invoice_producer_mail_v2, error_str)
-                    )
-                )
 
     @classmethod
     def init_repanier(cls):
@@ -247,7 +209,9 @@ class Configuration(models.Model):
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
 
-        webmaster_group = Group.objects.filter(name=AuthGroup.WEBMASTER).only("id").first()
+        webmaster_group = (
+            Group.objects.filter(name=AuthGroup.WEBMASTER).only("id").first()
+        )
         if webmaster_group is None:
             webmaster_group = Group.objects.create(name=AuthGroup.WEBMASTER)
         content_types = ContentType.objects.exclude(
@@ -274,7 +238,9 @@ class Configuration(models.Model):
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
 
-        repanier_group = Group.objects.filter(name=AuthGroup.REPANIER).only("id").first()
+        repanier_group = (
+            Group.objects.filter(name=AuthGroup.REPANIER).only("id").first()
+        )
         if repanier_group is None:
             repanier_group = Group.objects.create(name=AuthGroup.REPANIER)
         content_types = ContentType.objects.filter(
@@ -515,27 +481,6 @@ class Configuration(models.Model):
             <br>
             {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence_link }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{ permanence }}.{% if duplicate %}<br>
             <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br>
-            <br>
-            {{ signature }}
-            """
-        self.invoice_customer_mail_v2 = """
-            Bonjour {{ name }},<br>
-            <br>
-            En cliquant sur ce lien vous trouverez votre facture pour la {{ permanence_link }}.{% if invoice_description %}<br>
-            <br>
-            {{ invoice_description }}{% endif %}
-            <br>
-            {{ order_amount }}<br>
-            {{ last_balance_link }}<br>
-            {% if payment_needed %}{{ payment_needed }}<br>
-            {% endif %}<br>
-            <br>
-            {{ signature }}
-            """
-        self.invoice_producer_mail_v2 = """
-            Cher/Chère {{ profile_name }},<br>
-            <br>
-            En cliquant sur ce lien vous trouverez le détail de notre paiement pour la {{ permanence_link }}.<br>
             <br>
             {{ signature }}
             """

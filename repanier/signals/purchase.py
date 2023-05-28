@@ -5,8 +5,9 @@ from django.dispatch import receiver
 from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
-    PRODUCT_ORDER_UNIT_PC_KG,
-    RoundUpTo, SaleStatus,
+    RoundUpTo,
+    SaleStatus,
+    OrderUnit,
 )
 from repanier.models import (
     Purchase,
@@ -53,7 +54,7 @@ def purchase_pre_save(sender, **kwargs):
     if purchase.status < SaleStatus.WAIT_FOR_SEND:
         quantity = purchase.quantity_ordered
         delta_quantity = quantity - purchase.previous_quantity_ordered
-        if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+        if offer_item.order_unit == OrderUnit.PC_KG:
             # This quantity is used to calculate the price
             # The unit price is for 1 kg.
             # 1 = 1 piece of order_average_weight

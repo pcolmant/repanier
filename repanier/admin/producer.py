@@ -3,7 +3,6 @@ from collections import OrderedDict
 from django import forms
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import Textarea, TextInput, EmailInput
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -13,9 +12,8 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget
-from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING, SaleStatus
+from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
 from repanier.middleware import get_query_filters
-from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.tools import web_services_activated
 from repanier.xlsx.widget import (
@@ -128,22 +126,11 @@ def create__producer_action(year):
 
 
 class ProducerDataForm(forms.ModelForm):
-    permanences = forms.ModelMultipleChoiceField(
-        Permanence.objects.filter(status=SaleStatus.PLANNED),
-        label=_("Sales"),
-        widget=FilteredSelectMultiple(_("Sales"), False),
-        required=False,
-    )
     reference_site = forms.URLField(
         label=_("Reference site"),
         widget=forms.URLInput(attrs={"style": "width: 70%;"}),
         required=False,
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.id:
-            self.fields["permanences"].initial = self.instance.permanence_set.all()
 
     def clean_price_list_multiplier(self):
         price_list_multiplier = self.cleaned_data["price_list_multiplier"]
@@ -167,10 +154,6 @@ class ProducerDataForm(forms.ModelForm):
                     "reference_site", _("The reference site may not be your site.")
                 )
                 break
-        invoice_by_basket = self.cleaned_data.get("invoice_by_basket", False)
-        price_list_multiplier = self.cleaned_data.get(
-            "price_list_multiplier", DECIMAL_ONE
-        )
 
         short_profile_name = self.cleaned_data["short_profile_name"]
         qs = Producer.objects.filter(short_profile_name=short_profile_name)
@@ -181,24 +164,6 @@ class ProducerDataForm(forms.ModelForm):
                 "short_profile_name",
                 _("The given short_profile_name is used by another producer."),
             )
-
-    def save(self, *args, **kwargs):
-        instance = super().save(*args, **kwargs)
-        if instance.id is not None:
-            updated_permanences = Permanence.objects.filter(
-                producers=instance.pk
-            ).exclude(status=SaleStatus.PLANNED)
-            instance.permanence_set.set(updated_permanences)
-            instance.permanence_set.add(*self.cleaned_data["permanences"])
-            # The previous save is called with "commit=False"
-            # But we need to update the producer
-            # to recalculate the products prices. So a call to self.instance.save() is required
-            # self.instance.save()
-            # for product in Product.objects.filter(producer_id=instance.id).order_by('?'):
-            #     product.save()
-            # update_offer_item(producer_id=instance.id)
-
-        return instance
 
     class Meta:
         widgets = {
@@ -228,8 +193,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     list_filter = ("invoice_by_basket",)
     actions = ["export_customer_prices"]
 
-    # change_list_template = 'admin/producer_change_list.html'
-
     def has_delete_permission(self, request, producer=None):
         user = request.user
         if user.is_repanier_staff:
@@ -244,22 +207,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_redirect_to_change_list_url(self):
         return "{}{}".format(self.change_list_url, get_query_filters())
-
-    # def get_urls(self):
-    #     urls = super().get_urls()
-    #     custom_urls = [
-    #         url(
-    #             r"^export-stock/$",
-    #             self.admin_site.admin_view(self.export_stock),
-    #             name="producer-export-stock",
-    #         ),
-    #         url(
-    #             r"^import-stock/$",
-    #             self.admin_site.admin_view(self.import_stock),
-    #             name="producer-import-stock",
-    #         ),
-    #     ]
-    #     return custom_urls + urls
 
     def export_customer_prices(self, request, producer_qs):
         wb = export_customer_prices(
@@ -334,12 +281,11 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 "picture",
                 "memo",
                 "producer_price_are_wo_vat",
-                "sort_products_by_reference",
                 "invoice_by_basket",
+                "sort_products_by_reference",
                 "checking_stock",
                 "minimum_order_value",
                 "price_list_multiplier",
-                "permanences",
                 "get_admin_balance",
                 "get_admin_date_balance",
             ]
@@ -350,8 +296,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 "city",
                 "memo",
                 "producer_price_are_wo_vat",
-                "sort_products_by_reference",
                 "invoice_by_basket",
+                "sort_products_by_reference",
                 "checking_stock",
                 "minimum_order_value",
                 "price_list_multiplier",

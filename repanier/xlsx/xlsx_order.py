@@ -81,7 +81,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             customer.get_phone2(),
                             invoice.get_total_price_with_tax().amount,
                             # Used to send mail to customer with an order (via copy-paste to mail)
-                            customer.get_emails(),
+                            customer.get_email_postfixed(),
                         ]
                         for col_num in range(len(row)):
                             c = ws.cell(row=row_num, column=col_num)
@@ -147,7 +147,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         customer.get_phone2(),
                         invoice.get_total_price_with_tax().amount,
                         # Used to send mail to customer with an order (via copy-paste to mail)
-                        customer.get_emails(),
+                        customer.get_email_postfixed(),
                     ]
                     for col_num in range(len(row)):
                         c = ws.cell(row=row_num, column=col_num)
@@ -331,7 +331,6 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
             customerinvoice__delivery_id__in=deliveries_id
         )
 
-    dict_placement = dict(LUT_PRODUCT_PLACEMENT)
     freezer = []
     fridge = []
     out_of_basket = []
@@ -340,9 +339,9 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
         customer_identifier = "{} - {}".format(
             customer.preparation_order, customer.short_basket_name
         )
-        s = [
-            placement_id
-            for placement_id in list(
+        placements = [
+            Placement(placement)
+            for placement in list(
                 Purchase.objects.filter(
                     permanence_id=permanence.id, customer_id=customer.id
                 )
@@ -351,27 +350,25 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
                 .distinct("offer_item__placement")
             )
         ]
-        placements = ", ".join(
-            ["{}".format(dict_placement[placement_id]) for placement_id in s]
-        )
-        if PRODUCT_PLACEMENT_FREEZER in s:
+
+        if Placement.FREEZER in placements:
             freezer += [customer_identifier]
-        if PRODUCT_PLACEMENT_FRIDGE in s:
+        if Placement.FRIDGE in placements:
             fridge += [customer_identifier]
-        if PRODUCT_PLACEMENT_OUT_OF_BASKET in s:
+        if Placement.OUT_OF_BASKET in placements:
             out_of_basket += [customer_identifier]
 
         row_num = customer_label(customer_identifier, placements, row_num, ws)
 
-    placement_label = "[❄ {} ]".format(dict_placement[PRODUCT_PLACEMENT_FRIDGE])
+    placement_label = "[❄ {} ]".format(Placement.FRIDGE.label)
     for customer_identifier in fridge:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[❄❄❄ {} ]".format(dict_placement[PRODUCT_PLACEMENT_FREEZER])
+    placement_label = "[❄❄❄ {} ]".format(Placement.FREEZER.label)
     for customer_identifier in freezer:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "👜 [ {} ]".format(dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET])
+    placement_label = "👜 [ {} ]".format(Placement.OUT_OF_BASKET.label)
     for customer_identifier in out_of_basket:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
@@ -394,7 +391,7 @@ def customer_label(customer_identifier, placements, row_num, ws):
     row_num += 1
     ws.row_dimensions[row_num].height = 60
     c = ws.cell(row=row_num, column=0)
-    c.value = "{}".format(placements)
+    c.value = ", ".join(["{}".format(placement.label) for placement in placements])
     c.style.borders.left.border_style = Border.BORDER_THIN
     c.style.borders.right.border_style = Border.BORDER_THIN
     c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -594,10 +591,7 @@ def export_preparation_for_a_delivery(
                                     NumberFormat.FORMAT_TEXT
                                 )
                                 customer_unit_price = purchase.get_customer_unit_price()
-                                if (
-                                    purchase.offer_item.order_unit
-                                    == PRODUCT_ORDER_UNIT_PC_KG
-                                ):
+                                if purchase.offer_item.order_unit == OrderUnit.PC_KG:
                                     price_qty = (
                                         qty * purchase.offer_item.order_average_weight
                                     )
@@ -618,10 +612,7 @@ def export_preparation_for_a_delivery(
                                             + purchase.offer_item.unit_deposit.amount,
                                         )
                                     )
-                                if (
-                                    purchase.offer_item.order_unit
-                                    == PRODUCT_ORDER_UNIT_PC_KG
-                                ):
+                                if purchase.offer_item.order_unit == OrderUnit.PC_KG:
                                     c = ws.cell(row=row_num, column=9)
                                     if purchase.offer_item.wrapped:
                                         c.value = "{} :".format(
@@ -797,10 +788,7 @@ def export_preparation_for_a_delivery(
                                     c.style.number_format.format_code = (
                                         NumberFormat.FORMAT_TEXT
                                     )
-                                    if (
-                                        offer_item_save.order_unit
-                                        == PRODUCT_ORDER_UNIT_PC_KG
-                                    ):
+                                    if offer_item_save.order_unit == OrderUnit.PC_KG:
                                         c = ws.cell(row=row_num, column=9)
                                         if offer_item_save.wrapped:
                                             c.value = "{} :".format(
@@ -840,7 +828,7 @@ def export_preparation_for_a_delivery(
                                 if (
                                     not offer_item_save.wrapped
                                     and offer_item_save.order_unit
-                                    in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]
+                                    in [OrderUnit.KG, OrderUnit.PC_KG]
                                 ):
                                     c.style.font.color = Color(Color.BLUE)
                                 ws.conditional_formatting.addCellIs(
@@ -1026,7 +1014,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=7)
-                            if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                            if offer_item.order_unit == OrderUnit.PC_KG:
                                 price_qty = qty * offer_item.order_average_weight
                                 c.value = "=ROUND(B{}*{}*(F{}+G{}),2)".format(
                                     row_num + 1,
@@ -1132,7 +1120,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                         )
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=7)
-                        if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                        if offer_item.order_unit == OrderUnit.PC_KG:
                             price_qty = qty * offer_item.order_average_weight
                             c.value = "=ROUND(B{}*{}*(F{}+G{}),2)".format(
                                 row_num + 1,
@@ -1358,7 +1346,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     )
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=6)
-                    if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                    if offer_item_save.order_unit == OrderUnit.PC_KG:
                         c.value = "=ROUND(A{}*{}*(E{}+F{}),2)".format(
                             row_num + 1,
                             offer_item_save.order_average_weight,
@@ -1513,7 +1501,7 @@ def export_customer_for_a_delivery(
                     permanence_id=permanence.id,
                     customer_id=customer_invoice.customer_id,
                     producer__isnull=False,
-                    offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT,
+                    offer_item__order_unit=OrderUnit.DEPOSIT,
                 )
                 .order_by(
                     "offer_item__long_name_v2",
@@ -1530,7 +1518,7 @@ def export_customer_for_a_delivery(
                     customer_id=customer_invoice.customer_id,
                     producer__isnull=False,
                 )
-                .exclude(offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT)
+                .exclude(offer_item__order_unit=OrderUnit.DEPOSIT)
                 .order_by(
                     "offer_item__long_name_v2",
                     "offer_item__order_average_weight",
@@ -1545,7 +1533,7 @@ def export_customer_for_a_delivery(
                 Purchase.objects.filter(
                     permanence_id=permanence.id,
                     producer__isnull=False,
-                    offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT,
+                    offer_item__order_unit=OrderUnit.DEPOSIT,
                 )
                 .order_by(
                     "customer__short_basket_name",
@@ -1563,7 +1551,7 @@ def export_customer_for_a_delivery(
                     permanence_id=permanence.id,
                     producer__isnull=False,
                 )
-                .exclude(offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT)
+                .exclude(offer_item__order_unit=OrderUnit.DEPOSIT)
                 .order_by(
                     "customer__short_basket_name",
                     "offer_item__producer",
@@ -1746,7 +1734,7 @@ def export_customer_for_a_delivery(
                         )
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=9)
-                        if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                        if offer_item_save.order_unit == OrderUnit.PC_KG:
                             price_qty = qty * offer_item_save.order_average_weight
                             c.value = "=ROUND(F{}*{}*(H{}+I{}),2)".format(
                                 row_num + 1,

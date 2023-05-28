@@ -601,8 +601,8 @@ class Permanence(models.Model):
     # @debug_parameters
     def set_status(
         self,
-        old_status : SaleStatus,
-        new_status : SaleStatus,
+        old_status: SaleStatus,
+        new_status: SaleStatus,
         everything=True,
         deliveries_id=(),
         update_payment_date=False,
@@ -704,7 +704,7 @@ class Permanence(models.Model):
                 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0
             ):
                 membership_fee_product = Product.objects.filter(
-                    order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, is_active=True
+                    order_unit=OrderUnit.MEMBERSHIP_FEE, is_active=True
                 ).first()
                 membership_fee_product.producer_unit_price = (
                     REPANIER_SETTINGS_MEMBERSHIP_FEE
@@ -767,7 +767,7 @@ class Permanence(models.Model):
                 )
             for customer in customer_qs:
                 offer_item_qs = OfferItem.objects.filter(
-                    permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
+                    permanence_id=self.id, order_unit=OrderUnit.DEPOSIT
                 )
                 # if not everything:
                 #     offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
@@ -800,7 +800,7 @@ class Permanence(models.Model):
 
             # Add Transport
             offer_item_qs = OfferItem.objects.filter(
-                permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_TRANSPORTATION
+                permanence_id=self.id, order_unit=OrderUnit.TRANSPORTATION
             )
             group_id = Customer.get_or_create_group().id
             for offer_item in offer_item_qs:
@@ -833,7 +833,7 @@ class Permanence(models.Model):
                 " AND a.permanence_id = %s "
                 " AND a.status = %s "
                 " AND b.order_unit = %s ",
-                [self.id, SaleStatus.WAIT_FOR_SEND.value, PRODUCT_ORDER_UNIT_PC_KG],
+                [self.id, SaleStatus.WAIT_FOR_SEND.value, OrderUnit.PC_KG],
             )
         # for p in PurchaseWoReceiver.objects.filter(
         #     permanence_id=self.id,
@@ -845,11 +845,11 @@ class Permanence(models.Model):
         PurchaseWoReceiver.objects.filter(
             permanence_id=self.id,
             status=SaleStatus.WAIT_FOR_SEND,
-        ).exclude(offer_item__order_unit=PRODUCT_ORDER_UNIT_PC_KG,).update(
+        ).exclude(offer_item__order_unit=OrderUnit.PC_KG,).update(
             quantity_invoiced=F("quantity_ordered"),
         )
         OfferItemReadOnly.objects.filter(
-            permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_PC_KG
+            permanence_id=self.id, order_unit=OrderUnit.PC_KG
         ).update(use_order_unit_converted=True)
 
     @transaction.atomic
@@ -1574,14 +1574,14 @@ class Permanence(models.Model):
 
             offer_item.manage_production = producer.represent_this_buyinggroup
             # Offer_items are not subjects to customer price modifications
-            # if product.is_box or product.is_box_content or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
+            # if product.is_box or product.is_box_content or product.order_unit >= OrderUnit.DEPOSIT
             offer_item.is_resale_price_fixed = (
                 not (offer_item.manage_production)
-                or product.order_unit >= PRODUCT_ORDER_UNIT_DEPOSIT
+                or product.order_unit >= OrderUnit.DEPOSIT
             )
 
             offer_item.may_order = False
-            if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+            if product.order_unit < OrderUnit.DEPOSIT:
                 offer_item.may_order = product.is_into_offer
 
             # The group must pay the VAT, so it's easier to always have
@@ -1694,7 +1694,7 @@ class Permanence(models.Model):
                 OfferItemReadOnly.objects.filter(
                     is_active=True,
                     may_order=True,
-                    order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+                    order_unit__lt=OrderUnit.DEPOSIT,  # Don't display technical products.
                     permanence_id=self.id,
                     producer=a_producer,
                 ).values_list("product", flat=True)
@@ -1714,7 +1714,7 @@ class Permanence(models.Model):
                     OfferItemReadOnly.objects.filter(
                         is_active=True,
                         may_order=True,
-                        order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+                        order_unit__lt=OrderUnit.DEPOSIT,  # Don't display technical products.
                         permanence_id=previous_permanence.id,
                         producer=a_producer,
                     ).values_list("product", flat=True)

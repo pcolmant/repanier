@@ -317,7 +317,7 @@ def export_invoice(
                     qty,
                     "#,##0.????",
                     True
-                    if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG
+                    if purchase.offer_item.order_unit == OrderUnit.PC_KG
                     else False,
                 ),
                 (_("Unit"), 10, unit, NumberFormat.FORMAT_TEXT, False),
@@ -552,7 +552,6 @@ def import_invoice_sheet(
     header = get_header(worksheet)
     if header:
         now = timezone.now().date()
-        lut_reverse_vat = dict(LUT_ALL_VAT_REVERSE)
         import_counter = 0
         row_num = 1
         column_name = EMPTY_STRING
@@ -586,7 +585,7 @@ def import_invoice_sheet(
                     order_unit = get_reverse_invoice_unit(unit)
                     column_name = _("VAT rate")
                     vat = row[column_name]
-                    vat_level = lut_reverse_vat[round_tva(Decimal(vat))]
+                    vat_level = DICT_ALL_VAT_REVERSE[round_tva(Decimal(vat))]
                     product = Product.objects.filter(
                         producer_id=producer.id, reference=product_reference
                     ).first()

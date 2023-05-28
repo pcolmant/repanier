@@ -7,13 +7,13 @@ from django.utils.translation import gettext_lazy as _
 from repanier.const import (
     EMPTY_STRING,
     DECIMAL_ZERO,
-    RoundUpTo, SaleStatus,
+    RoundUpTo,
+    SaleStatus,
 )
 from repanier.models import Permanence
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
-from repanier.models.producer import Producer
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
     sint,
@@ -99,7 +99,6 @@ def repanier_user_bs3(context, *args, **kwargs):
     user = request.user
     nodes = []
     if user.is_authenticated:
-        nodes = []
         p_permanence_id = sint(kwargs.get("permanence_id", 0))
         if p_permanence_id > 0:
             nodes.append(
@@ -182,27 +181,12 @@ def repanier_user_bs3(context, *args, **kwargs):
             )
         )
         nodes.append("</ul></li>")
-
     else:
-        p_offer_uuid = kwargs.get("offer_uuid", None)
-        if len(p_offer_uuid) == 36:
-            producer = (
-                Producer.objects.filter(offer_uuid=p_offer_uuid)
-                .only("long_profile_name")
-                .first()
+        nodes = [
+            '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
+                reverse("repanier:login_form"), _("Sign in")
             )
-            if producer is not None:
-                nodes = [
-                    '<li><a href="#">{} {}</a></li>'.format(
-                        _("Welkom"), producer.long_profile_name
-                    )
-                ]
-        else:
-            nodes = [
-                '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
-                    reverse("repanier:login_form"), _("Sign in")
-                )
-            ]
+        ]
 
     return mark_safe("".join(nodes))
 
@@ -215,7 +199,6 @@ def repanier_user_bs5(context, *args, **kwargs):
     user = request.user
     nodes = []
     if user.is_authenticated:
-        nodes = []
         p_permanence_id = sint(kwargs.get("permanence_id", 0))
         if p_permanence_id > 0:
             nodes.append(
@@ -298,27 +281,12 @@ def repanier_user_bs5(context, *args, **kwargs):
             )
         )
         nodes.append("</ul></li>")
-
     else:
-        p_offer_uuid = kwargs.get("offer_uuid", None)
-        if len(p_offer_uuid) == 36:
-            producer = (
-                Producer.objects.filter(offer_uuid=p_offer_uuid)
-                .only("long_profile_name")
-                .first()
+        nodes = [
+            '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
+                reverse("repanier:login_form"), _("Sign in")
             )
-            if producer is not None:
-                nodes = [
-                    '<li><a href="#">{} {}</a></li>'.format(
-                        _("Welkom"), producer.long_profile_name
-                    )
-                ]
-        else:
-            nodes = [
-                '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
-                    reverse("repanier:login_form"), _("Sign in")
-                )
-            ]
+        ]
 
     return mark_safe("".join(nodes))
 
@@ -464,7 +432,9 @@ def select_offer_item(offer_item, result, user):
         )
         customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
         unit_deposit = offer_item.get_unit_deposit()
-        unit_price_amount = (customer_unit_price + unit_deposit).quantize(RoundUpTo.TWO_DECIMALS)
+        unit_price_amount = (customer_unit_price + unit_deposit).quantize(
+            RoundUpTo.TWO_DECIMALS
+        )
         html = get_html_selected_value(
             offer_item,
             purchase.quantity_ordered,

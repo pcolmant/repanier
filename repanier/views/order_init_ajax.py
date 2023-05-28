@@ -10,7 +10,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 from repanier.const import (
     DECIMAL_ZERO,
-    EMPTY_STRING, SaleStatus,
+    EMPTY_STRING,
+    SaleStatus,
 )
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
@@ -44,7 +45,6 @@ def order_init_ajax(request):
         #     "id",
         #     "vat_id",
         #     "short_basket_name",
-        #     "email2",
         #     "balance",
         #     "date_balance",
         #     "may_order",

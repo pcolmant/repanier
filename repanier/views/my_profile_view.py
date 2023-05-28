@@ -31,10 +31,6 @@ class CustomerForm(forms.Form):
         ),
     )
     email1 = fields.EmailField(label=_("E-mail address used to sign in to the site"))
-    email2 = fields.EmailField(
-        label=_("Secondary email address informed of sales"),
-        required=False,
-    )
 
     phone1 = fields.CharField(label=_("My main phone number"), max_length=25)
     phone2 = fields.CharField(
@@ -107,7 +103,6 @@ def my_profile_view(request):
                 customer.long_basket_name = form.cleaned_data.get("long_basket_name")
                 customer.phone1 = form.cleaned_data.get("phone1")
                 customer.phone2 = form.cleaned_data.get("phone2")
-                customer.email2 = form.cleaned_data.get("email2").lower()
                 customer.subscribe_to_email = form.cleaned_data.get(
                     "subscribe_to_email"
                 )
@@ -130,7 +125,6 @@ def my_profile_view(request):
                 # User feed back : Display email in lower case.
                 data = form.data.copy()
                 data["email1"] = customer.user.email
-                data["email2"] = customer.email2
                 form = CustomerForm(data, request=request)
             return render(
                 request,
@@ -162,8 +156,6 @@ def my_profile_view(request):
         field.initial = customer.phone2
         field = form.fields["email1"]
         field.initial = request.user.email
-        field = form.fields["email2"]
-        field.initial = customer.email2
         field = form.fields["subscribe_to_email"]
         field.initial = customer.subscribe_to_email
         field = form.fields["city"]

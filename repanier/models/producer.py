@@ -1,5 +1,4 @@
 import datetime
-import uuid
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -15,11 +14,10 @@ from repanier.const import (
     EMPTY_STRING,
     DECIMAL_ZERO,
     DECIMAL_ONE,
-    VAT_100,
     REPANIER_MONEY_ZERO,
-    PRODUCT_ORDER_UNIT_DEPOSIT,
-    PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
     SaleStatus,
+    OrderUnit,
+    Vat,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
@@ -84,19 +82,22 @@ class Producer(models.Model):
     web_services_activated = models.BooleanField(
         _("Web services activated"), default=False
     )
-    # uuid used to access to producer invoices without login
-    uuid = models.CharField("uuid", max_length=36, default=EMPTY_STRING, db_index=True)
-    offer_uuid = models.CharField(
-        "uuid", max_length=36, default=EMPTY_STRING, db_index=True
+    invoice_by_basket = models.BooleanField(
+        _("Billing is done on a consumer-by-consumer basis"), default=False
     )
-    invoice_by_basket = models.BooleanField(_("Invoice by basket"), default=False)
     producer_price_are_wo_vat = models.BooleanField(
-        _("Producer price are wo vat"), default=False
+        _("The prices of the products of this producer are encoded excluding VAT"),
+        default=False,
     )
     sort_products_by_reference = models.BooleanField(
-        _("Sort products by reference"), default=False
+        _(
+            "In the lists sent to the producer, classify the products by reference and not in alphabetical order"
+        ),
+        default=False,
     )
-    checking_stock = models.BooleanField(_("Checking stock"), default=False)
+    checking_stock = models.BooleanField(
+        _("In the lists sent to the producer, attach the stock"), default=False
+    )
 
     price_list_multiplier = models.DecimalField(
         _(
@@ -112,7 +113,7 @@ class Producer(models.Model):
         validators=[MinValueValidator(0)],
     )
     minimum_order_value = ModelRepanierMoneyField(
-        _("Minimum order value"),
+        _("Minimum order value to place an order"),
         help_text=_("0 mean : no minimum order value."),
         max_digits=8,
         decimal_places=2,
@@ -150,13 +151,13 @@ class Producer(models.Model):
             )
             # Create this to also prevent the deletion of the producer representing the buying group
             membership_fee_product = Product.objects.filter(
-                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, is_active=True
+                order_unit=OrderUnit.MEMBERSHIP_FEE, is_active=True
             )
             if not membership_fee_product.exists():
                 membership_fee_product = Product.objects.create(
                     producer_id=producer_buyinggroup.id,
-                    order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-                    vat_level=VAT_100,
+                    order_unit=OrderUnit.MEMBERSHIP_FEE,
+                    vat_level=Vat.VAT_100,
                     long_name_v2="{}".format(_("Membership fee")),
                 )
         return producer_buyinggroup
@@ -274,7 +275,7 @@ class Producer(models.Model):
         return bank_not_invoiced
 
     def get_calculated_purchases(self, permanence_id):
-        # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
+        # Do not take into account product whose order unit is >= OrderUnit.DEPOSIT
 
         result_set = (
             PurchaseWoReceiver.objects.filter(
@@ -282,7 +283,7 @@ class Producer(models.Model):
                 producer_id=self.id,
                 purchase_price__gte=F("selling_price"),
             )
-            .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
+            .exclude(offer_item__order_unit__gt=OrderUnit.DEPOSIT)
             .aggregate(
                 total_purchase_price_with_tax=Sum(
                     "selling_price",
@@ -305,7 +306,7 @@ class Producer(models.Model):
                 producer_id=self.id,
                 purchase_price__lt=F("selling_price"),
             )
-            .exclude(offer_item__order_unit__gt=PRODUCT_ORDER_UNIT_DEPOSIT)
+            .exclude(offer_item__order_unit__gt=OrderUnit.DEPOSIT)
             .aggregate(
                 total_selling_price_with_tax=Sum(
                     "purchase_price",
@@ -435,8 +436,6 @@ class Producer(models.Model):
         self.fax = EMPTY_STRING
         self.address = EMPTY_STRING
         self.memo = EMPTY_STRING
-        self.uuid = uuid.uuid1()
-        self.offer_uuid = uuid.uuid1()
         self.is_anonymized = True
         self.save()
 

@@ -1,5 +1,4 @@
 from django.core.validators import MinValueValidator
-from django.db import models
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -129,7 +128,9 @@ class BankAccount(models.Model):
 
     @classmethod
     def get_latest_total(cls):
-        return BankAccount.objects.filter(operation_status=BankMovement.LATEST_TOTAL).first()
+        return BankAccount.objects.filter(
+            operation_status=BankMovement.LATEST_TOTAL
+        ).first()
 
     def get_bank_amount_in(self):
         if self.operation_status in [BankMovement.PROFIT, BankMovement.TAX]:
@@ -194,7 +195,7 @@ class BankAccount(models.Model):
                 # This is a total, show it
                 from repanier.apps import REPANIER_SETTINGS_BANK_ACCOUNT
 
-                if self.operation_status == BANK_LATEST_TOTAL:
+                if self.operation_status == BankMovement.LATEST_TOTAL:
 
                     if REPANIER_SETTINGS_BANK_ACCOUNT is not None:
                         return format_html("<b>{}</b>", REPANIER_SETTINGS_BANK_ACCOUNT)

@@ -9,9 +9,10 @@ from djangocms_text_ckeditor.fields import HTMLField
 from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
-    PRODUCT_ORDER_UNIT_KG,
     DECIMAL_ONE,
-    RoundUpTo, SaleStatus,
+    RoundUpTo,
+    SaleStatus,
+    OrderUnit,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.item import Item
@@ -157,11 +158,11 @@ class OfferItem(Item):
 
     def get_qty_display(self):
         if self.use_order_unit_converted:
-            # The only conversion done in permanence concerns PRODUCT_ORDER_UNIT_PC_KG
-            # so we are sure that self.order_unit == PRODUCT_ORDER_UNIT_PC_KG
+            # The only conversion done in permanence concerns OrderUnit.PC_KG
+            # so we are sure that self.order_unit == OrderUnit.PC_KG
             qty_display = self.get_display(
                 qty=1,
-                order_unit=PRODUCT_ORDER_UNIT_KG,
+                order_unit=OrderUnit.KG,
                 with_qty_display=False,
                 with_price_display=False,
             )

@@ -309,7 +309,6 @@ Always on windows, remember to open a shell as an Administrator to edit C:\WINDO
 
 Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here above `_0_prd_example.ini` 
 - REPANIER_SETTINGS_BOOTSTRAP_CSS  (*bootstrap.css*, bootstrap_my_own.css, bootstrap_another.css) : Allows you to change the look of the site.
-- REPANIER_SETTINGS_BOX (True, *False*) : Allows you to sell multiple products together.
 - REPANIER_SETTINGS_COUNTRY  (be, fr, ch, es) : Allows you to change the applicable VAT. The currency (EUR, CHF, ...) is configured directly in the management interface of `Repanier`.
 - REPANIER_SETTINGS_BCC_ALL_EMAIL_TO : If present, email address to put in bcc of all the mails
 - REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER (True, *False*) : If True, unconfirmed orders are cancelled by `Repanier`.

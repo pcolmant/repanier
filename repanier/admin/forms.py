@@ -52,19 +52,6 @@ class GeneratePermanenceForm(forms.Form):
         super().__init__(*args, **kwargs)
 
 
-class InvoiceOrderForm(forms.Form):
-    template_invoice_customer_mail = forms.CharField(
-        label=_("Email content"), widget=TextEditorWidget, required=False
-    )
-    template_invoice_producer_mail = forms.CharField(
-        label=_("Email content"), widget=TextEditorWidget, required=False
-    )
-
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
-        super().__init__(*args, **kwargs)
-
-
 class PermanenceInvoicedForm(forms.Form):
     payment_date = forms.DateField(
         label=_("Payment date"), required=True, widget=AdminDateWidget()

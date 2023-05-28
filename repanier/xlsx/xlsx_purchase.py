@@ -18,7 +18,7 @@ def next_purchase(purchases):
     while (
         purchase is not None
         and purchase.quantity_invoiced <= DECIMAL_ZERO
-        and purchase.offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT
+        and purchase.offer_item.order_unit < OrderUnit.DEPOSIT
     ):
         purchase = next_row(purchases)
     return purchase
@@ -594,9 +594,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     ).quantize(RoundUpTo.TWO_DECIMALS)
                                     offer_items_price += offer_item_price
                                     if offer_item_save.order_unit in [
-                                        PRODUCT_ORDER_UNIT_KG,
-                                        PRODUCT_ORDER_UNIT_PC_KG,
-                                        PRODUCT_ORDER_UNIT_LT,
+                                        OrderUnit.KG,
+                                        OrderUnit.PC_KG,
+                                        OrderUnit.LT,
                                     ]:
                                         c.style.font.color = Color(Color.BLUE)
                                     ws.conditional_formatting.addCellIs(
@@ -650,9 +650,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     not offer_item_save.wrapped
                                     and offer_item_save.order_unit
                                     in [
-                                        PRODUCT_ORDER_UNIT_KG,
-                                        PRODUCT_ORDER_UNIT_PC_KG,
-                                        PRODUCT_ORDER_UNIT_LT,
+                                        OrderUnit.KG,
+                                        OrderUnit.PC_KG,
+                                        OrderUnit.LT,
                                     ]
                                 ):
                                     c = ws.cell(row=row_num - 1, column=11)
@@ -845,8 +845,8 @@ def import_purchase_sheet(
                             quantity_has_been_modified = True
                             # Asked by GAC HAMOIS : sell broken products...
                             # if purchase.offer_item.order_unit in [
-                            #     PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
-                            #     PRODUCT_ORDER_UNIT_LT
+                            #     OrderUnit.KG, OrderUnit.PC_KG,
+                            #     OrderUnit.LT
                             # ]:
                             producer_unit_price = (
                                 purchase.offer_item.producer_unit_price.amount

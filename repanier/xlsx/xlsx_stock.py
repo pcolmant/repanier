@@ -109,7 +109,7 @@ def export_permanence_stock(
                             show_column_reference = True
                         else:
                             offer_item_reference = EMPTY_STRING
-                        if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+                        if offer_item.order_unit < OrderUnit.DEPOSIT:
 
                             asked = offer_item.quantity_invoiced
                             stock = offer_item.stock
@@ -366,7 +366,7 @@ def export_permanence_stock(
 #         )
 #         product = next_row(products)
 #         while product is not None:
-#             if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+#             if product.order_unit < OrderUnit.DEPOSIT:
 #                 c = ws.cell(row=row_num, column=0)
 #                 c.value = product.id
 #                 c = ws.cell(row=row_num, column=1)

@@ -202,8 +202,6 @@ class SaleAdmin(admin.ModelAdmin):
         if permanence is not None:
             if permanence.status > SaleStatus.PLANNED.value:
                 readonly_fields.append("producers")
-                # if settings.REPANIER_SETTINGS_BOX:
-                #     readonly_fields.append("boxes")
             elif permanence.status >= SaleStatus.CLOSED.value:
                 readonly_fields.append("automatically_closed")
         return readonly_fields

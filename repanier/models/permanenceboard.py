@@ -29,7 +29,7 @@ class PermanenceBoard(models.Model):
 
     @property
     def get_html_board_member(self):
-        # Do not return phone2 nor email2
+        # Do not return phone2
         if self.customer is None:
             customer_name = EMPTY_STRING
             customer_phone_or_email = EMPTY_STRING
@@ -37,7 +37,7 @@ class PermanenceBoard(models.Model):
             customer_name = self.customer.long_basket_name
             customer_phone_or_email = self.customer.get_phone1(
                 prefix=", "
-            ) or self.customer.get_email1(prefix=", ")
+            ) or self.customer.get_email_prefixed(prefix=", ")
         return format_html(
             "<b>{}</b> : <b>{}</b>{}<br>{}",
             self.permanence_role,

@@ -218,7 +218,7 @@ class Purchase(models.Model):
             return self.quantity_ordered
         else:
             offer_item = self.offer_item
-            if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+            if offer_item.order_unit == OrderUnit.PC_KG:
                 if offer_item.order_average_weight != 0:
                     return (
                         self.quantity_invoiced / offer_item.order_average_weight

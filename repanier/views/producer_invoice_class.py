@@ -1,4 +1,3 @@
-import django
 from django.http import Http404
 from django.views.generic import DetailView
 
@@ -6,14 +5,12 @@ from repanier.const import DECIMAL_ZERO
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
-from repanier.models.producer import Producer
 from repanier.tools import get_repanier_template_name
 
 
 class ProducerInvoiceView(DetailView):
     template_name = get_repanier_template_name("producer_invoice_form.html")
     model = ProducerInvoice
-    uuid = None
 
     def get_object(self, queryset=None):
         # Important to handle producer without any invoice
@@ -80,24 +77,14 @@ class ProducerInvoiceView(DetailView):
                 context["previous_producer_invoice_id"] = previous_producer_invoice.id
             if next_producer_invoice is not None:
                 context["next_producer_invoice_id"] = next_producer_invoice.id
-            context["uuid"] = self.uuid
             context["producer"] = producer_invoice.producer
         return context
 
     def get_queryset(self):
-        self.uuid = None
         if self.request.user.is_staff:
             producer_id = self.request.GET.get("producer", None)
         else:
-            self.uuid = self.kwargs.get("uuid", None)
-            if self.uuid:
-                try:
-                    producer = Producer.objects.filter(uuid=self.uuid).first()
-                    producer_id = producer.id
-                except:
-                    raise Http404
-            else:
-                raise Http404
+            raise Http404
         pk = self.kwargs.get("pk", 0)
         if pk == 0:
             last_producer_invoice = (

@@ -5,23 +5,14 @@ from django.utils.translation import gettext_lazy as _
 
 from repanier.const import (
     DECIMAL_ZERO,
-    PRODUCT_ORDER_UNIT_PC_KG,
-    PRODUCT_ORDER_UNIT_KG,
     EMPTY_STRING,
     DECIMAL_ONE,
-    PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-    PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-    PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-    PRODUCT_ORDER_UNIT_LT,
-    DICT_VAT,
-    DICT_VAT_RATE,
-    PRODUCT_ORDER_UNIT_DEPOSIT,
-    LUT_PRODUCT_ORDER_UNIT,
-    PRODUCT_ORDER_UNIT_PC,
-    LUT_PRODUCT_PLACEMENT,
-    PRODUCT_PLACEMENT_BASKET,
-    LUT_ALL_VAT,
-    DICT_VAT_DEFAULT, RoundUpTo,
+    DICT_ALL_VAT,
+    RoundUpTo,
+    Placement,
+    OrderUnit,
+    Vat,
+    VAT_DEFAULT,
 )
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelRepanierMoneyField
 from repanier.picture.const import SIZE_L
@@ -53,8 +44,8 @@ class Item(models.Model):
 
     order_unit = models.CharField(
         max_length=3,
-        choices=LUT_PRODUCT_ORDER_UNIT,
-        default=PRODUCT_ORDER_UNIT_PC,
+        choices=OrderUnit.choices,
+        default=OrderUnit.PC,
         verbose_name=_("Order unit"),
     )
     order_average_weight = models.DecimalField(
@@ -87,8 +78,8 @@ class Item(models.Model):
     )
     vat_level = models.CharField(
         max_length=3,
-        choices=LUT_ALL_VAT,
-        default=DICT_VAT_DEFAULT,
+        choices=Vat.choices,
+        default=VAT_DEFAULT,
         verbose_name=_("VAT rate"),
     )
 
@@ -97,8 +88,8 @@ class Item(models.Model):
     )
     placement = models.CharField(
         max_length=3,
-        choices=LUT_PRODUCT_PLACEMENT,
-        default=PRODUCT_PLACEMENT_BASKET,
+        choices=Placement.choices,
+        default=Placement.BASKET,
         verbose_name=_("Product placement"),
     )
 
@@ -132,14 +123,13 @@ class Item(models.Model):
         self.stock = source.stock
 
     def recalculate_prices(self):
-        vat = DICT_VAT[self.vat_level]
-        vat_rate = vat[DICT_VAT_RATE]
+        vat_rate = DICT_ALL_VAT[self.vat_level]
         producer = self.producer
         if producer.producer_price_are_wo_vat:
             self.producer_vat.amount = (
                 self.producer_unit_price.amount * vat_rate
             ).quantize(RoundUpTo.FOUR_DECIMALS)
-            if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+            if self.order_unit < OrderUnit.DEPOSIT:
                 self.customer_unit_price.amount = (
                     self.producer_unit_price.amount * producer.price_list_multiplier
                 ).quantize(RoundUpTo.TWO_DECIMALS)
@@ -153,7 +143,7 @@ class Item(models.Model):
             self.producer_vat.amount = self.producer_unit_price.amount - (
                 self.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)
             ).quantize(RoundUpTo.FOUR_DECIMALS)
-            if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+            if self.order_unit < OrderUnit.DEPOSIT:
                 self.customer_unit_price.amount = (
                     self.producer_unit_price.amount * producer.price_list_multiplier
                 ).quantize(RoundUpTo.TWO_DECIMALS)
@@ -168,14 +158,14 @@ class Item(models.Model):
             unit_price = self.customer_unit_price
         else:
             unit_price = self.producer_unit_price
-        if self.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
+        if self.order_unit in [OrderUnit.KG, OrderUnit.PC_KG]:
             return "{} {}".format(unit_price, _("/ kg"))
-        elif self.order_unit == PRODUCT_ORDER_UNIT_LT:
+        elif self.order_unit == OrderUnit.LT:
             return "{} {}".format(unit_price, _("/ l"))
         elif self.order_unit not in [
-            PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-            PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-            PRODUCT_ORDER_UNIT_PC_PRICE_PC,
+            OrderUnit.PC_PRICE_KG,
+            OrderUnit.PC_PRICE_LT,
+            OrderUnit.PC_PRICE_PC,
         ]:
             return "{} {}".format(unit_price, _("/ piece"))
         else:
@@ -184,7 +174,7 @@ class Item(models.Model):
     def get_display(
         self,
         qty=0,
-        order_unit=PRODUCT_ORDER_UNIT_PC,
+        order_unit=OrderUnit.PC,
         unit_price_amount=None,
         with_qty_display=True,
         with_price_display=True,
@@ -193,7 +183,7 @@ class Item(models.Model):
         if qty == DECIMAL_ZERO:
             unit = EMPTY_STRING
         else:
-            if order_unit == PRODUCT_ORDER_UNIT_KG:
+            if order_unit == OrderUnit.KG:
                 if qty == DECIMAL_ZERO:
                     unit = EMPTY_STRING
                 elif qty < 1:
@@ -201,7 +191,7 @@ class Item(models.Model):
                     magnitude = 1000
                 else:
                     unit = "{}".format(_("kg"))
-            elif order_unit == PRODUCT_ORDER_UNIT_LT:
+            elif order_unit == OrderUnit.LT:
                 if qty == DECIMAL_ZERO:
                     unit = EMPTY_STRING
                 elif qty < 1:
@@ -209,7 +199,7 @@ class Item(models.Model):
                     magnitude = 100
                 else:
                     unit = "{}".format(_("l"))
-            elif order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+            elif order_unit == OrderUnit.PC_KG:
                 average_weight = self.order_average_weight
                 average_weight *= qty
                 if average_weight < 1:
@@ -231,7 +221,7 @@ class Item(models.Model):
                         number_format(average_weight, decimal),
                         average_weight_unit,
                     )
-            elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
+            elif order_unit == OrderUnit.PC_PRICE_KG:
                 average_weight = self.order_average_weight
                 if average_weight < 1:
                     average_weight_unit = _("gr")
@@ -251,7 +241,7 @@ class Item(models.Model):
                     )
                 else:
                     unit = EMPTY_STRING
-            elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
+            elif order_unit == OrderUnit.PC_PRICE_LT:
                 average_weight = self.order_average_weight
                 if average_weight < 1:
                     average_weight_unit = _("cl")
@@ -271,7 +261,7 @@ class Item(models.Model):
                     )
                 else:
                     unit = EMPTY_STRING
-            elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_PC:
+            elif order_unit == OrderUnit.PC_PRICE_PC:
                 average_weight = self.order_average_weight
                 if average_weight > 1:
                     unit = "* {}{}".format(number_format(average_weight, 0), _("pcs"))
@@ -297,7 +287,7 @@ class Item(models.Model):
 
         if with_qty_display:
             if unit:
-                if order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                if order_unit == OrderUnit.PC_KG:
                     if qty_display == DECIMAL_ZERO:
                         pcs = EMPTY_STRING
                     elif qty_display < 2:
@@ -322,7 +312,7 @@ class Item(models.Model):
         if not with_price_display or unit_price_amount is None:
             return unit_display
         else:
-            if order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+            if order_unit == OrderUnit.PC_KG:
                 unit_price_amount *= self.order_average_weight
             price_display = " = {}".format(RepanierMoney(unit_price_amount * qty))
             display = "{}{}".format(unit_display, price_display)

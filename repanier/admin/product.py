@@ -24,17 +24,9 @@ from repanier.const import (
     LUT_ALL_VAT_REVERSE,
     REPANIER_MONEY_ZERO,
     DECIMAL_ZERO,
-    PRODUCT_ORDER_UNIT_DEPOSIT,
-    PRODUCT_ORDER_UNIT_PC,
-    PRODUCT_ORDER_UNIT_PC_KG,
-    PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-    PRODUCT_ORDER_UNIT_PC_PRICE_PC,
     EMPTY_STRING,
-    PRODUCT_ORDER_UNIT_PC_PRICE_LT,
     LUT_VAT,
-    LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST,
-    LUT_PRODUCT_ORDER_UNIT,
-    LUT_PRODUCT_ORDER_UNIT_ALL,
+    OrderUnit,
 )
 from repanier.middleware import get_request_params, get_query_filters, add_filter
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
@@ -72,7 +64,7 @@ class ProductResource(resources.ModelResource):
     )
     unit = fields.Field(
         attribute="order_unit",
-        widget=OrderUnitWidget(LUT_PRODUCT_ORDER_UNIT_ALL, PRODUCT_ORDER_UNIT_PC),
+        widget=OrderUnitWidget(OrderUnit.choices, OrderUnit.PC),
     )
     average_weight = fields.Field(
         attribute="order_average_weight", widget=ThreeDecimalsWidget()
@@ -128,18 +120,18 @@ class ProductResource(resources.ModelResource):
             instance.stock = DECIMAL_ZERO
         if instance.order_unit is None:
             raise ValueError(_("The order unit must be set."))
-        if instance.order_unit != PRODUCT_ORDER_UNIT_DEPOSIT:
+        if instance.order_unit != OrderUnit.DEPOSIT:
             if instance.producer_unit_price < DECIMAL_ZERO:
                 raise ValueError(_("The price must be greater than or equal to zero."))
             if instance.customer_unit_price < DECIMAL_ZERO:
                 raise ValueError(_("The price must be greater than or equal to zero."))
-            if instance.order_unit in [
-                PRODUCT_ORDER_UNIT_PC,
-                PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-                PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-                PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-                PRODUCT_ORDER_UNIT_PC_KG,
-            ]:
+            if instance.order_unit in {
+                OrderUnit.PC,
+                OrderUnit.PC_PRICE_KG,
+                OrderUnit.PC_PRICE_LT,
+                OrderUnit.PC_PRICE_PC,
+                OrderUnit.PC_KG,
+            }:
                 # Do not allow decimal value when the qty represents pieces.
                 if (
                     instance.customer_minimum_order_quantity
@@ -156,7 +148,7 @@ class ProductResource(resources.ModelResource):
                 if instance.stock != instance.stock // 1:
                     raise ValueError(_("The stock must be an integer."))
 
-        if instance.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+        if instance.order_unit < OrderUnit.DEPOSIT:
             if instance.customer_minimum_order_quantity <= DECIMAL_ZERO:
                 raise ValueError(
                     _("The minimum order quantity must be greater than zero.")
@@ -237,8 +229,8 @@ class ProductDataForm(forms.ModelForm):
                         % {"product": qs.first()},
                     )
 
-        order_unit = self.cleaned_data.get("order_unit", PRODUCT_ORDER_UNIT_PC)
-        if order_unit != PRODUCT_ORDER_UNIT_DEPOSIT:
+        order_unit = self.cleaned_data.get("order_unit", OrderUnit.PC)
+        if order_unit != OrderUnit.DEPOSIT:
             producer_unit_price = self.cleaned_data["producer_unit_price"]
             if producer_unit_price < DECIMAL_ZERO:
                 self.add_error(
@@ -255,7 +247,7 @@ class ProductDataForm(forms.ModelForm):
                     _("The price must be greater than or equal to zero."),
                 )
 
-        if order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+        if order_unit < OrderUnit.DEPOSIT:
             customer_minimum_order_quantity = self.cleaned_data.get(
                 "customer_minimum_order_quantity", DECIMAL_ZERO
             )
@@ -264,13 +256,13 @@ class ProductDataForm(forms.ModelForm):
             )
             stock = self.cleaned_data.get("stock", DECIMAL_ZERO)
 
-            if order_unit in [
-                PRODUCT_ORDER_UNIT_PC,
-                PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-                PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-                PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-                PRODUCT_ORDER_UNIT_PC_KG,
-            ]:
+            if order_unit in {
+                OrderUnit.PC,
+                OrderUnit.PC_PRICE_KG,
+                OrderUnit.PC_PRICE_LT,
+                OrderUnit.PC_PRICE_PC,
+                OrderUnit.PC_KG,
+            }:
                 # Do not allow decimal value when the qty represents pieces.
                 if (
                     customer_minimum_order_quantity
@@ -452,16 +444,12 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
         production_mode_field = form.base_fields.get("production_mode")
 
-        order_unit_choices = LUT_PRODUCT_ORDER_UNIT
         if producer is not None:
             # One folder by producer for clarity
             if hasattr(picture_field.widget, "upload_to"):
                 picture_field.widget.upload_to = "{}{}{}".format(
                     "product", os_sep, producer.id
                 )
-            if producer.represent_this_buyinggroup:
-                order_unit_choices = LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST
-        order_unit_field.choices = order_unit_choices
 
         if product is not None:
             producer_field.empty_label = None

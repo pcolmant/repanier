@@ -121,21 +121,6 @@ class ConfigurationAdmin(admin.ModelAdmin):
                     },
                 )
             ]
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            fieldsets += [
-                (
-                    _("Invoicing mails"),
-                    {
-                        "classes": ("collapse",),
-                        "fields": (
-                            "send_invoice_mail_to_customer",
-                            "invoice_customer_mail_v2",
-                            "send_invoice_mail_to_producer",
-                            "invoice_producer_mail_v2",
-                        ),
-                    },
-                ),
-            ]
         fields = [
             "home_site",
             "group_label_v2",

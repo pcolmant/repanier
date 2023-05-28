@@ -147,8 +147,8 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
             self.fields["customer"].widget.can_add_related = False
             self.fields["customer"].widget.can_delete_related = False
             if self.instance.offer_item.order_unit not in [
-                PRODUCT_ORDER_UNIT_KG,
-                PRODUCT_ORDER_UNIT_PC_KG,
+                OrderUnit.KG,
+                OrderUnit.KG,
             ]:
                 self.fields["purchase_price"].widget.attrs["readonly"] = True
 
@@ -231,8 +231,8 @@ class OfferItemSendForm(forms.ModelForm):
         self.fields["previous_unit_deposit"].initial = product.unit_deposit
         self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax
         if product.wrapped or product.order_unit not in [
-            PRODUCT_ORDER_UNIT_KG,
-            PRODUCT_ORDER_UNIT_PC_KG,
+            OrderUnit.KG,
+            OrderUnit.KG,
         ]:
             self.fields["offer_purchase_price"].widget.attrs["readonly"] = True
             self.fields["offer_purchase_price"].disabled = True
@@ -254,7 +254,7 @@ class OfferItemSendForm(forms.ModelForm):
         permanence_field.widget = forms.HiddenInput()
 
     def get_readonly_fields(self, request, obj=None):
-        if obj.product.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
+        if obj.product.order_unit in [OrderUnit.KG, OrderUnit.PC_KG]:
             return []
         return [
             "offer_purchase_price",
@@ -325,8 +325,8 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         prices = ("producer_unit_price", "unit_deposit")
 
         if not product.wrapped and product.order_unit in [
-            PRODUCT_ORDER_UNIT_KG,
-            PRODUCT_ORDER_UNIT_PC_KG,
+            OrderUnit.KG,
+            OrderUnit.PC_KG,
         ]:
             fields_basic = (
                 ("permanence",),
@@ -473,9 +473,9 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                     customer, offer_item, purchase_form, purchase_form_instance
                 )
                 if offer_item.order_unit in [
-                    PRODUCT_ORDER_UNIT_KG,
-                    PRODUCT_ORDER_UNIT_PC_KG,
-                    PRODUCT_ORDER_UNIT_LT,
+                    OrderUnit.KG,
+                    OrderUnit.PC_KG,
+                    OrderUnit.LT,
                 ]:
                     purchase_price = purchase.purchase_price
                     previous_purchase_price = purchase_form.fields[
@@ -499,8 +499,8 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                     ).quantize(RoundUpTo.TWO_DECIMALS)
 
         if not offer_item.wrapped and offer_item.order_unit in [
-            PRODUCT_ORDER_UNIT_KG,
-            PRODUCT_ORDER_UNIT_PC_KG,
+            OrderUnit.KG,
+            OrderUnit.PC_KG,
         ]:
             rule_of_3 = form.cleaned_data["rule_of_3"]
             if rule_of_3:
