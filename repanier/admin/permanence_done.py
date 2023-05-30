@@ -146,7 +146,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             )
             response[
                 "Content-Disposition"
-            ] = "attachment; filename={0}-{1}.xlsx".format(_("Invoices"), permanence)
+            ] = "attachment; filename={0}-{1}.xlsx".format(_("Accounting entries"), permanence)
             wb.save(response)
             return response
         else:
@@ -207,7 +207,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             )
             wb.save(response)
             return response
-        user_message = _("No invoice available for {permanence}.'.").format(
+        user_message = _("No accounting entry for {permanence}").format(
             permanence=permanence
         )
         user_message_level = messages.WARNING
@@ -452,7 +452,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                         if last_permanence_invoiced_id == permanence.id:
                             # This is well the latest closed permanence. The invoices can be cancelled without damages.
                             permanence.cancel_invoice(last_bank_account_total)
-                            user_message = _("The selected invoice has been canceled.")
+                            user_message = _("The selected accounting entry has been cancelled")
                             user_message_level = messages.INFO
                         else:
                             user_message = _(
@@ -466,11 +466,11 @@ class PermanenceDoneAdmin(SaleAdmin):
                             user_message_level = messages.ERROR
                     else:
                         user_message = _(
-                            "The selected invoice is not the latest invoice."
+                            "You have not selected the last accounting entry"
                         )
                         user_message_level = messages.ERROR
                 else:
-                    user_message = _("The selected invoice has been canceled.")
+                    user_message = _("The selected accounting entry has been cancelled")
                     user_message_level = messages.INFO
                     permanence.set_status(
                         old_status=SaleStatus.INVOICED, new_status=SaleStatus.SEND
@@ -484,7 +484,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                     permanence.set_status(
                         old_status=SaleStatus.CANCELLED, new_status=SaleStatus.SEND
                     )
-                user_message = _("The selected invoice has been restored.")
+                user_message = _("Archiving has been cancelled")
                 user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(self.get_redirect_to_change_list_url())
@@ -594,7 +594,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                             "admin:permanence-cancel-invoicing", args=[permanence.pk]
                         )
                     ),
-                    _("Cancel the invoicing"),
+                    _("Cancel accounting registration"),
                 )
             else:
                 cancel_invoice = EMPTY_STRING

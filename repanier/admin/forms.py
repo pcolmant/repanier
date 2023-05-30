@@ -88,7 +88,7 @@ class ImportInvoiceForm(forms.Form):
     file_to_import = forms.FileField(label=_("File to import"), allow_empty_file=False)
     # Important : Here, the length of invoice_reference must be the same as of permanence.short_name
     invoice_reference = forms.CharField(
-        label=_("Invoice reference"), max_length=50, required=False
+        label=_("Accounting reference"), max_length=50, required=False
     )
     producer = forms.ModelChoiceField(
         label=_("Producer"),
@@ -122,7 +122,7 @@ class ProducerInvoicedForm(forms.Form):
         initial=REPANIER_MONEY_ZERO,
     )
     invoice_reference = forms.CharField(
-        label=_("Invoice reference"), max_length=100, required=False
+        label=_("Accounting reference"), max_length=100, required=False
     )
     producer_price_are_wo_vat = forms.BooleanField(required=False)
     represent_this_buyinggroup = forms.BooleanField(required=False)

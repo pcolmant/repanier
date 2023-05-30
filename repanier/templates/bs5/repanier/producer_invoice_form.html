@@ -18,9 +18,9 @@
                     {% endif %}
                     {% if next_producer_invoice_id %}
                         <a href="{{% url 'repanier:producer_invoice_view' 0 %}?producer={{ object.producer.id }}"
-                           class="btn btn-disabled"> {% translate "Invoice" %} </a>
+                           class="btn btn-disabled"> {% translate "Accounting entry" %} </a>
                     {% else %}
-                        <span class="btn btn-disabled">{% translate "Invoice" %}</span>
+                        <span class="btn btn-disabled">{% translate "Accounting entry" %}</span>
                     {% endif %}
                     {% if next_producer_invoice_id %}
                         <a href="{% url 'repanier:producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}"

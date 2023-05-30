@@ -326,7 +326,9 @@ class Producer(models.Model):
 
     def get_balance(self):
         any_producer_invoice = ProducerInvoice.objects.filter(
-            producer_id=self.id, invoice_sort_order__isnull=False
+            producer_id=self.id,
+            invoice_sort_order__isnull=False,
+            status__lte=SaleStatus.INVOICED,
         )
 
         balance = self.get_admin_balance()
@@ -358,7 +360,9 @@ class Producer(models.Model):
     def get_last_invoice(self):
         producer_last_invoice = (
             ProducerInvoice.objects.filter(
-                producer_id=self.id, invoice_sort_order__isnull=False
+                producer_id=self.id,
+                invoice_sort_order__isnull=False,
+                status__lte=SaleStatus.INVOICED,
             )
             .order_by("-id")
             .first()
@@ -390,7 +394,7 @@ class Producer(models.Model):
                 '<span style="color:#32CD32">{}</span>', number_format(0, 2)
             )
 
-    get_last_invoice.short_description = _("Last invoice")
+    get_last_invoice.short_description = _("Last accounting entry")
 
     def get_html_on_hold_movement(self):
         bank_not_invoiced = self.get_bank_not_invoiced()
@@ -403,15 +407,15 @@ class Producer(models.Model):
             if order_not_invoiced.amount != DECIMAL_ZERO:
                 if bank_not_invoiced.amount == DECIMAL_ZERO:
                     producer_on_hold_movement = _(
-                        "This balance does not take account of any unbilled sales %(other_order)s."
+                        "This balance does not take into account orders not yet booked for an amount of %(other_order)s."
                     ) % {"other_order": order_not_invoiced}
                 else:
                     producer_on_hold_movement = _(
-                        "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
+                        "This balance does not take into account payments made after the last accounting entry (for an amount of %(bank)s), nor does it take into account orders not yet accounted (for an amount of %(other_order)s)"
                     ) % {"bank": bank_not_invoiced, "other_order": order_not_invoiced}
             else:
                 producer_on_hold_movement = _(
-                    "This balance does not take account of any unrecognized payments %(bank)s."
+                    "This balance does not take into account payments made after the last accounting for an amount of %(bank)s."
                 ) % {"bank": bank_not_invoiced}
             return mark_safe(producer_on_hold_movement)
 

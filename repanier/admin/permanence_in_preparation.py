@@ -420,7 +420,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                     "balance": RepanierMoney(123.45),
                 }
                 customer_on_hold_movement = _(
-                    "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
+                    "This balance does not take into account payments made after the last accounting entry (for an amount of %(bank)s), nor does it take into account orders not yet accounted (for an amount of %(other_order)s)"
                 ) % {
                     "bank": RepanierMoney(123.45),
                     "other_order": RepanierMoney(123.45),

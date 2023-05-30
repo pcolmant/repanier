@@ -46,7 +46,7 @@ class Purchase(models.Model):
         max_length=3,
         choices=SaleStatus.choices,
         default=SaleStatus.PLANNED,
-        verbose_name=_("Invoice status"),
+        verbose_name=_("Accounting entry status"),
     )
     offer_item = models.ForeignKey(
         "OfferItem", verbose_name=_("Offer item"), on_delete=models.PROTECT
@@ -62,13 +62,13 @@ class Purchase(models.Model):
     )
     producer_invoice = models.ForeignKey(
         "ProducerInvoice",
-        verbose_name=_("Producer invoice"),
+        verbose_name=_("Accounting entry"),
         on_delete=models.PROTECT,
         db_index=True,
     )
     customer_invoice = models.ForeignKey(
         "CustomerInvoice",
-        verbose_name=_("Customer invoice"),
+        verbose_name=_("Accounting entry"),
         on_delete=models.PROTECT,
         db_index=True,
     )
@@ -94,7 +94,7 @@ class Purchase(models.Model):
     # During sending the orders to the producer this become the invoiced quantity
     # via permanence.send_to_producer()
     quantity_invoiced = models.DecimalField(
-        _("Quantity invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+        _("Quantity accounted for"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )
     purchase_price = ModelRepanierMoneyField(
         _("Producer row price"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
@@ -211,7 +211,7 @@ class Purchase(models.Model):
         else:
             return self.quantity_invoiced
 
-    get_quantity.short_description = _("Quantity invoiced")
+    get_quantity.short_description = _("Quantity accounted for")
 
     def get_producer_quantity(self):
         if self.status < SaleStatus.WAIT_FOR_SEND:

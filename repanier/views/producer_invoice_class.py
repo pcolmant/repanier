@@ -1,7 +1,7 @@
 from django.http import Http404
 from django.views.generic import DetailView
 
-from repanier.const import DECIMAL_ZERO
+from repanier.const import DECIMAL_ZERO, SaleStatus
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
@@ -47,6 +47,7 @@ class ProducerInvoiceView(DetailView):
                         producer_id=producer_invoice.producer_id,
                         invoice_sort_order__isnull=False,
                         invoice_sort_order__lt=producer_invoice.invoice_sort_order,
+                        status__lte=SaleStatus.INVOICED,
                     )
                     .order_by("-invoice_sort_order")
                     .only("id")
@@ -57,6 +58,7 @@ class ProducerInvoiceView(DetailView):
                         producer_id=producer_invoice.producer_id,
                         invoice_sort_order__isnull=False,
                         invoice_sort_order__gt=producer_invoice.invoice_sort_order,
+                        status__lte=SaleStatus.INVOICED,
                     )
                     .order_by("invoice_sort_order")
                     .only("id")
@@ -68,6 +70,7 @@ class ProducerInvoiceView(DetailView):
                     ProducerInvoice.objects.filter(
                         producer_id=producer_invoice.producer_id,
                         invoice_sort_order__isnull=False,
+                        status__lte=SaleStatus.INVOICED,
                     )
                     .order_by("invoice_sort_order")
                     .only("id")
@@ -82,19 +85,22 @@ class ProducerInvoiceView(DetailView):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            producer_id = self.request.GET.get("producer", None)
+            producer_id = self.request.GET.get("producer_id", None)
         else:
             raise Http404
-        pk = self.kwargs.get("pk", 0)
-        if pk == 0:
+        invoice_id = self.kwargs.get("invoice_id", 0)
+        if invoice_id == 0:
             last_producer_invoice = (
                 ProducerInvoice.objects.filter(
-                    producer_id=producer_id, invoice_sort_order__isnull=False
+                    producer_id=producer_id,
+                    invoice_sort_order__isnull=False,
+                    status__lte=SaleStatus.INVOICED,
                 )
                 .only("id")
                 .order_by("-invoice_sort_order")
                 .first()
             )
             if last_producer_invoice is not None:
-                self.kwargs["pk"] = last_producer_invoice.id
+                invoice_id = last_producer_invoice.id
+        self.kwargs["pk"] = invoice_id
         return ProducerInvoice.objects.filter(producer_id=producer_id)

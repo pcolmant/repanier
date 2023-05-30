@@ -1,11 +1,10 @@
 from django.conf import settings
-from django.http import Http404
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import DECIMAL_ZERO, EMPTY_STRING
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING, SaleStatus
 from repanier.models.invoice import CustomerInvoice
 
 
@@ -17,7 +16,9 @@ def my_balance_ajax(request):
         return HttpResponse(EMPTY_STRING)
     last_customer_invoice = (
         CustomerInvoice.objects.filter(
-            customer_id=request.customer_id, invoice_sort_order__isnull=False
+            customer_id=request.customer_id,
+            invoice_sort_order__isnull=False,
+            status__lte=SaleStatus.INVOICED,
         )
         .only("balance", "date_balance")
         .order_by("-invoice_sort_order")

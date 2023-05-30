@@ -61,10 +61,10 @@ class Permanence(models.Model):
         default=EMPTY_STRING,
     )
     invoice_description_v2 = HTMLField(
-        _("Invoice description"),
+        _("Accounting entry description"),
         configuration="CKEDITOR_SETTINGS_MODEL2",
         help_text=_(
-            "This message is send by mail to all customers having bought something when closing the permanence."
+            "When orders are closed, this e-mail is sent to customers who have placed an order"
         ),
         blank=True,
         default=EMPTY_STRING,
@@ -106,11 +106,11 @@ class Permanence(models.Model):
         db_index=True,
     )
     invoice_sort_order = models.IntegerField(
-        _("Invoice sort order"), default=None, blank=True, null=True
+        "Accounting entry sort order", default=None, blank=True, null=True
     )
     # canceled_invoice_sort_order is used in admin.permanence_done to display the canceled permanence in correct order
     canceled_invoice_sort_order = models.IntegerField(
-        _("Canceled invoice sort order"), default=None, blank=True, null=True
+        "Canceled accounting entry sort order", default=None, blank=True, null=True
     )
     picture = RepanierPictureField(
         verbose_name=_("Picture"),
@@ -431,7 +431,7 @@ class Permanence(models.Model):
                 customers_html.append(
                     '<a href="{}" target="_blank">{}</a>'.format(
                         reverse(
-                            "repanier:customer_invoice_view_with_customer",
+                            "repanier:customer_invoice_view",
                             args=(
                                 ci.id,
                                 ci.customer_id,

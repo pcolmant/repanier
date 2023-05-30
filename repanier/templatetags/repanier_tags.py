@@ -139,39 +139,10 @@ def repanier_user_bs3(context, *args, **kwargs):
                 )
             )
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-                last_customer_invoice = (
-                    CustomerInvoice.objects.filter(
-                        customer__user_id=request.user.id,
-                        invoice_sort_order__isnull=False,
-                    )
-                    .only("balance", "date_balance")
-                    .order_by("-invoice_sort_order")
-                    .first()
-                )
-                if last_customer_invoice is not None:
-                    if last_customer_invoice.balance < DECIMAL_ZERO:
-                        my_balance = _(
-                            'My balance : <font color="red">%(balance)s</font> at %(date)s'
-                        ) % {
-                            "balance": last_customer_invoice.balance,
-                            "date": last_customer_invoice.date_balance.strftime(
-                                settings.DJANGO_SETTINGS_DATE
-                            ),
-                        }
-                    else:
-                        my_balance = _(
-                            'My balance : <font color="green">%(balance)s</font> at %(date)s'
-                        ) % {
-                            "balance": last_customer_invoice.balance,
-                            "date": last_customer_invoice.date_balance.strftime(
-                                settings.DJANGO_SETTINGS_DATE
-                            ),
-                        }
-                else:
-                    my_balance = _("My balance")
                 nodes.append(
                     '<li><a href="{}">{}</a></li>'.format(
-                        reverse("repanier:customer_invoice_view", args=(0,)), my_balance
+                        reverse("repanier:customer_invoice_view", args=(0,user.customer_id,)),
+                        _("My balance"),
                     )
                 )
             nodes.append('<li class="divider"></li>')
@@ -243,6 +214,7 @@ def repanier_user_bs5(context, *args, **kwargs):
                     CustomerInvoice.objects.filter(
                         customer__user_id=request.user.id,
                         invoice_sort_order__isnull=False,
+                        status__lte=SaleStatus.INVOICED,
                     )
                     .only("balance", "date_balance")
                     .order_by("-invoice_sort_order")
@@ -271,7 +243,7 @@ def repanier_user_bs5(context, *args, **kwargs):
                     my_balance = _("My balance")
                 nodes.append(
                     '<li><a href="{}">{}</a></li>'.format(
-                        reverse("repanier:customer_invoice_view", args=(0,)), my_balance
+                        reverse("repanier:customer_invoice_view", args=(0,user.customer_id,)), my_balance
                     )
                 )
             nodes.append('<li class="divider"></li>')

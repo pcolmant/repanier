@@ -1,5 +1,4 @@
 from django.core.validators import MinValueValidator
-from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -95,7 +94,7 @@ class LUT_DeliveryPoint(MPTTModel):
         related_name="+",
         verbose_name=_("Group"),
         help_text=_(
-            "Invoices are sent to this group who is responsible for collecting the payments."
+            "The group centralise payments"
         ),
         blank=True,
         null=True,

@@ -237,8 +237,8 @@ def export_order_2_1_group(
                 "last_balance_link": mark_safe(
                     '<a href="https://{}{}">{}</a>'.format(
                         settings.ALLOWED_HOSTS[0],
-                        reverse("repanier:customer_invoice_view", args=(0,)),
-                        _("Group invoices"),
+                        reverse("repanier:customer_invoice_view", args=(0,0,)),
+                        _("Accounting entries"),
                     )
                 ),
                 "last_balance": EMPTY_STRING,
@@ -346,7 +346,7 @@ def export_order_2_1_customer(
                     "last_balance_link": mark_safe(
                         '<a href="https://{}{}">{}</a>'.format(
                             settings.ALLOWED_HOSTS[0],
-                            reverse("repanier:customer_invoice_view", args=(0,)),
+                            reverse("repanier:customer_invoice_view", args=(0,0,)),
                             customer_last_balance,
                         )
                     ),

@@ -37,7 +37,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         (_("Producer"), 15),
         (_("Product"), 60),
         (_("Customer"), 15),
-        (_("Quantity invoiced"), 10),
+        (_("Quantity accounted for"), 10),
         (_("Producer unit price"), 10),
         (_("Deposit"), 10),
         (_("Purchase price"), 10),
@@ -82,7 +82,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         title1 = "{}-{}".format(producer.short_profile_name, year)
     producer = next_row(producers)
     if producer is not None:
-        wb, ws = new_landscape_a4_sheet(wb, title1, _("Invoices"), header)
+        wb, ws = new_landscape_a4_sheet(wb, title1, _("Accounting entries"), header)
         row_num = 1
         count_all_purchase = 0
         purchase_price_all_purchase = []
@@ -862,8 +862,8 @@ def import_purchase_sheet(
                     if not quantity_has_been_modified:
                         quantity_invoiced = (
                             DECIMAL_ZERO
-                            if row[_("Quantity invoiced")] is None
-                            else Decimal(row[_("Quantity invoiced")]).quantize(
+                            if row[_("Quantity accounted for")] is None
+                            else Decimal(row[_("Quantity accounted for")]).quantize(
                                 RoundUpTo.FOUR_DECIMALS
                             )
                         )
@@ -992,7 +992,7 @@ def handle_uploaded_purchase(request, permanence, file_to_import, *args):
                     error_msg = format_worksheet_title(permanence) + " > " + error_msg
             else:
                 error = True
-                error_msg = _("The permanence has already been invoiced.")
+                error_msg = _("The accounting has already been done")
         else:
             error = True
             error_msg = _("The permanence doesn't exists.")

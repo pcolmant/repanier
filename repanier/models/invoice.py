@@ -32,7 +32,7 @@ class Invoice(models.Model):
     )
     # Calculated with Purchase
     total_price_with_tax = ModelRepanierMoneyField(
-        _("Invoiced TVAC"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
+        _("Accounted for w VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
     )
     delta_price_with_tax = ModelRepanierMoneyField(
         _("Total amount"),
@@ -102,7 +102,7 @@ class Invoice(models.Model):
             self.delta_price_with_tax.amount += total_price_gov_be - total_price
 
     def __str__(self):
-        return _("Invoice")
+        return _("Accounting entry")
 
     class Meta:
         abstract = True
@@ -140,14 +140,11 @@ class CustomerInvoice(Invoice):
         _("Confirmation of the order send"), choices=settings.LUT_CONFIRM, default=False
     )
     invoice_sort_order = models.IntegerField(
-        _("Invoice sort order"), default=None, blank=True, null=True, db_index=True
+        _("Accounting entry sort order"), default=None, blank=True, null=True, db_index=True
     )
     price_list_multiplier = models.DecimalField(
         _(
             "Delivery point coefficient applied to the producer tariff to calculate the customer tariff"
-        ),
-        help_text=_(
-            "This multiplier is applied once for groups with entitled customer or at each customer invoice for open groups."
         ),
         default=DECIMAL_ONE,
         max_digits=5,
@@ -157,9 +154,6 @@ class CustomerInvoice(Invoice):
     )
     transport = ModelRepanierMoneyField(
         _("Shipping cost"),
-        help_text=_(
-            "This amount is added once for groups with entitled customer or at each customer for open groups."
-        ),
         default=DECIMAL_ZERO,
         max_digits=5,
         decimal_places=2,
@@ -686,8 +680,8 @@ class CustomerInvoice(Invoice):
         return "{}, {}".format(self.customer, self.permanence)
 
     class Meta:
-        verbose_name = _("Customer invoice")
-        verbose_name_plural = _("Customers invoices")
+        verbose_name = _("Accounting entry")
+        verbose_name_plural = _("Accounting entries")
         unique_together = (("permanence", "customer"),)
 
 
@@ -715,10 +709,10 @@ class ProducerInvoice(Invoice):
         default=DECIMAL_ZERO,
     )
     invoice_sort_order = models.IntegerField(
-        _("Invoice sort order"), default=None, blank=True, null=True, db_index=True
+        _("Accounting entry sort order"), default=None, blank=True, null=True, db_index=True
     )
     invoice_reference = models.CharField(
-        _("Invoice reference"), max_length=100, blank=True, default=EMPTY_STRING
+        _("Accounting reference"), max_length=100, blank=True, default=EMPTY_STRING
     )
 
     def get_negative_previous_balance(self):
@@ -812,8 +806,8 @@ class ProducerInvoice(Invoice):
         return "{}, {}".format(self.producer, self.permanence)
 
     class Meta:
-        verbose_name = _("Producer invoice")
-        verbose_name_plural = _("Producers invoices")
+        verbose_name = _("Accounting entry")
+        verbose_name_plural = _("Accounting entries")
         unique_together = (("permanence", "producer"),)
 
 
@@ -837,7 +831,7 @@ class CustomerProducerInvoice(models.Model):
     )
     # Calculated with Purchase
     total_selling_with_tax = ModelRepanierMoneyField(
-        _("Invoiced to the customer w TVA"),
+        _("Accounted to the customer w VAT"),
         help_text=_("Total selling amount vat included"),
         default=DECIMAL_ZERO,
         max_digits=8,

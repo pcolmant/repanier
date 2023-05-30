@@ -84,7 +84,7 @@
                     </li>
                 {% if not f_form.represent_this_buyinggroup.value %}
                     <li class="repanier-flex-ul-li">
-                        {% translate ", invoiced : " %}&nbsp;
+                        , {% translate "booked" %} : &nbsp;
                     </li>
                     <li class="repanier-flex-ul-li">
                         {{ f_form.to_be_invoiced_balance }}
@@ -92,7 +92,7 @@
                     <li class="repanier-flex-ul-li">
                         &nbsp;{% if f_form.producer_price_are_wo_vat is True %}{% translate "wo VAT" %}{% else %}
                         {% translate "w VAT" %}{% endif %}
-                        {% translate ", invoice reference : " %} {{ f_form.invoice_reference }}
+                        , {% translate "accounting reference" %} : &nbsp;{{ f_form.invoice_reference }}
                     </li>
                 {% endif %}
                 </ul>

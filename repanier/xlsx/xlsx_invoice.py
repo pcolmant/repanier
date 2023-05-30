@@ -405,7 +405,7 @@ def export_invoice(
             row += [
                 (_("Comment"), 30, purchase.comment, NumberFormat.FORMAT_TEXT, False),
                 (
-                    _("Invoice status"),
+                    _("Accounting entry status"),
                     10,
                     purchase.get_status_display(),
                     NumberFormat.FORMAT_TEXT,

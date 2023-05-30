@@ -22,7 +22,7 @@ class AdminFilterDepartment(AutocompleteFilter):
 
 
 class AdminFilterQuantityInvoiced(SimpleListFilter):
-    title = _("Invoiced")
+    title = _("Accounted for")
     parameter_name = "is_filled_exact"
 
     def lookups(self, request, model_admin):

@@ -44,14 +44,14 @@ class OfferItem(Item):
 
     # Calculated with Purchase : Total producer purchase price vat included
     total_purchase_with_tax = ModelRepanierMoneyField(
-        _("Producer amount invoiced"),
+        _("Accounted to the producer w VAT"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
     # Calculated with Purchase : Total customer selling price vat included
     total_selling_with_tax = ModelRepanierMoneyField(
-        _("Invoiced to the customer w TVA"),
+        _("Accounted to the customer w VAT"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
@@ -62,7 +62,7 @@ class OfferItem(Item):
     # During sending the orders to the producer this become the invoiced quantity
     # via permanence.send_to_producer()
     quantity_invoiced = models.DecimalField(
-        _("Qty invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+        _("Quantity accounted for"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )
     use_order_unit_converted = models.BooleanField(default=False)
 

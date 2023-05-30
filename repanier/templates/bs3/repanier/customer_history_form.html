@@ -1,0 +1,134 @@
+{% extends 'bs3/base_wo_cms_toolbar.html' %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags cache %}
+{% block base_content %}
+    <div class="container-repanier">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="btn-group">
+                        <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
+                           class="btn btn-info btn-disabled"> {% translate "Detail" %} <span
+                                class="glyphicon glyphicon-fullscreen"></span> </a>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    {% if my_invoices %}{% else %}<h4>{{ customer.long_basket_name }}</h4>{% endif %}
+                    <h4>
+                        <span class="label label-danger">
+                            {% translate "My current balance" %}
+                        &nbsp;: {{ customer.get_admin_balance }}
+                            </span>
+                    </h4>
+                    <p/>
+                </div>
+            </div>
+            {% for not_invoiced in not_invoiced_customer_invoice_set %}
+                <div class="row">
+                    <div class="col-lg-12">
+                    <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
+                                   class="btn-xs btn-default btn-disabled">
+                                    {% translate "Pending purchases" %}
+                                </a>
+                        &nbsp;: {{ not_invoiced.get_total_price_with_tax }}
+                        <small>(
+                            {{ not_invoiced.permanence }}
+                            {% if not_invoiced.customer_id != not_invoiced.customer_charged_id %}
+                                , {% translate "Payment centralized by" %}
+                                : {{ not_invoiced.customer_charged }}.
+                            {% endif %}
+                            )</small>
+                    </div>
+                </div>
+            {% endfor %}
+            {% for bank_account in not_invoiced_bank_account_set %}
+                <div class="row">
+                    <div class="col-lg-12">
+                        {% if bank_account.bank_amount_in != 0 %}
+                            <span class="label label-info">{% translate "Pending provision" %} :</span>
+                            {{ bank_account.bank_amount_in }}
+                            <small>(
+                                {% if bank_account.operation_comment %}
+                                    {{ bank_account.operation_comment }},
+                                {% endif %}
+                                {{ bank_account.operation_date | date:"DATE_FORMAT" }}
+                                )</small>
+                        {% endif %}
+                        {% if bank_account.bank_amount_out != 0 %}
+                            <span class="label label-info">{% translate "Pending refund" %} :</span>
+                            {{ bank_account.bank_amount_out }}
+                            <small>(
+                                {% if bank_account.operation_comment %}
+                                    {{ bank_account.operation_comment }},
+                                {% endif %}
+                                {{ bank_account.operation_date | date:"DATE_FORMAT" }}
+                                )</small>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+            {% for invoiced in invoiced_array %}
+                <br/>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
+                           class="btn-xs btn-danger btn-disabled">
+                            {% translate "My balance at" %} {{ invoiced.customer_invoice.date_balance | date:"DATE_FORMAT" }} :
+                            {{ invoiced.customer_invoice.balance }}
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
+                           class="btn-xs btn-default btn-disabled">
+                            {% translate "Purchases" %}
+                        </a>
+                        &nbsp;: {{ invoiced.customer_invoice.get_total_price_with_tax }}
+                        <small>(
+                            {{ invoiced.customer_invoice.permanence }}
+                            {% if invoiced.customer_invoice.customer_id != invoiced.customer_invoice.customer_charged_id %}
+                                , {% translate "Payment centralized by" %}
+                                : {{ invoiced.customer_invoice.customer_charged }}.
+                            {% endif %}
+                            )</small>
+                    </div>
+                </div>
+
+                {% for bank_account in invoiced.bank_account_set %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            {% if bank_account.bank_amount_in != 0 %}
+                                <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
+                                   class="btn-xs btn-info btn-disabled">
+                                    {% translate "Provision" %}
+                                </a>
+                                &nbsp;: {{ bank_account.bank_amount_in }}
+                                <small>(
+                                    {% if bank_account.operation_comment %}
+                                        {{ bank_account.operation_comment }},
+                                    {% endif %}
+                                    {{ bank_account.operation_date | date:"DATE_FORMAT" }}
+                                    )</small>
+                            {% endif %}
+                            {% if bank_account.bank_amount_out != 0 %}
+                                <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
+                                   class="btn-xs btn-info btn-disabled">
+                                    {% translate "Refund" %}
+                                </a>
+                                &nbsp;: {{ bank_account.bank_amount_out }}
+                                <small>(
+                                    {% if bank_account.operation_comment %}
+                                        {{ bank_account.operation_comment }},
+                                    {% endif %}
+                                    {{ bank_account.operation_date | date:"DATE_FORMAT" }}
+                                    )</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

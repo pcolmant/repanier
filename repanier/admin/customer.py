@@ -281,7 +281,7 @@ def create__customer_action(year):
             response[
                 "Content-Disposition"
             ] = "attachment; filename={0}-{1}.xlsx".format(
-                "{} {}".format(_("Invoice"), year),
+                "{} {}".format(_("Accounting"), year),
                 settings.REPANIER_SETTINGS_GROUP_NAME,
             )
             wb.save(response)
@@ -518,7 +518,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             customer_price = EMPTY_STRING
             if customer.price_list_multiplier < DECIMAL_ONE:
                 customer_price = _(
-                    " in addition to the %(discount)s%% personal discount rate on to the pricelist"
+                    " in addition to the %(discount)s%% customer discount rate on to the pricelist"
                 ) % {
                     "discount": Decimal(
                         (DECIMAL_ONE - customer.price_list_multiplier) * 100
@@ -526,7 +526,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 }
             elif customer.price_list_multiplier > DECIMAL_ONE:
                 customer_price = _(
-                    " in addition to the %(surcharge)s%% personal surcharge on to the pricelist"
+                    " in addition to the %(surcharge)s%% customer surcharge on to the pricelist"
                 ) % {
                     "surcharge": Decimal(
                         (customer.price_list_multiplier - DECIMAL_ONE) * 100
@@ -537,7 +537,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     request,
                     messages.WARNING,
                     _(
-                        "%(discount)s%% discount is granted to customer invoices when delivered to %(group)s%(customer_price)s."
+                        "%(discount)s%% discount is granted to customer when delivered to %(group)s%(customer_price)s."
                     )
                     % {
                         "discount": Decimal(
@@ -552,7 +552,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     request,
                     messages.WARNING,
                     _(
-                        "%(surcharge)s%% surcharge is applied to customer invoices when delivered to %(group)s%(customer_price)s."
+                        "%(surcharge)s%% surcharge is applied to customer when delivered to %(group)s%(customer_price)s."
                     )
                     % {
                         "surcharge": Decimal(

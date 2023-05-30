@@ -91,7 +91,7 @@ class Configuration(models.Model):
         "Permanence", on_delete=models.PROTECT, blank=True, null=True
     )
     group_label_v2 = models.CharField(
-        _("Label to mention on the invoices of the group"),
+        _("Label to be shown on orders"),
         max_length=100,
         default=EMPTY_STRING,
         blank=True,

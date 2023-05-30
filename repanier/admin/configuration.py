@@ -28,7 +28,7 @@ class ConfigurationDataForm(forms.ModelForm):
         required=False,
     )
     group_label_v2 = forms.CharField(
-        label=_("Label to mention on the invoices of the group"),
+        label=_("Label to be shown on orders"),
         required=False,
         widget=forms.TextInput(attrs={"style": "width:100% !important"}),
     )

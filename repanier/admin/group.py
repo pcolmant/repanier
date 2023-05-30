@@ -131,7 +131,7 @@ def create__group_action(year):
             response[
                 "Content-Disposition"
             ] = "attachment; filename={0}-{1}.xlsx".format(
-                "{} {}".format(_("Invoice"), year),
+                "{} {}".format(_("Accounting"), year),
                 settings.REPANIER_SETTINGS_GROUP_NAME,
             )
             wb.save(response)

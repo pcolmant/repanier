@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
+from repanier.const import SaleStatus
 
 from repanier.models.invoice import CustomerInvoice
 from repanier.xlsx.xlsx_invoice import export_invoice
@@ -16,13 +17,16 @@ def download_customer_invoice(request, customer_invoice_id):
     if user.is_authenticated:
         if user.is_repanier_staff:
             customer_invoice = CustomerInvoice.objects.filter(
-                id=customer_invoice_id, invoice_sort_order__isnull=False
+                id=customer_invoice_id,
+                invoice_sort_order__isnull=False,
+                status__lte=SaleStatus.INVOICED,
             ).first()
         else:
             customer_invoice = CustomerInvoice.objects.filter(
                 customer__user_id=request.user.id,
                 id=customer_invoice_id,
                 invoice_sort_order__isnull=False,
+                status__lte=SaleStatus.INVOICED,
             ).first()
         if customer_invoice is not None:
             wb = export_invoice(

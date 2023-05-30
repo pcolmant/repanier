@@ -17,10 +17,8 @@ from repanier.rest.producer import producers_list, producer_detail
 from repanier.rest.product import products_rest, product_rest
 from repanier.rest.version import version_rest
 from repanier.tools import get_repanier_template_name
-from repanier.views.basket_message_form_ajax import (
-    customer_basket_message_form_ajax,
-)
 from repanier.views.btn_confirm_order_ajax import btn_confirm_order_ajax
+from repanier.views.customer_history_class import CustomerHistoryView
 from repanier.views.customer_invoice_class import CustomerInvoiceView
 from repanier.views.customer_name_ajax import customer_name_ajax
 from repanier.views.customer_product_description_ajax import (
@@ -144,11 +142,6 @@ urlpatterns = [
     path("ajax/delivery-select/", delivery_select_ajax, name="delivery_select_ajax"),
     path("ajax/permanence/", task_form_ajax, name="task_form_ajax"),
     path(
-        "ajax/customer-basket-message/<int:customer_invoice_id>/",
-        customer_basket_message_form_ajax,
-        name="customer_basket_message_form_ajax",
-    ),
-    path(
         "ajax/customer-product-description/",
         order_product_description_ajax,
         name="order_product_description_ajax",
@@ -171,17 +164,17 @@ urlpatterns = [
     path("ajax/test-mail-config/", test_mail_config_ajax, name="test_mail_config_ajax"),
     path("permanence/", never_cache(PermanenceView.as_view()), name="permanence_view"),
     path(
-        "customer-invoice/<int:pk>/<int:customer_id>",
-        login_required(CustomerInvoiceView.as_view()),
-        name="customer_invoice_view_with_customer",
-    ),
-    path(
-        "customer-invoice/<int:pk>/",
+        "customer-invoice/<int:invoice_id>/<int:customer_id>/",
         login_required(CustomerInvoiceView.as_view()),
         name="customer_invoice_view",
     ),
     path(
-        "producer-invoice/<int:pk>/",
+        "customer-history/<int:customer_id>/",
+        login_required(CustomerHistoryView.as_view()),
+        name="customer_history_view",
+    ),
+    path(
+        "producer-invoice/<int:invoice_id>/<int:producer_id>/",
         login_required(ProducerInvoiceView.as_view()),
         name="producer_invoice_view",
     ),

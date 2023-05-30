@@ -322,7 +322,9 @@ class Customer(models.Model):
 
     def get_balance(self):
         any_customer_invoice = CustomerInvoice.objects.filter(
-            customer_id=self.id, invoice_sort_order__isnull=False
+            customer_id=self.id,
+            invoice_sort_order__isnull=False,
+            status__lte=SaleStatus.INVOICED,
         )
 
         balance = self.get_admin_balance()
@@ -338,7 +340,7 @@ class Customer(models.Model):
             return format_html(
                 '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:{}">{}</span></a>',
                 reverse(
-                    "repanier:customer_invoice_view_with_customer",
+                    "repanier:customer_invoice_view",
                     args=(
                         0,
                         self.id,
@@ -382,18 +384,18 @@ class Customer(models.Model):
             if other_order_not_invoiced.amount != DECIMAL_ZERO:
                 if bank_not_invoiced.amount == DECIMAL_ZERO:
                     customer_on_hold_movement = _(
-                        "This balance does not take account of any unbilled sales %(other_order)s."
+                        "This balance does not take into account orders not yet booked for an amount of %(other_order)s."
                     ) % {"other_order": other_order_not_invoiced}
                 else:
                     customer_on_hold_movement = _(
-                        "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
+                        "This balance does not take into account payments made after the last accounting entry (for an amount of %(bank)s), nor does it take into account orders not yet accounted (for an amount of %(other_order)s)"
                     ) % {
                         "bank": bank_not_invoiced,
                         "other_order": other_order_not_invoiced,
                     }
             else:
                 customer_on_hold_movement = _(
-                    "This balance does not take account of any unrecognized payments %(bank)s."
+                    "This balance does not take into account payments made after the last accounting for an amount of %(bank)s."
                 ) % {"bank": bank_not_invoiced}
             customer_on_hold_movement = mark_safe(customer_on_hold_movement)
         else:

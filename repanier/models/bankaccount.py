@@ -58,7 +58,7 @@ class BankAccount(models.Model):
     )
     producer_invoice = models.ForeignKey(
         "ProducerInvoice",
-        verbose_name=_("Producer invoice"),
+        verbose_name=_("Accounting entry"),
         blank=True,
         null=True,
         on_delete=models.PROTECT,
@@ -66,7 +66,7 @@ class BankAccount(models.Model):
     )
     customer_invoice = models.ForeignKey(
         "CustomerInvoice",
-        verbose_name=_("Customer invoice"),
+        verbose_name=_("Accounting entry"),
         blank=True,
         null=True,
         on_delete=models.PROTECT,
