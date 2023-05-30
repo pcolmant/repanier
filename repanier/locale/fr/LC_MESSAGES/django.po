@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-29 22:28+0200\n"
-"PO-Revision-Date: 2023-05-29 22:30+0200\n"
+"POT-Creation-Date: 2023-05-30 20:58+0200\n"
+"PO-Revision-Date: 2023-05-30 21:11+0200\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -28,7 +28,7 @@ msgstr ""
 msgid "Producers"
 msgstr "Producteurs"
 
-#: admin/admin_filter.py:19 cms_toolbar.py:59 models/lut.py:176
+#: admin/admin_filter.py:19 cms_toolbar.py:59 models/lut.py:175
 msgid "Departments"
 msgstr "Rayons"
 
@@ -83,8 +83,8 @@ msgstr ""
 #: templates/bs3/admin/repanier/customersend/change_form.html:7
 #: templates/bs3/admin/repanier/offeritemsend/change_form.html:7
 #: templates/bs3/admin/repanier/purchase/change_form.html:7
-#: templates/bs3/repanier/customer_invoice_form.html:315
-#: templates/bs3/repanier/customer_invoice_form.html:396
+#: templates/bs3/repanier/customer_invoice_form.html:319
+#: templates/bs3/repanier/customer_invoice_form.html:400
 #: templates/bs5/admin/repanier/customersend/change_form.html:7
 #: templates/bs5/admin/repanier/offeritemsend/change_form.html:7
 #: templates/bs5/admin/repanier/purchase/change_form.html:7
@@ -99,9 +99,9 @@ msgstr "Consommateur"
 #: models/bankaccount.py:20 models/bankaccount.py:187 models/invoice.py:691
 #: models/invoice.py:819 models/item.py:24 models/producer.py:432
 #: models/producer.py:461 models/purchase.py:55
-#: templates/bs3/repanier/customer_invoice_form.html:147
-#: templates/bs3/repanier/customer_invoice_form.html:320
-#: templates/bs3/repanier/customer_invoice_form.html:400
+#: templates/bs3/repanier/customer_invoice_form.html:149
+#: templates/bs3/repanier/customer_invoice_form.html:324
+#: templates/bs3/repanier/customer_invoice_form.html:404
 #: templates/bs5/repanier/customer_invoice_form.html:173
 #: templates/bs5/repanier/customer_invoice_form.html:258
 #: xlsx/xlsx_invoice.py:285 xlsx/xlsx_offer.py:59 xlsx/xlsx_order.py:419
@@ -291,7 +291,7 @@ msgstr "Référence comptable"
 #: admin/permanence_in_preparation.py:438
 #: admin/permanence_in_preparation.py:456
 #: admin/permanence_in_preparation.py:457 models/customer.py:34
-#: models/lut.py:34 models/lut.py:81 models/lut.py:161 models/lut.py:199
+#: models/lut.py:33 models/lut.py:80 models/lut.py:160 models/lut.py:198
 #: models/producer.py:33
 msgid "Short name"
 msgstr "Nom abrégé"
@@ -308,13 +308,13 @@ msgstr "Montant réclamé par le producteur"
 msgid "Members"
 msgstr "Membres"
 
-#: admin/group.py:160 models/lut.py:108
+#: admin/group.py:160 models/lut.py:107
 msgid "Inform the group of orders placed by its members"
 msgstr "Informer le groupe des commandes passées par ses membres"
 
 #: admin/group.py:163 models/invoice.py:45 models/invoice.py:156
-#: models/lut.py:111 templates/bs3/repanier/customer_invoice_form.html:105
-#: templates/bs3/repanier/customer_invoice_form.html:276
+#: models/lut.py:110 templates/bs3/repanier/customer_invoice_form.html:109
+#: templates/bs3/repanier/customer_invoice_form.html:280
 #: templates/bs3/repanier/producer_invoice_form.html:58
 #: templates/bs5/repanier/customer_invoice_form.html:89
 #: templates/bs5/repanier/producer_invoice_form.html:58
@@ -322,7 +322,7 @@ msgstr "Informer le groupe des commandes passées par ses membres"
 msgid "Shipping cost"
 msgstr "Frais"
 
-#: admin/group.py:171 models/invoice.py:163 models/lut.py:119
+#: admin/group.py:171 models/invoice.py:163 models/lut.py:118
 msgid "Minimum order amount for free shipping cost"
 msgstr "Montant minimum à commander pour éviter les frais"
 
@@ -427,7 +427,7 @@ msgstr "Veuillez confirmer votre demande de reprise en compte de la livraison."
 #: admin/permanence_done.py:549 models/permanence.py:144
 #: models/permanence.py:167 models/permanence.py:193 models/permanence.py:328
 #: templates/bs3/admin/import_export/export.html:5
-#: templates/bs3/repanier/customer_invoice_form.html:26
+#: templates/bs3/repanier/customer_invoice_form.html:29
 #: templates/bs5/admin/import_export/export.html:5
 #: templates/bs5/repanier/customer_invoice_form.html:28
 msgid "Export"
@@ -524,11 +524,11 @@ msgstr ""
 
 #: admin/permanence_in_preparation.py:467 admin/purchase.py:305
 #: models/deliveryboard.py:18 models/invoice.py:419 models/invoice.py:677
-#: models/lut.py:136 models/purchase.py:206
-#: templates/bs3/repanier/customer_invoice_form.html:83
-#: templates/bs3/repanier/customer_invoice_form.html:113
-#: templates/bs3/repanier/customer_invoice_form.html:256
-#: templates/bs3/repanier/customer_invoice_form.html:283
+#: models/lut.py:135 models/purchase.py:206
+#: templates/bs3/repanier/customer_invoice_form.html:87
+#: templates/bs3/repanier/customer_invoice_form.html:117
+#: templates/bs3/repanier/customer_invoice_form.html:260
+#: templates/bs3/repanier/customer_invoice_form.html:287
 #: templates/bs5/repanier/customer_invoice_form.html:61
 #: templates/bs5/repanier/customer_invoice_form.html:96 xlsx/xlsx_order.py:33
 msgid "Delivery point"
@@ -682,9 +682,9 @@ msgstr "Qté demandée"
 msgid "Quantity prepared"
 msgstr "Qté préparée"
 
-#: admin/purchase.py:352 templates/bs3/repanier/customer_invoice_form.html:156
-#: templates/bs3/repanier/customer_invoice_form.html:329
-#: templates/bs3/repanier/customer_invoice_form.html:409
+#: admin/purchase.py:352 templates/bs3/repanier/customer_invoice_form.html:158
+#: templates/bs3/repanier/customer_invoice_form.html:333
+#: templates/bs3/repanier/customer_invoice_form.html:413
 #: templates/bs3/repanier/producer_invoice_form.html:117
 #: templates/bs5/repanier/customer_invoice_form.html:182
 #: templates/bs5/repanier/customer_invoice_form.html:267
@@ -692,10 +692,10 @@ msgstr "Qté préparée"
 msgid "Qty"
 msgstr "Qté"
 
-#: admin/purchase.py:456 models/item.py:28 models/lut.py:175
-#: templates/bs3/repanier/customer_invoice_form.html:149
-#: templates/bs3/repanier/customer_invoice_form.html:322
-#: templates/bs3/repanier/customer_invoice_form.html:402
+#: admin/purchase.py:456 models/item.py:28 models/lut.py:174
+#: templates/bs3/repanier/customer_invoice_form.html:151
+#: templates/bs3/repanier/customer_invoice_form.html:326
+#: templates/bs3/repanier/customer_invoice_form.html:406
 #: templates/bs5/repanier/customer_invoice_form.html:175
 #: templates/bs5/repanier/customer_invoice_form.html:260
 #: xlsx/xlsx_invoice.py:299 xlsx/xlsx_offer.py:66 xlsx/xlsx_product.py:48
@@ -1444,7 +1444,7 @@ msgstr "Configuration"
 msgid "Language"
 msgstr "Langue"
 
-#: models/customer.py:52 models/item.py:35 models/lut.py:43
+#: models/customer.py:52 models/item.py:35 models/lut.py:42
 #: models/permanence.py:116 models/producer.py:57
 msgid "Picture"
 msgstr "Photo"
@@ -1488,8 +1488,8 @@ msgid "Membership fee valid until"
 msgstr "Cotisation à renouveler le"
 
 #: models/customer.py:82 models/producer.py:104 models/purchase.py:123
-#: templates/bs3/repanier/customer_invoice_form.html:120
-#: templates/bs3/repanier/customer_invoice_form.html:290
+#: templates/bs3/repanier/customer_invoice_form.html:124
+#: templates/bs3/repanier/customer_invoice_form.html:294
 #: templates/bs5/repanier/customer_invoice_form.html:103
 msgid ""
 "Coefficient applied to the producer tariff to calculate the customer tariff"
@@ -1511,12 +1511,12 @@ msgid "Represent_this_buyinggroup"
 msgstr "Représente ce groupement d'achats"
 
 #: models/customer.py:110 models/customer.py:125 models/group.py:12
-#: models/invoice.py:170 models/lut.py:96 models/producer.py:429
+#: models/invoice.py:170 models/lut.py:95 models/producer.py:429
 msgid "Group"
 msgstr "Groupe"
 
-#: models/customer.py:116 models/item.py:105 models/lut.py:50 models/lut.py:89
-#: models/lut.py:159 models/lut.py:215 models/producer.py:134
+#: models/customer.py:116 models/item.py:105 models/lut.py:49 models/lut.py:88
+#: models/lut.py:158 models/lut.py:214 models/producer.py:134
 #: models/staff.py:74
 msgid "Active"
 msgstr "Actif"
@@ -1652,8 +1652,8 @@ msgid "VAT to add"
 msgstr "TVA à ajouter"
 
 #: models/invoice.py:59 models/item.py:72 models/purchase.py:113
-#: models/purchase.py:194 templates/bs3/repanier/customer_invoice_form.html:98
-#: templates/bs3/repanier/customer_invoice_form.html:269
+#: models/purchase.py:194 templates/bs3/repanier/customer_invoice_form.html:102
+#: templates/bs3/repanier/customer_invoice_form.html:273
 #: templates/bs5/repanier/customer_invoice_form.html:82
 #: xlsx/v3/xlsx_stock.py:31 xlsx/xlsx_invoice.py:325 xlsx/xlsx_invoice.py:603
 #: xlsx/xlsx_offer.py:98 xlsx/xlsx_order.py:879 xlsx/xlsx_order.py:1257
@@ -1661,8 +1661,8 @@ msgstr "TVA à ajouter"
 msgid "Deposit"
 msgstr "Consigne"
 
-#: models/invoice.py:60 templates/bs3/repanier/customer_invoice_form.html:131
-#: templates/bs3/repanier/customer_invoice_form.html:301
+#: models/invoice.py:60 templates/bs3/repanier/customer_invoice_form.html:135
+#: templates/bs3/repanier/customer_invoice_form.html:305
 #: templates/bs5/repanier/customer_invoice_form.html:112
 msgid "Surcharge"
 msgstr "Surcharge appliquée"
@@ -1856,39 +1856,39 @@ msgstr "pc"
 msgid "Producer tariff"
 msgstr "Tarif producteur"
 
-#: models/lut.py:37 models/lut.py:84 models/lut.py:164 models/lut.py:202
+#: models/lut.py:36 models/lut.py:83 models/lut.py:163 models/lut.py:201
 msgid "Description"
 msgstr "Description"
 
-#: models/lut.py:57 models/product.py:21
+#: models/lut.py:56 models/product.py:21
 msgid "Production mode"
 msgstr "Labels"
 
-#: models/lut.py:58
+#: models/lut.py:57
 msgid "Production modes"
 msgstr "Labels"
 
-#: models/lut.py:98
+#: models/lut.py:97
 msgid "The group centralise payments"
 msgstr "Le groupe centralise les paiements"
 
-#: models/lut.py:137
+#: models/lut.py:136
 msgid "Deliveries points"
 msgstr "Points de livraisons"
 
-#: models/lut.py:209
+#: models/lut.py:208
 msgid "This task constitutes a participation in the activities of the group"
 msgstr "Cette tâche constitue une participation aux activités du groupe"
 
-#: models/lut.py:213
+#: models/lut.py:212
 msgid "Customers can register for this task"
 msgstr "Les consommateurs peuvent s'inscrire à cette tâche"
 
-#: models/lut.py:222 models/permanenceboard.py:25
+#: models/lut.py:221 models/permanenceboard.py:25
 msgid "Permanence role"
 msgstr "Tâche"
 
-#: models/lut.py:223
+#: models/lut.py:222
 msgid "Permanences roles"
 msgstr "Tâches"
 
@@ -1901,9 +1901,9 @@ msgid "Notifications"
 msgstr "Annonce \"flash\""
 
 #: models/offeritem.py:37 models/product.py:147
-#: templates/bs3/repanier/customer_invoice_form.html:153
-#: templates/bs3/repanier/customer_invoice_form.html:326
-#: templates/bs3/repanier/customer_invoice_form.html:406
+#: templates/bs3/repanier/customer_invoice_form.html:155
+#: templates/bs3/repanier/customer_invoice_form.html:330
+#: templates/bs3/repanier/customer_invoice_form.html:410
 #: templates/bs3/repanier/producer_invoice_form.html:114
 #: templates/bs5/repanier/customer_invoice_form.html:179
 #: templates/bs5/repanier/customer_invoice_form.html:264
@@ -2217,7 +2217,8 @@ msgstr "Achat"
 #: templates/bs3/admin/repanier/customersend/change_list.html:7
 #: templates/bs3/admin/repanier/offeritemsend/change_list.html:7
 #: templates/bs3/admin/repanier/purchase/change_list.html:7
-#: templates/bs3/repanier/customer_invoice_form.html:246
+#: templates/bs3/repanier/customer_history_form.html:96
+#: templates/bs3/repanier/customer_invoice_form.html:250
 #: templates/bs3/repanier/producer_invoice_form.html:45
 #: templates/bs5/admin/repanier/customersend/change_list.html:7
 #: templates/bs5/admin/repanier/offeritemsend/change_list.html:7
@@ -2882,78 +2883,54 @@ msgstr "Vous avez participé à"
 msgid "permanence in the last 12 weeks."
 msgstr "permanence(s) au cours des 12 dernières semaines."
 
-#: templates/bs3/repanier/customer_invoice_form.html:17
-msgid "Next balance"
-msgstr "Solde suivant"
+#: templates/bs3/repanier/customer_history_form.html:10
+msgid "Detail"
+msgstr "Détail"
 
-#: templates/bs3/repanier/customer_invoice_form.html:20
-msgid "Current balance"
-msgstr "Solde actuel"
-
-#: templates/bs3/repanier/customer_invoice_form.html:38
+#: templates/bs3/repanier/customer_history_form.html:21
+#: templates/bs3/repanier/customer_invoice_form.html:42
 msgid "My current balance"
 msgstr "Mon solde actuel"
 
-#: templates/bs3/repanier/customer_invoice_form.html:47
-msgid "Pending provision"
-msgstr "Paiement en cours"
-
-#: templates/bs3/repanier/customer_invoice_form.html:57
-msgid "Pending refund"
-msgstr "Remboursement en cours"
-
-#: templates/bs3/repanier/customer_invoice_form.html:73
+#: templates/bs3/repanier/customer_history_form.html:34
+#: templates/bs3/repanier/customer_invoice_form.html:77
 msgid "Pending purchases"
 msgstr "Achats en cours"
 
-#: templates/bs3/repanier/customer_invoice_form.html:90
-#: templates/bs3/repanier/customer_invoice_form.html:262
+#: templates/bs3/repanier/customer_history_form.html:40
+#: templates/bs3/repanier/customer_history_form.html:102
+#: templates/bs3/repanier/customer_invoice_form.html:94
+#: templates/bs3/repanier/customer_invoice_form.html:266
 #: templates/bs5/repanier/customer_invoice_form.html:67
 msgid "Payment centralized by"
 msgstr "Paiement centralisé par"
 
-#: templates/bs3/repanier/customer_invoice_form.html:130
-#: templates/bs3/repanier/customer_invoice_form.html:300
-#: templates/bs5/repanier/customer_invoice_form.html:111
-msgid "Reduction granted"
-msgstr "Réduction accordée"
+#: templates/bs3/repanier/customer_history_form.html:51
+#: templates/bs3/repanier/customer_invoice_form.html:52
+msgid "Pending provision"
+msgstr "Paiement en cours"
 
-#: templates/bs3/repanier/customer_invoice_form.html:159
-#: templates/bs3/repanier/customer_invoice_form.html:332
-#: templates/bs3/repanier/customer_invoice_form.html:412
-#: templates/bs3/repanier/producer_invoice_form.html:120
-#: templates/bs5/repanier/customer_invoice_form.html:185
-#: templates/bs5/repanier/customer_invoice_form.html:270
-#: templates/bs5/repanier/producer_invoice_form.html:120 xlsx/xlsx_order.py:878
-#: xlsx/xlsx_order.py:1256 xlsx/xlsx_order.py:1445
-msgid "Unit price"
-msgstr "Prix unitaire"
+#: templates/bs3/repanier/customer_history_form.html:61
+#: templates/bs3/repanier/customer_invoice_form.html:62
+msgid "Pending refund"
+msgstr "Remboursement en cours"
 
-#: templates/bs3/repanier/customer_invoice_form.html:162
-#: templates/bs3/repanier/customer_invoice_form.html:335
-#: templates/bs3/repanier/customer_invoice_form.html:415
-#: templates/bs3/repanier/producer_invoice_form.html:123
-#: templates/bs5/repanier/customer_invoice_form.html:188
-#: templates/bs5/repanier/customer_invoice_form.html:273
-#: templates/bs5/repanier/producer_invoice_form.html:123
-#: xlsx/v3/xlsx_stock.py:227 xlsx/v3/xlsx_stock.py:258 xlsx/xlsx_stock.py:227
-#: xlsx/xlsx_stock.py:258
-msgid "Total price"
-msgstr "Prix total"
-
-#: templates/bs3/repanier/customer_invoice_form.html:210
-#: templates/bs3/repanier/customer_invoice_form.html:470
+#: templates/bs3/repanier/customer_history_form.html:81
+#: templates/bs3/repanier/customer_invoice_form.html:213
+#: templates/bs3/repanier/customer_invoice_form.html:475
 msgid "My balance at"
 msgstr "Mon solde au"
 
-#: templates/bs3/repanier/customer_invoice_form.html:221
+#: templates/bs3/repanier/customer_history_form.html:116
+#: templates/bs3/repanier/customer_invoice_form.html:225
 #: templates/bs3/repanier/producer_invoice_form.html:72
 #: templates/bs5/repanier/customer_invoice_form.html:122
 #: templates/bs5/repanier/producer_invoice_form.html:72
 msgid "Provision"
 msgstr "Provision"
 
-#: templates/bs3/repanier/customer_invoice_form.html:231
+#: templates/bs3/repanier/customer_history_form.html:129
+#: templates/bs3/repanier/customer_invoice_form.html:235
 #: templates/bs3/repanier/producer_invoice_form.html:76
 #: templates/bs3/repanier/producer_invoice_form.html:81
 #: templates/bs5/repanier/customer_invoice_form.html:132
@@ -2963,14 +2940,55 @@ msgstr "Provision"
 msgid "Refund"
 msgstr "Remboursement"
 
-#: templates/bs3/repanier/customer_invoice_form.html:383
+#: templates/bs3/repanier/customer_invoice_form.html:17
+msgid "Next balance"
+msgstr "Solde suivant"
+
+#: templates/bs3/repanier/customer_invoice_form.html:20
+msgid "Current balance"
+msgstr "Solde actuel"
+
+#: templates/bs3/repanier/customer_invoice_form.html:25
+msgid "History"
+msgstr "Historique"
+
+#: templates/bs3/repanier/customer_invoice_form.html:134
+#: templates/bs3/repanier/customer_invoice_form.html:304
+#: templates/bs5/repanier/customer_invoice_form.html:111
+msgid "Reduction granted"
+msgstr "Réduction accordée"
+
+#: templates/bs3/repanier/customer_invoice_form.html:161
+#: templates/bs3/repanier/customer_invoice_form.html:336
+#: templates/bs3/repanier/customer_invoice_form.html:416
+#: templates/bs3/repanier/producer_invoice_form.html:120
+#: templates/bs5/repanier/customer_invoice_form.html:185
+#: templates/bs5/repanier/customer_invoice_form.html:270
+#: templates/bs5/repanier/producer_invoice_form.html:120 xlsx/xlsx_order.py:878
+#: xlsx/xlsx_order.py:1256 xlsx/xlsx_order.py:1445
+msgid "Unit price"
+msgstr "Prix unitaire"
+
+#: templates/bs3/repanier/customer_invoice_form.html:164
+#: templates/bs3/repanier/customer_invoice_form.html:339
+#: templates/bs3/repanier/customer_invoice_form.html:419
+#: templates/bs3/repanier/producer_invoice_form.html:123
+#: templates/bs5/repanier/customer_invoice_form.html:188
+#: templates/bs5/repanier/customer_invoice_form.html:273
+#: templates/bs5/repanier/producer_invoice_form.html:123
+#: xlsx/v3/xlsx_stock.py:227 xlsx/v3/xlsx_stock.py:258 xlsx/xlsx_stock.py:227
+#: xlsx/xlsx_stock.py:258
+msgid "Total price"
+msgstr "Prix total"
+
+#: templates/bs3/repanier/customer_invoice_form.html:387
 #: templates/bs3/repanier/producer_invoice_form.html:152
 #: templates/bs5/repanier/customer_invoice_form.html:241
 #: templates/bs5/repanier/producer_invoice_form.html:152
 msgid "No purchase found"
 msgstr "Pas d'achat trouvé"
 
-#: templates/bs3/repanier/customer_invoice_form.html:461
+#: templates/bs3/repanier/customer_invoice_form.html:465
 msgid "No order placed"
 msgstr "Aucune commande passée"
 
@@ -3603,10 +3621,9 @@ msgstr "Qui est qui"
 msgid "My profile"
 msgstr "Mon profil"
 
-#: templatetags/repanier_tags.py:145 templatetags/repanier_tags.py:243
-#: views/my_balance_ajax.py:47
-msgid "My balance"
-msgstr "Mon solde"
+#: templatetags/repanier_tags.py:145
+msgid "My orders"
+msgstr "Mes commandes"
 
 #: templatetags/repanier_tags.py:226 views/my_balance_ajax.py:30
 #, python-format
@@ -3617,6 +3634,10 @@ msgstr "Mon solde : <font color=\"red\">%(balance)s</font> au %(date)s"
 #, python-format
 msgid "My balance : <font color=\"green\">%(balance)s</font> at %(date)s"
 msgstr "Mon solde : <font color=\"green\">%(balance)s</font> au %(date)s"
+
+#: templatetags/repanier_tags.py:243 views/my_balance_ajax.py:47
+msgid "My balance"
+msgstr "Mon solde"
 
 #: tools.py:151
 msgid "/ pieces"
@@ -4029,6 +4050,9 @@ msgstr "La comptabilisation a déjà été faite"
 #: xlsx/xlsx_purchase.py:998
 msgid "The permanence doesn't exists."
 msgstr "Cette permanence n'existe pas."
+
+#~ msgid "My history"
+#~ msgstr "Mon historique"
 
 #~ msgid "This balance includes orders not yet booked"
 #~ msgstr ""

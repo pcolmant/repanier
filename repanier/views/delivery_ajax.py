@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import SaleStatus
+from repanier.const import SaleStatus, EMPTY_STRING
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
@@ -100,18 +100,23 @@ def delivery_ajax(request):
         status = customer_invoice.delivery.status
     else:
         status = customer_invoice.status
-    basket_message = get_html_basket_message(
-        customer, permanence, status, customer_invoice
-    )
+
     delivery_message = customer_invoice.get_html_select_delivery_point(
         permanence, status
     )
+    if is_basket:
+        basket_message = get_html_basket_message(
+            customer, permanence, status, customer_invoice
+        )
+    else:
+        basket_message = EMPTY_STRING
+
     json_dict.update(
         customer_invoice.get_html_my_order_confirmation(
             permanence=permanence,
             is_basket=is_basket,
-            basket_message=basket_message,
             delivery_message=delivery_message,
+            basket_message=basket_message,
         )
     )
     return JsonResponse(json_dict)

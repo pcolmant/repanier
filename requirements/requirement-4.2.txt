@@ -6,6 +6,7 @@ PyYAML==6.0
 # django-filer 2.2.3 depends on Unidecode<1.2 and >=0.04
 Unidecode~=1.1.0
 asgiref==3.7.2
+crispy-bootstrap3==2022.1
 crispy-bootstrap5==0.7
 defusedxml==0.7.1
 diff-match-patch==20230430

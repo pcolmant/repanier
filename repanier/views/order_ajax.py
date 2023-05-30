@@ -29,14 +29,13 @@ def order_ajax(request):
     """
     Add a selected offer item to a customer order (i.e. update the customer's invoice and the producer's invoice)
     """
-    print("####### order_ajax")
+    # print("####### order_ajax")
     user = request.user
     customer = Customer.objects.filter(id=user.customer_id, may_order=True).first()
     if customer is None:
         raise Http404
     offer_item_id = sint(request.GET.get("offer_item", 0))
     value_id = sint(request.GET.get("value", 0))
-    is_basket = sboolean(request.GET.get("is_basket", False))
     qs = CustomerInvoice.objects.filter(
         permanence__offeritem=offer_item_id,
         customer_id=customer.id,
@@ -118,21 +117,23 @@ def order_ajax(request):
             )
 
             permanence = Permanence.objects.filter(id=offer_item.permanence_id).first()
+            is_basket = sboolean(request.GET.get("is_basket", False))
+            delivery_message = customer_invoice.get_html_select_delivery_point(
+                permanence, SaleStatus.OPENED
+            )
             if is_basket:
                 basket_message = get_html_basket_message(
                     customer, permanence, SaleStatus.OPENED, customer_invoice
                 )
             else:
                 basket_message = EMPTY_STRING
-            delivery_message = customer_invoice.get_html_select_delivery_point(
-                permanence, SaleStatus.OPENED
-            )
+
             json_dict.update(
                 customer_invoice.get_html_my_order_confirmation(
                     permanence=permanence,
                     is_basket=is_basket,
-                    basket_message=basket_message,
                     delivery_message=delivery_message,
+                    basket_message=basket_message,
                 )
             )
     return JsonResponse(json_dict)

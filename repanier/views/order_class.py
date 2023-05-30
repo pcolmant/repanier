@@ -1,10 +1,7 @@
 from django.conf import settings
-from django.db.models import Q
-from django.utils import translation
 from django.views.generic import ListView
 
 from repanier.const import EMPTY_STRING
-from repanier.models import CustomerInvoice
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.offeritem import OfferItemReadOnly
@@ -15,7 +12,6 @@ from repanier.tools import (
     sint,
     permanence_ok_or_404,
     get_repanier_template_name,
-    get_html_basket_message,
 )
 
 
@@ -127,50 +123,14 @@ class OrderView(ListView):
             context["is_basket"] = "yes"
             context["is_select_view"] = EMPTY_STRING
             context["is_basket_view"] = "active"
-
-            if self.may_order:
-                translation.activate(self.customer.language)
-                customer_invoice = CustomerInvoice.objects.filter(
-                    permanence_id=self.permanence.id, customer_id=self.customer.id
-                ).first()
-                if customer_invoice is None:
-                    customer_invoice = CustomerInvoice.objects.create(
-                        permanence_id=self.permanence.id,
-                        customer_id=self.customer.id,
-                        status=self.permanence.status,
-                        customer_charged_id=self.customer.id,
-                    )
-                    customer_invoice.set_order_delivery(delivery=None)
-                    customer_invoice.calculate_order_amount()
-                    customer_invoice.save()
-                if customer_invoice.delivery is not None:
-                    status = customer_invoice.delivery.status
-                else:
-                    status = customer_invoice.status
-
-                basket_message = get_html_basket_message(
-                    self.customer, self.permanence, status, customer_invoice
-                )
-                delivery_message = customer_invoice.get_html_select_delivery_point(
-                    self.permanence, status
-                )
-                html = customer_invoice.get_html_my_order_confirmation(
-                    permanence=self.permanence,
-                    is_basket=True,
-                    basket_message=basket_message,
-                    delivery_message=delivery_message,
-                )
-                context["span_btn_confirm_order"] = html["#span_btn_confirm_order"]
         else:
             context["is_basket"] = EMPTY_STRING
             context["is_select_view"] = "active"
             context["is_basket_view"] = EMPTY_STRING
 
         context["is_like"] = "yes" if self.is_like else EMPTY_STRING
-
         context["communication"] = self.communication
         context["q"] = self.q
-
         context["may_order"] = self.may_order
         context[
             "display_anonymous_order_form"

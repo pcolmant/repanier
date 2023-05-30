@@ -141,8 +141,8 @@ def repanier_user_bs3(context, *args, **kwargs):
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 nodes.append(
                     '<li><a href="{}">{}</a></li>'.format(
-                        reverse("repanier:customer_invoice_view", args=(0,user.customer_id,)),
-                        _("My balance"),
+                        reverse("repanier:customer_history_view", args=(user.customer_id,)),
+                        _("History"),
                     )
                 )
             nodes.append('<li class="divider"></li>')

@@ -34,7 +34,7 @@
             </div>
             <div class="row">
                 <div class="col-lg-12">
-                    {% if my_invoices %}{% else %}<h4>{{ customer.long_basket_name }}</h4>{% endif %}
+                    {% if my_invoices %}{% else %}<h4>{{ customer.long_basket_name }}, <span class="glyphicon glyphicon-earphone"></span> {{ customer.phone1 }}, <span class="glyphicon glyphicon-envelope"></span> {{ customer.user.email }}</h4>{% endif %}
                     {% if not next_customer_invoice_id %}
                         {% with balance=customer.get_admin_balance %}
                             <h4>
@@ -179,7 +179,7 @@
                                                     {{ purchase.get_long_name_with_customer_price }}
                                                 </td>
                                                 <td align="right">
-                                                    {{ purchase.quantity_invoiced | floatformat:3 }}
+                                                    {{ purchase.quantity_ordered | floatformat:3 }}
                                                 </td>
                                                 <td align="right">
                                                     {{ purchase.get_customer_unit_price }}

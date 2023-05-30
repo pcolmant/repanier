@@ -71,34 +71,27 @@ def order_init_ajax(request):
         raise Http404
 
     basket = sboolean(request.GET.get("ba", False))
-
     if customer_invoice.delivery is not None:
         status = customer_invoice.delivery.status
     else:
         status = customer_invoice.status
 
-    # if status <= PERMANENCE_OPENED:
-    #     basket_message = get_html_basket_message(
-    #         customer, permanence, status, customer_invoice
-    #     )
-    # else:
-    #     if customer_invoice.delivery is not None:
-    #         basket_message = EMPTY_STRING
-    #     else:
-    #         basket_message = "{}".format(_("The orders are closed."))
-
-    basket_message = get_html_basket_message(
-        customer, permanence, status, customer_invoice
-    )
     delivery_message = customer_invoice.get_html_select_delivery_point(
         permanence, status
     )
+    if basket:
+        basket_message = get_html_basket_message(
+            customer, permanence, status, customer_invoice
+        )
+    else:
+        basket_message = EMPTY_STRING
+
     if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
         json_dict = customer_invoice.get_html_my_order_confirmation(
             permanence=permanence,
             is_basket=basket,
-            basket_message=basket_message,
             delivery_message=delivery_message,
+            basket_message=basket_message,
         )
     else:
         json_dict = {}

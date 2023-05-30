@@ -52,18 +52,18 @@ def btn_confirm_order_ajax(request):
         status = customer_invoice.delivery.status
     else:
         status = customer_invoice.status
-    basket_message = get_html_basket_message(
-        customer, permanence, status, customer_invoice
-    )
     delivery_message = customer_invoice.get_html_select_delivery_point(
         permanence, status
+    )
+    basket_message = get_html_basket_message(
+        customer, permanence, status, customer_invoice
     )
     json_dict.update(
         customer_invoice.get_html_my_order_confirmation(
             permanence=permanence,
             is_basket=True,
-            basket_message=basket_message,
             delivery_message=delivery_message,
+            basket_message=basket_message,
         )
     )
     return JsonResponse(json_dict)

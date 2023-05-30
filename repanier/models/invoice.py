@@ -254,11 +254,17 @@ class CustomerInvoice(Invoice):
         delivery_message=EMPTY_STRING,
     ):
 
+        msg_history = """
+            <a href="{}" class="btn btn-info" target="_blank">{}</a>
+        """.format(
+            reverse("repanier:customer_history_view", args=(self.customer.id,)),
+            _("History"),
+        )
         if not is_basket and not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
             # If REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER,
             # then permanence.with_delivery_point is also True
-            msg_html = EMPTY_STRING
+            msg_html = msg_history
         else:
             msg_unconfirmed_order_will_be_cancelled = EMPTY_STRING
             msg_goto_basket = EMPTY_STRING
@@ -324,7 +330,7 @@ class CustomerInvoice(Invoice):
                 <div class="row">
                 <div class="panel panel-default">
                 <div class="panel-heading">
-                {}{}{}{}{}{}{}
+                {}{}{}{}{}{}{}{}
                 </div>
                 </div>
                 </div>
@@ -336,7 +342,7 @@ class CustomerInvoice(Invoice):
                 msg_unconfirmed_order_will_be_cancelled,
                 msg_goto_basket,
                 msg_confirm_basket,
-
+                msg_history,
             )
         return {"#span_btn_confirm_order": mark_safe(msg_html)}
 

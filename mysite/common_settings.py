@@ -330,7 +330,8 @@ INSTALLED_APPS = (
     "easy_select2",
     "recurrence",
     "crispy_forms",
-    "crispy_bootstrap5",
+    "crispy_bootstrap3",
+    # "crispy_bootstrap5",
     "django.forms",  # must be last! because of the FORM_RENDERER setting below.
     # For the templates we don’t override, we still want the renderer to look in Django’s form app
 )
@@ -458,10 +459,10 @@ else:
     ]
 
 if REPANIER_SETTINGS_TEMPLATE == "bs3":
+    CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap3"
     CRISPY_TEMPLATE_PACK = "bootstrap3"
-elif REPANIER_SETTINGS_TEMPLATE == "bs4":
-    CRISPY_TEMPLATE_PACK = "bootstrap4"
 elif REPANIER_SETTINGS_TEMPLATE == "bs5":
+    CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
     CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 CMS_PERMISSION = False
@@ -474,7 +475,7 @@ CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
 CMS_ENABLE_HELP = False
 CMS_EXTRA_HELP_MENU_ITEMS = (
-    (gettext("Repanier guide"), 'https://repanier.be/fr/documentation/'),
+    (gettext("Repanier guide"), 'https://drive.google.com/file/d/0B16D6fVMcuF1U25kSkVraWt0Snc/view?usp=sharing&resourcekey=0-Q9lqg6-RASeZpxu_EX_51A'),
     (gettext("django CMS guide"), 'https://docs.google.com/document/d/1f5eWyD_sxUSok436fSqDI0NHcpQ88CXQoDoQm9ZXb0s/'),
 )
 CMS_CONFIRM_VERSION4 = True
