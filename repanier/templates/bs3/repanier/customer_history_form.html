@@ -15,22 +15,24 @@
             <div class="row">
                 <div class="col-lg-12">
                     {% if my_invoices %}{% else %}<h4>{{ customer.long_basket_name }}</h4>{% endif %}
-                    <h4>
-                        <span class="label label-danger">
+                    {% with balance=customer.get_admin_balance %}
+                        <h4>
+                        <span class="label label-{% if balance < 0 %}danger{% else %}info{% endif %}">
                             {% translate "My current balance" %}
-                        &nbsp;: {{ customer.get_admin_balance }}
+                        &nbsp;: {{ balance }}
                             </span>
-                    </h4>
+                        </h4>
+                    {% endwith %}
                     <p/>
                 </div>
             </div>
             {% for not_invoiced in not_invoiced_customer_invoice_set %}
                 <div class="row">
                     <div class="col-lg-12">
-                    <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
-                                   class="btn-xs btn-default btn-disabled">
-                                    {% translate "Pending purchases" %}
-                                </a>
+                        <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
+                           class="btn-xs btn-default btn-disabled">
+                            {% translate "Pending purchases" %}
+                        </a>
                         &nbsp;: {{ not_invoiced.get_total_price_with_tax }}
                         <small>(
                             {{ not_invoiced.permanence }}
@@ -69,33 +71,42 @@
                 </div>
             {% endfor %}
             {% for invoiced in invoiced_array %}
-                <br/>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
-                           class="btn-xs btn-danger btn-disabled">
-                            {% translate "My balance at" %} {{ invoiced.customer_invoice.date_balance | date:"DATE_FORMAT" }} :
-                            {{ invoiced.customer_invoice.balance }}
-                        </a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
-                           class="btn-xs btn-default btn-disabled">
-                            {% translate "Purchases" %}
-                        </a>
-                        &nbsp;: {{ invoiced.customer_invoice.get_total_price_with_tax }}
-                        <small>(
-                            {{ invoiced.customer_invoice.permanence }}
-                            {% if invoiced.customer_invoice.customer_id != invoiced.customer_invoice.customer_charged_id %}
-                                , {% translate "Payment centralized by" %}
-                                : {{ invoiced.customer_invoice.customer_charged }}.
-                            {% endif %}
-                            )</small>
-                    </div>
-                </div>
+                {% with balance=invoiced.customer_invoice.balance %}
+                    {% if balance != 0 %}
+                        <div class="row">
+                            <div class="col-lg-12">
 
+                                <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
+                                   class="btn-xs btn-{% if balance < 0 %}danger{% else %}info{% endif %} btn-disabled">
+                                    {% translate "My balance at" %} {{ invoiced.customer_invoice.date_balance | date:"DATE_FORMAT" }}
+                                    :
+                                    {{ balance }}
+                                </a>
+
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                {% with total_price=invoiced.customer_invoice.get_total_price_with_tax %}
+                    {% if total_price != 0 %}
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id customer.id %}"
+                                   class="btn-xs btn-default btn-disabled">
+                                    {% translate "Purchases" %}
+                                </a>
+                                &nbsp;: {{ total_price }}
+                                <small>(
+                                    {{ invoiced.customer_invoice.permanence }}
+                                    {% if invoiced.customer_invoice.customer_id != invoiced.customer_invoice.customer_charged_id %}
+                                        , {% translate "Payment centralized by" %}
+                                        : {{ invoiced.customer_invoice.customer_charged }}.
+                                    {% endif %}
+                                    )</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
                 {% for bank_account in invoiced.bank_account_set %}
                     <div class="row">
                         <div class="col-lg-12">
