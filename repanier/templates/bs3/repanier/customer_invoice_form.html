@@ -22,8 +22,8 @@
                                 <span class="glyphicon glyphicon-arrow-right"></span> </a>
                         {% endif %}
                         <a href="{% url 'repanier:customer_history_view' customer.id %}"
-                               class="btn btn-info btn-disabled"> {% translate "History" %} <span
-                                    class="glyphicon glyphicon-film"></span> </a>
+                           class="btn btn-info btn-disabled"> {% translate "History" %} <span
+                                class="glyphicon glyphicon-film"></span> </a>
                         {% if download_invoice %}
                             <a href="{% url 'repanier:download_customer_invoice' object.id %}"
                                class="btn btn-info btn-disabled"> {% translate "Export" %} <span
@@ -36,11 +36,13 @@
                 <div class="col-lg-12">
                     {% if my_invoices %}{% else %}<h4>{{ customer.long_basket_name }}</h4>{% endif %}
                     {% if not next_customer_invoice_id %}
-                        <h4>
-                        <span class="label label-danger">
+                        {% with balance=customer.get_admin_balance %}
+                            <h4>
+                        <span class="label label-{% if balance < 0 %}danger{% else %}info{% endif %}">
                             {% translate "My current balance" %}
-                        &nbsp;: {{ customer.get_admin_balance }}
+                        &nbsp;: {{ balance }}
                         </span></h4>
+                        {% endwith %}
                         <p/>
                     {% endif %}
                     {% for bank_account in not_invoiced_bank_account_set %}
@@ -205,11 +207,13 @@
             {% if object %}
                 <div class="row">
                     <div class="col-lg-12">
-                        <h4>
-                            <span class="label label-danger">
+                        {% with balance=object.balance %}
+                            <h4>
+                            <span class="label label-{% if balance < 0 %}danger{% else %}info{% endif %}">
                                 {% translate "My balance at" %} {{ object.date_balance | date:"DATE_FORMAT" }}
-                                &nbsp;: {{ object.balance }}</span>
-                        </h4>
+                                &nbsp;: {{ balance }}</span>
+                            </h4>
+                        {% endwith %}
                         <p/>
                     </div>
                 </div>
@@ -465,11 +469,13 @@
             {% if object %}
                 <div class="row">
                     <div class="col-lg-12">
-                        <h4>
-                            <span class="label label-danger">
+                        {% with balance=object.previous_balance %}
+                            <h4>
+                            <span class="label label-{% if balance < 0 %}danger{% else %}info{% endif %}">
                                 {% translate "My balance at" %} {{ object.date_previous_balance | date:"DATE_FORMAT" }}
-                                &nbsp;: {{ object.previous_balance }}</span>
-                        </h4>
+                                &nbsp;: {{ object.balance }}</span>
+                            </h4>
+                        {% endwith %}
                         <p/>
                     </div>
                 </div>
