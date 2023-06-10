@@ -340,9 +340,8 @@ class Customer(models.Model):
             return format_html(
                 '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:{}">{}</span></a>',
                 reverse(
-                    "repanier:customer_invoice_view",
+                    "repanier:customer_history_view",
                     args=(
-                        0,
                         self.id,
                     ),
                 ),

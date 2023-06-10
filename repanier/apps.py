@@ -64,23 +64,23 @@ class RepanierConfig(AppConfig):
         from repanier.models.notification import Notification
         from repanier.const import DECIMAL_ONE
 
-        # try:
-        # Create if needed and load RepanierSettings var when performing config.save()
-        translation.activate(settings.LANGUAGE_CODE)
+        try:
+            # Create if needed and load RepanierSettings var when performing config.save()
+            translation.activate(settings.LANGUAGE_CODE)
 
-        notification = Notification.objects.filter(id=DECIMAL_ONE).first()
-        if notification is None:
-            notification = Notification.objects.create()
-        notification.save()
+            notification = Notification.objects.filter(id=DECIMAL_ONE).first()
+            if notification is None:
+                notification = Notification.objects.create()
+            notification.save()
 
-        config = Configuration.init_repanier()
+            config = Configuration.init_repanier()
 
-        if not settings.DEBUG:
-            from repanier.email.email import RepanierEmail
+            if not settings.DEBUG:
+                from repanier.email.email import RepanierEmail
 
-            RepanierEmail.send_startup_email(sys.argv[0])
+                RepanierEmail.send_startup_email(sys.argv[0])
 
-        # except Exception as error_str:
-        #     logger.error("##################################")
-        #     logger.error(error_str)
-        #     logger.error("##################################")
+        except Exception as error_str:
+            logger.error("##################################")
+            logger.error(error_str)
+            logger.error("##################################")

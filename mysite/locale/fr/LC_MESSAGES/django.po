@@ -2,12 +2,12 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-26 14:44+0200\n"
+"POT-Creation-Date: 2023-05-30 20:57+0200\n"
 "PO-Revision-Date: 2016-11-22 18:20+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <pcolmant@gmail.com>\n"
@@ -18,121 +18,106 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 1.7.1\n"
 
-#: common_settings.py:521
-msgid "Internal page"
-msgstr "Page interne"
+#: common_settings.py:478
+msgid "Repanier guide"
+msgstr ""
 
-#: common_settings.py:522
+#: common_settings.py:479
+msgid "django CMS guide"
+msgstr ""
+
+#: common_settings.py:904
 msgid "Internal page with menu on left"
 msgstr "Page interne avec menu à gauche"
 
-#: common_settings.py:523
+#: common_settings.py:905
+msgid "Internal page"
+msgstr "Page interne"
+
+#: common_settings.py:906
 msgid "Home page"
 msgstr "Page d'accueil"
 
-#: common_settings.py:524
-msgid "Bootstrap page"
-msgstr "Page Bootstrap"
-
-#: common_settings.py:525
-msgid "Bootstrap page with menu on left"
-msgstr "Page Bootstrap avec menu à gauche"
-
-#: common_settings.py:682
-msgid "mobile phones"
-msgstr "GSM"
-
-#: common_settings.py:683
-msgid "tablets"
-msgstr "Tablettes"
-
-#: common_settings.py:684
-msgid "laptops"
-msgstr "Ecrans classiques"
-
-#: common_settings.py:685
-msgid "large desktops"
-msgstr "Ecrans larges"
-
-#: common_settings.py:697
+#: common_settings.py:970
 msgid "Hero"
 msgstr "Bannière"
 
-#: common_settings.py:725
+#: common_settings.py:978
 msgid "Column 1"
 msgstr "Colonne 1"
 
-#: common_settings.py:757
+#: common_settings.py:986
 msgid "Column 2"
 msgstr "Colonne 2"
 
-#: common_settings.py:789
+#: common_settings.py:994
 msgid "Column 3"
 msgstr "Colonne 3"
 
-#: common_settings.py:821
+#: common_settings.py:1002
 msgid "Content"
 msgstr "Contenu"
 
-#: common_settings.py:847
-msgid "Bootstrap Content"
-msgstr "Contenu"
-
-#: common_settings.py:877
+#: common_settings.py:1019
 msgid "Footer"
 msgstr "Pied de page"
 
-#: common_settings.py:902 common_settings.py:909 common_settings.py:918
-#: common_settings.py:926 common_settings.py:936 common_settings.py:943
-#: common_settings.py:952 common_settings.py:959
-msgid "none"
-msgstr "aucun"
+#~ msgid "Bootstrap page"
+#~ msgstr "Page Bootstrap"
 
-#: common_settings.py:903 common_settings.py:910
-msgid "vat 2.5%"
-msgstr "TVA 2,5%"
+#~ msgid "Bootstrap page with menu on left"
+#~ msgstr "Page Bootstrap avec menu à gauche"
 
-#: common_settings.py:904 common_settings.py:911
-msgid "vat 3.8%"
-msgstr "TVA 3,8%"
+#~ msgid "mobile phones"
+#~ msgstr "GSM"
 
-#: common_settings.py:905 common_settings.py:912
-msgid "vat 8%"
-msgstr "TVA 8%"
+#~ msgid "tablets"
+#~ msgstr "Tablettes"
 
-#: common_settings.py:919 common_settings.py:927
-msgid "vat 2.1%"
-msgstr "TVA 2,1%"
+#~ msgid "laptops"
+#~ msgstr "Ecrans classiques"
 
-#: common_settings.py:920 common_settings.py:928
-msgid "vat 5.5%"
-msgstr "TVA 5,5%"
+#~ msgid "large desktops"
+#~ msgstr "Ecrans larges"
 
-#: common_settings.py:921 common_settings.py:929 common_settings.py:938
-#: common_settings.py:945
-msgid "vat 10%"
-msgstr "TVA 10%"
+#~ msgid "Bootstrap Content"
+#~ msgstr "Contenu"
 
-#: common_settings.py:922 common_settings.py:930
-msgid "vat 20%"
-msgstr "TVA 20%"
+#~ msgid "none"
+#~ msgstr "aucun"
 
-#: common_settings.py:937 common_settings.py:944
-msgid "vat 4%"
-msgstr "TVA 4%"
+#~ msgid "vat 2.5%"
+#~ msgstr "TVA 2,5%"
 
-#: common_settings.py:939 common_settings.py:946 common_settings.py:955
-#: common_settings.py:962
-msgid "vat 21%"
-msgstr "TVA 21%"
+#~ msgid "vat 3.8%"
+#~ msgstr "TVA 3,8%"
 
-#: common_settings.py:953 common_settings.py:960
-msgid "vat 6%"
-msgstr "TVA 6%"
+#~ msgid "vat 8%"
+#~ msgstr "TVA 8%"
 
-#: common_settings.py:954 common_settings.py:961
-msgid "vat 12%"
-msgstr "TVA 12%"
+#~ msgid "vat 2.1%"
+#~ msgstr "TVA 2,1%"
+
+#~ msgid "vat 5.5%"
+#~ msgstr "TVA 5,5%"
+
+#~ msgid "vat 10%"
+#~ msgstr "TVA 10%"
+
+#~ msgid "vat 20%"
+#~ msgstr "TVA 20%"
+
+#~ msgid "vat 4%"
+#~ msgstr "TVA 4%"
+
+#~ msgid "vat 21%"
+#~ msgstr "TVA 21%"
+
+#~ msgid "vat 6%"
+#~ msgstr "TVA 6%"
+
+#~ msgid "vat 12%"
+#~ msgstr "TVA 12%"
 
 #~ msgid "Accueil"
 #~ msgstr "Acceuil"

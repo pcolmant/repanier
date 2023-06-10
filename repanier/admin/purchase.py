@@ -261,7 +261,7 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
         ).first()
         purchased_symbol = EMPTY_STRING
         if purchase is not None:
-            if purchase.status < SaleStatus.SEND:
+            if purchase.status < SaleStatus.WAIT_FOR_SEND:
                 qty = _("Quantity requested")
                 purchased_symbol = mark_safe(
                     "[<b>{} : {:.2f}</b>] ".format(qty, purchase.quantity_ordered)
@@ -385,11 +385,11 @@ class PurchaseForm(forms.ModelForm):
             producer_field.initial = producer_id
         else:
             # Update existing purchase
-            if purchase.status < SaleStatus.SEND:
-                quantity_field.initial = purchase.quantity_ordered
-            else:
-                quantity_field.initial = purchase.quantity_invoiced
-
+            # if purchase.status < SaleStatus.SEND:
+            #     quantity_field.initial = purchase.quantity_ordered
+            # else:
+            #     quantity_field.initial = purchase.quantity_invoiced
+            quantity_field.initial = purchase.get_quantity()
             permanence_id = purchase.permanence_id
             delivery_point_id = purchase.customer_invoice.delivery
 

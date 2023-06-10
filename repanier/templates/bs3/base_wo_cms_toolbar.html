@@ -1,8 +1,12 @@
 {% load cms_tags sekizai_tags menu_tags i18n l10n static repanier_tags %}
-{% addtoblock "css" %}<link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endaddtoblock %}
-{% addtoblock "css" %}<link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">{% endaddtoblock %}
-{% addtoblock "jshead" %}<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>{% endaddtoblock %}
-{% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
+{% addtoblock "css" %}
+    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endaddtoblock %}
+{% addtoblock "css" %}
+    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">{% endaddtoblock %}
+{% addtoblock "jshead" %}
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>{% endaddtoblock %}
+{% addtoblock "jshead" %}
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
 {#{% addtoblock "js" %}<script src="{% static "repanier/bs3/fluidvids/fluidvids.js" %}"></script>{% endaddtoblock %}#}
 {#{% addtoblock "lastjs" %}{% spaceless %}#}
 {#    <script>#}
@@ -13,137 +17,153 @@
 {#    </script>#}
 {#{% endspaceless %}{% endaddtoblock %}#}
 {% addtoblock "css" %}{% spaceless %}
-{#    django CMS toolbar adjustment#}
+    {#    django CMS toolbar adjustment#}
     {% if request.toolbar %}
-    <style>
-    .cms-toolbar-expanded .navbar-custom {
-        margin-top: 45px;
-    }
-    </style>
+        <style>
+            .cms-toolbar-expanded .navbar-custom {
+                margin-top: 45px;
+            }
+        </style>
     {% endif %}
 {% endspaceless %}{% endaddtoblock %}
-{%get_current_language as LANGUAGE_CODE%}
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="{{LANGUAGE_CODE}}">
-  <head>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{#    <meta name="description" content="{% page_attribute 'meta_description' %}">#}
+    {#    <meta name="description" content="{% page_attribute 'meta_description' %}">#}
     <link rel="apple-touch-icon" sizes="180x180" href="{{ MEDIA_URL }}apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ MEDIA_URL }}favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ MEDIA_URL }}favicon-16x16.png">
     <link rel="manifest" href="{{ MEDIA_URL }}site.webmanifest">
     <title>{% page_attribute "title" %}</title>
-    {% render_block "css"  %}
+    {% render_block "css" %}
     {% render_block "jshead" %}
     <script>
-{#      ensuring django namespace is set correctly#}
-      window.django = window.django || undefined;
-{#      ensuring jQuery namespace is set correctly#}
-      window.jQuery = (django && django.jQuery) ? django.jQuery : window.jQuery || undefined;
-{#      ensuring Class namespace is set correctly#}
-      window.Class = window.Class || undefined;
-{#      ensuring CMS namespace is set correctly#}
-      var CMS = {
-        '$': (typeof jQuery === 'function') ? jQuery : undefined,
-        'Class': (typeof Class === 'function') ? Class : undefined,
-        'API': {}
-      };
-      {#var my_app  = undefined;#}
-      {#if( typeof angular !== "undefined") {#}
-      {#  my_app  = angular.module('repanier', ['djng.forms']);#}
-      {# } #}
+        {#      ensuring django namespace is set correctly#}
+        window.django = window.django || undefined;
+        {#      ensuring jQuery namespace is set correctly#}
+        window.jQuery = (django && django.jQuery) ? django.jQuery : window.jQuery || undefined;
+        {#      ensuring Class namespace is set correctly#}
+        window.Class = window.Class || undefined;
+        {#      ensuring CMS namespace is set correctly#}
+        var CMS = {
+            '$': (typeof jQuery === 'function') ? jQuery : undefined,
+            'Class': (typeof Class === 'function') ? Class : undefined,
+            'API': {}
+        };
+        {#var my_app  = undefined;#}
+        {#if( typeof angular !== "undefined") {#}
+        {#  my_app  = angular.module('repanier', ['djng.forms']);#}
+        {# } #}
     </script>
-   </head>
-  <body>
-    <a href="#content" class="skip_link">{% translate "Skip to main content" %}</a>
-<a name="#top"></a><section>
+</head>
+<body>
+<a href="#content" class="skip_link">{% translate "Skip to main content" %}</a>
+<a id="top"></a>
 {#    {% cms_toolbar %}#}
-    {% spaceless %}
-    {# <!-- Header and Nav --> #}
-    <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
-        <div class="navbar-header visible-xs-inline-block">
-          <a href="#" class="btn btn-info" onclick="openNav()">
-            <span class="sr-only">{% translate "Toggle navigation" %}</span>
-            <span class="glyphicon glyphicon-list"></span>
-          </a>
-          {% if not permanence_id %}
-              <span class="navbar-group-name"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
-          {% else %}
-              <span id="link_to_order_or_filter_view"></span>
-              {% if user.is_authenticated %}
-                  <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right" style="margin-right: 10px;">
-                      <span id="prepared_amount_visible_xs"></span>
-                  </a>
-              {%  endif %}
-          {%  endif %}
-        </div>
-      <div class="container-menu">
-        <div id="mySideNav" class="sidenav collapse navbar-collapse">
-          {# <!-- Left Nav Section --> #}
-          <ul class="nav navbar-nav navbar-left">
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-transfer"></span> <b
+{% spaceless %}
+    <section>
+        {# <!-- Header and Nav --> #}
+        <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
+            <div class="navbar-header visible-xs-inline-block">
+                <a href="#" class="btn btn-info" onclick="openNav()">
+                    <span class="sr-only">{% translate "Toggle navigation" %}</span>
+                    <span class="glyphicon glyphicon-list"></span>
+                </a>
+                {% if not permanence_id %}
+                    <span class="navbar-group-name"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
+                {% else %}
+                    <span id="link_to_order_or_filter_view"></span>
+                    {% if user.is_authenticated %}
+                        <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes"
+                           class="btn btn-info pull-right" style="margin-right: 10px;">
+                            <span id="prepared_amount_visible_xs"></span>
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="container-menu">
+                <div id="mySideNav" class="sidenav collapse navbar-collapse">
+                    {# <!-- Left Nav Section --> #}
+                    <ul class="nav navbar-nav navbar-left">
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span
+                                    class="glyphicon glyphicon-transfer"></span> <b
+                                    class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="https://gasath.repanier.be/" target="_blank">GasAth (Ath)</a></li>
+                                <li><a href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco
+                                    (Charleroi)</a></li>
+                                <li><a href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de
+                                    Romuald (Forest)</a></li>
+                                <li><a href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel
+                                    (Frasnes)</a></li>
+                                <li><a href="https://gac-jalhay.repanier.be/" target="_blank">Gac Jalhay (Jalhay)</a>
+                                </li>
+                                <li><a href="https://lepanierlensois.repanier.be/fr/" target="_blank">Le Panier Lensois
+                                    (Lens)</a></li>
+                                <li><a href="https://epicentre.repanier.be/" target="_blank">Epicentre
+                                    (Meix-devant-Virton)</a></li>
+                                <li><a href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson
+                                    (Oeudeghien)</a></li>
+                                <li><a href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit
+                                    (Péruwelz)</a></li>
+                                <li><a href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
+                            </ul>
+                            <button type="button" class="visible-xs-inline-block pull-right btn btn-sm closebtn"
+                                    onclick="closeNav()">&times;
+                            </button>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav">
+                        {% show_menu 0 1 1 1 %}
+                    </ul>
+                    {# <!-- Right Nav Section --> #}
+                    <ul class="nav navbar-nav navbar-right">
+                        {% repanier_user_bs3 permanence_id=0 %}
+                        {% if REPANIER_DISPLAY_LANGUAGE %}
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% translate "Language" %} <b
                                         class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li><a href="https://gasath.repanier.be/" target="_blank">GasAth (Ath)</a></li>
-                <li><a href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco (Charleroi)</a></li>
-                <li><a href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de Romuald (Forest)</a></li>
-                <li><a href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel (Frasnes)</a></li>
-                <li><a href="https://gac-jalhay.repanier.be/" target="_blank">Gac Jalhay (Jalhay)</a></li>
-                <li><a href="https://lepanierlensois.repanier.be/fr/" target="_blank">Le Panier Lensois (Lens)</a></li>
-                <li><a href="https://epicentre.repanier.be/" target="_blank">Epicentre (Meix-devant-Virton)</a></li>
-                <li><a href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson (Oeudeghien)</a></li>
-                <li><a href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit (Péruwelz)</a></li>
-                <li><a href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
-              </ul>
-            </li>
-            <li>
-              <button type="button" class="visible-xs-inline-block pull-right btn btn-sm closebtn"
-                      onclick="closeNav()">&times;</button>
-            </li>
-          </ul>
-          <ul class="nav navbar-nav">
-            {% show_menu 0 1 1 1 %}
-          </ul>
-          {# <!-- Right Nav Section --> #}
-          <ul class="nav navbar-nav navbar-right">
-            {% repanier_user_bs3 permanence_id=0 %}
-              {% if REPANIER_DISPLAY_LANGUAGE %}
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% translate "Language" %} <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    {% language_chooser "native" %}
-                  </ul>
-                </li>
-              {% endif %}
-          </ul>
-        </div>
-      </div>
-    </nav>
-    {% addtoblock "js" %}{% spaceless %}
-        <script>
-            function openNav() {
-                $("#mySideNav").show()
-            }
-            function closeNav() {
-                $("#mySideNav").hide()
-            }
-        </script>
-    {% endspaceless %}{% endaddtoblock %}
-    <a name="content"></a><section>
-    {% block base_content%}{% endblock %}
+                                <ul class="dropdown-menu">
+                                    {% language_chooser "native" %}
+                                </ul>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        {% addtoblock "js" %}{% spaceless %}
+            <script>
+                function openNav() {
+                    $("#mySideNav").show()
+                }
+
+                function closeNav() {
+                    $("#mySideNav").hide()
+                }
+            </script>
+        {% endspaceless %}{% endaddtoblock %}
     </section>
-    <div class="footer">
-        <div class="container-fluid">
-            <p class="text-muted">
-                {% static_placeholder "footer" %}
-            </p>
+    <a id="content"></a>
+    <section>
+        {% block base_content %}{% endblock %}
+    </section>
+    <section>
+        <div class="footer">
+            <div class="container-fluid">
+                <p class="text-muted">
+                    {% static_placeholder "footer" %}
+                </p>
+            </div>
         </div>
-    </div>
-    {% endspaceless %}
-    {% render_block "js" %}
-    {% render_block "lastjs"  %}
-  </body>
+    </section>
+{% endspaceless %}
+{% render_block "js" %}
+{% render_block "lastjs" %}
+</body>
 </html>

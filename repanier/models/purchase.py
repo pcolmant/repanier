@@ -213,6 +213,12 @@ class Purchase(models.Model):
 
     get_quantity.short_description = _("Quantity accounted for")
 
+    def set_quantity(self, quantity):
+        if self.status < SaleStatus.WAIT_FOR_SEND:
+            self.quantity_ordered = quantity
+        else:
+            self.quantity_invoiced = quantity
+
     def get_producer_quantity(self):
         if self.status < SaleStatus.WAIT_FOR_SEND:
             return self.quantity_ordered

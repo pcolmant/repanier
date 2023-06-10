@@ -137,6 +137,10 @@ class RepanierToolbar(BasicToolbar):
                 params['page_id'] = self.page.pk
             url = add_url_parameters(url, params)
             page_menu.add_sideframe_item(_('Page Tree'), url=url, position=0)
+
+            url = reverse('admin:filer-directory_listing-root') # filer page admin
+            page_menu.add_sideframe_item(_('Files'), url=url, position=1)
+
         # Users
         self.add_users_button(repanier_menu)
         # Logout

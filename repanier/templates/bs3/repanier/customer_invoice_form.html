@@ -179,7 +179,7 @@
                                                     {{ purchase.get_long_name_with_customer_price }}
                                                 </td>
                                                 <td align="right">
-                                                    {{ purchase.quantity_ordered | floatformat:3 }}
+                                                    {{ purchase.get_quantity | floatformat:3 }}
                                                 </td>
                                                 <td align="right">
                                                     {{ purchase.get_customer_unit_price }}
@@ -359,7 +359,7 @@
                                             {{ purchase.get_long_name_with_customer_price }}
                                         </td>
                                         <td align="right">
-                                            {{ purchase.quantity_invoiced | floatformat:3 }}
+                                            {{ purchase.get_quantity | floatformat:3 }}
                                         </td>
                                         <td align="right">
                                             {{ purchase.get_customer_unit_price }}
@@ -437,7 +437,7 @@
                                             {{ purchase.get_long_name_with_customer_price }}
                                         </td>
                                         <td align="right">
-                                            {{ purchase.quantity_invoiced | floatformat:3 }}
+                                            {{ purchase.get_quantity | floatformat:3 }}
                                         </td>
                                         <td align="right">
                                             {{ purchase.get_customer_unit_price }}
@@ -473,7 +473,7 @@
                             <h4>
                             <span class="label label-{% if balance < 0 %}danger{% else %}info{% endif %}">
                                 {% translate "My balance at" %} {{ object.date_previous_balance | date:"DATE_FORMAT" }}
-                                &nbsp;: {{ object.balance }}</span>
+                                &nbsp;: {{ balance }}</span>
                             </h4>
                         {% endwith %}
                         <p/>

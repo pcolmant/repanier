@@ -183,11 +183,13 @@ class Configuration(models.Model):
         cls.init_repanier_group()
 
         # Create the configuration record managed via the admin UI
+        # coordinator = cls.init_firsts_users()
+        # cls.init_home_page(coordinator)
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
         if config is None:
             config = Configuration.objects.create(
                 group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
-                name=PermanenceName.PERMANENCE.label,
+                name=PermanenceName.PERMANENCE,
                 bank_account="BE99 9999 9999 9999",
                 currency=Currency.EUR,
             )
@@ -288,34 +290,35 @@ class Configuration(models.Model):
             soft_root=False,
             template=settings.CMS_TEMPLATE_HOME,
             language=settings.LANGUAGE_CODE,
-            published=False,
+            # published=False,
             parent=None,
             xframe_options=X_FRAME_OPTIONS_DENY,
             in_navigation=True,
         )
         page.set_as_homepage()
-        placeholder = page.placeholders.get(slot="home-hero")
+        placeholders = page.get_placeholders(settings.LANGUAGE_CODE)
+        placeholder = placeholders.filter(slot="home-hero").first()
         api.add_plugin(
             placeholder=placeholder,
             plugin_type="TextPlugin",
             language=settings.LANGUAGE_CODE,
             body=settings.CMS_TEMPLATE_HOME_HERO,
         )
-        placeholder = page.placeholders.get(slot="home-col-1")
+        placeholder = placeholders.filter(slot="home-col-1").first()
         api.add_plugin(
             placeholder=placeholder,
             plugin_type="TextPlugin",
             language=settings.LANGUAGE_CODE,
             body=settings.CMS_TEMPLATE_HOME_COL_1,
         )
-        placeholder = page.placeholders.get(slot="home-col-2")
+        placeholder = placeholders.filter(slot="home-col-2").first()
         api.add_plugin(
             placeholder=placeholder,
             plugin_type="TextPlugin",
             language=settings.LANGUAGE_CODE,
             body=settings.CMS_TEMPLATE_HOME_COL_2,
         )
-        placeholder = page.placeholders.get(slot="home-col-3")
+        placeholder = placeholders.filter(slot="home-col-3").first()
         api.add_plugin(
             placeholder=placeholder,
             plugin_type="TextPlugin",
@@ -330,14 +333,21 @@ class Configuration(models.Model):
             language=settings.LANGUAGE_CODE,
             body=settings.CMS_TEMPLATE_FOOTER,
         )
-        static_placeholder.publish(
-            request=None, language=settings.LANGUAGE_CODE, force=True
-        )
+        # static_placeholder.publish(
+        #     request=None, language=settings.LANGUAGE_CODE, force=True
+        # )
+        # placeholder = placeholders.filter(slot="footer").first()
+        # api.add_plugin(
+        #     placeholder=placeholder,
+        #     plugin_type="TextPlugin",
+        #     language=settings.LANGUAGE_CODE,
+        #     body=settings.CMS_TEMPLATE_FOOTER,
+        # )
         user = coordinator.customer_responsible.user
         user.groups.clear()
         group_id = Group.objects.filter(name=AuthGroup.WEBMASTER).first()
         user.groups.add(group_id)
-        api.publish_page(page=page, user=user, language=settings.LANGUAGE_CODE)
+        # api.publish_page(page=page, user=user, language=settings.LANGUAGE_CODE)
         user.groups.remove(group_id)
 
     @classmethod

@@ -346,11 +346,11 @@ def create_or_update_one_purchase(
         else:
             purchase.set_comment(comment)
             purchase.status = status
-            if status < const.SaleStatus.SEND:
-                purchase.quantity_ordered = q_order
-            else:
-                # purchase.quantity_ordered = q_order
-                purchase.quantity_invoiced = q_order
+            purchase.set_quantity(q_order)
+            # if status < const.SaleStatus.SEND:
+            #     purchase.quantity_ordered = q_order
+            # else:
+            #     purchase.quantity_invoiced = q_order
             purchase.save()
         return purchase, True
     else:

@@ -63,10 +63,10 @@
 </head>
 <body>
 <a href="#content" class="skip_link">{% translate "Skip to main content" %}</a>
-<a name="#top"></a>
-<section>
-    {% cms_toolbar %}
-    {% spaceless %}
+<a id="top"></a>
+{% cms_toolbar %}
+{% spaceless %}
+    <section>
         {# <!-- Header and Nav --> #}
         <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
             <div class="navbar-header visible-xs-inline-block">
@@ -92,31 +92,33 @@
                     {# <!-- Left Nav Section --> #}
                     <ul class="nav navbar-nav navbar-left">
                         <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-transfer"></span> <b
-                                        class="caret"></b></a>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span
+                                    class="glyphicon glyphicon-transfer"></span> <b
+                                    class="caret"></b></a>
                             <ul class="dropdown-menu">
                                 <li><a href="https://gasath.repanier.be/" target="_blank">GasAth (Ath)</a></li>
-                                <li><a href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco (Charleroi)</a></li>
-                                <li><a href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de Romuald (Forest)</a></li>
-                                <li><a href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel (Frasnes)</a></li>
-                                <li><a href="https://gac-jalhay.repanier.be/" target="_blank">Gac Jalhay (Jalhay)</a></li>
-                                <li><a href="https://lepanierlensois.repanier.be/fr/" target="_blank">Le Panier Lensois (Lens)</a></li>
-                                <li><a href="https://epicentre.repanier.be/" target="_blank">Epicentre (Meix-devant-Virton)</a></li>
-                                <li><a href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson (Oeudeghien)</a></li>
-                                <li><a href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit (Péruwelz)</a></li>
+                                <li><a href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco
+                                    (Charleroi)</a></li>
+                                <li><a href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de
+                                    Romuald (Forest)</a></li>
+                                <li><a href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel
+                                    (Frasnes)</a></li>
+                                <li><a href="https://gac-jalhay.repanier.be/" target="_blank">Gac Jalhay (Jalhay)</a>
+                                </li>
+                                <li><a href="https://lepanierlensois.repanier.be/fr/" target="_blank">Le Panier Lensois
+                                    (Lens)</a></li>
+                                <li><a href="https://epicentre.repanier.be/" target="_blank">Epicentre
+                                    (Meix-devant-Virton)</a></li>
+                                <li><a href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson
+                                    (Oeudeghien)</a></li>
+                                <li><a href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit
+                                    (Péruwelz)</a></li>
                                 <li><a href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
                             </ul>
-                        </li>
-                        <li>
                             <button type="button" class="visible-xs-inline-block pull-right btn btn-sm closebtn"
-                                onclick="closeNav()">&times;</button>
+                                    onclick="closeNav()">&times;
+                            </button>
                         </li>
-{#                        <li>#}
-{#                            <a href="{{ REPANIER_HOME_SITE }}"><span class="glyphicon glyphicon-transfer"></span></a>#}
-{#                            <button type="button" class="visible-xs-inline-block pull-right btn btn-sm closebtn"#}
-{#                                    onclick="closeNav()">&times;#}
-{#                            </button>#}
-{#                        </li>#}
                     </ul>
                     <ul class="nav navbar-nav">
                         {% show_menu 0 1 1 1 %}
@@ -148,30 +150,32 @@
                 }
             </script>
         {% endspaceless %}{% endaddtoblock %}
-        <a name="content"></a>
-        <section>
-            {% if current_page.is_home %}
-                <div class="container-info" id="containerInfo">&nbsp;</div>
-                {% addtoblock "lastjs" %}{% spaceless %}
-                    <script>
-                        $(document).ready(function () {
-                            lien = '{% url 'repanier:home_info' %}';
-                            $.ajax({
-                                url: lien,
-                                cache: false,
-                                async: true,
-                                success: function (result) {
-                                    $.each(result, function (key, val) {
-                                        $(key).html(val);
-                                    });
-                                }
-                            });
+    </section>
+    <a id="content"></a>
+    <section>
+        {% if current_page.is_home %}
+            <div class="container-info" id="containerInfo">&nbsp;</div>
+            {% addtoblock "lastjs" %}{% spaceless %}
+                <script>
+                    $(document).ready(function () {
+                        lien = '{% url 'repanier:home_info' %}';
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            async: true,
+                            success: function (result) {
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
+                            }
                         });
-                    </script>
-                {% endspaceless %}{% endaddtoblock %}
-            {% endif %}
-            {% block base_content %}{% endblock %}
-        </section>
+                    });
+                </script>
+            {% endspaceless %}{% endaddtoblock %}
+        {% endif %}
+        {% block base_content %}{% endblock %}
+    </section>
+    <section>
         <div class="footer">
             <div class="container-fluid">
                 <p class="text-muted">
@@ -179,8 +183,9 @@
                 </p>
             </div>
         </div>
-    {% endspaceless %}
-    {% render_block "js" %}
-    {% render_block "lastjs" %}
+    </section>
+{% endspaceless %}
+{% render_block "js" %}
+{% render_block "lastjs" %}
 </body>
 </html>
