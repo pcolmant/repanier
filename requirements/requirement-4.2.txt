@@ -13,7 +13,7 @@ diff-match-patch==20230430
 django-admin-autocomplete-filter==0.7.1
 django-autocomplete-light==3.9.8rc29
 django-classy-tags==4.0.0
-django-cms==4.1.0rc3
+django-cms==3.11.3
 # django-cms~=4.1.0
 # https://github.com/django-cms/django-cms/archive/06c9a85df486581f152dbf11bbf40a1c6c5e6cd3.zip
 django-crispy-forms==2.0

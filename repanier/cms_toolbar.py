@@ -131,7 +131,10 @@ class RepanierToolbar(BasicToolbar):
         if can_change_page:
             page_menu = self.toolbar.get_or_create_menu(PAGE_MENU_IDENTIFIER, _("Page"), position=1)
 
-            url = admin_reverse('cms_pagecontent_changelist')  # cms page admin
+            try:
+                url = admin_reverse('cms_pagecontent_changelist')  # cms page admin >= 4.0
+            except:
+                url = admin_reverse("cms_page_changelist") # cms page admin < 4.0
             params = {'language': self.toolbar.request_language}
             if self.page:
                 params['page_id'] = self.page.pk
