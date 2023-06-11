@@ -68,11 +68,19 @@ def login_view(
 
             if as_staff_id == 0:
                 if user.is_superuser:
-                    return HttpResponseRedirect(
-                        "{}?{}".format(
-                            redirect_to, get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
+                    try:
+                        return HttpResponseRedirect(
+                            "{}?{}".format(
+                                redirect_to, get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
+                            )
                         )
-                    )
+                    except:
+                        # CMS version 4
+                        return HttpResponseRedirect(
+                            "{}?{}".format(
+                                redirect_to, get_cms_setting("CMS_TOOLBAR_URL__ENABLE")
+                            )
+                        )
                 else:
                     # The user want to be logged in as a customer
                     return HttpResponseRedirect(redirect_to)
@@ -91,9 +99,19 @@ def login_view(
             RepanierAuthBackend.set_staff_right(
                 request=request, user=user, as_staff=as_staff
             )
-            return HttpResponseRedirect(
-                "{}?{}".format(redirect_to, get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON"))
-            )
+            try:
+                return HttpResponseRedirect(
+                    "{}?{}".format(
+                        redirect_to, get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
+                    )
+                )
+            except:
+                # CMS version 4
+                return HttpResponseRedirect(
+                    "{}?{}".format(
+                        redirect_to, get_cms_setting("CMS_TOOLBAR_URL__ENABLE")
+                    )
+                )
 
     form = authentication_form(request)
 
