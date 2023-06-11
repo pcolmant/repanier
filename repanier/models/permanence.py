@@ -261,9 +261,8 @@ class Permanence(models.Model):
                     # Such that they can be accessed by the producer and by the staff
                     producers.append(label)
                     producers_html.append(
-                        '<a href="{}?producer={}" target="_blank">{}</a>'.format(
-                            reverse("repanier:producer_invoice_view", args=(pi.id,)),
-                            pi.producer_id,
+                        '<a href="{}" target="_blank">{}</a>'.format(
+                            reverse("repanier:producer_invoice_view", args=(0, pi.producer_id,)),
                             label.replace(" ", "&nbsp;"),
                         )
                     )

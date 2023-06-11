@@ -49,7 +49,7 @@
 </head>
 <body>
 <a href="#content" class="skip_link">{% translate "Skip to main content" %}</a>
-<a name="#top"></a>
+<a id="#top"></a>
 <section>
     {% cms_toolbar %}
     {% spaceless %}
@@ -114,7 +114,7 @@
                 }
             </script>
         {% endspaceless %}{% endaddtoblock %}
-        <a name="content"></a>
+        <a id="content"></a>
         <section>
             {% if current_page.is_home %}
                 <div class="container-info" id="containerInfo">&nbsp;</div>

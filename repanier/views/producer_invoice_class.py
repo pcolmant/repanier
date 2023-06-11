@@ -85,7 +85,7 @@ class ProducerInvoiceView(DetailView):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            producer_id = self.request.GET.get("producer_id", None)
+            producer_id = self.kwargs.get("producer_id", 0)
         else:
             raise Http404
         invoice_id = self.kwargs.get("invoice_id", 0)

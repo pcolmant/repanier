@@ -211,7 +211,7 @@
                                 {{ purchase.get_long_name_with_customer_price }}
                             </td>
                             <td align="right">
-                                {{ purchase.quantity_invoiced | floatformat:3 }}
+                                {{ purchase.get_quantity | floatformat:3 }}
                             </td>
                             <td align="right">
                                 {{ purchase.get_customer_unit_price }}{% if purchase.offer_item.unit_deposit != 0 %}
@@ -294,7 +294,7 @@
                                 {{ purchase.get_long_name_with_customer_price }}
                             </td>
                             <td align="right">
-                                {{ purchase.quantity_invoiced | floatformat:3 }}
+                                {{ purchase.get_quantity | floatformat:3 }}
                             </td>
                             <td align="right">
                                 {{ purchase.get_customer_unit_price }}{% if purchase.offer_item.unit_deposit != 0 %}, ♻ {{ purchase.offer_item.unit_deposit }}
