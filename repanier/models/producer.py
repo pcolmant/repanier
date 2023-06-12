@@ -8,7 +8,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import number_format
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from repanier.const import (
     EMPTY_STRING,
@@ -395,30 +394,30 @@ class Producer(models.Model):
 
     get_last_invoice.short_description = _("Last accounting entry")
 
-    def get_html_on_hold_movement(self):
-        bank_not_invoiced = self.get_bank_not_invoiced()
-        order_not_invoiced = self.get_order_not_invoiced()
-
-        if (
-            order_not_invoiced.amount != DECIMAL_ZERO
-            or bank_not_invoiced.amount != DECIMAL_ZERO
-        ):
-            if order_not_invoiced.amount != DECIMAL_ZERO:
-                if bank_not_invoiced.amount == DECIMAL_ZERO:
-                    producer_on_hold_movement = _(
-                        "This balance does not take into account orders not yet booked for an amount of %(other_order)s."
-                    ) % {"other_order": order_not_invoiced}
-                else:
-                    producer_on_hold_movement = _(
-                        "This balance does not take into account payments made after the last accounting entry (for an amount of %(bank)s), nor does it take into account orders not yet accounted (for an amount of %(other_order)s)"
-                    ) % {"bank": bank_not_invoiced, "other_order": order_not_invoiced}
-            else:
-                producer_on_hold_movement = _(
-                    "This balance does not take into account payments made after the last accounting for an amount of %(bank)s."
-                ) % {"bank": bank_not_invoiced}
-            return mark_safe(producer_on_hold_movement)
-
-        return EMPTY_STRING
+    # def get_html_on_hold_movement(self):
+    #     bank_not_invoiced = self.get_bank_not_invoiced()
+    #     order_not_invoiced = self.get_order_not_invoiced()
+    #
+    #     if (
+    #         order_not_invoiced.amount != DECIMAL_ZERO
+    #         or bank_not_invoiced.amount != DECIMAL_ZERO
+    #     ):
+    #         if order_not_invoiced.amount != DECIMAL_ZERO:
+    #             if bank_not_invoiced.amount == DECIMAL_ZERO:
+    #                 producer_on_hold_movement = _(
+    #                     "This balance does not take into account orders not yet booked for an amount of %(other_order)s."
+    #                 ) % {"other_order": order_not_invoiced}
+    #             else:
+    #                 producer_on_hold_movement = _(
+    #                     "This balance does not take into account payments made after the last accounting entry (for an amount of %(bank)s), nor does it take into account orders not yet accounted (for an amount of %(other_order)s)"
+    #                 ) % {"bank": bank_not_invoiced, "other_order": order_not_invoiced}
+    #         else:
+    #             producer_on_hold_movement = _(
+    #                 "This balance does not take into account payments made after the last accounting for an amount of %(bank)s."
+    #             ) % {"bank": bank_not_invoiced}
+    #         return mark_safe(producer_on_hold_movement)
+    #
+    #     return EMPTY_STRING
 
     def anonymize(self, also_group=False):
         if self.represent_this_buyinggroup:

@@ -45,11 +45,11 @@ class CustomerInvoiceView(DetailView):
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,
-                ).order_by("producer", "offer_item__order_sort_order_v2")
+                ).order_by("producer", "offer_item")
             else:
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,
-                ).order_by("offer_item__order_sort_order_v2")
+                ).order_by("offer_item")
             context["purchase_set"] = purchase_set
             purchase_by_other_set = (
                 Purchase.objects.filter(
@@ -57,7 +57,7 @@ class CustomerInvoiceView(DetailView):
                     permanence_id=customer_invoice.permanence_id,
                 )
                 .exclude(customer_id=customer_invoice.customer_id)
-                .order_by("customer", "producer", "offer_item__order_sort_order_v2")
+                .order_by("customer", "producer", "offer_item")
             )
             context["purchase_by_other_set"] = purchase_by_other_set
             if customer_invoice.invoice_sort_order is not None:

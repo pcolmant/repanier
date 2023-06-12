@@ -259,13 +259,17 @@ def export_invoice(
         permanence=permanence, year=year, customer=customer, producer=producer
     )
     if purchase_set.exists():
-
-        wb, ws = new_landscape_a4_sheet(wb, sheet_name, permanence)
+        wb, ws = new_landscape_a4_sheet(wb, sheet_name, permanence or year)
         row = []
         row_num = 0
         hide_column_deposit = True
+        permanence_id_save = None
 
         for purchase in purchase_set:
+
+            if permanence_id_save is not None:
+                row_num = shipping_cost_row(customer, permanence_id_save, row, row_num, ws)
+                permanence_id_save = purchase.permanence_id
 
             qty = purchase.quantity_invoiced
 
@@ -471,27 +475,8 @@ def export_invoice(
             ws.column_dimensions[get_column_letter(19)].visible = False
             ws.column_dimensions[get_column_letter(20)].visible = False
 
-            if customer is not None:
-                customer_invoice = CustomerInvoice.objects.filter(
-                    permanence_id=permanence.id, customer_id=customer.id
-                ).first()
-                delta_transport = customer_invoice.delta_transport.amount
-                if delta_transport:
-                    # delivery is mandatory if transport
-                    delivery = customer_invoice.delivery or EMPTY_STRING
-                    for col_num in range(len(row)):
-                        c = ws.cell(row=row_num, column=col_num)
-                        c.style.borders.top.border_style = Border.BORDER_THIN
-                        c.style.borders.bottom.border_style = Border.BORDER_THIN
-                        if col_num == 2:
-                            c.value = "{} {}".format(_("Shipping cost"), delivery)
-                            c.style.font.bold = True
-                        if col_num == 12:
-                            c.value = delta_transport
-                            c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                            )
-                    row_num += 1
+            if permanence_id_save is not None:
+                row_num = shipping_cost_row(customer, permanence_id_save, row, row_num, ws)
 
             for col_num in range(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
@@ -542,6 +527,31 @@ def export_invoice(
                             c.value = "{}".format(group_label)
                             c.style.font.bold = True
     return wb
+
+
+def shipping_cost_row(customer, permanence_id_save, row, row_num, ws):
+    if customer is not None and permanence_id_save is not None:
+        customer_invoice = CustomerInvoice.objects.filter(
+            permanence_id=permanence_id_save, customer_id=customer.id
+        ).first()
+        delta_transport = customer_invoice.delta_transport.amount
+        if delta_transport:
+            # delivery is mandatory if transport
+            delivery = customer_invoice.delivery or EMPTY_STRING
+            for col_num in range(len(row)):
+                c = ws.cell(row=row_num, column=col_num)
+                c.style.borders.top.border_style = Border.BORDER_THIN
+                c.style.borders.bottom.border_style = Border.BORDER_THIN
+                if col_num == 2:
+                    c.value = "{} {}".format(_("Shipping cost"), delivery)
+                    c.style.font.bold = True
+                if col_num == 12:
+                    c.value = delta_transport
+                    c.style.number_format.format_code = (
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    )
+            row_num += 1
+    return row_num
 
 
 def import_invoice_sheet(

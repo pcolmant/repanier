@@ -188,23 +188,28 @@ def payment_message(customer, permanence, customer_invoice):
     customer_order_amount = _("The amount of your order is %(amount)s.") % {
         "amount": customer_invoice.get_total_price_with_tax()
     }
-    if customer.balance.amount != const.DECIMAL_ZERO:
-        if customer.balance.amount < const.DECIMAL_ZERO:
-            balance = '<font color="#bd0926">{}</font>'.format(customer.balance)
+    if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+        balance = customer.get_admin_balance()
+    else:
+        balance = customer_invoice.get_total_price_with_tax()
+    if balance.amount != const.DECIMAL_ZERO:
+        if balance.amount < const.DECIMAL_ZERO:
+            html_balance = '<font color="#bd0926">{}</font>'.format(balance)
         else:
-            balance = "{}".format(customer.balance)
-        customer_last_balance = _(
-            "The balance of your account as of %(date)s is %(balance)s."
+            html_balance = "{}".format(balance)
+        html_customer_last_balance = _(
+            "Including this order, your account balance is %(balance)s."
+            # "The balance of your account as of %(date)s is %(balance)s."
         ) % {
-            "date": customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
-            "balance": balance,
+            # "date": customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
+            "balance": html_balance,
         }
     else:
-        customer_last_balance = const.EMPTY_STRING
+        html_customer_last_balance = const.EMPTY_STRING
 
     if customer_invoice.customer_id != customer_invoice.customer_charged_id:
-        customer_on_hold_movement = const.EMPTY_STRING
-        customer_payment_needed = "{}".format(
+        html_customer_on_hold_movement = const.EMPTY_STRING
+        html_customer_payment_needed = "{}".format(
             _(
                 "Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments."
             )
@@ -215,24 +220,25 @@ def payment_message(customer, permanence, customer_invoice):
             not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
             or customer_invoice.is_order_confirm_send
         ):
-            bank_not_invoiced = customer.get_bank_not_invoiced()
-            order_not_invoiced = customer.get_order_not_invoiced()
+            # bank_not_invoiced = customer.get_bank_not_invoiced()
+            # order_not_invoiced = customer.get_order_not_invoiced()
 
-            customer_on_hold_movement = customer.get_html_on_hold_movement(
-                bank_not_invoiced,
-                order_not_invoiced,
-                customer_invoice.get_total_price_with_tax(),
-            )
-            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-                payment_needed = -(
-                    customer.balance - order_not_invoiced + bank_not_invoiced
-                )
-            else:
-                payment_needed = customer_invoice.get_total_price_with_tax()
+            # customer_on_hold_movement = customer.get_html_on_hold_movement(
+            #     bank_not_invoiced,
+            #     order_not_invoiced,
+            #     customer_invoice.get_total_price_with_tax(),
+            # )
+            # if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            #     payment_needed = -(
+            #         customer.balance - order_not_invoiced + bank_not_invoiced
+            #     )
+            # else:
+            #     payment_needed = customer_invoice.get_total_price_with_tax()
+            html_customer_on_hold_movement = const.EMPTY_STRING
 
             bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
             if bank_account_number is not None:
-                if payment_needed.amount > const.DECIMAL_ZERO:
+                if balance.amount < const.DECIMAL_ZERO:
                     if permanence.short_name_v2:
                         communication = "{} ({})".format(
                             customer.short_basket_name, permanence.short_name_v2
@@ -240,12 +246,12 @@ def payment_message(customer, permanence, customer_invoice):
                     else:
                         communication = customer.short_basket_name
                     group_name = settings.REPANIER_SETTINGS_GROUP_NAME
-                    customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
+                    html_customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
                         _(
                             "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
                         )
                         % {
-                            "payment": payment_needed,
+                            "payment": -balance,
                             "name": group_name,
                             "number": bank_account_number,
                             "communication": communication,
@@ -253,24 +259,24 @@ def payment_message(customer, permanence, customer_invoice):
                     )
 
                 else:
-                    if customer.balance.amount != const.DECIMAL_ZERO:
-                        customer_payment_needed = (
+                    if balance.amount != const.DECIMAL_ZERO:
+                        html_customer_payment_needed = (
                             '<br><font color="#51a351">{}.</font>'.format(
                                 _("Your account balance is sufficient")
                             )
                         )
                     else:
-                        customer_payment_needed = const.EMPTY_STRING
+                        html_customer_payment_needed = const.EMPTY_STRING
             else:
-                customer_payment_needed = const.EMPTY_STRING
+                html_customer_payment_needed = const.EMPTY_STRING
         else:
-            customer_on_hold_movement = const.EMPTY_STRING
-            customer_payment_needed = const.EMPTY_STRING
+            html_customer_on_hold_movement = const.EMPTY_STRING
+            html_customer_payment_needed = const.EMPTY_STRING
 
     return (
-        customer_last_balance,
-        customer_on_hold_movement,
-        customer_payment_needed,
+        html_customer_last_balance,
+        html_customer_on_hold_movement,
+        html_customer_payment_needed,
         customer_order_amount,
     )
 
