@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class PurchaseManager(models.Manager):
     def get_invoices(self, permanence=None, year=None, customer=None, producer=None):
         purchase_set = (
-            super().get_queryset().order_by("permanence", "customer", "offer_item")
+            super().get_queryset().order_by("permanence", "customer", "producer", "offer_item")
         )
         if permanence is not None:
             purchase_set = purchase_set.filter(permanence_id=permanence.id)
