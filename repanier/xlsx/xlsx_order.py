@@ -360,15 +360,15 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
 
         row_num = customer_label(customer_identifier, placements, row_num, ws)
 
-    placement_label = "[❄ {} ]".format(Placement.FRIDGE.label)
+    placement_label = "[❄ {} ]".format(Placement.FRIDGE)
     for customer_identifier in fridge:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[❄❄❄ {} ]".format(Placement.FREEZER.label)
+    placement_label = "[❄❄❄ {} ]".format(Placement.FREEZER)
     for customer_identifier in freezer:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "👜 [ {} ]".format(Placement.OUT_OF_BASKET.label)
+    placement_label = "👜 [ {} ]".format(Placement.OUT_OF_BASKET)
     for customer_identifier in out_of_basket:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
