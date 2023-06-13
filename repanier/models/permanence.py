@@ -787,30 +787,30 @@ class Permanence(models.Model):
                         batch_job=True,
                         comment=EMPTY_STRING,
                     )
-        if everything:
-            # # Round to multiple producer_order_by_quantity
-            # offer_item_qs = OfferItem.objects.filter(
-            #     permanence_id=self.id,
-            #     may_order=True,
-            #     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
-            #     producer_order_by_quantity__gt=1,
-            #     quantity_invoiced__gt=0,
-            # )
-
-            # Add Transport
-            offer_item_qs = OfferItem.objects.filter(
-                permanence_id=self.id, order_unit=OrderUnit.TRANSPORTATION
-            )
-            group_id = Customer.get_or_create_group().id
-            for offer_item in offer_item_qs:
-                create_or_update_one_purchase(
-                    customer_id=group_id,
-                    offer_item=offer_item,
-                    status=SaleStatus.OPENED,
-                    q_order=1,
-                    batch_job=True,
-                    comment=EMPTY_STRING,
-                )
+        # if everything:
+        #     # # Round to multiple producer_order_by_quantity
+        #     # offer_item_qs = OfferItem.objects.filter(
+        #     #     permanence_id=self.id,
+        #     #     may_order=True,
+        #     #     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
+        #     #     producer_order_by_quantity__gt=1,
+        #     #     quantity_invoiced__gt=0,
+        #     # )
+        #
+        #     # Add Transport
+        #     offer_item_qs = OfferItem.objects.filter(
+        #         permanence_id=self.id, order_unit=OrderUnit.TRANSPORTATION
+        #     )
+        #     group_id = Customer.get_or_create_group().id
+        #     for offer_item in offer_item_qs:
+        #         create_or_update_one_purchase(
+        #             customer_id=group_id,
+        #             offer_item=offer_item,
+        #             status=SaleStatus.OPENED,
+        #             q_order=1,
+        #             batch_job=True,
+        #             comment=EMPTY_STRING,
+        #         )
 
     def send_to_producer(self):
         from repanier.models.purchase import PurchaseWoReceiver

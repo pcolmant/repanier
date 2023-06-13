@@ -55,7 +55,6 @@
                     break;
                 case "300":
                 case "400":
-                case "500":
                     $("div.fieldBox.field-unit_deposit").hide();
                     $("div.fieldBox.field-order_average_weight").hide();
                     $("div.fieldBox.field-customer_minimum_order_quantity").hide();
@@ -63,16 +62,6 @@
                     $("div.form-row.field-customer_minimum_order_quantity").hide();
                     $("div.form-row.field-customer_increment_order_quantity").hide();
                     $("div.fieldBox.field-customer_unit_price").hide();
-                    $("div.form-row.field-wrapped").hide();
-                    break;
-                case "600":
-                    $("div.fieldBox.field-unit_deposit").hide();
-                    $("div.fieldBox.field-order_average_weight").hide();
-                    $("div.fieldBox.field-customer_minimum_order_quantity").hide();
-                    $("div.fieldBox.field-customer_increment_order_quantity").hide();
-                    $("div.form-row.field-customer_minimum_order_quantity").hide();
-                    $("div.form-row.field-customer_increment_order_quantity").hide();
-                    $("div.fieldBox.field-customer_unit_price").show();
                     $("div.form-row.field-wrapped").hide();
                     break;
             }
@@ -121,10 +110,7 @@
                 case "300":
                     $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one deposit" %}");
                     break;
-                case "500":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one transportation" %}");
-                    break;
-                case "600":
+                case "400":
                     $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one subscription" %}");
                     break;
             }
