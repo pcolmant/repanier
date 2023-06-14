@@ -358,19 +358,45 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
         if Placement.OUT_OF_BASKET in placements:
             out_of_basket += [customer_identifier]
 
-        row_num = customer_label(customer_identifier, placements, row_num, ws)
+        row_num = customer_label(
+            customer_identifier,
+            [placement.label for placement in placements],
+            row_num,
+            ws,
+        )
 
-    placement_label = "[❄ {} ]".format(Placement.FRIDGE)
+    placement_label = "[❄ {} ]".format(Placement.FRIDGE.label)
     for customer_identifier in fridge:
-        row_num = customer_label(customer_identifier, placement_label, row_num, ws)
+        row_num = customer_label(
+            customer_identifier,
+            [
+                placement_label,
+            ],
+            row_num,
+            ws,
+        )
 
-    placement_label = "[❄❄❄ {} ]".format(Placement.FREEZER)
+    placement_label = "[❄❄❄ {} ]".format(Placement.FREEZER.label)
     for customer_identifier in freezer:
-        row_num = customer_label(customer_identifier, placement_label, row_num, ws)
+        row_num = customer_label(
+            customer_identifier,
+            [
+                placement_label,
+            ],
+            row_num,
+            ws,
+        )
 
-    placement_label = "👜 [ {} ]".format(Placement.OUT_OF_BASKET)
+    placement_label = "👜 [ {} ]".format(Placement.OUT_OF_BASKET.label)
     for customer_identifier in out_of_basket:
-        row_num = customer_label(customer_identifier, placement_label, row_num, ws)
+        row_num = customer_label(
+            customer_identifier,
+            [
+                placement_label,
+            ],
+            row_num,
+            ws,
+        )
 
     if row_num > 0:
         ws.column_dimensions[get_column_letter(1)].width = 120
@@ -391,7 +417,7 @@ def customer_label(customer_identifier, placements, row_num, ws):
     row_num += 1
     ws.row_dimensions[row_num].height = 60
     c = ws.cell(row=row_num, column=0)
-    c.value = ", ".join(["{}".format(placement.label) for placement in placements])
+    c.value = ", ".join(["{}".format(placement) for placement in placements])
     c.style.borders.left.border_style = Border.BORDER_THIN
     c.style.borders.right.border_style = Border.BORDER_THIN
     c.style.borders.bottom.border_style = Border.BORDER_THIN
