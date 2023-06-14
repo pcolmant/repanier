@@ -299,23 +299,28 @@ class PermanenceDoneAdmin(SaleAdmin):
                             )
                     if at_least_one_selected:
                         permanence.invoice(payment_date=payment_date)
-                        previous_latest_total = (
-                            BankAccount.objects.filter(
-                                operation_status=BankMovement.LATEST_TOTAL,
-                                producer__isnull=True,
-                                customer__isnull=True,
-                            )
-                            .order_by("-id")
-                            .first()
-                        )
-                        previous_latest_total_id = (
-                            previous_latest_total.id
-                            if previous_latest_total is not None
-                            else 0
-                        )
+                        # previous_latest_total = (
+                        #     BankAccount.objects.filter(
+                        #         operation_status=BankMovement.LATEST_TOTAL,
+                        #         producer__isnull=True,
+                        #         customer__isnull=True,
+                        #     )
+                        #     .order_by("-id")
+                        #     .first()
+                        # )
+                        # previous_latest_total_id = (
+                        #     previous_latest_total.id
+                        #     if previous_latest_total is not None
+                        #     else 0
+                        # )
                         template_name = get_repanier_template_name(
                             "admin/confirm_bank_movement.html"
                         )
+                        calculated_invoices = BankAccount.objects.filter(permanence_id=permanence.id, producer__isnull=False,
+                                                        producer__represent_this_buyinggroup=False,
+                                                        customer__isnull=True,
+                                                        operation_status=BankMovement.CALCULATED_INVOICE, ).order_by(
+                            "producer", "-operation_date", "-id")
                         return render(
                             request,
                             template_name,
@@ -323,13 +328,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                                 **self.admin_site.each_context(request),
                                 "action": "invoice",
                                 "permanence": permanence,
-                                "bankaccounts": BankAccount.objects.filter(
-                                    id__gt=previous_latest_total_id,
-                                    producer__isnull=False,
-                                    producer__represent_this_buyinggroup=False,
-                                    customer__isnull=True,
-                                    operation_status=BankMovement.CALCULATED_INVOICE,
-                                ).order_by("producer", "-operation_date", "-id"),
+                                "bankaccounts": calculated_invoices,
                                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
                             },
                         )
