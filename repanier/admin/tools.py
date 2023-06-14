@@ -64,7 +64,7 @@ def check_permanence(status: SaleStatus):
                 # logger.debug("check_permanence, permanence.status != status")
                 user_message = _(
                     "To perform this action, the status of {permanence} must be '{status.label}.'."
-                ).format(permanence=permanence, status=status.label)
+                ).format(permanence=permanence, status=status)
                 user_message_level = messages.ERROR
                 args[0].message_user(args[1], user_message, user_message_level)
                 return HttpResponseRedirect(args[0].get_redirect_to_change_list_url())
