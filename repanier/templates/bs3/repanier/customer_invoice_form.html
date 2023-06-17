@@ -35,7 +35,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     {% if my_invoices %}{% else %}<h4>{{ customer.long_basket_name }}, <span class="glyphicon glyphicon-earphone"></span> {{ customer.phone1 }}, <span class="glyphicon glyphicon-envelope"></span> {{ customer.user.email }}</h4>{% endif %}
-                    {% if not next_customer_invoice_id %}
+                    {% if display_admin_balance %}
                         {% with balance=customer.get_admin_balance %}
                             <h4>
                         <span class="label label-{% if balance < 0 %}danger{% else %}info{% endif %}">
@@ -74,7 +74,7 @@
                     {% for not_invoiced in not_invoiced_array %}
                         <div class="row">
                             <div class="col-lg-12">
-                                <span class="label label-default">{% translate "Pending purchases" %}</span>
+                                <span class="label label-default">{% translate "Pending purchase" %}</span>
                                 &nbsp;: {{ not_invoiced.customer_invoice.get_total_price_with_tax }}
                                 <small>({{ not_invoiced.customer_invoice.permanence }})</small>
                                 <p/>
@@ -247,7 +247,15 @@
             {% if purchase_set or purchase_by_other_set %}
                 <div class="row">
                     <div class="col-lg-12">
-                        <span class="label label-default">{% translate "Purchases" %}</span>
+                        <span class="label label-default">
+                            {% if object.is_invoiced %}
+                                {% translate "Invoiced purchases" %}
+                            {% elif object.is_archived %}
+                                {% translate "Archived purchases" %}
+                            {% else %}
+                                {% translate "Pending purchase" %}
+                            {% endif %}
+                        </span>
                         &nbsp;: {{ object.get_total_price_with_tax }}
                         <small>({{ object.permanence }})</small>
                         <p/>
@@ -460,11 +468,13 @@
                     </div>
                 {% endif %}
             {% else %}
-                <div class="row">
-                    <div class="col-lg-12">
-                        <p>{% translate "No order placed" %} ({{ object.permanence }})</p>
+                {% if object %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <p>{% translate "No order placed" %} ({{ object.permanence }})</p>
+                        </div>
                     </div>
-                </div>
+                {% endif %}
             {% endif %}
             {% if object %}
                 <div class="row">

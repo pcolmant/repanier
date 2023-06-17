@@ -24,14 +24,12 @@ class CustomerHistoryView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["my_invoices"] = self.my_invoices
-        if context["object"] is not None:
+        customer = context["object"]
+        if customer is not None:
             # This customer exists
-            customer = self.get_object()
-            context["customer"] = customer
             not_invoiced_customer_invoice_set = CustomerInvoice.objects.filter(
                 customer_id=customer.id,
-                invoice_sort_order__isnull=True,
-                status__lte=SaleStatus.INVOICED,
+                status__lt=SaleStatus.INVOICED,
             )
             context["not_invoiced_customer_invoice_set"] = not_invoiced_customer_invoice_set
             not_invoiced_bank_account_set = BankAccount.objects.filter(
@@ -40,9 +38,8 @@ class CustomerHistoryView(DetailView):
             ).order_by("operation_date")
             context["not_invoiced_bank_account_set"] = not_invoiced_bank_account_set
             customer_invoice_set = CustomerInvoice.objects.filter(
-                customer_id=customer.id,
-                invoice_sort_order__isnull=False,
-                status=SaleStatus.INVOICED,
+                    customer_id=customer.id,
+                    status=SaleStatus.INVOICED,
             ).order_by("-invoice_sort_order")
             invoiced_array = []
             for customer_invoice in customer_invoice_set:
@@ -56,8 +53,11 @@ class CustomerHistoryView(DetailView):
                     }
                 ]
             context["invoiced_array"] = invoiced_array
-        else:
-            context["customer"] = None
+            archived_customer_invoice_set = CustomerInvoice.objects.filter(
+                    customer_id=customer.id,
+                    status=SaleStatus.ARCHIVED,
+            ).order_by("-id")
+            context["archived_customer_invoice_set"] = archived_customer_invoice_set
         return context
 
     def get_queryset(self):

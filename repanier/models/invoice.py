@@ -192,6 +192,11 @@ class CustomerInvoice(Invoice):
         # round to 2 decimals
         return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
 
+    def is_invoiced(self):
+        return self.status == SaleStatus.INVOICED
+
+    def is_archived(self):
+        return self.status == SaleStatus.ARCHIVED
     @classmethod
     def get_or_create_invoice(cls, permanence_id, customer_id, status):
         customer_invoice = CustomerInvoice.objects.filter(

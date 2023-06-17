@@ -323,8 +323,8 @@ class Customer(models.Model):
     def get_balance(self):
         any_customer_invoice = CustomerInvoice.objects.filter(
             customer_id=self.id,
-            invoice_sort_order__isnull=False,
-            status__lte=SaleStatus.INVOICED,
+            # invoice_sort_order__isnull=False,
+            status__in=[SaleStatus.INVOICED, SaleStatus.ARCHIVED],
         )
 
         balance = self.get_admin_balance()
