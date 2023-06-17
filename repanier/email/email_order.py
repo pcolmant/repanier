@@ -145,7 +145,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             send_email = True
         else:
             if producer.email:
-                to_email.append(producer.email)
+                to_email.append(producer.user.email)
                 send_email = True
             if producer.email2:
                 to_email.append(producer.email2)
