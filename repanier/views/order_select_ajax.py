@@ -23,7 +23,7 @@ from repanier.tools import sint, get_html_selected_value
 @require_GET
 @login_required
 def order_select_ajax(request):
-    print("####### order_select_ajax")
+    # print("####### order_select_ajax")
     user = request.user
     customer = Customer.objects.filter(id=user.customer_id, may_order=True).first()
     if customer is None:

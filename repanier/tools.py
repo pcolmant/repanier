@@ -531,7 +531,7 @@ def reorder_purchases(permanence_id):
         offer_item__wrapped=False,
         offer_item__order_unit__in=[
             const.OrderUnit.KG,
-            const.OrderUnit.KG,
+            const.OrderUnit.PC_KG,
         ],
     ).update(quantity_for_preparation_sort_order=F("quantity_invoiced"))
 

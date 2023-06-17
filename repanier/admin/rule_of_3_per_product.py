@@ -148,7 +148,7 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
             self.fields["customer"].widget.can_delete_related = False
             if self.instance.offer_item.order_unit not in [
                 OrderUnit.KG,
-                OrderUnit.KG,
+                OrderUnit.PC_KG,
             ]:
                 self.fields["purchase_price"].widget.attrs["readonly"] = True
 
@@ -232,7 +232,7 @@ class OfferItemSendForm(forms.ModelForm):
         self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax
         if product.wrapped or product.order_unit not in [
             OrderUnit.KG,
-            OrderUnit.KG,
+            OrderUnit.PC_KG,
         ]:
             self.fields["offer_purchase_price"].widget.attrs["readonly"] = True
             self.fields["offer_purchase_price"].disabled = True
