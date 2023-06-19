@@ -262,7 +262,13 @@ class Permanence(models.Model):
                     producers.append(label)
                     producers_html.append(
                         '<a href="{}" target="_blank">{}</a>'.format(
-                            reverse("repanier:producer_invoice_view", args=(0, pi.producer_id,)),
+                            reverse(
+                                "repanier:producer_invoice_view",
+                                args=(
+                                    0,
+                                    pi.producer_id,
+                                ),
+                            ),
                             label.replace(" ", "&nbsp;"),
                         )
                     )
@@ -768,8 +774,6 @@ class Permanence(models.Model):
                 offer_item_qs = OfferItem.objects.filter(
                     permanence_id=self.id, order_unit=OrderUnit.DEPOSIT
                 )
-                # if not everything:
-                #     offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
                 for offer_item in offer_item_qs:
                     create_or_update_one_purchase(
                         customer_id=customer.id,
@@ -787,42 +791,17 @@ class Permanence(models.Model):
                         batch_job=True,
                         comment=EMPTY_STRING,
                     )
-        # if everything:
-        #     # # Round to multiple producer_order_by_quantity
-        #     # offer_item_qs = OfferItem.objects.filter(
-        #     #     permanence_id=self.id,
-        #     #     may_order=True,
-        #     #     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
-        #     #     producer_order_by_quantity__gt=1,
-        #     #     quantity_invoiced__gt=0,
-        #     # )
-        #
-        #     # Add Transport
-        #     offer_item_qs = OfferItem.objects.filter(
-        #         permanence_id=self.id, order_unit=OrderUnit.TRANSPORTATION
-        #     )
-        #     group_id = Customer.get_or_create_group().id
-        #     for offer_item in offer_item_qs:
-        #         create_or_update_one_purchase(
-        #             customer_id=group_id,
-        #             offer_item=offer_item,
-        #             status=SaleStatus.OPENED,
-        #             q_order=1,
-        #             batch_job=True,
-        #             comment=EMPTY_STRING,
-        #         )
 
     def send_to_producer(self):
-        from repanier.models.purchase import PurchaseWoReceiver
-
-        # PurchaseWoReceiver.objects.filter(
-        #     permanence_id=self.id,
-        #     status=PERMANENCE_WAIT_FOR_SEND,
-        #     offer_item__order_unit=PRODUCT_ORDER_UNIT_PC_KG,
-        # ).update(
-        #     quantity_invoiced=F("quantity_ordered")
-        #     * F("offer_item__order_average_weight"),
-        # )
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE repanier_purchase AS a SET "
+                " quantity_invoiced = quantity_ordered "
+                " WHERE permanence_id = %s ",
+                [
+                    self.id,
+                ],
+            )
         with connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE repanier_purchase AS a SET "
@@ -830,26 +809,9 @@ class Permanence(models.Model):
                 " FROM repanier_offeritem AS b "
                 " WHERE a.offer_item_id = b.id "
                 " AND a.permanence_id = %s "
-                " AND a.status = %s "
                 " AND b.order_unit = %s ",
-                [self.id, SaleStatus.WAIT_FOR_SEND.value, OrderUnit.PC_KG],
+                [self.id, OrderUnit.PC_KG.value],
             )
-        # for p in PurchaseWoReceiver.objects.filter(
-        #     permanence_id=self.id,
-        #     status=PERMANENCE_WAIT_FOR_SEND,
-        #     offer_item__order_unit=PRODUCT_ORDER_UNIT_PC_KG,
-        # ):
-        #     p.quantity_invoiced = p.quantity_ordered * p.offer_item.order_average_weight
-        #     p.save()
-        PurchaseWoReceiver.objects.filter(
-            permanence_id=self.id,
-            status=SaleStatus.WAIT_FOR_SEND,
-        ).exclude(offer_item__order_unit=OrderUnit.PC_KG,).update(
-            quantity_invoiced=F("quantity_ordered"),
-        )
-        OfferItemReadOnly.objects.filter(
-            permanence_id=self.id, order_unit=OrderUnit.PC_KG
-        ).update(use_order_unit_converted=True)
 
     @transaction.atomic
     @debug_parameters
@@ -1625,7 +1587,7 @@ class Permanence(models.Model):
             customer_producer_invoice.save()
 
         for offer_item in OfferItemReadOnly.objects.filter(permanence_id=self.id):
-            offer_item.calculate_order_amount()
+            offer_item.calculate_order_amount(status=self.status)
             offer_item.save()
 
         result_set = CustomerInvoice.objects.filter(permanence_id=self.id).aggregate(

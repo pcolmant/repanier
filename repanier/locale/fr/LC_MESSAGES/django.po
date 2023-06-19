@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-16 11:47+0200\n"
+"POT-Creation-Date: 2023-06-19 07:59+0200\n"
 "PO-Revision-Date: 2023-06-16 22:31+0200\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
@@ -78,7 +78,7 @@ msgstr ""
 #: admin/bankaccount.py:224 admin/purchase.py:292
 #: admin/rule_of_3_per_product.py:126 models/bankaccount.py:27
 #: models/bankaccount.py:211 models/customer.py:588 models/invoice.py:113
-#: models/invoice.py:117 models/invoice.py:822 models/invoice.py:923
+#: models/invoice.py:117 models/invoice.py:827 models/invoice.py:928
 #: models/permanenceboard.py:10 models/purchase.py:58
 #: templates/bs3/admin/repanier/customersend/change_form.html:7
 #: templates/bs3/admin/repanier/offeritemsend/change_form.html:7
@@ -96,8 +96,8 @@ msgid "Customer"
 msgstr "Consommateur"
 
 #: admin/bankaccount.py:237 admin/forms.py:94 admin/purchase.py:321
-#: models/bankaccount.py:20 models/bankaccount.py:187 models/invoice.py:697
-#: models/invoice.py:825 models/item.py:24 models/producer.py:430
+#: models/bankaccount.py:20 models/bankaccount.py:187 models/invoice.py:702
+#: models/invoice.py:830 models/item.py:24 models/producer.py:430
 #: models/producer.py:459 models/purchase.py:55
 #: templates/bs3/repanier/customer_invoice_form.html:149
 #: templates/bs3/repanier/customer_invoice_form.html:332
@@ -246,17 +246,17 @@ msgstr ""
 #: admin/customer.py:540
 #, python-format
 msgid ""
-"%(discount)s%% discount is granted to customer when delivered to "
-"%(group)s%(customer_price)s."
+"%(discount)s%% discount is granted to customer when delivered to %(group)s"
+"%(customer_price)s."
 msgstr ""
-"Une réduction de %(discount)s%% sur les livraisons \"%(group)s\" est "
-"accordée%(customer_price)s."
+"Une réduction de %(discount)s%% sur les livraisons \"%(group)s\" est accordée"
+"%(customer_price)s."
 
 #: admin/customer.py:555
 #, python-format
 msgid ""
-"%(surcharge)s%% surcharge is applied to customer when delivered to "
-"%(group)s%(customer_price)s."
+"%(surcharge)s%% surcharge is applied to customer when delivered to %(group)s"
+"%(customer_price)s."
 msgstr ""
 "Une surcharge de %(surcharge)s%% sur les livraisons \"%(group)s\" est "
 "appliquée%(customer_price)s."
@@ -281,7 +281,7 @@ msgstr "Date du paiement"
 msgid "File to import"
 msgstr "Fichier à importer"
 
-#: admin/forms.py:91 admin/forms.py:125 models/invoice.py:721
+#: admin/forms.py:91 admin/forms.py:125 models/invoice.py:726
 msgid "Accounting reference"
 msgstr "Référence comptable"
 
@@ -296,11 +296,11 @@ msgstr "Référence comptable"
 msgid "Short name"
 msgstr "Nom abrégé"
 
-#: admin/forms.py:111 models/invoice.py:706
+#: admin/forms.py:111 models/invoice.py:711
 msgid "Amount due to the producer as calculated by Repanier"
 msgstr "Montant dû au producteur tel que calculé par Repanier"
 
-#: admin/forms.py:118 models/invoice.py:712
+#: admin/forms.py:118 models/invoice.py:717
 msgid "Amount claimed by the producer"
 msgstr "Montant réclamé par le producteur"
 
@@ -336,8 +336,8 @@ msgstr "---------"
 msgid "Import an invoice"
 msgstr "Importer une facture"
 
-#: admin/permanence_done.py:149 email/email_order.py:241 models/invoice.py:690
-#: models/invoice.py:816 xlsx/xlsx_purchase.py:85
+#: admin/permanence_done.py:149 models/invoice.py:695 models/invoice.py:821
+#: xlsx/xlsx_purchase.py:85
 msgid "Accounting entries"
 msgstr "Entrées comptable"
 
@@ -468,7 +468,7 @@ msgstr "1 --- Vérifier l'offre"
 
 #: admin/permanence_in_preparation.py:181
 #: admin/permanence_in_preparation.py:202 admin/purchase.py:96
-#: cms_toolbar.py:85 models/customer.py:589 models/invoice.py:924
+#: cms_toolbar.py:85 models/customer.py:589 models/invoice.py:929
 msgid "Customers"
 msgstr "Consommateurs"
 
@@ -522,7 +522,7 @@ msgstr ""
 "%(number)s avec comme communication \"%(communication)s\"."
 
 #: admin/permanence_in_preparation.py:467 admin/purchase.py:305
-#: models/deliveryboard.py:18 models/invoice.py:425 models/invoice.py:683
+#: models/deliveryboard.py:18 models/invoice.py:430 models/invoice.py:688
 #: models/lut.py:135 models/purchase.py:206
 #: templates/bs3/repanier/customer_invoice_form.html:87
 #: templates/bs3/repanier/customer_invoice_form.html:117
@@ -730,7 +730,7 @@ msgstr "Produit en offre"
 msgid "Producer amount invoiced"
 msgstr "Facturé par le producteur"
 
-#: admin/rule_of_3_per_customer.py:225 models/invoice.py:840
+#: admin/rule_of_3_per_customer.py:225 models/invoice.py:845
 #: models/offeritem.py:54
 msgid "Accounted to the customer w VAT"
 msgstr "Comptabilisé auprès du consommateur TVAC"
@@ -748,7 +748,7 @@ msgstr "Le même consommateur ne peut pas être sélectionné deux fois."
 msgid "Purchase price"
 msgstr "Prix d'achat"
 
-#: admin/rule_of_3_per_product.py:186 models/invoice.py:832
+#: admin/rule_of_3_per_product.py:186 models/invoice.py:837
 msgid "Producer amount booked"
 msgstr "Comptabilisé pour le producteur"
 
@@ -1140,12 +1140,18 @@ msgstr ""
 "⚠ Mail non transmis au producteur {} car le minimum de commande n'a pas été "
 "atteint."
 
+#: email/email_order.py:241 models/invoice.py:266
+#: templates/bs3/repanier/customer_invoice_form.html:25
+#: templatetags/repanier_tags.py:145
+msgid "History"
+msgstr "Historique"
+
 #: email/email_order.py:322
 msgid "⚠ Order cancelled"
 msgstr "⚠ Commande annulée"
 
 #: models/bankaccount.py:13 models/deliveryboard.py:24 models/invoice.py:19
-#: models/invoice.py:828 models/offeritem.py:32 models/permanence.py:1899
+#: models/invoice.py:833 models/offeritem.py:32 models/permanence.py:1899
 #: models/permanenceboard.py:18 models/purchase.py:41
 #: templatetags/repanier_tags.py:86
 msgid "Sale"
@@ -1164,7 +1170,7 @@ msgid "Account balance status"
 msgstr "Statut du solde du compte"
 
 #: models/bankaccount.py:61 models/bankaccount.py:69 models/invoice.py:105
-#: models/invoice.py:689 models/invoice.py:815 models/purchase.py:65
+#: models/invoice.py:694 models/invoice.py:820 models/purchase.py:65
 #: models/purchase.py:71 templates/bs3/repanier/producer_invoice_form.html:21
 #: templates/bs3/repanier/producer_invoice_form.html:23
 #: templates/bs5/repanier/producer_invoice_form.html:21
@@ -1656,7 +1662,7 @@ msgstr "Surcharge appliquée"
 msgid "Confirmation of the order send"
 msgstr "Confirmation de la commande envoyée"
 
-#: models/invoice.py:143 models/invoice.py:718
+#: models/invoice.py:143 models/invoice.py:723
 msgid "Accounting entry sort order"
 msgstr "Ordonnancement de l'entrée comptable"
 
@@ -1676,40 +1682,35 @@ msgstr ""
 "dans le cas où le groupe possède un consommateur responsable. Sinon il est "
 "porte sur le total de chaque facture individuelle."
 
-#: models/invoice.py:261 templates/bs3/repanier/customer_invoice_form.html:25
-#: templatetags/repanier_tags.py:145
-msgid "History"
-msgstr "Historique"
-
-#: models/invoice.py:294
+#: models/invoice.py:299
 #: templates/bs3/repanier/communication_confirm_order.html:11
 #: templates/bs5/repanier/communication_confirm_order.html:11
 msgid "⚠ Unconfirmed orders will be canceled."
 msgstr "⚠ Les commandes non confirmées sont annulées."
 
-#: models/invoice.py:305
+#: models/invoice.py:310
 msgid " ➜ Confirm this order and receive an email containing its summary."
 msgstr " ➜ Confirmer ma commande et recevoir un mail récapitulatif."
 
-#: models/invoice.py:314
+#: models/invoice.py:319
 msgid "➜ Go to the confirmation step of my order."
 msgstr "➜ Aller à l'étape de confirmation de ma commande."
 
-#: models/invoice.py:326
+#: models/invoice.py:331
 msgid "Receive an email containing this order summary."
 msgstr "Recevoir un mail récapitulatif de ma commande."
 
-#: models/invoice.py:379 views/delivery_select_ajax.py:77
+#: models/invoice.py:384 views/delivery_select_ajax.py:77
 msgid "Please, select a delivery point"
 msgstr "Veuillez sélectionner un point de livraison"
 
-#: models/invoice.py:385 views/delivery_select_ajax.py:74
+#: models/invoice.py:390 views/delivery_select_ajax.py:74
 msgid "No delivery point is open for you. You can not place order."
 msgstr ""
 "Vous ne pouvez pas passer commande car aucun point de livraison n'est ouvert "
 "pour vous."
 
-#: models/invoice.py:403
+#: models/invoice.py:408
 #, python-format
 msgid ""
 "The shipping costs for this delivery point amount to %(transport)s for "
@@ -1718,30 +1719,30 @@ msgstr ""
 "Pour ce point de livraison, %(transport)s de frais sont ajoutés aux "
 "commandes de moins de %(min_transport)s."
 
-#: models/invoice.py:413
+#: models/invoice.py:418
 #, python-format
 msgid "The shipping costs for this delivery point amount to %(transport)s."
 msgstr ""
 "Pour ce point de livraison, %(transport)s de frais seront ajoutés à votre "
 "commande."
 
-#: models/invoice.py:655
+#: models/invoice.py:660
 msgid "Canceled order"
 msgstr "Commande annulée"
 
-#: models/invoice.py:673
+#: models/invoice.py:678
 msgid "Qty not confirmed : {}"
 msgstr "Qté non confirmée : {}"
 
-#: models/invoice.py:703
+#: models/invoice.py:708
 msgid "To be booked"
 msgstr "A comptabiliser"
 
-#: models/invoice.py:833 models/invoice.py:841
+#: models/invoice.py:838 models/invoice.py:846
 msgid "Total selling amount vat included"
 msgstr "Facturé au consommateur à la pièce ou au kg TVA incluse"
 
-#: models/invoice.py:852 models/offeritem.py:127 models/purchase.py:170
+#: models/invoice.py:857 models/offeritem.py:127 models/purchase.py:170
 msgid "Row amount"
 msgstr "Total de la ligne"
 
@@ -2207,14 +2208,14 @@ msgstr "Achat"
 #: templates/bs3/admin/repanier/customersend/change_list.html:7
 #: templates/bs3/admin/repanier/offeritemsend/change_list.html:7
 #: templates/bs3/admin/repanier/purchase/change_list.html:7
-#: templates/bs3/repanier/customer_history_form.html:97
+#: templates/bs3/repanier/customer_history_form.html:98
 #: templates/bs3/repanier/producer_invoice_form.html:45
 #: templates/bs5/admin/repanier/customersend/change_list.html:7
 #: templates/bs5/admin/repanier/offeritemsend/change_list.html:7
 #: templates/bs5/admin/repanier/purchase/change_list.html:7
 #: templates/bs5/repanier/customer_invoice_form.html:49
 #: templates/bs5/repanier/producer_invoice_form.html:45
-#: views/download_customer_invoice.py:44
+#: views/download_customer_invoice.py:43
 msgid "Purchases"
 msgstr "Achats"
 
@@ -2876,42 +2877,42 @@ msgstr "permanence(s) au cours des 12 dernières semaines."
 msgid "Detail"
 msgstr "Détail"
 
-#: templates/bs3/repanier/customer_history_form.html:23
+#: templates/bs3/repanier/customer_history_form.html:24
 #: templates/bs3/repanier/customer_invoice_form.html:42
 msgid "My current balance"
 msgstr "Mon solde actuel"
 
-#: templates/bs3/repanier/customer_history_form.html:36
+#: templates/bs3/repanier/customer_history_form.html:37
 #: templates/bs3/repanier/customer_invoice_form.html:77
 #: templates/bs3/repanier/customer_invoice_form.html:256
 msgid "Pending purchase"
 msgstr "Achats en traitement"
 
-#: templates/bs3/repanier/customer_history_form.html:42
-#: templates/bs3/repanier/customer_history_form.html:103
+#: templates/bs3/repanier/customer_history_form.html:43
+#: templates/bs3/repanier/customer_history_form.html:104
 #: templates/bs3/repanier/customer_invoice_form.html:94
 #: templates/bs3/repanier/customer_invoice_form.html:274
 #: templates/bs5/repanier/customer_invoice_form.html:67
 msgid "Payment centralized by"
 msgstr "Paiement centralisé par"
 
-#: templates/bs3/repanier/customer_history_form.html:53
+#: templates/bs3/repanier/customer_history_form.html:54
 #: templates/bs3/repanier/customer_invoice_form.html:52
 msgid "Pending provision"
 msgstr "Paiement en traitement"
 
-#: templates/bs3/repanier/customer_history_form.html:63
+#: templates/bs3/repanier/customer_history_form.html:64
 #: templates/bs3/repanier/customer_invoice_form.html:62
 msgid "Pending refund"
 msgstr "Remboursement en traitement"
 
-#: templates/bs3/repanier/customer_history_form.html:82
+#: templates/bs3/repanier/customer_history_form.html:83
 #: templates/bs3/repanier/customer_invoice_form.html:213
 #: templates/bs3/repanier/customer_invoice_form.html:485
 msgid "My balance at"
 msgstr "Mon solde au"
 
-#: templates/bs3/repanier/customer_history_form.html:117
+#: templates/bs3/repanier/customer_history_form.html:118
 #: templates/bs3/repanier/customer_invoice_form.html:225
 #: templates/bs3/repanier/producer_invoice_form.html:72
 #: templates/bs5/repanier/customer_invoice_form.html:122
@@ -2919,7 +2920,7 @@ msgstr "Mon solde au"
 msgid "Provision"
 msgstr "Provision"
 
-#: templates/bs3/repanier/customer_history_form.html:130
+#: templates/bs3/repanier/customer_history_form.html:131
 #: templates/bs3/repanier/customer_invoice_form.html:235
 #: templates/bs3/repanier/producer_invoice_form.html:76
 #: templates/bs3/repanier/producer_invoice_form.html:81
@@ -2930,7 +2931,7 @@ msgstr "Provision"
 msgid "Refund"
 msgstr "Remboursement"
 
-#: templates/bs3/repanier/customer_history_form.html:149
+#: templates/bs3/repanier/customer_history_form.html:150
 #: templates/bs3/repanier/customer_invoice_form.html:254
 msgid "Archived purchases"
 msgstr "Achats archivés"
@@ -3249,9 +3250,9 @@ msgid ""
 "              <a href=\"/\" class=\"btn btn-info\">home page</a>."
 msgstr ""
 "Vous ne recevrez plus de mail non sollicité provenant de ce site. Vous "
-"pouvez vous <a href=\"/repanier/go_repanier/\" class=\"btn btn-"
-"default\">identifier</a> ou vous rendre à la <a href=\"/\" class=\"btn btn-"
-"default\">page d'accueil</a>."
+"pouvez vous <a href=\"/repanier/go_repanier/\" class=\"btn btn-default"
+"\">identifier</a> ou vous rendre à la <a href=\"/\" class=\"btn btn-default"
+"\">page d'accueil</a>."
 
 #: templates/bs3/repanier/send_mail_to_coordinators.html:8
 #: templates/bs5/repanier/send_mail_to_coordinators.html:8
@@ -4361,14 +4362,14 @@ msgstr "Cette permanence n'existe pas."
 
 #~ msgid ""
 #~ "Your unsubscription is registered. You can go right now on the\n"
-#~ "              <a href=\"/repanier/go_repanier/\" class=\"btn btn-"
-#~ "info\">login page</a> or on the\n"
+#~ "              <a href=\"/repanier/go_repanier/\" class=\"btn btn-info"
+#~ "\">login page</a> or on the\n"
 #~ "              <a href=\"/\" class=\"btn btn-info\">home page</a>."
 #~ msgstr ""
 #~ "Vous ne recevrez plus de mail non sollicité provenant de ce site. Vous "
-#~ "pouvez vous <a href=\"/repanier/go_repanier/\" class=\"btn btn-"
-#~ "default\">identifier</a> ou vous rendre à la <a href=\"/\" class=\"btn "
-#~ "btn-default\">page d'accueil</a>."
+#~ "pouvez vous <a href=\"/repanier/go_repanier/\" class=\"btn btn-default"
+#~ "\">identifier</a> ou vous rendre à la <a href=\"/\" class=\"btn btn-"
+#~ "default\">page d'accueil</a>."
 
 #~ msgid ""
 #~ "You can increase the order quantities as long as the orders are open for "
@@ -5127,8 +5128,8 @@ msgstr "Cette permanence n'existe pas."
 
 #~ msgid ""
 #~ "You are now disconnected. You can go right now on the\n"
-#~ "              <a href=\"/repanier/go_repanier/\" class=\"btn btn-"
-#~ "info\">login page</a> or on the\n"
+#~ "              <a href=\"/repanier/go_repanier/\" class=\"btn btn-info"
+#~ "\">login page</a> or on the\n"
 #~ "              <a href=\"/\" class=\"btn btn-info\">home page</a>."
 #~ msgstr ""
 #~ "Vous êtes maintenant déconnecté. Vous pouvez vous <a href=\"/repanier/"

@@ -62,7 +62,10 @@ class OfferItem(Item):
     # During sending the orders to the producer this become the invoiced quantity
     # via permanence.send_to_producer()
     quantity_invoiced = models.DecimalField(
-        _("Quantity accounted for"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+        _("Quantity accounted for"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
     )
     use_order_unit_converted = models.BooleanField(default=False)
 
@@ -185,7 +188,7 @@ class OfferItem(Item):
 
 
 class OfferItemReadOnly(OfferItem):
-    def calculate_order_amount(self):
+    def calculate_order_amount(self, status: SaleStatus):
         from repanier.models.purchase import PurchaseWoReceiver
 
         query_set = PurchaseWoReceiver.objects.filter(
@@ -195,6 +198,12 @@ class OfferItemReadOnly(OfferItem):
         result_set = query_set.aggregate(
             quantity_ordered=Sum(
                 "quantity_ordered",
+                output_field=DecimalField(
+                    max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+                ),
+            ),
+            quantity_invoiced=Sum(
+                "quantity_invoiced",
                 output_field=DecimalField(
                     max_digits=9, decimal_places=4, default=DECIMAL_ZERO
                 ),
@@ -212,11 +221,18 @@ class OfferItemReadOnly(OfferItem):
                 ),
             ),
         )
-        self.quantity_invoiced = (
-            result_set["quantity_ordered"]
-            if result_set["quantity_ordered"] is not None
-            else DECIMAL_ZERO
-        )
+        if status < SaleStatus.WAIT_FOR_SEND:
+            self.quantity_invoiced = (
+                result_set["quantity_ordered"]
+                if result_set["quantity_ordered"] is not None
+                else DECIMAL_ZERO
+            )
+        else:
+            self.quantity_invoiced = (
+                result_set["quantity_invoiced"]
+                if result_set["quantity_invoiced"] is not None
+                else DECIMAL_ZERO
+            )
         self.total_purchase_with_tax.amount = (
             result_set["purchase_price"]
             if result_set["purchase_price"] is not None
