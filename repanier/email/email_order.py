@@ -145,7 +145,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             send_email = True
         else:
             if producer.email:
-                to_email.append(producer.user.email)
+                to_email.append(producer.email)
                 send_email = True
             if producer.email2:
                 to_email.append(producer.email2)
@@ -237,8 +237,8 @@ def export_order_2_1_group(
                 "last_balance_link": mark_safe(
                     '<a href="https://{}{}">{}</a>'.format(
                         settings.ALLOWED_HOSTS[0],
-                        reverse("repanier:customer_invoice_view", args=(0,0,)),
-                        _("Accounting entries"),
+                        reverse("repanier:customer_history_view", args=(group.id,)),
+                        _("History"),
                     )
                 ),
                 "last_balance": EMPTY_STRING,
@@ -252,7 +252,7 @@ def export_order_2_1_group(
         html_body = template.render(context)
 
         to_email = [group.user.email]
-        # to_email = list(set(to_email + order_responsible["to_email"]))
+        to_email = list(set(to_email + order_responsible["to_email"]))
 
         email = RepanierEmail(
             subject=order_customer_mail_subject,
@@ -346,7 +346,7 @@ def export_order_2_1_customer(
                     "last_balance_link": mark_safe(
                         '<a href="https://{}{}">{}</a>'.format(
                             settings.ALLOWED_HOSTS[0],
-                            reverse("repanier:customer_invoice_view", args=(0,0,)),
+                            reverse("repanier:customer_history_view", args=(customer.id,)),
                             customer_last_balance,
                         )
                     ),
