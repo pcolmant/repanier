@@ -86,10 +86,10 @@ class AdminFilterCustomerOfPermanenceSearchView(AutocompleteJsonView):
 
 
 class AdminFilterCustomerOfPermanenceChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
+    def label_from_instance(self, selected_item):
         query_params = get_request_params()
         permanence_id = query_params.get("permanence", "0")
-        return obj.get_filter_display(permanence_id)
+        return selected_item.get_filter_display(permanence_id)
 
 
 class AdminFilterCustomerOfPermanence(AutocompleteFilter):
@@ -125,25 +125,7 @@ class CustomerAutocomplete(autocomplete.Select2QuerySetView):
 
     def get_result_label(self, item):
         permanence_id = self.forwarded.get("permanence", None)
-
-        ci = CustomerInvoice.objects.filter(
-            permanence_id=permanence_id, customer_id=item.id
-        ).first()
-        if ci is not None:
-            if ci.is_order_confirm_send:
-                result = "{} {} ({})".format(
-                    settings.LOCK_UNICODE,
-                    item.short_basket_name,
-                    ci.get_total_price_with_tax(),
-                )
-            else:
-                result = "{} ({})".format(
-                    item.short_basket_name, ci.total_price_with_tax
-                )
-        else:
-            result = item.short_basket_name
-
-        return result
+        return item.get_filter_display(permanence_id)
 
 
 class ProducerAutocomplete(autocomplete.Select2QuerySetView):
@@ -288,6 +270,9 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class PurchaseForm(forms.ModelForm):
+    permanence = forms.ModelChoiceField(
+        Permanence.objects.all(), required=True
+    )
     customer = forms.ModelChoiceField(
         label=_("Customer"),
         queryset=Customer.objects.all(),
@@ -385,15 +370,11 @@ class PurchaseForm(forms.ModelForm):
             producer_field.initial = producer_id
         else:
             # Update existing purchase
-            # if purchase.status < SaleStatus.SEND:
-            #     quantity_field.initial = purchase.quantity_ordered
-            # else:
-            #     quantity_field.initial = purchase.quantity_invoiced
             quantity_field.initial = purchase.get_quantity()
             permanence_id = purchase.permanence_id
             delivery_point_id = purchase.customer_invoice.delivery
 
-        permanence_field.widget = forms.HiddenInput()
+        # permanence_field.widget = forms.HiddenInput()
         permanence_field.widget.attrs["readonly"] = True
         permanence_field.disabled = True
 
@@ -465,13 +446,13 @@ class PurchaseAdmin(admin.ModelAdmin):
     get_long_name_with_customer_price.admin_order_field = "offer_item__long_name_v2"
 
     def get_queryset(self, request):
-        query_params = get_request_params()
-        permanence_id = query_params.get("permanence", "0")
+        # query_params = get_request_params()
+        # permanence_id = query_params.get("permanence", "0")
         return (
             super()
             .get_queryset(request)
             .filter(
-                permanence_id=permanence_id,
+                # permanence_id=permanence_id,
                 is_box_content=False,
             )
         )
@@ -561,9 +542,15 @@ class PurchaseAdmin(admin.ModelAdmin):
             return get_preserved_filters()
 
     def response_add(self, request, obj, post_url_continue=None):
-
         purchase_saved = get_threading_local("purchase_saved")
         return super().response_add(request, purchase_saved, post_url_continue)
+
+    def response_change(self, request, obj):
+        purchase_saved = get_threading_local("purchase_saved")
+        if purchase_saved is not None:
+            request.path = reverse("admin:repanier_purchase_change", args=[purchase_saved.id])
+            obj = purchase_saved
+        return super().response_change(request, obj)
 
     def changelist_view(self, request, extra_context=None):
         # Add extra context data to pass to change list template
@@ -576,6 +563,7 @@ class PurchaseAdmin(admin.ModelAdmin):
         return view
 
     def update_extra_context(self, view, purchase):
+        purchase_saved = get_threading_local("purchase_saved")
         if purchase is None:
             delivery_point = None
             permanence = None
@@ -597,7 +585,7 @@ class PurchaseAdmin(admin.ModelAdmin):
         context = context or {}
         context.update(
             {
-                "PERMANENCE": permanence,
+                "PERMANENCE": permanence.get_permanence_display(),
             }
         )
         return super().render_change_form(request, context, add, change, form_url, obj)

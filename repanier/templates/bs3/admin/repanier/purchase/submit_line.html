@@ -1,7 +1,7 @@
 {% load i18n admin_urls %}
 <div class="submit-row">
 {% block submit-row %}
-{#{% if show_save_and_continue %}<input type="submit" value="{% translate 'Save and continue editing' %}" name="_continue">{% endif %}#}
+{% if show_save_and_continue %}<input type="submit" value="{% translate 'Save and continue editing' %}" name="_continue">{% endif %}
 <input type="submit" value="{% translate 'Save' %}" class="default" name="_save">
 {% endblock %}
 </div>
