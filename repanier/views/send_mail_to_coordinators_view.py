@@ -48,8 +48,6 @@ def send_mail_to_coordinators_view(request):
                 strip_tags(form.cleaned_data.get("subject")),
                 html_body=strip_tags(form.cleaned_data.get("message")),
                 to=to_email,
-                show_customer_may_unsubscribe=False,
-                send_even_if_unsubscribed=True,
             )
             t = threading.Thread(target=email.send_email)
             t.start()

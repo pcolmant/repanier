@@ -51,24 +51,25 @@ class RepanierEmail(EmailMultiAlternatives):
         self.cc = []
         self.bcc = []
         self.reply_to = [settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO]
+        self.alternatives = []
 
         customer = Customer.get_customer_from_valid_email(email_to)
-        if customer is None or not (
-            self.send_even_if_unsubscribed or customer.subscribe_to_email
-        ):
-            return False
-
-        self.alternatives = []
-        if self.show_customer_may_unsubscribe:
-            self.attach_alternative(
-                "{}{}".format(
-                    self.html_body, customer.get_html_unsubscribe_mail_footer()
-                ),
-                "text/html",
-            )
-            self.extra_headers[
-                "List-Unsubscribe"
-            ] = customer.get_html_list_unsubscribe()
+        if customer is not None:
+            if self.send_even_if_unsubscribed or customer.subscribe_to_email:
+                if self.show_customer_may_unsubscribe:
+                    self.attach_alternative(
+                        "{}{}".format(
+                            self.html_body, customer.get_html_unsubscribe_mail_footer()
+                        ),
+                        "text/html",
+                    )
+                    self.extra_headers[
+                        "List-Unsubscribe"
+                    ] = customer.get_html_list_unsubscribe()
+                else:
+                    self.attach_alternative(self.html_body, "text/html")
+            else:
+                return
         else:
             self.attach_alternative(self.html_body, "text/html")
         email_send = False
@@ -87,7 +88,12 @@ class RepanierEmail(EmailMultiAlternatives):
                 if settings.DEBUG:
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.to = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
+                        subject_save = self.subject
+                        self.subject = "<{}>, subject : <{}>".format(
+                            email_to, self.subject
+                        )
                         self.send()
+                        self.subject = subject_save
                         logger.debug(
                             "email send only to REPANIER_SETTINGS_BCC_ALL_EMAIL_TO (DEBUG)"
                         )
@@ -107,11 +113,10 @@ class RepanierEmail(EmailMultiAlternatives):
                 # reset connection : EmailMessage.get_connection() will get/open a new connection
                 # before next self.send()
                 self.connection = None
-        # customer.save(update_fields=['valid_email'])
-        # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-        Customer.objects.filter(id=customer.id).update(valid_email=email_send)
-
-        return email_send
+        if customer is not None:
+            # customer.save(update_fields=['valid_email'])
+            # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+            Customer.objects.filter(id=customer.id).update(valid_email=email_send)
 
     @classmethod
     def send_test_email(cls, to_email, subject=EMPTY_STRING, html_body=EMPTY_STRING):
