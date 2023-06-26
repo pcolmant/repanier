@@ -1,7 +1,6 @@
 from dal import autocomplete
 from django import forms
 from django.contrib import admin
-from django.db.models import Q
 from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from import_export import resources, fields
@@ -56,11 +55,12 @@ class BankAccountResource(resources.ModelResource):
         Override to add additional logic.
         """
         if instance.id is None:
+            if instance.bank_amount_out is None:
+                instance.bank_amount_out = DECIMAL_ZERO
+            if instance.bank_amount_in is None:
+                instance.bank_amount_in = DECIMAL_ZERO
             if instance.producer is None and instance.customer is None:
-                if (
-                    instance.bank_amount_out is not None
-                    and instance.bank_amount_out != DECIMAL_ZERO
-                ):
+                if instance.bank_amount_out != DECIMAL_ZERO:
                     only_one_target = ProducerInvoice.objects.filter(
                         status=SaleStatus.SEND,
                         total_price_with_tax=instance.bank_amount_out,
@@ -74,10 +74,7 @@ class BankAccountResource(resources.ModelResource):
                             .first()
                             .producer
                         )
-                elif (
-                    instance.bank_amount_in is not None
-                    and instance.bank_amount_in != DECIMAL_ZERO
-                ):
+                elif instance.bank_amount_in != DECIMAL_ZERO:
                     only_one_target = CustomerInvoice.objects.filter(
                         status=SaleStatus.SEND,
                         total_price_with_tax=instance.bank_amount_in,
@@ -93,10 +90,6 @@ class BankAccountResource(resources.ModelResource):
                         )
                 if instance.producer is None and instance.customer is None:
                     raise ValueError(_("No producer nor customer found."))
-            if instance.bank_amount_out is None:
-                instance.bank_amount_out = DECIMAL_ZERO
-            if instance.bank_amount_in is None:
-                instance.bank_amount_in = DECIMAL_ZERO
             if instance.producer is not None and instance.customer is not None:
                 raise ValueError(_("Only a customer or a producer may be entered."))
             if instance.producer is not None:
@@ -107,13 +100,13 @@ class BankAccountResource(resources.ModelResource):
                     operation_date=instance.operation_date,
                 ).exists():
                     raise ValueError(_("This movement already exists."))
-                if BankAccount.objects.filter(
-                    producer=instance.producer,
-                    bank_amount_in=instance.bank_amount_in,
-                    bank_amount_out=instance.bank_amount_out,
-                    operation_comment=instance.operation_comment,
-                ).exists():
-                    raise ValueError(_("This movement already exists."))
+                # if BankAccount.objects.filter(
+                #     producer=instance.producer,
+                #     bank_amount_in=instance.bank_amount_in,
+                #     bank_amount_out=instance.bank_amount_out,
+                #     operation_comment=instance.operation_comment,
+                # ).exists():
+                #     raise ValueError(_("This movement already exists."))
             if instance.customer is not None:
                 if BankAccount.objects.filter(
                     customer=instance.customer,
@@ -122,19 +115,19 @@ class BankAccountResource(resources.ModelResource):
                     operation_date=instance.operation_date,
                 ).exists():
                     raise ValueError(_("This movement already exists."))
-                if BankAccount.objects.filter(
-                    customer=instance.customer,
-                    bank_amount_in=instance.bank_amount_in,
-                    bank_amount_out=instance.bank_amount_out,
-                    operation_comment=instance.operation_comment,
-                ).exists():
-                    raise ValueError(_("This movement already exists."))
+                # if BankAccount.objects.filter(
+                #     customer=instance.customer,
+                #     bank_amount_in=instance.bank_amount_in,
+                #     bank_amount_out=instance.bank_amount_out,
+                #     operation_comment=instance.operation_comment,
+                # ).exists():
+                #     raise ValueError(_("This movement already exists."))
 
-    def skip_row(self, instance, original):
+    def skip_row(self, instance, original, row, import_validation_errors=None):
         if instance.id is not None:
             # The import may not be used to update bank movements.
             return True
-        super().skip_row(instance, original)
+        super().skip_row(instance, original, row, import_validation_errors)
 
     class Meta:
         model = BankAccount
