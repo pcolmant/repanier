@@ -1074,7 +1074,7 @@ def export_producer_by_product(permanence, producer, wb=None):
 
                             row_num += 1
                 else:
-                    qty = offer_item.quantity_invoiced
+                    qty = offer_item.get_producer_quantity(status)
                     if qty != DECIMAL_ZERO:
                         # Important : in this case, the qty comes from offer item.
                         # Offer item contains weight, not pieces

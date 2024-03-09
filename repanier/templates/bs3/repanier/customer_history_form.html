@@ -51,7 +51,7 @@
                 <div class="row">
                     <div class="col-lg-12">
                         {% if bank_account.bank_amount_in != 0 %}
-                            <span class="label label-info">{% translate "Pending provision" %} :</span>
+                            <span class="btn-xs btn-info btn-disabled">{% translate "Pending provision" %} :</span>
                             {{ bank_account.bank_amount_in }}
                             <small>(
                                 {% if bank_account.operation_comment %}
@@ -61,7 +61,7 @@
                                 )</small>
                         {% endif %}
                         {% if bank_account.bank_amount_out != 0 %}
-                            <span class="label label-info">{% translate "Pending refund" %} :</span>
+                            <span class="btn-xs btn-info btn-disabled">{% translate "Pending refund" %} :</span>
                             {{ bank_account.bank_amount_out }}
                             <small>(
                                 {% if bank_account.operation_comment %}

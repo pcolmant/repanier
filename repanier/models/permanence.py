@@ -1634,17 +1634,17 @@ class Permanence(models.Model):
         )
         producer_invoice_buyinggroup.save()
 
-    def update_offer_item(self, offer_item_qs):
-        from repanier.models.purchase import Purchase
-
-        permanence_offer_item_qs = offer_item_qs.filter(permanence_id=self.id)
-        purchase_set = Purchase.objects.filter(
-            permanence_id=self.id,
-            offer_item__in=permanence_offer_item_qs,
-        )
-
-        for a_purchase in purchase_set.select_related("offer_item", "customer_invoice"):
-            a_purchase.save()
+    # def update_offer_item(self, offer_item_qs):
+    #     from repanier.models.purchase import Purchase
+    #
+    #     permanence_offer_item_qs = offer_item_qs.filter(permanence_id=self.id)
+    #     purchase_set = Purchase.objects.filter(
+    #         # permanence_id=self.id,
+    #         offer_item__in=permanence_offer_item_qs,
+    #     )
+    #
+    #     for a_purchase in purchase_set.select_related("offer_item", "customer_invoice"):
+    #         a_purchase.save()
 
     @cached_property
     def get_new_products(self):

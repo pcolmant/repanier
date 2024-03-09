@@ -15,7 +15,6 @@ from repanier.models import Product
 @receiver(pre_save, sender=Product)
 def product_pre_save(sender, **kwargs):
     product = kwargs["instance"]
-    producer = product.producer
 
     if product.order_unit not in [
         OrderUnit.PC,

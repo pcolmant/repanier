@@ -578,26 +578,30 @@ def update_offer_item(product=None, producer_id=None):
         status=const.SaleStatus.OPENED,
     ):
         if product is not None:
-            offer_item_qs = OfferItem.objects.filter(product_id=product.id)
+            offer_item_qs = OfferItem.objects.filter(
+                permanence_id=permanence.id, product_id=product.id
+            )
         else:
-            offer_item_qs = OfferItem.objects.filter(producer_id=producer_id)
+            offer_item_qs = OfferItem.objects.filter(
+                permanence_id=permanence.id, producer_id=producer_id
+            )
         permanence.clean_offer_item(offer_item_qs=offer_item_qs)
-        permanence.update_offer_item(offer_item_qs=offer_item_qs)
+        permanence.calculate_order_amount()
 
     for permanence in Permanence.objects.filter(
         status=const.SaleStatus.SEND,
     ):
         if product is not None:
             if product.is_into_offer:
-                offer_item = product.get_or_create_offer_item(permanence)
-                offer_item_qs = OfferItem.objects.filter(id=offer_item.id)
-                permanence.update_offer_item(offer_item_qs=offer_item_qs)
+                permanence.calculate_order_amount()
         else:
             offer_item_qs = OfferItem.objects.filter(
-                producer_id=producer_id, product__is_into_offer=True
+                permanence_id=permanence.id,
+                producer_id=producer_id,
+                product__is_into_offer=True,
             )
             permanence.clean_offer_item(offer_item_qs=offer_item_qs)
-            permanence.update_offer_item(offer_item_qs=offer_item_qs)
+            permanence.calculate_order_amount()
     cache.clear()
 
 

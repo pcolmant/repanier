@@ -111,7 +111,7 @@ def export_permanence_stock(
                             offer_item_reference = EMPTY_STRING
                         if offer_item.order_unit < OrderUnit.DEPOSIT:
 
-                            asked = offer_item.quantity_invoiced
+                            asked = offer_item.get_producer_quantity(permanence.status)
                             stock = offer_item.stock
                             c = ws.cell(row=row_num, column=0)
                             c.value = offer_item.producer_id

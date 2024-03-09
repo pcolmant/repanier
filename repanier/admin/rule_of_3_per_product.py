@@ -559,6 +559,4 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 purchase_form.instance.save()
 
         # Important : linked with (1*)
-        offer_item.permanence.update_offer_item(
-            offer_item_qs=OfferItem.objects.filter(id=offer_item.id)
-        )
+        offer_item.permanence.calculate_order_amount()

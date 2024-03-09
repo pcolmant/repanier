@@ -284,6 +284,17 @@ class OfferItemReadOnly(OfferItem):
             else DECIMAL_ZERO
         )
 
+    def get_producer_quantity(self, status: SaleStatus):
+        if status < SaleStatus.WAIT_FOR_SEND:
+            return self.quantity_invoiced
+        else:
+            if self.order_unit == OrderUnit.PC_KG:
+                if self.order_average_weight != 0:
+                    return (
+                        self.quantity_invoiced / self.order_average_weight
+                    ).quantize(RoundUpTo.FOUR_DECIMALS)
+            return self.quantity_invoiced
+
     def __str__(self):
         return self.get_long_name_with_producer_price()
 

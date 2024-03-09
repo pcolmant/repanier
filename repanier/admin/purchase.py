@@ -227,8 +227,7 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
         if self.q:
             qs = qs.filter(
                 Q(long_name_v2__icontains=self.q)
-                | Q(producer__short_profile_name__icontains=self.q)
-                | Q(product__department_for_customer__short_name_v2__icontains=self.q)
+                | Q(department_for_customer__short_name_v2__icontains=self.q)
             )
 
         return qs
@@ -270,9 +269,7 @@ class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class PurchaseForm(forms.ModelForm):
-    permanence = forms.ModelChoiceField(
-        Permanence.objects.all(), required=True
-    )
+    permanence = forms.ModelChoiceField(Permanence.objects.all(), required=True)
     customer = forms.ModelChoiceField(
         label=_("Customer"),
         queryset=Customer.objects.all(),
@@ -548,7 +545,9 @@ class PurchaseAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         purchase_saved = get_threading_local("purchase_saved")
         if purchase_saved is not None:
-            request.path = reverse("admin:repanier_purchase_change", args=[purchase_saved.id])
+            request.path = reverse(
+                "admin:repanier_purchase_change", args=[purchase_saved.id]
+            )
             obj = purchase_saved
         return super().response_change(request, obj)
 
