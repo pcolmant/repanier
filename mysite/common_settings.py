@@ -306,26 +306,25 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.messages",
     "django.contrib.postgres",
-    "djangocms_text_ckeditor",  # note this needs to be above the 'cms' entry
-    # 'django_select2',
+    "djangocms_text_ckeditor",  # note this needs to be above the 'cms' entry, required to run django CMS
     "admin_auto_filters",  # django-admin-autocomplete-filter
     "djangocms_link",
     "djangocms_file",
     "djangocms_picture",
     "djangocms_video",
+    "djangocms_versioning", # required to run django CMS
+    "djangocms_alias", # required to run django CMS
     # "django_extensions", # Need only to be present on dev environment
-    "cms",
-    # 'cms_bootstrap3',
-    "menus",
-    "treebeard",
-    "easy_thumbnails",
+    "cms", # required to run django CMS
+    "menus", # required to run django CMS
+    "treebeard", # required to run django CMS
+    "easy_thumbnails", # required to run django CMS
     "easy_thumbnails.optimize",
-    "filer",
-    "sekizai",
+    "filer", # required to run django CMS
+    "sekizai", # required to run django CMS
     "mptt",
     "django_mptt_admin",
     "reversion",
-    # 'aldryn_reversion',
     "parler",
     "import_export",
     "rest_framework",
@@ -336,6 +335,7 @@ INSTALLED_APPS = (
     # "crispy_bootstrap5",
     "django.forms",  # must be last! because of the FORM_RENDERER setting below.
     # For the templates we don’t override, we still want the renderer to look in Django’s form app
+    "djangocms_4_migration"
 )
 
 # set djangocms and filer plugins as cmsplugin for ckeditor
@@ -359,18 +359,18 @@ MIGRATION_MODULES = {
 MIDDLEWARE = (
     "django.middleware.cache.UpdateCacheMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "cms.middleware.utils.ApphookReloadMiddleware",
+    "cms.middleware.utils.ApphookReloadMiddleware", # not required but useful to run django CMS
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.locale.LocaleMiddleware", # required to run django CMS
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "cms.middleware.page.CurrentPageMiddleware",
-    "cms.middleware.user.CurrentUserMiddleware",
-    "cms.middleware.toolbar.ToolbarMiddleware",
-    "cms.middleware.language.LanguageCookieMiddleware",
+    "cms.middleware.user.CurrentUserMiddleware", # required to run django CMS
+    "cms.middleware.page.CurrentPageMiddleware", # required to run django CMS
+    "cms.middleware.toolbar.ToolbarMiddleware", # required to run django CMS
+    "cms.middleware.language.LanguageCookieMiddleware", # required to run django CMS
     "{}.middleware.admin_filter_middleware".format(REPANIER_SETTINGS_VERSION),
     "django.middleware.cache.FetchFromCacheMiddleware",
 )
@@ -383,7 +383,7 @@ if DJANGO_SETTINGS_DEBUG_TOOLBAR:
 CONTEXT_PROCESSORS = [
     "django.template.context_processors.debug",
     "django.template.context_processors.request",
-    "django.template.context_processors.i18n",
+    "django.template.context_processors.i18n", # required to run django CMS
     "django.template.context_processors.media",
     "django.template.context_processors.static",
     "django.template.context_processors.tz",
@@ -391,12 +391,12 @@ CONTEXT_PROCESSORS = [
     "django.contrib.auth.context_processors.auth",
     "django.contrib.messages.context_processors.messages",
     "sekizai.context_processors.sekizai",
-    "cms.context_processors.cms_settings",
+    "cms.context_processors.cms_settings", # required to run django CMS
     "{}.context_processors.repanier_settings".format(REPANIER_SETTINGS_VERSION),
 ]
 
 # Django 3.0
-X_FRAME_OPTIONS = "SAMEORIGIN"  # Needed for Django CMS
+X_FRAME_OPTIONS = "SAMEORIGIN"  # required to run django CMS
 
 # https://www.caktusgroup.com/blog/2018/06/18/make-all-your-django-forms-better/
 # The default form renderer is the DjangoTemplates renderer uses its own template engine,
@@ -416,7 +416,7 @@ if DEBUG:
                 os.path.join(
                     PROJECT_PATH,
                     REPANIER_SETTINGS_VERSION,
-                    "templates",
+                    "templates", # required to run django CMS
                     REPANIER_SETTINGS_TEMPLATE,
                 )
             ],
@@ -599,13 +599,13 @@ FILER_DUMP_PAYLOAD = True
 FILER_DEBUG = False
 
 THUMBNAIL_PROCESSORS = (
-    "easy_thumbnails.processors.colorspace",
-    "easy_thumbnails.processors.autocrop",
-    "filer.thumbnail_processors.scale_and_crop_with_subject_location",
-    "easy_thumbnails.processors.filters",
+    "easy_thumbnails.processors.colorspace", # required to run django CMS
+    "easy_thumbnails.processors.autocrop", # required to run django CMS
+    "filer.thumbnail_processors.scale_and_crop_with_subject_location", # required to run django CMS
+    "easy_thumbnails.processors.filters", # required to run django CMS
     "easy_thumbnails.processors.background",
 )
-THUMBNAIL_HIGH_RESOLUTION = True
+THUMBNAIL_HIGH_RESOLUTION = True # required to run django CMS
 THUMBNAIL_PROGRESSIVE = 100
 THUMBNAIL_PRESERVE_EXTENSIONS = True
 
@@ -689,121 +689,7 @@ PARLER_LANGUAGES = {
     },
 }
 
-if DJANGO_SETTINGS_LANGUAGE == "es":
-
-    LANGUAGE_CODE = "es"
-    LANGUAGES = [("es", get_language_info("es")["name_local"])]
-    CMS_LANGUAGES = {
-        SITE_ID: [
-            {
-                "code": "es",
-                "name": get_language_info("es")["name"],
-                "public": True,
-                "hide_untranslated": False,
-            }
-        ]
-    }
-    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
-    PARLER_LANGUAGES = {
-        SITE_ID: ({"code": LANGUAGE_CODE},),
-        "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
-    }
-
-elif DJANGO_SETTINGS_LANGUAGE == "fr-nl-en":
-
-    LANGUAGE_CODE = "fr"
-    LANGUAGES = [
-        ("fr", get_language_info("fr")["name_local"]),
-        ("nl", get_language_info("nl")["name_local"]),
-        ("en", get_language_info("en")["name_local"]),
-    ]
-    CMS_LANGUAGES = {
-        SITE_ID: [
-            {
-                "code": "fr",
-                "name": get_language_info("fr")["name"],
-                "public": True,
-                "redirect_on_fallback": False,
-                "hide_untranslated": False,
-            },
-            {
-                "code": "nl",
-                "name": get_language_info("nl")["name"],
-                "fallbacks": ["en", LANGUAGE_CODE],
-                "public": True,
-            },
-            {
-                "code": "en",
-                "name": get_language_info("en")["name"],
-                "fallbacks": [LANGUAGE_CODE],
-                "public": True,
-            },
-        ]
-    }
-    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
-    PARLER_LANGUAGES = {
-        SITE_ID: ({"code": "fr"}, {"code": "nl"}, {"code": "en"}),
-        "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
-    }
-elif DJANGO_SETTINGS_LANGUAGE == "fr-en":
-
-    LANGUAGE_CODE = "fr"
-    LANGUAGES = [
-        ("fr", get_language_info("fr")["name_local"]),
-        ("en", get_language_info("en")["name_local"]),
-    ]
-    CMS_LANGUAGES = {
-        SITE_ID: [
-            {
-                "code": "fr",
-                "name": get_language_info("fr")["name"],
-                "public": True,
-                "redirect_on_fallback": False,
-                "hide_untranslated": False,
-            },
-            {
-                "code": "en",
-                "name": get_language_info("en")["name"],
-                "fallbacks": [LANGUAGE_CODE],
-                "public": True,
-            },
-        ]
-    }
-    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
-    PARLER_LANGUAGES = {
-        SITE_ID: ({"code": "fr"}, {"code": "en"}),
-        "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
-    }
-elif DJANGO_SETTINGS_LANGUAGE == "fr-nl":
-
-    LANGUAGE_CODE = "fr"
-    LANGUAGES = [
-        ("fr", get_language_info("fr")["name_local"]),
-        ("nl", get_language_info("nl")["name_local"]),
-    ]
-    CMS_LANGUAGES = {
-        SITE_ID: [
-            {
-                "code": "fr",
-                "name": get_language_info("fr")["name"],
-                "public": True,
-                "redirect_on_fallback": False,
-                "hide_untranslated": False,
-            },
-            {
-                "code": "nl",
-                "name": get_language_info("nl")["name"],
-                "fallbacks": [LANGUAGE_CODE],
-                "public": True,
-            },
-        ]
-    }
-    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
-    PARLER_LANGUAGES = {
-        SITE_ID: ({"code": "fr"}, {"code": "nl"}),
-        "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
-    }
-elif DJANGO_SETTINGS_LANGUAGE == "fr-de-en-nl-sv":
+if DJANGO_SETTINGS_LANGUAGE == "fr-de-en-nl-sv":
 
     LANGUAGE_CODE = "fr"
     LANGUAGES = [
