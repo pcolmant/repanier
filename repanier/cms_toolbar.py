@@ -1,7 +1,14 @@
 from cms.api import can_change_page
 from cms.cms_toolbars import ADMIN_MENU_IDENTIFIER, BasicToolbar, PAGE_MENU_IDENTIFIER
 from cms.utils import page_permissions
+from cms.utils.i18n import get_default_language
+from cms.utils.permissions import get_model_permission_codename
 from cms.utils.urlutils import admin_reverse, add_url_parameters
+from django.utils.http import urlencode
+from django.utils.translation import get_language_from_request
+from djangocms_alias.cms_toolbars import ALIAS_MENU_IDENTIFIER
+from djangocms_alias.constants import LIST_ALIAS_URL_NAME
+from djangocms_alias.models import Alias
 
 try:
     from cms.cms_toolbars import HELP_MENU_IDENTIFIER, HELP_MENU_BREAK
@@ -31,6 +38,44 @@ class RepanierToolbar(BasicToolbar):
         if ADMIN_MENU_IDENTIFIER in self.toolbar.menus:
             menu = self.toolbar.menus[ADMIN_MENU_IDENTIFIER]
             self.toolbar.remove_item(menu)
+        if not ALIAS_MENU_IDENTIFIER in self.toolbar.menus:
+            # menu = self.toolbar.menus[ALIAS_MENU_IDENTIFIER]
+            # self.toolbar.remove_item(menu)
+
+            can_change = self.request.user.has_perm(
+                get_model_permission_codename(Alias, 'change'),
+            )
+            if can_change:
+                current_page_menu = self.toolbar.get_or_create_menu(
+                    PAGE_MENU_IDENTIFIER, _('Page'), position=1)
+                url = admin_reverse(LIST_ALIAS_URL_NAME)
+                obj = self.toolbar.get_object()
+                language = obj.language if hasattr(obj, "language") else get_language_from_request(self.request)
+                if language is None:
+                    language = get_default_language()
+                url += f'?{urlencode({"language": language})}'
+                current_page_menu.add_sideframe_item(_("Aliases"), url=url, position=1)
+
+                # if isinstance(obj, AliasContent) and hasattr(obj, "alias_id"):
+                #     current_page_menu.add_sideframe_item(
+                #         _('Change alias settings'),
+                #         url=admin_reverse(
+                #             'djangocms_alias_alias_change',
+                #             args=[obj.alias_id],
+                #         ),
+                #         disabled=not can_change,
+                #         position=2
+                #     )
+                #     current_page_menu.add_sideframe_item(
+                #         _('View usage'),
+                #         url=admin_reverse(
+                #             USAGE_ALIAS_URL_NAME,
+                #             args=[obj.alias_id],
+                #         ),
+                #         position=3
+                #     )
+
+
         repanier_menu = self.toolbar.get_or_create_menu(REPANIER_MENU_IDENTIFIER, _("Manage"), position=0)
         # self.toolbar.add_item(admin_menu, position=0)
         position = 0
