@@ -1,4 +1,4 @@
-{% load cms_tags sekizai_tags menu_tags i18n l10n static repanier_tags %}
+{% load cms_tags menu_tags djangocms_alias_tags  sekizai_tags i18n l10n static repanier_tags %}
 {% addtoblock "css" %}
     <link rel="stylesheet" href="/bootstrap.css">
     <link rel="stylesheet" href="/custom.css">
@@ -136,12 +136,26 @@
                     </script>
                 {% endspaceless %}{% endaddtoblock %}
             {% endif %}
-            {% block base_content %}{% endblock %}
+            {% block base_content %}
+                <div class="container-repanier">
+                    <div class="container">
+                        <!-- Example row of columns -->
+                        <div class="row">
+                            <div>
+                                <div class="aliases">
+                                    {% block aliases_content %}
+                                    {% endblock aliases_content %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
         </section>
         <div class="footer">
             <div class="container-fluid">
                 <p class="text-muted">
-                    {% static_placeholder "footer" %}
+                    {% static_alias  "footer" %}
                 </p>
             </div>
         </div>
