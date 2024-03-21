@@ -38,42 +38,42 @@ class RepanierToolbar(BasicToolbar):
         if ADMIN_MENU_IDENTIFIER in self.toolbar.menus:
             menu = self.toolbar.menus[ADMIN_MENU_IDENTIFIER]
             self.toolbar.remove_item(menu)
-        if not ALIAS_MENU_IDENTIFIER in self.toolbar.menus:
-            # menu = self.toolbar.menus[ALIAS_MENU_IDENTIFIER]
-            # self.toolbar.remove_item(menu)
+        if ALIAS_MENU_IDENTIFIER in self.toolbar.menus:
+            menu = self.toolbar.menus[ALIAS_MENU_IDENTIFIER]
+            self.toolbar.remove_item(menu)
 
-            can_change = self.request.user.has_perm(
-                get_model_permission_codename(Alias, 'change'),
-            )
-            if can_change:
-                current_page_menu = self.toolbar.get_or_create_menu(
-                    PAGE_MENU_IDENTIFIER, _('Page'), position=1)
-                url = admin_reverse(LIST_ALIAS_URL_NAME)
-                obj = self.toolbar.get_object()
-                language = obj.language if hasattr(obj, "language") else get_language_from_request(self.request)
-                if language is None:
-                    language = get_default_language()
-                url += f'?{urlencode({"language": language})}'
-                current_page_menu.add_sideframe_item(_("Aliases"), url=url, position=1)
+        can_change = self.request.user.has_perm(
+            get_model_permission_codename(Alias, 'change'),
+        )
+        if can_change:
+            current_page_menu = self.toolbar.get_or_create_menu(
+                PAGE_MENU_IDENTIFIER, _('Page'), position=1)
+            url = admin_reverse(LIST_ALIAS_URL_NAME)
+            obj = self.toolbar.get_object()
+            language = obj.language if hasattr(obj, "language") else get_language_from_request(self.request)
+            if language is None:
+                language = get_default_language()
+            url += f'?{urlencode({"language": language})}'
+            current_page_menu.add_sideframe_item(_("Aliases"), url=url, position=1)
 
-                # if isinstance(obj, AliasContent) and hasattr(obj, "alias_id"):
-                #     current_page_menu.add_sideframe_item(
-                #         _('Change alias settings'),
-                #         url=admin_reverse(
-                #             'djangocms_alias_alias_change',
-                #             args=[obj.alias_id],
-                #         ),
-                #         disabled=not can_change,
-                #         position=2
-                #     )
-                #     current_page_menu.add_sideframe_item(
-                #         _('View usage'),
-                #         url=admin_reverse(
-                #             USAGE_ALIAS_URL_NAME,
-                #             args=[obj.alias_id],
-                #         ),
-                #         position=3
-                #     )
+            # if isinstance(obj, AliasContent) and hasattr(obj, "alias_id"):
+            #     current_page_menu.add_sideframe_item(
+            #         _('Change alias settings'),
+            #         url=admin_reverse(
+            #             'djangocms_alias_alias_change',
+            #             args=[obj.alias_id],
+            #         ),
+            #         disabled=not can_change,
+            #         position=2
+            #     )
+            #     current_page_menu.add_sideframe_item(
+            #         _('View usage'),
+            #         url=admin_reverse(
+            #             USAGE_ALIAS_URL_NAME,
+            #             args=[obj.alias_id],
+            #         ),
+            #         position=3
+            #     )
 
 
         repanier_menu = self.toolbar.get_or_create_menu(REPANIER_MENU_IDENTIFIER, _("Manage"), position=0)
