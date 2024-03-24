@@ -30,16 +30,22 @@ django-polymorphic==3.1.0
 django-recurrence==1.11.1
 django-reversion==5.0.12
 django-sekizai==4.1.0
-# django-cms 3.10.0 depends on django-treebeard>=4.3
+# django-cms 4.1.0 depends on django-treebeard>=4.3
 django-treebeard==4.7.1
 # djangocms-4-migration
-https://github.com/Aiky30/djangocms-4-migration/archive/refs/heads/main.zip
+# https://github.com/Aiky30/djangocms-4-migration/archive/refs/heads/main.zip
 djangocms-alias==2.0.0
 # djangocms-attributes-field 2.1.0 depends on django-treebeard<4.5 and >=4.3
 djangocms-attributes-field==3.0.0
 djangocms-file==3.0.1
+# /!\ from https://github.com/django-cms/djangocms-link/pull/201
+# need to correct line 21 of djangocms_link/forms.py  ---> remove .draft() after pip install of package
+# self.fields['internal_link'].queryset = Page.objects.on_site(site)#
+# https://github.com/django-cms/djangocms-link will eventually
+# be replaced by https://github.com/django-cms/djangocms-url-manager
 djangocms-link==3.1.1
 djangocms-picture==4.1.1
+# https://github.com/django-cms/djangocms-text-ckeditor will be replaced by https://github.com/django-cms/djangocms-text
 djangocms-text-ckeditor==5.1.5
 djangocms-versioning==2.0.0
 djangocms-video==3.1.0
