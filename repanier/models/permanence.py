@@ -1165,7 +1165,7 @@ class Permanence(models.Model):
                 producer_invoice = ProducerInvoice.objects.create(
                     producer=bank_account.producer,
                     permanence_id=self.id,
-                    price_list_multiplier=bank_account.producer.price_list_multiplier,
+                    # price_list_multiplier=bank_account.producer.price_list_multiplier,
                     date_previous_balance=bank_account.producer.date_balance,
                     previous_balance=bank_account.producer.balance,
                     date_balance=payment_date,
