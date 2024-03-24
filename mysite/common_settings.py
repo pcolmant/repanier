@@ -335,7 +335,7 @@ INSTALLED_APPS = (
     # "crispy_bootstrap5",
     "django.forms",  # must be last! because of the FORM_RENDERER setting below.
     # For the templates we don’t override, we still want the renderer to look in Django’s form app
-    "djangocms_4_migration"
+    # "djangocms_4_migration"
 )
 
 # set djangocms and filer plugins as cmsplugin for ckeditor
@@ -588,6 +588,7 @@ CKEDITOR_SETTINGS_MODEL2 = {
 TEXT_ADDITIONAL_TAGS = ("span", "iframe")
 TEXT_ADDITIONAL_ATTRIBUTES = ("class", "scrolling", "allowfullscreen", "frameborder")
 TEXT_HTML_SANITIZE = True
+TEXT_INLINE_EDITING = True
 
 FILER_ENABLE_LOGGING = False
 FILER_IMAGE_USE_ICON = True
