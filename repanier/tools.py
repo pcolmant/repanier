@@ -578,14 +578,13 @@ def update_offer_item(product=None, producer_id=None):
         status=const.SaleStatus.OPENED,
     ):
         if product is not None:
-            offer_item_qs = OfferItem.objects.filter(
-                permanence_id=permanence.id, product_id=product.id
-            )
+            # Create the offer item if needed and clean it
+            offer_item = product.get_or_create_offer_item(permanence)
         else:
             offer_item_qs = OfferItem.objects.filter(
-                permanence_id=permanence.id, producer_id=producer_id
+                producer_id=producer_id
             )
-        permanence.clean_offer_item(offer_item_qs=offer_item_qs)
+            permanence.clean_offer_item(offer_item_qs=offer_item_qs)
         permanence.calculate_order_amount()
 
     for permanence in Permanence.objects.filter(
@@ -593,10 +592,11 @@ def update_offer_item(product=None, producer_id=None):
     ):
         if product is not None:
             if product.is_into_offer:
+                # Create the offer item if needed and clean it
+                offer_item = product.get_or_create_offer_item(permanence)
                 permanence.calculate_order_amount()
         else:
             offer_item_qs = OfferItem.objects.filter(
-                permanence_id=permanence.id,
                 producer_id=producer_id,
                 product__is_into_offer=True,
             )
