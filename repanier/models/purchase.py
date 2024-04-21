@@ -225,7 +225,7 @@ class Purchase(models.Model):
         else:
             offer_item = self.offer_item
             if offer_item.order_unit == OrderUnit.PC_KG:
-                if offer_item.order_average_weight != 0:
+                if offer_item.order_average_weight > DECIMAL_ZERO:
                     return (
                         self.quantity_invoiced / offer_item.order_average_weight
                     ).quantize(RoundUpTo.FOUR_DECIMALS)
