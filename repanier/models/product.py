@@ -131,14 +131,14 @@ class Product(Item):
         )
         return mark_safe(link)
 
-    def get_qty_display(self):
-        qty_display = self.get_display(
-            qty=1,
-            order_unit=self.order_unit,
-            with_qty_display=False,
-            with_price_display=False,
-        )
-        return qty_display
+    # def get_qty_display(self):
+    #     qty_display = self.get_display(
+    #         qty=1,
+    #         order_unit=self.order_unit,
+    #         with_qty_display=False,
+    #         with_price_display=False,
+    #     )
+    #     return qty_display
 
     def __str__(self):
         return super().get_long_name_with_customer_price()

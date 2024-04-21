@@ -319,7 +319,14 @@ class Item(models.Model):
             return display
 
     def get_qty_display(self):
-        raise NotImplementedError
+        # raise NotImplementedError
+        qty_display = self.get_display(
+            qty=1,
+            order_unit=self.order_unit,
+            with_qty_display=False,
+            with_price_display=False,
+        )
+        return qty_display
 
     def get_qty_and_price_display(self, customer_price=True):
         qty_display = self.get_qty_display()

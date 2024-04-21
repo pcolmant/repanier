@@ -67,6 +67,7 @@ class OfferItem(Item):
         decimal_places=4,
         default=DECIMAL_ZERO,
     )
+    # TBD, no more used
     use_order_unit_converted = models.BooleanField(default=False)
 
     may_order = models.BooleanField(_("May order"), default=True)
@@ -159,24 +160,24 @@ class OfferItem(Item):
             )
         return "{}".format(self.long_name_v2)
 
-    def get_qty_display(self):
-        if self.use_order_unit_converted:
-            # The only conversion done in permanence concerns OrderUnit.PC_KG
-            # so we are sure that self.order_unit == OrderUnit.PC_KG
-            qty_display = self.get_display(
-                qty=1,
-                order_unit=OrderUnit.KG,
-                with_qty_display=False,
-                with_price_display=False,
-            )
-        else:
-            qty_display = self.get_display(
-                qty=1,
-                order_unit=self.order_unit,
-                with_qty_display=False,
-                with_price_display=False,
-            )
-        return qty_display
+    # def get_qty_display(self):
+        # if self.use_order_unit_converted:
+        #     # The only conversion done in permanence concerns OrderUnit.PC_KG
+        #     # so we are sure that self.order_unit == OrderUnit.PC_KG
+        #     qty_display = self.get_display(
+        #         qty=1,
+        #         order_unit=OrderUnit.KG,
+        #         with_qty_display=False,
+        #         with_price_display=False,
+        #     )
+        # else:
+        # qty_display = self.get_display(
+        #     qty=1,
+        #     order_unit=self.order_unit,
+        #     with_qty_display=False,
+        #     with_price_display=False,
+        # )
+        # return qty_display
 
     def __str__(self):
         return self.get_long_name_with_producer_price()
@@ -289,7 +290,7 @@ class OfferItemReadOnly(OfferItem):
             return self.quantity_invoiced
         else:
             if self.order_unit == OrderUnit.PC_KG:
-                if self.order_average_weight != 0:
+                if self.order_average_weight > DECIMAL_ZERO:
                     return (
                         self.quantity_invoiced / self.order_average_weight
                     ).quantize(RoundUpTo.FOUR_DECIMALS)
