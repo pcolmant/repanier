@@ -1078,11 +1078,11 @@ def export_producer_by_product(permanence, producer, wb=None):
                     if qty != DECIMAL_ZERO:
                         # Important : in this case, the qty comes from offer item.
                         # Offer item contains weight, not pieces
-                        if offer_item.use_order_unit_converted:
-                            if offer_item.order_average_weight > DECIMAL_ZERO:
-                                qty = (qty / offer_item.order_average_weight).quantize(
-                                    RoundUpTo.TWO_DECIMALS
-                                )
+                        # if offer_item.use_order_unit_converted:
+                        #     if offer_item.order_average_weight > DECIMAL_ZERO:
+                        #         qty = (qty / offer_item.order_average_weight).quantize(
+                        #             RoundUpTo.TWO_DECIMALS
+                        #         )
                         base_unit = get_base_unit(offer_item.order_unit, qty)
                         c = ws.cell(row=row_num, column=0)
                         c.value = "{}".format(settings.REPANIER_SETTINGS_GROUP_NAME)
