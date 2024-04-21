@@ -1650,6 +1650,8 @@ class Permanence(models.Model):
     def get_new_products(self):
         assert self.status < SaleStatus.SEND
         result = []
+        six_months_ago = timezone.now().date() - datetime.timedelta(days=6 * 30)
+        six_days_ago = timezone.now() - datetime.timedelta(days=6)
         for a_producer in self.producers.all():
             current_products = list(
                 OfferItemReadOnly.objects.filter(
@@ -1660,7 +1662,6 @@ class Permanence(models.Model):
                     producer=a_producer,
                 ).values_list("product", flat=True)
             )
-            six_months_ago = timezone.now().date() - datetime.timedelta(days=6 * 30)
             previous_permanence = (
                 Permanence.objects.filter(
                     status__gte=SaleStatus.SEND,
@@ -1678,6 +1679,7 @@ class Permanence(models.Model):
                         order_unit__lt=OrderUnit.DEPOSIT,  # Don't display technical products.
                         permanence_id=previous_permanence.id,
                         producer=a_producer,
+                        product__is_updated_on__lt=six_days_ago # Not recently updated
                     ).values_list("product", flat=True)
                 )
                 new_products = [
