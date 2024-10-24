@@ -21,7 +21,7 @@
 # @license: http://www.opensource.org/licenses/mit-license.php
 # @author: see AUTHORS file
 
-from collections import Mapping
+from collections.abc import Mapping
 
 from ..shared.compat import iteritems, OrderedDict
 from .colors import Color
