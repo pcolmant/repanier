@@ -1,4 +1,4 @@
-{% load cms_tags menu_tags djangocms_alias_tags  sekizai_tags i18n l10n static repanier_tags %}
+{% load cms_tags menu_tags djangocms_alias_tags sekizai_tags i18n l10n static repanier_tags %}
 {% addtoblock "css" %}
     <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endaddtoblock %}
 {% addtoblock "css" %}
@@ -38,7 +38,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ MEDIA_URL }}apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ MEDIA_URL }}favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ MEDIA_URL }}favicon-16x16.png">
-    <link rel="manifest" href="{{ MEDIA_URL }}site.webmanifest">
+    {#    <link rel="manifest" href="{{ MEDIA_URL }}site.webmanifest">#}
     <title>{% page_attribute "title" %}</title>
     {% render_block "css" %}
     {% render_block "jshead" %}
@@ -99,6 +99,8 @@
                                 <li><a href="https://gasath.repanier.be/" target="_blank">GasAth (Ath)</a></li>
                                 <li><a href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco
                                     (Charleroi)</a></li>
+                                <li><a href="https://gaschievres.repanier.be/" target="_blank">GasChièvres
+                                    (Chièvres)</a></li>
                                 <li><a href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de
                                     Romuald (Forest)</a></li>
                                 <li><a href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel
@@ -114,7 +116,9 @@
                                 <li><a href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit
                                     (Péruwelz)</a></li>
                                 <li><a href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
-                                <li><hr/></li>
+                                <li>
+                                    <hr/>
+                                </li>
                                 <li><a href="https://colibera.be/" target="_blank">Colibéra</a></li>
                                 <li><a href="https://projet.repanier.be/" target="_blank">Projet Repanier</a></li>
                             </ul>
@@ -196,7 +200,7 @@
         <div class="footer">
             <div class="container-fluid">
                 <p class="text-muted">
-                    {% static_alias  "footer" %}
+                    {% static_alias "footer" %}
                 </p>
             </div>
         </div>
