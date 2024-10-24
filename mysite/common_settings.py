@@ -134,16 +134,15 @@ REPANIER_SETTINGS_COUNTRY = config.get(
 REPANIER_SETTINGS_BCC_ALL_EMAIL_TO = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_BCC_ALL_EMAIL_TO", fallback=EMPTY_STRING
 )
-REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER", fallback=False
-)
 
 REPANIER_SETTINGS_DELIVERY_POINT = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_DELIVERY_POINT", fallback=False
 )
-if not REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-    # CUSTOMER_MUST_CONFIRM_ORDER to enable DELIVERY_POINT
-    REPANIER_SETTINGS_DELIVERY_POINT = False
+if REPANIER_SETTINGS_DELIVERY_POINT:
+    # CUSTOMER_MUST_CONFIRM_ORDER if DELIVERY_POINT is enabled
+    REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = True
+else:
+    REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = False
 
 REPANIER_SETTINGS_MANAGE_ACCOUNTING = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_MANAGE_ACCOUNTING", fallback=True
@@ -187,7 +186,9 @@ REPANIER_SETTINGS_GROUP_NAME = config.get(
 )
 # DEFAULT_FROM_EMAIL = "{} <{}>".format(REPANIER_SETTINGS_GROUP_NAME, EMAIL_HOST_USER)
 # DEFAULT_FROM_EMAIL = "{} <nrply@repanier.be>".format(REPANIER_SETTINGS_GROUP_NAME)
-DEFAULT_FROM_EMAIL = "{} <{}>".format(REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO)
+DEFAULT_FROM_EMAIL = "{} <{}>".format(
+    REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO
+)
 
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
 DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
@@ -306,22 +307,43 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.messages",
     "django.contrib.postgres",
+    # "djangocms_text",
+    # "djangocms_text.contrib.text_ckeditor4",
     "djangocms_text_ckeditor",  # note this needs to be above the 'cms' entry, required to run django CMS
     "admin_auto_filters",  # django-admin-autocomplete-filter
     "djangocms_link",
     "djangocms_file",
     "djangocms_picture",
     "djangocms_video",
-    "djangocms_versioning", # required to run django CMS
-    "djangocms_alias", # required to run django CMS
+    # "djangocms_googlemap",
+    # "djangocms_snippet",
+    # "djangocms_style",
+    # DO NOT USE IT "djangocms_versioning", # required to run django CMS
+    "djangocms_alias",  # required to run django CMS
     # "django_extensions", # Need only to be present on dev environment
-    "cms", # required to run django CMS
-    "menus", # required to run django CMS
-    "treebeard", # required to run django CMS
-    "easy_thumbnails", # required to run django CMS
+    "cms",  # required to run django CMS
+    "menus",  # required to run django CMS
+    "treebeard",  # required to run django CMS
+    "filer",  # required to run django CMS
+    "easy_thumbnails",  # required to run django CMS
     "easy_thumbnails.optimize",
-    "filer", # required to run django CMS
-    "sekizai", # required to run django CMS
+    # "djangocms_frontend",
+    # "djangocms_frontend.contrib.accordion",
+    # "djangocms_frontend.contrib.alert",
+    # "djangocms_frontend.contrib.badge",
+    # "djangocms_frontend.contrib.card",
+    # "djangocms_frontend.contrib.carousel",
+    # "djangocms_frontend.contrib.collapse",
+    # "djangocms_frontend.contrib.content",
+    # "djangocms_frontend.contrib.grid",
+    # "djangocms_frontend.contrib.image",
+    # "djangocms_frontend.contrib.jumbotron",
+    # "djangocms_frontend.contrib.link",
+    # "djangocms_frontend.contrib.listgroup",
+    # "djangocms_frontend.contrib.media",
+    # "djangocms_frontend.contrib.tabs",
+    # "djangocms_frontend.contrib.utilities",
+    "sekizai",  # required to run django CMS
     "mptt",
     "django_mptt_admin",
     "reversion",
@@ -331,8 +353,8 @@ INSTALLED_APPS = (
     "easy_select2",
     "recurrence",
     "crispy_forms",
-    "crispy_bootstrap3",
-    # "crispy_bootstrap5",
+    "crispy_bootstrap3",  # activated or not below, see : TEMPLATE_PACK
+    "crispy_bootstrap5",  # activated or not below, see : TEMPLATE_PACK
     "django.forms",  # must be last! because of the FORM_RENDERER setting below.
     # For the templates we don’t override, we still want the renderer to look in Django’s form app
     # "djangocms_4_migration"
@@ -359,18 +381,18 @@ MIGRATION_MODULES = {
 MIDDLEWARE = (
     "django.middleware.cache.UpdateCacheMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "cms.middleware.utils.ApphookReloadMiddleware", # not required but useful to run django CMS
+    "cms.middleware.utils.ApphookReloadMiddleware",  # not required but useful to run django CMS
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.locale.LocaleMiddleware", # required to run django CMS
+    "django.middleware.locale.LocaleMiddleware",  # required to run django CMS
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "cms.middleware.user.CurrentUserMiddleware", # required to run django CMS
-    "cms.middleware.page.CurrentPageMiddleware", # required to run django CMS
-    "cms.middleware.toolbar.ToolbarMiddleware", # required to run django CMS
-    "cms.middleware.language.LanguageCookieMiddleware", # required to run django CMS
+    "cms.middleware.user.CurrentUserMiddleware",  # required to run django CMS
+    "cms.middleware.page.CurrentPageMiddleware",  # required to run django CMS
+    "cms.middleware.toolbar.ToolbarMiddleware",  # required to run django CMS
+    "cms.middleware.language.LanguageCookieMiddleware",  # required to run django CMS
     "{}.middleware.admin_filter_middleware".format(REPANIER_SETTINGS_VERSION),
     "django.middleware.cache.FetchFromCacheMiddleware",
 )
@@ -383,7 +405,7 @@ if DJANGO_SETTINGS_DEBUG_TOOLBAR:
 CONTEXT_PROCESSORS = [
     "django.template.context_processors.debug",
     "django.template.context_processors.request",
-    "django.template.context_processors.i18n", # required to run django CMS
+    "django.template.context_processors.i18n",  # required to run django CMS
     "django.template.context_processors.media",
     "django.template.context_processors.static",
     "django.template.context_processors.tz",
@@ -391,7 +413,7 @@ CONTEXT_PROCESSORS = [
     "django.contrib.auth.context_processors.auth",
     "django.contrib.messages.context_processors.messages",
     "sekizai.context_processors.sekizai",
-    "cms.context_processors.cms_settings", # required to run django CMS
+    "cms.context_processors.cms_settings",  # required to run django CMS
     "{}.context_processors.repanier_settings".format(REPANIER_SETTINGS_VERSION),
 ]
 
@@ -416,7 +438,7 @@ if DEBUG:
                 os.path.join(
                     PROJECT_PATH,
                     REPANIER_SETTINGS_VERSION,
-                    "templates", # required to run django CMS
+                    "templates",  # required to run django CMS
                     REPANIER_SETTINGS_TEMPLATE,
                 )
             ],
@@ -477,51 +499,52 @@ CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
 CMS_ENABLE_HELP = False
 CMS_EXTRA_HELP_MENU_ITEMS = (
-    (gettext("Repanier guide"), 'https://drive.google.com/file/d/0B16D6fVMcuF1U25kSkVraWt0Snc/view?usp=sharing&resourcekey=0-Q9lqg6-RASeZpxu_EX_51A'),
-    (gettext("django CMS guide"), 'https://docs.google.com/document/d/1f5eWyD_sxUSok436fSqDI0NHcpQ88CXQoDoQm9ZXb0s/'),
+    (
+        gettext("Repanier guide"),
+        "https://drive.google.com/file/d/0B16D6fVMcuF1U25kSkVraWt0Snc/view?usp=sharing&resourcekey=0-Q9lqg6-RASeZpxu_EX_51A",
+    ),
+    (
+        gettext("django CMS guide"),
+        "https://docs.google.com/document/d/1f5eWyD_sxUSok436fSqDI0NHcpQ88CXQoDoQm9ZXb0s/",
+    ),
 )
 CMS_CONFIRM_VERSION4 = True
 
 DJANGOCMS_PICTURE_RESPONSIVE_IMAGES = True
 
+# DJANGOCMS_TEXT_EDITOR = "djangocms_text.contrib.text_ckeditor4.ckeditor4"
+
 CKEDITOR_SETTINGS = {
     "language": "{{ language }}",
     "toolbar_CMS": [
-        ["Undo", "Redo"],
-        ["cmsplugins", "-", "ShowBlocks"],
-        ["Format"],
-        ["TextColor", "BGColor", "Smiley", "-", "PasteText"],
-        ["Maximize", ""],
-        "/",
-        [
-            "Bold",
-            "Italic",
-            "Underline",
-            "-",
-            "Subscript",
-            "Superscript",
-            "-",
-            "RemoveFormat",
-        ],
-        ["JustifyLeft", "JustifyCenter", "JustifyRight"],
-        ["HorizontalRule"],
-        ["NumberedList", "BulletedList", "-", "Outdent", "Indent", "-", "Table"],
-        ["Source"],
+        ["Undo", "Redo",
+         "cmsplugins", "ShowBlocks",
+         "Format",
+         "TextColor", "BGColor", "Smiley", "PasteText",
+         "Maximize",
+         "Bold",
+         "Italic",
+         "Underline",
+         "Subscript",
+         "Superscript",
+         "RemoveFormat",
+         "JustifyLeft", "JustifyCenter", "JustifyRight",
+         "HorizontalRule",
+         "NumberedList", "BulletedList", "Outdent", "Indent", "Table",
+         "Source", ]
     ],
     "toolbar_HTMLField": [
-        [
-            "Format",
-            "Bold",
-            "Italic",
-            "TextColor",
-            "Smiley",
-            "-",
-            "NumberedList",
-            "BulletedList",
-            "RemoveFormat",
-        ],
-        ["Preview", "Cut", "Copy", "PasteText", "Link", "-", "Undo", "Redo"],
-        ["Source"],
+        "Format",
+        "Bold",
+        "Italic",
+        "TextColor",
+        "Smiley",
+        "-",
+        "NumberedList",
+        "BulletedList",
+        "RemoveFormat",
+        "Preview", "Cut", "Copy", "PasteText", "Link", "-", "Undo", "Redo",
+        "Source",
     ],
     "forcePasteAsPlainText": "true",
     "format_tags": "p;h2;h3;h4;h5",
@@ -585,10 +608,23 @@ CKEDITOR_SETTINGS_MODEL2 = {
 # Sanitisation may strip tags usesful for some use cases such as iframe;
 # you may customize the tags and attributes allowed by overriding
 # the TEXT_ADDITIONAL_TAGS and TEXT_ADDITIONAL_ATTRIBUTES settings:
-TEXT_ADDITIONAL_TAGS = ("span", "iframe")
+# djangocms_text_ckeditor
 TEXT_ADDITIONAL_ATTRIBUTES = ("class", "scrolling", "allowfullscreen", "frameborder")
+TEXT_ADDITIONAL_TAGS = ("span", "iframe")
+# djangocms_text
+# settings.TEXT_ADDITIONAL_ATTRIBUTES: (text.W002) The TEXT_ADDITIONAL_ATTRIBUTES setting has changed.
+# Please use the TEXT_ADDITIONAL_ATTRIBUTES setting with a dictionary instead. Have an entry for each tag and specify allowed attributes for the tag as a set.
+#         HINT: TEXT_ADDITIONAL_ATTRIBUTES = {"*": {'allowfullscreen', 'class', 'frameborder', 'scrolling'}}
+# settings.TEXT_ADDITIONAL_TAGS: (text.W001) The TEXT_ADDITIONAL_TAGS setting is deprecated and will be removed in a future release.
+# Please use the TEXT_ADDITIONAL_ATTRIBUTES setting with a dictionary instead. Have an entry for each tag and specify allowed attributes for the tag as a set.
+#         HINT: TEXT_ADDITIONAL_ATTRIBUTES = {"span": set(), "iframe": set()"}
+# TEXT_ADDITIONAL_ATTRIBUTES = {
+#     "*": {"allowfullscreen", "class", "frameborder", "scrolling"},
+#     "span": set(),
+#     "iframe": set(),
+# }
 TEXT_HTML_SANITIZE = True
-TEXT_INLINE_EDITING = True
+TEXT_INLINE_EDITING = False
 
 FILER_ENABLE_LOGGING = False
 FILER_IMAGE_USE_ICON = True
@@ -600,13 +636,13 @@ FILER_DUMP_PAYLOAD = True
 FILER_DEBUG = False
 
 THUMBNAIL_PROCESSORS = (
-    "easy_thumbnails.processors.colorspace", # required to run django CMS
-    "easy_thumbnails.processors.autocrop", # required to run django CMS
-    "filer.thumbnail_processors.scale_and_crop_with_subject_location", # required to run django CMS
-    "easy_thumbnails.processors.filters", # required to run django CMS
+    "easy_thumbnails.processors.colorspace",  # required to run django CMS
+    "easy_thumbnails.processors.autocrop",  # required to run django CMS
+    "filer.thumbnail_processors.scale_and_crop_with_subject_location",  # required to run django CMS
+    "easy_thumbnails.processors.filters",  # required to run django CMS
     "easy_thumbnails.processors.background",
 )
-THUMBNAIL_HIGH_RESOLUTION = True # required to run django CMS
+THUMBNAIL_HIGH_RESOLUTION = True  # required to run django CMS
 THUMBNAIL_PROGRESSIVE = 100
 THUMBNAIL_PRESERVE_EXTENSIONS = True
 
@@ -690,6 +726,36 @@ PARLER_LANGUAGES = {
     },
 }
 
+if DJANGO_SETTINGS_LANGUAGE == "fr-nl":
+
+    LANGUAGE_CODE = "fr"
+    LANGUAGES = [
+        ("fr", get_language_info("fr")["name_local"]),
+        ("nl", get_language_info("nl")["name_local"]),
+    ]
+    CMS_LANGUAGES = {
+        SITE_ID: [
+            {
+                "code": "fr",
+                "name": get_language_info("fr")["name"],
+                "public": True,
+                "redirect_on_fallback": False,
+                "hide_untranslated": False,
+            },
+            {
+                "code": "nl",
+                "name": get_language_info("nl")["name"],
+                "fallbacks": ["en", LANGUAGE_CODE],
+                "public": True,
+            },
+        ]
+    }
+    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
+    PARLER_LANGUAGES = {
+        SITE_ID: ({"code": "fr"}, {"code": "nl"}),
+        "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
+    }
+
 if DJANGO_SETTINGS_LANGUAGE == "fr-de-en-nl-sv":
 
     LANGUAGE_CODE = "fr"
@@ -699,7 +765,6 @@ if DJANGO_SETTINGS_LANGUAGE == "fr-de-en-nl-sv":
         ("en", get_language_info("en")["name_local"]),
         ("nl", get_language_info("nl")["name_local"]),
         ("sv", get_language_info("sv")["name_local"]),
-
     ]
     CMS_LANGUAGES = {
         SITE_ID: [
@@ -734,14 +799,20 @@ if DJANGO_SETTINGS_LANGUAGE == "fr-de-en-nl-sv":
                 "fallbacks": ["en", "de", LANGUAGE_CODE],
                 "public": True,
             },
-
         ]
     }
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
-        SITE_ID: ({"code": "fr"}, {"code": "de"}, {"code": "en"}, {"code": "nl"}, {"code": "sv"}),
+        SITE_ID: (
+            {"code": "fr"},
+            {"code": "de"},
+            {"code": "en"},
+            {"code": "nl"},
+            {"code": "sv"},
+        ),
         "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
     }
+
 DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
 
 ###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)

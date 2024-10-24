@@ -1,67 +1,66 @@
-Django~=4.2.0
-MarkupPy==1.14
-pillow==10.2.0
-PyYAML==6.0.1
-# django-filer 2.2.3 depends on Unidecode<1.2 and >=0.04
-Unidecode~=1.3.0
-asgiref==3.7.2
-crispy-bootstrap3==2024.1
-crispy-bootstrap5==2024.2
-defusedxml==0.7.1
-diff-match-patch==20230430
+# DO NOT USE : djangocms-versioning==2.0.2
+# Unidecode~=1.3.0
+# django-polymorphic
+# djangocms-link will be replaced by https://github.com/django-cms/djangocms-url-manager
+# djangocms-snippet==3.1.1, linked to https://github.com/django-cms/djangocms-static-ace
+# djangocms-text-ckeditor will be replaced by https://github.com/django-cms/djangocms-text
+# et-xmlfile
+Django~=4.2.0 						# from django-cms==4.1.3 ** https://github.com/django/django/blob/main/pyproject.toml - dependencies
+Genshi==0.7.9 						# extra from html5lib
+asgiref==3.8.1 						# from Django
+chardet==5.2.0 						# extra from html5lib
+crispy-bootstrap3==2024.1			# https://github.com/django-crispy-forms/crispy-bootstrap3
+crispy-bootstrap5==2024.10			# https://github.com/django-crispy-forms/crispy-bootstrap5
+cssselect2==0.7.0					# ???
+diff-match-patch==20241021			# from django-import-export
 django-admin-autocomplete-filter==0.7.1
-django-autocomplete-light==3.11.0
-django-classy-tags==4.1.0
-django-cms==4.1.0
-# django-cms~=4.1.0
-# https://github.com/django-cms/django-cms/archive/06c9a85df486581f152dbf11bbf40a1c6c5e6cd3.zip
-django-crispy-forms==2.1
-django-debug-toolbar==4.3.0
-django-easy-select2==1.5.8
-# django-filer 2.2.3 depends on Unidecode<1.2 and >=0.04
-django-filer==3.1.1
-django-formtools==2.5.1
-django-import-export==3.3.7
-django-js-asset==2.2.0
-django-mptt-admin==2.6.1
-django-mptt==0.16.0
-django-parler==2.3
-django-polymorphic==3.1.0
-django-recurrence==1.11.1
-django-reversion==5.0.12
-django-sekizai==4.1.0
-# django-cms 4.1.0 depends on django-treebeard>=4.3
-django-treebeard==4.7.1
-# djangocms-4-migration
-# https://github.com/Aiky30/djangocms-4-migration/archive/refs/heads/main.zip
-djangocms-alias==2.0.0
-# djangocms-attributes-field 2.1.0 depends on django-treebeard<4.5 and >=4.3
-djangocms-attributes-field==3.0.0
-djangocms-file==3.0.1
-# /!\ from https://github.com/django-cms/djangocms-link/pull/201
-# need to correct line 21 of djangocms_link/forms.py  ---> remove .draft() after pip install of package
-# self.fields['internal_link'].queryset = Page.objects.on_site(site)#
-# https://github.com/django-cms/djangocms-link will eventually
-# be replaced by https://github.com/django-cms/djangocms-url-manager
-djangocms-link==3.1.1
-djangocms-picture==4.1.1
-# https://github.com/django-cms/djangocms-text-ckeditor will be replaced by https://github.com/django-cms/djangocms-text
-djangocms-text-ckeditor==5.1.5
-djangocms-versioning==2.0.0
-djangocms-video==3.1.0
-djangorestframework==3.14.0
-easy-thumbnails==2.8.5
-et-xmlfile==1.1.0
-html5lib==1.1
-odfpy==1.4.1
-openpyxl==3.2.0b1
-psycopg2-binary==2.9.9
-python-dateutil==2.8.2
-pytz==2023.3
-six==1.16.0
-sqlparse==0.4.4
-tablib==3.5.0
+django-appconf==1.0.6				# ???
+django-autocomplete-light==3.11.0	# ** https://github.com/yourlabs/django-autocomplete-light/blob/master/setup.py
+django-classy-tags==4.1.0 			# from django-cms
+django-cms==4.1.3 					# ** https://github.com/django-cms/django-cms/blob/develop-4/setup.cfg - install_requires
+django-crispy-forms==2.3			# ** https://github.com/django-crispy-forms/django-crispy-forms/blob/main/pyproject.toml, dependencies
+django-easy-select2==1.5.8			# ** https://github.com/asyncee/django-easy-select2/blob/master/setup.py, install_requires
+django-entangled==0.5.4 			# from djangocms-frontend, djangocms-frontend 1.3.4 depends on django-entangled<0.6 and >=0.5.4
+django-filer==3.2.3 				# from djangocms-frontend, djangocms-file, djangocms-link, djangocms-picture, djangocms-video, djangocms-googlemap
+django-formtools==2.5.1 			# from django-cms
+django-import-export==4.1.1			# ** https://github.com/django-import-export/django-import-export/blob/main/pyproject.toml, dependencies
+django-mptt==0.16.0					# from django-mptt-admin
+django-mptt-admin==2.7.0			# ** https://github.com/mbraak/django-mptt-admin/blob/master/setup.py, install_requires
+django-parler==2.3 					# from djangocms-alias
+django-polymorphic==3.1.0			# ???
+django-recurrence==1.11.1			# ** https://github.com/jazzband/django-recurrence/blob/master/pyproject.toml, dependencies
+django-reversion==5.1.0				# ** https://github.com/etianen/django-reversion/blob/master/setup.py, install_requires
+django-sekizai==4.1.0 				# from django-cms
+django-select2==8.2.1           	# ** https://github.com/codingjoe/django-select2
+django-treebeard==4.7.1 			# from django-cms, djangocms-googlemap
+djangocms-admin-style==3.3.1 		# from django-cms
+djangocms-alias==2.0.1 				# ** https://github.com/django-cms/djangocms-alias/blob/master/setup.py, INSTALL_REQUIREMENTS
+djangocms-attributes-field==3.0.0 	# from djangocms-frontend, djangocms-file, djangocms-link, djangocms-picture, djangocms-video
+djangocms-file==3.0.1				# ** https://github.com/django-cms/djangocms-file/blob/master/setup.py, REQUIREMENTS
+# djangocms-frontend==1.3.4 			# ** https://github.com/django-cms/djangocms-frontend/blob/master/setup.py - REQUIREMENTS, EXTRA_REQUIREMENTS
+# djangocms-googlemap==2.2.0			# ** https://github.com/django-cms/djangocms-googlemap/blob/master/setup.py, REQUIREMENTS
+djangocms-link==4.0.0				# ** https://github.com/django-cms/djangocms-link/blob/master/setup.py, REQUIREMENTS
+djangocms-picture==4.1.1			# ** https://github.com/django-cms/djangocms-picture/blob/master/setup.py, REQUIREMENTS
+djangocms-text-ckeditor==5.1.6 		# ** https://github.com/django-cms/djangocms-text-ckeditor/blob/master/setup.py - REQUIREMENTS
+# djangocms-text==0.3.2           	# ** https://github.com/django-cms/djangocms-text/blob/main/pyproject.toml, dependencies
+djangocms-video==3.1.0				# ** https://github.com/django-cms/djangocms-video/blob/master/setup.py, REQUIREMENTS
+djangorestframework==3.15.2			# ** https://github.com/encode/django-rest-framework/blob/master/setup.py, install_requires
+easy-thumbnails==2.10				# from djangocms-frontend, djangocms-picture
+html5lib==1.1 						# from djangocms-text-ckeditor ** https://github.com/html5lib/html5lib-python/blob/master/setup.py - install_requires & extra_require
+lxml==5.0.1							# from openpyxl, djangocms-text
+nh3===0.2.18						# from djangocms-text
+openpyxl==3.1.5						# Source : https://foss.heptapod.net/openpyxl/openpyxl
+packaging==24.1						# from django-cms, djangocms-text-ckeditor, djangocms-text
+pillow==11.0.0						# from djangocms-text-ckeditor, djangocms-text
+psycopg2-binary==2.9.10
+python-dateutil==2.8.2				# from django-recurrence
+pytz==2024.2
+reportlab==4.2.5
+setuptools==75.2.0					# from django-cms
+six==1.16.0							# from html5lib
+sqlparse==0.5.1 					# from Django
+svglib==1.5.1
+tablib==3.5.0						# from django-import-export -  django-import-export 4.1.1 depends on tablib==3.5.0
+tinycss2==1.3.0						# ???
 uWSGI==2.0.24
-webencodings==0.5.1
-xlrd==2.0.1
-xlwt==1.3.0
+webencodings==0.5.1 				# from html5lib
