@@ -6,8 +6,9 @@ cache
 .ropeproject
 
 *sublime-*
-/mysite/_1_dev_gassine.ini
-/mysite/_1_dev_buisson.ini
 /mysite/collect-static/
 /mysite/settings.py
-/mysite/mysite.ini
+/mysite/_a_dev_site.ini
+/mysite/_b_dev_site.ini
+/requirements/requirement-4.2.old.txt
+/repanier/migrations/
