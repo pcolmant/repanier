@@ -31,16 +31,22 @@ admin.site.empty_value_display = "-"
 # Disable new unwanted left admin menu :
 admin.site.enable_nav_sidebar = False
 
-urlpatterns = i18n_patterns(
-    path("repanier/", include("repanier.urls", namespace="repanier")),
-    path("coordi/", admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
+
+# Non i18n URLs
+urlpatterns = [
     path(
-        "sitemap\.xml",
+        "sitemap.xml",
         sitemap,
         {"sitemaps": {"cmspages": CMSSitemap}},
         name="django.contrib.sitemaps.views.sitemap",
     ),
+]
+
+# i18n URLs
+urlpatterns += i18n_patterns(
+    path("repanier/", include("repanier.urls", namespace="repanier")),
+    path("coordi/", admin.site.urls),
+    path("api-auth/", include("rest_framework.urls")),
     path(
         "jsi18n/",
         JavaScriptCatalog.as_view(packages=["recurrence"]),
@@ -49,9 +55,9 @@ urlpatterns = i18n_patterns(
     path("", include("cms.urls")),
 )
 
-if settings.DEBUG:
+if settings.DJANGO_SETTINGS_DEBUG_TOOLBAR:
     import debug_toolbar
 
     urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
 
-urlpatterns += staticfiles_urlpatterns()
+# urlpatterns += staticfiles_urlpatterns()
