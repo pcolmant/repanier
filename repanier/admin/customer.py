@@ -17,6 +17,7 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget, ForeignKeyWidget
+
 from repanier.const import EMPTY_STRING, DECIMAL_ONE, RoundUpTo
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
@@ -408,7 +409,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "membership_fee_valid_until",
                 "price_list_multiplier",
             ]
-            if settings.REPANIER_SETTINGS_DELIVERY_POINT:
+            if Customer.objects.filter(is_group=True).exists():
                 fields_basic += ["group"]
             if customer is not None:
                 fields_basic += [
