@@ -6,5 +6,5 @@
 
 # Do not forget to change chmod +x on this .sh file
 DIR=$( cd "$( dirname "${0}" )" && pwd )
-$DIR/../../../../venvs/_d_/bin/python $DIR/../manage.py backup_db
+$DIR/../../../../_1_venv/bin/python $DIR/../manage.py backup_db
 
