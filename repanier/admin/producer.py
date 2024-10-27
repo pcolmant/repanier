@@ -45,6 +45,12 @@ class ProducerResource(resources.ModelResource):
         widget=DecimalBooleanWidget(),
         readonly=False,
     )
+    producer_price_are_wo_vat = fields.Field(
+        attribute="producer_price_are_wo_vat",
+        default=False,
+        widget=DecimalBooleanWidget(),
+        readonly=False,
+    )
     sort_products_by_reference = fields.Field(
         attribute="sort_products_by_reference",
         default=False,
@@ -53,7 +59,7 @@ class ProducerResource(resources.ModelResource):
     )
     reference_site = fields.Field(attribute="reference_site", readonly=True)
 
-    def before_save_instance(self, instance, using_transactions, dry_run):
+    def before_save_instance(self, instance, row, **kwargs):
         """
         Override to add additional logic.
         """

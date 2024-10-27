@@ -187,7 +187,7 @@ class CustomerResource(resources.ModelResource):
         attribute="zero_waste", widget=DecimalBooleanWidget(), readonly=True
     )
 
-    def before_save_instance(self, instance, using_transactions, dry_run):
+    def before_save_instance(self, instance, row, **kwargs):
         """
         Override to add additional logic.
         """
@@ -218,7 +218,7 @@ class CustomerResource(resources.ModelResource):
                     instance.short_basket_name
                 )
             )
-        if using_transactions or not dry_run:
+        if self._is_using_transactions(kwargs) or not self._is_dry_run(kwargs):
             if instance.id is not None:
                 email = instance.user.email
                 instance.user = user_model.objects.get(id=customer.user_id)

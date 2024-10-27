@@ -50,7 +50,7 @@ class BankAccountResource(resources.ModelResource):
         readonly=True,
     )
 
-    def before_save_instance(self, instance, using_transactions, dry_run):
+    def before_save_instance(self, instance, row, **kwargs):
         """
         Override to add additional logic.
         """

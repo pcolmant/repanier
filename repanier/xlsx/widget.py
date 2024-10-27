@@ -38,29 +38,17 @@ class DecimalsWidget(DecimalWidget):
 
     def clean_quantize(self, value, decimals):
         if self.is_empty(value):
-            return
-        return Decimal(value).quantize(decimals)
-
-    def render_quantize(self, value, decimals):
-        return float(Decimal(value).quantize(decimals))
-
-
-class IdWidget(DecimalsWidget):
-    """
-    Widget for converting id fields with 0 decimals or empty content.
-    """
-
-    def clean(self, value, row=None, *args, **kwargs):
-        if self.is_empty(value):
-            return None
+            return DECIMAL_ZERO
         try:
-            return Decimal(value).quantize(RoundUpTo.ZERO_DECIMAL)
+            return Decimal(value).quantize(decimals)
         except InvalidOperation:
             # This occurs when text is present in a decimal field
-            return None
+            return DECIMAL_ZERO
 
-    def render(self, value, obj=None):
-        return super().render_quantize(value, RoundUpTo.ZERO_DECIMAL)
+    def render_quantize(self, value, decimals):
+        value = self.clean_quantize(value, decimals)
+        return float(Decimal(value).quantize(decimals))
+
 
 
 class ZeroDecimalsWidget(DecimalsWidget):
@@ -109,6 +97,13 @@ class FourDecimalsWidget(DecimalsWidget):
 
     def render(self, value, obj=None):
         return super().render_quantize(value, RoundUpTo.FOUR_DECIMALS)
+
+
+class IdWidget(ZeroDecimalsWidget):
+    """
+    Widget for converting id fields with 0 decimals or empty content.
+    """
+    pass
 
 
 class MoneysWidget(DecimalWidget):
@@ -256,14 +251,14 @@ class DateWidgetExcel(Widget):
     Takes optional ``format`` parameter.
     """
 
-    def __init__(self, format=None):
-        if format is None:
+    def __init__(self, date_format=None):
+        if date_format is None:
             if not settings.DATE_INPUT_FORMATS:
                 formats = ("%Y-%m-%d",)
             else:
                 formats = settings.DATE_INPUT_FORMATS
         else:
-            formats = (format,)
+            formats = (date_format,)
         self.formats = formats
 
     def clean(self, value, row=None, *args, **kwargs):
@@ -277,9 +272,9 @@ class DateWidgetExcel(Widget):
             return (
                 datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
             ).date()
-        for format in self.formats:
+        for date_format in self.formats:
             try:
-                return datetime.datetime.strptime(value, format).date()
+                return datetime.datetime.strptime(value, date_format).date()
             except (ValueError, TypeError):
                 continue
         raise ValueError("Enter a valid date.")

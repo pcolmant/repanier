@@ -100,7 +100,7 @@ class ProductResource(resources.ModelResource):
         attribute="is_active", widget=DecimalBooleanWidget(), readonly=True
     )
 
-    def before_save_instance(self, instance, using_transactions, dry_run):
+    def before_save_instance(self, instance, row, **kwargs):
         """
         Override to add additional logic.
         """
@@ -192,7 +192,7 @@ class ProductResource(resources.ModelResource):
             "description",
         )
         export_order = fields
-        import_id_fields = ("id",)
+        import_id_fields = ("reference",)
         skip_unchanged = True
         report_skipped = False
         use_transactions = False
