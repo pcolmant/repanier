@@ -9,6 +9,8 @@ from django.urls import reverse, reverse_lazy, path
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+
+from models import PermanenceDone
 from repanier.admin.admin_filter import AdminFilterPermanenceDoneStatus
 from repanier.admin.forms import (
     ProducerInvoicedFormSet,
@@ -39,7 +41,7 @@ from repanier.xlsx.xlsx_stock import export_permanence_stock
 
 logger = logging.getLogger(__name__)
 
-
+@admin.register(PermanenceDone)
 class PermanenceDoneAdmin(SaleAdmin):
     list_display = (
         "get_permanence_admin_display",

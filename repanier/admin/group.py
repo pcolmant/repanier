@@ -214,7 +214,7 @@ class GroupWithUserDataForm(UserDataForm):
         model = Group
         fields = "__all__"
 
-
+@admin.register(Group)
 class GroupWithUserDataAdmin(admin.ModelAdmin):
     form = GroupWithUserDataForm
     list_display = (

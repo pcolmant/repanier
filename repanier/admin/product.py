@@ -302,7 +302,7 @@ class ProductDataForm(forms.ModelForm):
             "order_unit": SelectAdminOrderUnitWidget(attrs={"style": "width: 95%;"}),
         }
 
-
+@admin.register(Product)
 class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     change_list_template = None  # get default admin selection to use customized product change_list template
     form = ProductDataForm

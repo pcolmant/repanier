@@ -42,7 +42,7 @@ class ConfigurationDataForm(forms.ModelForm):
         model = Configuration
         fields = "__all__"
 
-
+@admin.register(Configuration)
 class ConfigurationAdmin(admin.ModelAdmin):
     form = ConfigurationDataForm
 

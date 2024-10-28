@@ -187,7 +187,7 @@ class ProducerDataForm(forms.ModelForm):
         model = Producer
         fields = "__all__"
 
-
+@admin.register(Producer)
 class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     form = ProducerDataForm
     resource_class = ProducerResource

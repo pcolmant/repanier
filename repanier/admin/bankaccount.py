@@ -348,7 +348,7 @@ class BankAccountDataForm(forms.ModelForm):
         model = BankAccount
         fields = "__all__"
 
-
+@admin.register(BankAccount)
 class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     form = BankAccountDataForm
     resource_class = BankAccountResource

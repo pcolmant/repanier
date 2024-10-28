@@ -402,7 +402,7 @@ class PurchaseForm(forms.ModelForm):
             "comment": TextInput(attrs={"style": "width: 80%;"}),
         }
 
-
+@admin.register(Purchase)
 class PurchaseAdmin(admin.ModelAdmin):
     form = PurchaseForm
     list_display = [

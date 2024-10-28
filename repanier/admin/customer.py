@@ -310,7 +310,7 @@ class CustomerWithUserDataForm(UserDataForm):
         model = Customer
         fields = "__all__"
 
-
+@admin.register(Customer)
 class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     form = CustomerWithUserDataForm
     resource_class = CustomerResource

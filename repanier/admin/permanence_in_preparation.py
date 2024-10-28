@@ -1,6 +1,8 @@
 import logging
 import threading
 
+from django.contrib import admin
+
 import repanier.apps
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
@@ -12,6 +14,8 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+
+from models import PermanenceInPreparation
 from repanier.admin.admin_filter import AdminFilterPermanenceInPreparationStatus
 from repanier.admin.forms import (
     OpenAndSendOfferForm,
@@ -43,7 +47,7 @@ from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_x
 
 logger = logging.getLogger(__name__)
 
-
+@admin.register(PermanenceInPreparation)
 class PermanenceInPreparationAdmin(SaleAdmin):
     list_display = (
         "get_permanence_admin_display",

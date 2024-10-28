@@ -8,6 +8,8 @@ from django.forms import BaseInlineFormSet
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
+
+from models import CustomerSend
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
@@ -270,7 +272,7 @@ class CustomerSendForm(forms.ModelForm):
         permanence_field.widget = forms.HiddenInput()
         producer_field.widget = forms.HiddenInput()
 
-
+@admin.register(CustomerSend)
 class CustomerSendAdmin(admin.ModelAdmin):
     form = CustomerSendForm
     fields = (

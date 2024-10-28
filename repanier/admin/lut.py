@@ -1,5 +1,8 @@
+from django.contrib import admin
 from django.db.models import F
 from django_mptt_admin.admin import DjangoMpttAdmin
+
+from models import LUT_DeliveryPoint, LUT_PermanenceRole
 from repanier.const import MpttLevelDepth
 from repanier.models import LUT_DepartmentForCustomer, LUT_ProductionMode, Customer
 
@@ -65,7 +68,7 @@ class LUTAdmin(DjangoMpttAdmin):
                 pass
         return actions
 
-
+@admin.register(LUT_ProductionMode)
 class LUTProductionModeAdmin(LUTAdmin):
     mptt_level_limit = MpttLevelDepth.TWO
     search_fields = ("short_name_v2",)
@@ -92,7 +95,7 @@ class LUTProductionModeAdmin(LUTAdmin):
             qs = super().get_queryset(request)
         return qs
 
-
+@admin.register(LUT_DeliveryPoint)
 class LUTDeliveryPointAdmin(LUTAdmin):
     mptt_level_limit = MpttLevelDepth.ONE
     search_fields = ("short_name_v2",)
@@ -109,7 +112,7 @@ class LUTDeliveryPointAdmin(LUTAdmin):
                 is_active=delivery_point.is_active,
             )
 
-
+@admin.register(LUT_DepartmentForCustomer)
 class LUTDepartmentForCustomerAdmin(LUTAdmin):
     mptt_level_limit = MpttLevelDepth.TWO
     search_fields = ("short_name_v2",)
@@ -129,7 +132,7 @@ class LUTDepartmentForCustomerAdmin(LUTAdmin):
             qs = super().get_queryset(request)
         return qs
 
-
+@admin.register(LUT_PermanenceRole)
 class LUTPermanenceRoleAdmin(LUTAdmin):
     mptt_level_limit = MpttLevelDepth.ONE
     search_fields = ("short_name_v2",)

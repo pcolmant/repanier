@@ -9,6 +9,8 @@ from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
 from easy_select2 import Select2
+
+from models import OfferItemSend
 from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
 )
@@ -295,7 +297,7 @@ class OfferItemSendForm(forms.ModelForm):
                 # Do not : update_offer_item(product_id=product.id, producer_id=None)
         return offer_item
 
-
+@admin.register(OfferItemSend)
 class OfferItemSendAdmin(admin.ModelAdmin):
     form = OfferItemSendForm
     inlines = [OfferItemPurchaseSendInline]
