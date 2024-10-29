@@ -234,9 +234,11 @@ class Permanence(models.Model):
                         ):
                             label = "{} ({} - {})".format(
                                 pi.producer.short_profile_name,
-                                pi.get_total_price_with_tax()
-                                if pi.producer_id == group_id
-                                else pi.to_be_invoiced_balance,
+                                (
+                                    pi.get_total_price_with_tax()
+                                    if pi.producer_id == group_id
+                                    else pi.to_be_invoiced_balance
+                                ),
                                 cap(pi.invoice_reference, 15),
                             )
                         else:
@@ -251,9 +253,11 @@ class Permanence(models.Model):
                         ):
                             label = "{} ({})".format(
                                 pi.producer.short_profile_name,
-                                pi.get_total_price_with_tax()
-                                if pi.producer_id == group_id
-                                else pi.to_be_invoiced_balance,
+                                (
+                                    pi.get_total_price_with_tax()
+                                    if pi.producer_id == group_id
+                                    else pi.to_be_invoiced_balance
+                                ),
                             )
                         else:
                             continue
@@ -363,9 +367,11 @@ class Permanence(models.Model):
                 label = "{}{} ({}) {}{}".format(
                     "<b><i>" if ci.is_group else EMPTY_STRING,
                     ci.customer.short_basket_name,
-                    "-"
-                    if ci.is_group or total_price_with_tax == DECIMAL_ZERO
-                    else total_price_with_tax,
+                    (
+                        "-"
+                        if ci.is_group or total_price_with_tax == DECIMAL_ZERO
+                        else total_price_with_tax
+                    ),
                     ci.get_is_order_confirm_send_display(),
                     "</i></b>" if ci.is_group else EMPTY_STRING,
                 )
@@ -395,9 +401,11 @@ class Permanence(models.Model):
                     if delivery_save is not None and display_total:
                         customers_html.append(
                             '<a href="\043"><br><b><i>= {} ({})</i></b></a><br/>'.format(
-                                "-"
-                                if total_price_with_tax_save == DECIMAL_ZERO
-                                else total_price_with_tax_save,
+                                (
+                                    "-"
+                                    if total_price_with_tax_save == DECIMAL_ZERO
+                                    else total_price_with_tax_save
+                                ),
                                 _("Total amount"),
                             )
                         )
@@ -418,16 +426,20 @@ class Permanence(models.Model):
                 if ci.is_group:
                     display_total = False
                     label = "<b><i>= {} ({})</i></b></br>".format(
-                        "-"
-                        if total_price_with_tax == DECIMAL_ZERO
-                        else total_price_with_tax,
+                        (
+                            "-"
+                            if total_price_with_tax == DECIMAL_ZERO
+                            else total_price_with_tax
+                        ),
                         _("Total amount"),
                     )
                 else:
                     label = "{} ({}) {}".format(
-                        "-"
-                        if total_price_with_tax == DECIMAL_ZERO
-                        else total_price_with_tax,
+                        (
+                            "-"
+                            if total_price_with_tax == DECIMAL_ZERO
+                            else total_price_with_tax
+                        ),
                         ci.customer.short_basket_name,
                         ci.get_is_order_confirm_send_display(),
                     )
@@ -873,7 +885,7 @@ class Permanence(models.Model):
             ).update(permanence_id=new_permanence.id, status=SaleStatus.SEND)
             CustomerProducerInvoice.objects.filter(
                 permanence_id=self.id,
-                producer_id__in=producers_to_move
+                producer_id__in=producers_to_move,
                 # Redundant : customer_id__in=customers_to_move
             ).update(permanence_id=new_permanence.id)
             OfferItemReadOnly.objects.filter(
@@ -901,9 +913,9 @@ class Permanence(models.Model):
 
         for customer_invoice in CustomerInvoice.objects.filter(permanence_id=self.id):
             # customer_invoice.calculate_order_amount()
-            customer_invoice.balance = (
-                customer_invoice.previous_balance
-            ) = customer_invoice.customer.balance
+            customer_invoice.balance = customer_invoice.previous_balance = (
+                customer_invoice.customer.balance
+            )
             customer_invoice.date_previous_balance = (
                 customer_invoice.customer.date_balance
             )
@@ -929,9 +941,9 @@ class Permanence(models.Model):
 
         for producer_invoice in ProducerInvoice.objects.filter(permanence_id=self.id):
             # producer_invoice.calculate_order_amount()
-            producer_invoice.balance = (
-                producer_invoice.previous_balance
-            ) = producer_invoice.producer.balance
+            producer_invoice.balance = producer_invoice.previous_balance = (
+                producer_invoice.producer.balance
+            )
             producer_invoice.date_previous_balance = (
                 producer_invoice.producer.date_balance
             )
@@ -1199,12 +1211,16 @@ class Permanence(models.Model):
             operation_date=payment_date,
             operation_status=BankMovement.LATEST_TOTAL,
             operation_comment=cap(str(self), 100),
-            bank_amount_in=new_bank_latest_total
-            if new_bank_latest_total >= DECIMAL_ZERO
-            else DECIMAL_ZERO,
-            bank_amount_out=-new_bank_latest_total
-            if new_bank_latest_total < DECIMAL_ZERO
-            else DECIMAL_ZERO,
+            bank_amount_in=(
+                new_bank_latest_total
+                if new_bank_latest_total >= DECIMAL_ZERO
+                else DECIMAL_ZERO
+            ),
+            bank_amount_out=(
+                -new_bank_latest_total
+                if new_bank_latest_total < DECIMAL_ZERO
+                else DECIMAL_ZERO
+            ),
             customer_invoice=None,
             producer_invoice=None,
         )
@@ -1679,7 +1695,7 @@ class Permanence(models.Model):
                         order_unit__lt=OrderUnit.DEPOSIT,  # Don't display technical products.
                         permanence_id=previous_permanence.id,
                         producer=a_producer,
-                        product__is_updated_on__lt=six_days_ago # Not recently updated
+                        product__is_updated_on__lt=six_days_ago,  # Not recently updated
                     ).values_list("product", flat=True)
                 )
                 new_products = [
@@ -1836,7 +1852,7 @@ class Permanence(models.Model):
                 <div class="excerpt">{offer_description}</div>
             </a>
             """.format(
-                    href=reverse("repanier:order_view", args=(self.id,)),
+                    href=self.get_absolute_url(),
                     title=self.get_html_permanence_display(),
                     offer_description=offer_description.words(30, html=True),
                 )
@@ -1858,6 +1874,9 @@ class Permanence(models.Model):
 
     def __str__(self):
         return self.get_permanence_display()
+
+    def get_absolute_url(self):
+        return reverse("repanier:order_view", args=[self.id])
 
     class Meta:
         verbose_name = _("Sale")

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db.models import F
 from django_mptt_admin.admin import DjangoMpttAdmin
 
-from models import LUT_DeliveryPoint, LUT_PermanenceRole
+from repanier.models import LUT_DeliveryPoint, LUT_PermanenceRole
 from repanier.const import MpttLevelDepth
 from repanier.models import LUT_DepartmentForCustomer, LUT_ProductionMode, Customer
 

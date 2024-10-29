@@ -15,7 +15,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from models import PermanenceInPreparation
+from repanier.models import PermanenceInPreparation
 from repanier.admin.admin_filter import AdminFilterPermanenceInPreparationStatus
 from repanier.admin.forms import (
     OpenAndSendOfferForm,

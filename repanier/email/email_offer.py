@@ -75,7 +75,7 @@ def send_open_order(permanence_id):
             "permanence_link": mark_safe(
                 '<a href="https://{}{}">{}</a>'.format(
                     settings.ALLOWED_HOSTS[0],
-                    reverse("repanier:order_view", args=(permanence.id,)),
+                    permanence.get_absolute_url(),
                     permanence,
                 )
             ),

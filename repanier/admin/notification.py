@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from models.notification import Notification
+from repanier.models.notification import Notification
 
 
 @admin.register(Notification)

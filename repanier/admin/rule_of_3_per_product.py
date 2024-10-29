@@ -10,7 +10,7 @@ from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
 from easy_select2 import Select2
 
-from models import OfferItemSend
+from repanier.models import OfferItemSend
 from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
 )

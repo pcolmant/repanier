@@ -95,7 +95,7 @@ class PermanenceMenu(Menu):
         self, nodes, parent_node, submenu_id, is_anonymous, permanence
     ):
 
-        path = reverse("repanier:order_view", args=(permanence.id,))
+        path = permanence.get_absolute_url()
         if not is_anonymous and permanence.status > SaleStatus.OPENED:
             path = path + "?is_basket=yes"
         submenu_id += 1
