@@ -20,10 +20,11 @@ from django.conf.urls import include
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import path
 from django.views.i18n import JavaScriptCatalog
 
-from django.urls import path
+from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
+from repanier.sitemaps import PermamenceSitemap
 
 admin.site.site_header = ""
 admin.site.site_title = ""
@@ -37,7 +38,12 @@ urlpatterns = [
     path(
         "sitemap.xml",
         sitemap,
-        {"sitemaps": {"cmspages": CMSSitemap}},
+        {
+            "sitemaps": {
+                REPANIER_SETTINGS_PERMANENCES_NAME: PermamenceSitemap,
+                "cmspages": CMSSitemap,
+            }
+        },
         name="django.contrib.sitemaps.views.sitemap",
     ),
 ]
