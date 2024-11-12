@@ -162,7 +162,7 @@ urlpatterns = [
         login_required(never_cache(display_status)),
         name="display_status",
     ),
-    path("ajax/like/<int:offer_item_id>/", login_required(never_cache(like_ajax)), name="like_ajax"),
+    path("ajax/like/", login_required(never_cache(like_ajax)), name="like_ajax"),
     path("ajax/is-into-offer/<int:product_id>/", is_into_offer, name="is_into_offer"),
     path("ajax/test-mail-config/", test_mail_config_ajax, name="test_mail_config_ajax"),
     path("permanence/", never_cache(PermanenceView.as_view()), name="permanence_view"),

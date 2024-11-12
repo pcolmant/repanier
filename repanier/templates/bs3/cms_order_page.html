@@ -387,7 +387,7 @@
 
                 }
                 function like_ajax(offer_item_id) {
-                    var lien = "{% url 'repanier:like_ajax' offer_item_id %}";
+                    var lien = '{% url 'repanier:like_ajax' %}?offer_item=' + offer_item_id;
                     $.ajax({
                         url: lien,
                         cache: false,
