@@ -2,19 +2,20 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.urls import path, reverse_lazy
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
 
 from repanier.picture.views import ajax_picture
-from repanier.rest.lut import (
-    departments_for_customers_rest,
-    department_for_customer_rest,
-)
-from repanier.rest.permanence import (
-    permanences_rest,
-    permanence_producer_product_rest,
-    permanence_producer_rest,
-)
-from repanier.rest.producer import producers_list, producer_detail
-from repanier.rest.product import products_rest, product_rest
+# from repanier.rest.lut import (
+#     departments_for_customers_rest,
+#     department_for_customer_rest,
+# )
+# from repanier.rest.permanence import (
+#     permanences_rest,
+#     permanence_producer_product_rest,
+#     permanence_producer_rest,
+# )
+# from repanier.rest.producer import producers_list, producer_detail
+# from repanier.rest.product import products_rest, product_rest
 from repanier.rest.version import version_rest
 from repanier.tools import get_repanier_template_name
 from repanier.views.btn_confirm_order_ajax import btn_confirm_order_ajax
@@ -42,7 +43,7 @@ from repanier.views.my_cart_amount_ajax import my_cart_amount_ajax
 from repanier.views.my_profile_view import my_profile_view
 from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
-from repanier.views.order_description_view import order_description_view
+# from repanier.views.order_description_view import order_description_view
 from repanier.views.order_filter_view import order_filter_view
 from repanier.views.order_init_ajax import order_init_ajax
 from repanier.views.order_select_ajax import order_select_ajax
@@ -113,20 +114,22 @@ urlpatterns = [
         never_cache(OrderView.as_view()),
         name="order_view",
     ),
+    # path(
+    #     "like/<int:permanence_id>/",
+    #     never_cache(OrderView.as_view()),
+    #     {"like": True},
+    #     name="like_view",
+    # ),
     path(
-        "like/<int:permanence_id>/",
-        never_cache(OrderView.as_view()),
-        {"like": True},
-        name="like_view",
+        "order-filter/<int:permanence_id>/",
+        order_filter_view,
+        name="order_filter_view"
     ),
-    path(
-        "order-filter/<int:permanence_id>/", order_filter_view, name="order_filter_view"
-    ),
-    path(
-        "order-description/<int:permanence_id>/",
-        order_description_view,
-        name="order_description_view",
-    ),
+    # path(
+    #     "order-description/<int:permanence_id>/",
+    #     order_description_view,
+    #     name="order_description_view",
+    # ),
     path("ajax/order/", order_ajax, name="order_ajax"),
     path("ajax/delivery/", delivery_ajax, name="delivery_ajax"),
     path(
@@ -152,14 +155,14 @@ urlpatterns = [
         name="ajax_picture",
     ),
     path(
-        "ajax/btn-confirm-order/", btn_confirm_order_ajax, name="btn_confirm_order_ajax"
+        "ajax/btn-confirm-order/", login_required(never_cache(btn_confirm_order_ajax)), name="btn_confirm_order_ajax"
     ),
     path(
         "ajax/display-status/<int:permanence_id>/",
-        display_status,
+        login_required(never_cache(display_status)),
         name="display_status",
     ),
-    path("ajax/like/", like_ajax, name="like_ajax"),
+    path("ajax/like/<int:offer_item_id>/", login_required(never_cache(like_ajax)), name="like_ajax"),
     path("ajax/is-into-offer/<int:product_id>/", is_into_offer, name="is_into_offer"),
     path("ajax/test-mail-config/", test_mail_config_ajax, name="test_mail_config_ajax"),
     path("permanence/", never_cache(PermanenceView.as_view()), name="permanence_view"),
@@ -183,43 +186,43 @@ urlpatterns = [
         send_mail_to_coordinators_view,
         name="send_mail_to_coordinators_view",
     ),
-    path("who/", who_is_who_view, name="who_is_who_view"),
-    path("me/", my_profile_view, name="my_profile_view"),
-    path("rest/permanences/", permanences_rest, name="permanences_rest"),
-    path(
-        "rest/permanence/<int:permanence_id>/<str:producer_name>/<str:reference>/",
-        permanence_producer_product_rest,
-        name="permanence_producer_product_rest",
-    ),
-    path(
-        "rest/permanence/<int:permanence_id>/<str:producer_name>/",
-        permanence_producer_rest,
-        name="permanence_producer_rest",
-    ),
-    path(
-        "rest/departments-for-customers/",
-        departments_for_customers_rest,
-        name="departments_for_customers_rest",
-    ),
-    path(
-        "rest/department-for-customer/<str:short_name>/",
-        department_for_customer_rest,
-        name="department_for_customer_rest",
-    ),
-    path("rest/producers/", producers_list, name="producers_rest"),
-    path(
-        "rest/producer/<str:short_profile_name>/", producer_detail, name="producer_rest"
-    ),
-    path(
-        "rest/products/<str:producer_short_profile_name>/",
-        products_rest,
-        name="products_rest",
-    ),
-    path(
-        "rest/product/<str:producer_short_profile_name>/<str:reference>/",
-        product_rest,
-        name="product_rest",
-    ),
+    path("who/", login_required(never_cache(csrf_protect(who_is_who_view))), name="who_is_who_view"),
+    path("me/", login_required(never_cache(csrf_protect(my_profile_view))), name="my_profile_view"),
+    # path("rest/permanences/", permanences_rest, name="permanences_rest"),
+    # path(
+    #     "rest/permanence/<int:permanence_id>/<str:producer_name>/<str:reference>/",
+    #     permanence_producer_product_rest,
+    #     name="permanence_producer_product_rest",
+    # ),
+    # path(
+    #     "rest/permanence/<int:permanence_id>/<str:producer_name>/",
+    #     permanence_producer_rest,
+    #     name="permanence_producer_rest",
+    # ),
+    # path(
+    #     "rest/departments-for-customers/",
+    #     departments_for_customers_rest,
+    #     name="departments_for_customers_rest",
+    # ),
+    # path(
+    #     "rest/department-for-customer/<str:short_name>/",
+    #     department_for_customer_rest,
+    #     name="department_for_customer_rest",
+    # ),
+    # path("rest/producers/", producers_list, name="producers_rest"),
+    # path(
+    #     "rest/producer/<str:short_profile_name>/", producer_detail, name="producer_rest"
+    # ),
+    # path(
+    #     "rest/products/<str:producer_short_profile_name>/",
+    #     products_rest,
+    #     name="products_rest",
+    # ),
+    # path(
+    #     "rest/product/<str:producer_short_profile_name>/<str:reference>/",
+    #     product_rest,
+    #     name="product_rest",
+    # ),
     path("rest/version/", version_rest, name="version_rest"),
     path(
         "dowload-customer-invoice/<int:customer_invoice_id>/",
