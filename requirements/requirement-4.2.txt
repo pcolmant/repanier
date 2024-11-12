@@ -64,3 +64,5 @@ tablib==3.5.0						# from django-import-export -  django-import-export 4.1.1 dep
 tinycss2==1.3.0						# ???
 uWSGI==2.0.24
 webencodings==0.5.1 				# from html5lib
+xlrd==2.0.1                         # The 'xls' format is not available. You may want to install the xlrd and xlwt packages (or `pip install "tablib[xls]"`)
+xlwt==1.3.0                         # The 'xls' format is not available. You may want to install the xlrd and xlwt packages (or `pip install "tablib[xls]"`)
