@@ -1,13 +1,13 @@
 from os import sep as os_sep
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
+# from django.contrib.auth.decorators import login_required
 from django.forms import widgets, forms, fields
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.cache import never_cache
-from django.views.decorators.csrf import csrf_protect
+# from django.views.decorators.cache import never_cache
+# from django.views.decorators.csrf import csrf_protect
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.customer import Customer
 from repanier.picture.const import SIZE_S
@@ -74,9 +74,9 @@ class CustomerForm(forms.Form):
         super().__init__(*args, **kwargs)
 
 
-@login_required()
-@csrf_protect
-@never_cache
+# @login_required()
+# @csrf_protect
+# @never_cache
 def my_profile_view(request):
     user = request.user
     customer = Customer.objects.filter(id=user.customer_id).first()

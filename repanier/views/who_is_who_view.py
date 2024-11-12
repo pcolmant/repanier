@@ -1,18 +1,18 @@
-from django.contrib.auth.decorators import login_required
+# from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import render
-from django.views.decorators.cache import never_cache
-from django.views.decorators.csrf import csrf_protect
+# from django.views.decorators.cache import never_cache
+# from django.views.decorators.csrf import csrf_protect
 
 from repanier.models.customer import Customer
 from repanier.models.staff import Staff
 from repanier.tools import get_repanier_template_name
 
 
-@login_required()
-@csrf_protect
-@never_cache
+# @login_required()
+# @csrf_protect
+# @never_cache
 def who_is_who_view(request):
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
