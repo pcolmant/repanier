@@ -872,6 +872,7 @@ else:
         "permissions": 3600,  # default: 3600
     }
 
+# CMS_CACHE_PREFIX = "cms"
 CMS_TEMPLATE_HOME = "cms_home.html"
 CMS_TEMPLATE_PAGE = "cms_page.html"
 CMS_TEMPLATE_SUB_PAGE = "cms_subpage.html"

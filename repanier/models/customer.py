@@ -19,6 +19,11 @@ from repanier.picture.const import SIZE_S
 from repanier.picture.fields import RepanierPictureField
 
 
+class MayOrderManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(may_order=True)
+
+
 class Customer(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE
@@ -341,9 +346,7 @@ class Customer(models.Model):
                 '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:{}">{}</span></a>',
                 reverse(
                     "repanier:customer_history_view",
-                    args=(
-                        self.id,
-                    ),
+                    args=(self.id,),
                 ),
                 color,
                 balance,
@@ -353,54 +356,6 @@ class Customer(models.Model):
 
     get_balance.short_description = _("Balance")
     get_balance.admin_order_field = "balance"
-
-    # def get_html_on_hold_movement(
-    #     self,
-    #     bank_not_invoiced=None,
-    #     order_not_invoiced=None,
-    #     total_price_with_tax=REPANIER_MONEY_ZERO,
-    # ):
-    #     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-    #         bank_not_invoiced = (
-    #             bank_not_invoiced
-    #             if bank_not_invoiced is not None
-    #             else self.get_bank_not_invoiced()
-    #         )
-    #         order_not_invoiced = (
-    #             order_not_invoiced
-    #             if order_not_invoiced is not None
-    #             else self.get_order_not_invoiced()
-    #         )
-    #         other_order_not_invoiced = order_not_invoiced - total_price_with_tax
-    #     else:
-    #         bank_not_invoiced = REPANIER_MONEY_ZERO
-    #         other_order_not_invoiced = REPANIER_MONEY_ZERO
-    #
-    #     if (
-    #         other_order_not_invoiced.amount != DECIMAL_ZERO
-    #         or bank_not_invoiced.amount != DECIMAL_ZERO
-    #     ):
-    #         if other_order_not_invoiced.amount != DECIMAL_ZERO:
-    #             if bank_not_invoiced.amount == DECIMAL_ZERO:
-    #                 customer_on_hold_movement = _(
-    #                     "This balance does not take into account orders not yet booked for an amount of %(other_order)s."
-    #                 ) % {"other_order": other_order_not_invoiced}
-    #             else:
-    #                 customer_on_hold_movement = _(
-    #                     "This balance does not take into account payments made after the last accounting entry (for an amount of %(bank)s), nor does it take into account orders not yet accounted (for an amount of %(other_order)s)"
-    #                 ) % {
-    #                     "bank": bank_not_invoiced,
-    #                     "other_order": other_order_not_invoiced,
-    #                 }
-    #         else:
-    #             customer_on_hold_movement = _(
-    #                 "This balance does not take into account payments made after the last accounting for an amount of %(bank)s."
-    #             ) % {"bank": bank_not_invoiced}
-    #         customer_on_hold_movement = mark_safe(customer_on_hold_movement)
-    #     else:
-    #         customer_on_hold_movement = EMPTY_STRING
-    #
-    #     return customer_on_hold_movement
 
     def get_last_membership_fee(self):
         from repanier.models.purchase import Purchase
@@ -583,6 +538,9 @@ class Customer(models.Model):
             return self.short_basket_name
         else:
             return "{} - {}".format(self.group, self.short_basket_name)
+
+    objects = models.Manager()  # The default manager.
+    can_place_an_order = MayOrderManager()  # Our custom manager.
 
     class Meta:
         verbose_name = _("Customer")

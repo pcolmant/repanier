@@ -1,8 +1,6 @@
-from django.contrib.auth.decorators import login_required
 from django.http import Http404, JsonResponse
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.email.email_order import export_order_2_1_customer
@@ -17,12 +15,10 @@ from repanier.tools import (
 )
 
 
-@never_cache
 @require_GET
-@login_required
 def btn_confirm_order_ajax(request):
-    user = request.user
-    customer = Customer.objects.filter(user_id=user.id, may_order=True).first()
+    customer_id = request.user.customer_id
+    customer = Customer.can_place_an_order.filter(id=customer_id).first()
     if customer is None:
         raise Http404
     translation.activate(customer.language)
@@ -31,7 +27,7 @@ def btn_confirm_order_ajax(request):
     permanence_ok_or_404(permanence)
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence_id,
-        customer_id=customer.id,
+        customer_id=customer_id,
         is_order_confirm_send=False,
         is_group=False,
     ).first()

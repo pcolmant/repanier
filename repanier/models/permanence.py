@@ -1852,7 +1852,7 @@ class Permanence(models.Model):
                 <div class="excerpt">{offer_description}</div>
             </a>
             """.format(
-                    href=self.get_absolute_url(),
+                    href=self.get_order_url(),
                     title=self.get_html_permanence_display(),
                     offer_description=offer_description.words(30, html=True),
                 )
@@ -1875,7 +1875,10 @@ class Permanence(models.Model):
     def __str__(self):
         return self.get_permanence_display()
 
-    def get_absolute_url(self):
+    def get_order_filter_url(self):
+        return reverse("repanier:order_filter_view", args=[self.id])
+
+    def get_order_url(self):
         return reverse("repanier:order_view", args=[self.id])
 
     class Meta:

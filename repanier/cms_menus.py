@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
+
 from repanier.const import *
 from repanier.models import Permanence
 from repanier.models import PermanenceBoard
@@ -31,14 +32,21 @@ class PermanenceMenu(Menu):
             nodes, parent_node, submenu_id
         )
 
-        displayed_permanence_counter = 0
         first_pass = True
-        for permanence in (
-            Permanence.objects.filter(status=SaleStatus.OPENED)
-            .only("id", "permanence_date", "status")
-            .order_by("permanence_date", "id")
-        ):
-            displayed_permanence_counter += 1
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            qs = Permanence.objects.filter(
+                status__in=[SaleStatus.OPENED, SaleStatus.CLOSED, SaleStatus.SEND],
+                master_permanence__isnull=True,
+            ).order_by(
+                "permanence_date", "id"
+            )
+        else:
+            qs = Permanence.objects.filter(
+                status=SaleStatus.OPENED, master_permanence__isnull=True
+            ).order_by(
+                "permanence_date", "id"
+            )
+        for permanence in qs:
             if first_pass and separator_needed:
                 submenu_id = self.append_separator(nodes, parent_node, submenu_id)
             first_pass = False
@@ -46,28 +54,6 @@ class PermanenceMenu(Menu):
             submenu_id = self.append_permanence(
                 nodes, parent_node, submenu_id, is_anonymous, permanence
             )
-
-        first_pass = True
-        if displayed_permanence_counter <= 4:
-            for permanence in (
-                Permanence.objects.filter(
-                    status__in=[SaleStatus.CLOSED, SaleStatus.SEND],
-                    master_permanence__isnull=True,
-                )
-                .only("id", "permanence_date")
-                .order_by("-permanence_date")
-            ):
-
-                displayed_permanence_counter += 1
-                if first_pass and separator_needed:
-                    submenu_id = self.append_separator(nodes, parent_node, submenu_id)
-                first_pass = False
-                submenu_id = self.append_permanence(
-                    nodes, parent_node, submenu_id, is_anonymous, permanence
-                )
-                if displayed_permanence_counter > 4:
-                    break
-
         if len(nodes) > 1:
             return nodes
         return []
@@ -95,7 +81,7 @@ class PermanenceMenu(Menu):
         self, nodes, parent_node, submenu_id, is_anonymous, permanence
     ):
 
-        path = permanence.get_absolute_url()
+        path = permanence.get_order_url()
         if not is_anonymous and permanence.status > SaleStatus.OPENED:
             path = path + "?is_basket=yes"
         submenu_id += 1

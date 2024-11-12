@@ -314,7 +314,7 @@ class CustomerInvoice(Invoice):
                         msg_goto_basket = """
                             <a href="{}?is_basket=yes" class="btn btn-info" {}>{}</a>
                         """.format(
-                            permanence.get_absolute_url(),
+                            permanence.get_order_url(),
                             confirm_basket_disabled,
                             _("➜ Go to the confirmation step of my order."),
                         )

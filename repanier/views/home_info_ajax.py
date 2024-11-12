@@ -21,13 +21,12 @@ def home_info_bs3_ajax(request):
     permanences = []
     for permanence in (
         Permanence.objects.filter(status=SaleStatus.OPENED)
-        .only("id", "permanence_date", "with_delivery_point")
         .order_by("-permanence_date", "-id")
     ):
         permanences.append(
             format_html(
                 '<div class="panel-heading"><h4 class="panel-title"><a href="{}">{}</a></h4></div>',
-                permanence.get_absolute_url(),
+                permanence.get_order_url(),
                 permanence.get_permanence_display(),
             )
         )
@@ -85,13 +84,12 @@ def home_info_bs5_ajax(request):
     permanences = []
     for permanence in (
         Permanence.objects.filter(status=SaleStatus.OPENED)
-        .only("id", "permanence_date", "with_delivery_point")
         .order_by("-permanence_date", "-id")
     ):
         permanences.append(
             format_html(
                 '<div class="panel-heading"><h4 class="panel-title"><a href="{}">{}</a></h4></div>',
-                permanence.get_absolute_url(),
+                permanence.get_order_url(),
                 permanence.get_permanence_display(),
             )
         )

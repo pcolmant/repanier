@@ -57,7 +57,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                     "permanence_link": mark_safe(
                         '<a href="https://{}{}">{}</a>'.format(
                             settings.ALLOWED_HOSTS[0],
-                            permanence.get_absolute_url(),
+                            permanence.get_order_url(),
                             permanence,
                         )
                     ),
@@ -118,7 +118,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 "permanence_link": mark_safe(
                     '<a href="https://{}{}">{}</a>'.format(
                         settings.ALLOWED_HOSTS[0],
-                        permanence.get_absolute_url(),
+                        permanence.get_order_url(),
                         permanence,
                     )
                 ),
@@ -230,7 +230,7 @@ def export_order_2_1_group(
                 "permanence_link": mark_safe(
                     '<a href="https://{}{}">{}</a>'.format(
                         settings.ALLOWED_HOSTS[0],
-                        permanence.get_absolute_url(),
+                        permanence.get_order_url(),
                         permanence,
                     )
                 ),
@@ -339,7 +339,7 @@ def export_order_2_1_customer(
                     "permanence_link": mark_safe(
                         '<a href="https://{}{}">{}</a>'.format(
                             settings.ALLOWED_HOSTS[0],
-                            permanence.get_absolute_url(),
+                            permanence.get_order_url(),
                             permanence,
                         )
                     ),

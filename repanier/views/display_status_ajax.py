@@ -1,15 +1,11 @@
-from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.http import HttpResponse
-from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.models.permanence import Permanence
 
 
-@never_cache
 @require_GET
-@login_required
 def display_status(request, permanence_id):
     if request.user.is_staff:
         permanence = Permanence.objects.filter(id=permanence_id).first()
