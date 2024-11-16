@@ -573,37 +573,42 @@ def update_offer_item(product=None, producer_id=None):
     from repanier.models.permanence import Permanence
     from repanier.models.offeritem import OfferItem
 
+    producer_id = product.producer_id if product else producer_id
     # The user can also modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in Permanence.objects.filter(
         status=const.SaleStatus.OPENED,
+        producers=producer_id,
     ):
         if product is not None:
             # Create the offer item if needed and clean it
             offer_item = product.get_or_create_offer_item(permanence)
         else:
             offer_item_qs = OfferItem.objects.filter(
+                permanence_id=permanence.id,
                 producer_id=producer_id
             )
             permanence.clean_offer_item(offer_item_qs=offer_item_qs)
         permanence.calculate_order_amount()
 
-    for permanence in Permanence.objects.filter(
-        status=const.SaleStatus.SEND,
-    ):
-        if product is not None:
-            if product.is_into_offer:
-                # Create the offer item if needed and clean it
-                offer_item = product.get_or_create_offer_item(permanence)
+    if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+        for permanence in Permanence.objects.filter(
+            status=const.SaleStatus.SEND,
+            producers=producer_id,
+        ):
+            if product is not None:
+                if product.is_into_offer:
+                    # Create the offer item if needed and clean it
+                    offer_item = product.get_or_create_offer_item(permanence)
+                    permanence.calculate_order_amount()
+            else:
+                offer_item_qs = OfferItem.objects.filter(
+                    permanence_id=permanence.id,
+                    producer_id=producer_id,
+                    product__is_into_offer=True,
+                )
+                permanence.clean_offer_item(offer_item_qs=offer_item_qs)
                 permanence.calculate_order_amount()
-        else:
-            offer_item_qs = OfferItem.objects.filter(
-                producer_id=producer_id,
-                product__is_into_offer=True,
-            )
-            permanence.clean_offer_item(offer_item_qs=offer_item_qs)
-            permanence.calculate_order_amount()
     cache.clear()
-
 
 def web_services_activated(reference_site=None):
     activated = False
