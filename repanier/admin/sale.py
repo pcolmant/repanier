@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.db import transaction
 from django.db.models import F
 from django.utils.translation import gettext_lazy as _
+
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import EMPTY_STRING, SaleStatus
 from repanier.middleware import get_query_filters
@@ -200,7 +201,10 @@ class SaleAdmin(admin.ModelAdmin):
             "status",
         ]
         if permanence is not None:
-            if permanence.status > SaleStatus.PLANNED.value:
+            if SaleStatus.PLANNED.value < permanence.status < SaleStatus.SEND.value:
+                # Let add producer when the Sale is closed to be able to add products in admin.purchase
+                # for a newly added producer. Tools.update_offer_item requires that the producer is present
+                # into the sale to update the offer item required to add a product.
                 readonly_fields.append("producers")
             elif permanence.status >= SaleStatus.CLOSED.value:
                 readonly_fields.append("automatically_closed")
