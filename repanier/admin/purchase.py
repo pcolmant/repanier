@@ -13,6 +13,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse, path
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+
 from repanier.const import *
 from repanier.middleware import (
     get_request_params,
@@ -140,8 +141,9 @@ class ProducerAutocomplete(autocomplete.Select2QuerySetView):
         if not self.request.user.is_staff:
             return Producer.objects.none()
 
+        permanence_id = self.forwarded.get("permanence", None)
         qs = super().get_queryset()
-        qs = qs.filter(is_active=True)
+        qs = qs.filter(permanence=permanence_id, is_active=True)
 
         return qs
 
@@ -305,6 +307,7 @@ class PurchaseForm(forms.ModelForm):
         required=True,
         widget=autocomplete.ModelSelect2(
             url="admin:repanier_purchase_form_producer",
+            forward=(forward.Field("permanence"),),
             attrs={
                 "data-dropdown-auto-width": "true",
                 "data-width": "80%",
@@ -401,6 +404,7 @@ class PurchaseForm(forms.ModelForm):
         widgets = {
             "comment": TextInput(attrs={"style": "width: 80%;"}),
         }
+
 
 @admin.register(Purchase)
 class PurchaseAdmin(admin.ModelAdmin):
