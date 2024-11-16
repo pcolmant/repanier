@@ -38,13 +38,13 @@ class PermanenceMenu(Menu):
                 status__in=[SaleStatus.OPENED, SaleStatus.CLOSED, SaleStatus.SEND],
                 master_permanence__isnull=True,
             ).order_by(
-                "permanence_date", "id"
+                "-permanence_date", "id"
             )
         else:
             qs = Permanence.objects.filter(
                 status=SaleStatus.OPENED, master_permanence__isnull=True
             ).order_by(
-                "permanence_date", "id"
+                "-permanence_date", "id"
             )
         for permanence in qs:
             if first_pass and separator_needed:
