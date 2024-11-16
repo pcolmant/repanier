@@ -84,16 +84,15 @@ def order_ajax(request):
                     offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=True
                 )
 
-            if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
-                producer_invoice = (
-                    ProducerInvoice.objects.filter(
-                        producer_id=offer_item.producer_id,
-                        permanence_id=offer_item.permanence_id,
-                    )
-                    .only("total_price_with_tax")
-                    .first()
+            producer_invoice = (
+                ProducerInvoice.objects.filter(
+                    producer_id=offer_item.producer_id,
+                    permanence_id=offer_item.permanence_id,
                 )
-                json_dict.update(producer_invoice.get_order_json())
+                .only("total_price_with_tax")
+                .first()
+            )
+            json_dict.update(producer_invoice.get_order_json())
 
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=offer_item.permanence_id, customer_id=customer.id

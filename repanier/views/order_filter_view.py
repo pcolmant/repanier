@@ -33,12 +33,9 @@ def order_filter_view(request, permanence_id):
     department_id = request.GET.get("department", "all")
     q = request.GET.get("q", None)
 
-    if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
-        producer_set = Producer.objects.filter(permanence=permanence_id).only(
-            "id", "short_profile_name"
-        )
-    else:
-        producer_set = None
+    producer_set = Producer.objects.filter(permanence=permanence_id).only(
+        "id", "short_profile_name"
+    )
 
     department_set = (
         LUT_DepartmentForCustomer.objects.filter(

@@ -96,11 +96,10 @@ def order_init_ajax(request):
     else:
         json_dict = {}
 
-    if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
-        for producer_invoice in ProducerInvoice.objects.filter(
-            permanence_id=permanence.id, producer__minimum_order_value__gt=DECIMAL_ZERO
-        ).only("total_price_with_tax", "status"):
-            json_dict.update(producer_invoice.get_order_json())
+    for producer_invoice in ProducerInvoice.objects.filter(
+        permanence_id=permanence.id, producer__minimum_order_value__gt=DECIMAL_ZERO
+    ).only("total_price_with_tax", "status"):
+        json_dict.update(producer_invoice.get_order_json())
 
     communication = sboolean(request.GET.get("co", False))
     if communication:

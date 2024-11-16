@@ -49,14 +49,9 @@ class CustomerInvoiceView(DetailView):
                 customer_invoice=customer_invoice
             ).order_by("operation_date")
             context["bank_account_set"] = bank_account_set
-            if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
-                purchase_set = Purchase.objects.filter(
-                    customer_invoice=customer_invoice,
-                ).order_by("producer", "offer_item")
-            else:
-                purchase_set = Purchase.objects.filter(
-                    customer_invoice=customer_invoice,
-                ).order_by("offer_item")
+            purchase_set = Purchase.objects.filter(
+                customer_invoice=customer_invoice,
+            ).order_by("producer", "offer_item")
             context["purchase_set"] = purchase_set
             purchase_by_other_set = (
                 Purchase.objects.filter(

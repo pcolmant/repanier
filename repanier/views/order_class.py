@@ -85,12 +85,9 @@ class OrderView(ListView):
             "notification"
         ] = REPANIER_SETTINGS_NOTIFICATION.get_notification_display()
         if self.first_page:
-            if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
-                producer_set = Producer.objects.filter(
-                    permanence=self.permanence.id
-                ).only("id", "short_profile_name")
-            else:
-                producer_set = None
+            producer_set = Producer.objects.filter(
+                permanence=self.permanence.id
+            ).only("id", "short_profile_name")
             context["producer_set"] = producer_set
             if self.producer_id == "all":
                 department_set = (
