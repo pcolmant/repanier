@@ -18,7 +18,7 @@ from repanier.tools import sint
 def task_form_ajax(request):
     user = request.user
     customer = (
-        Customer.objects.filter(id=user.customer_id, may_order=True)
+        Customer.can_place_an_order.filter(user_id=user.id)
         .only("id", "vat_id", "language")
         .first()
     )

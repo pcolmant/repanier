@@ -31,7 +31,7 @@ def order_ajax(request):
     """
     # print("####### order_ajax")
     user = request.user
-    customer = Customer.objects.filter(id=user.customer_id, may_order=True).first()
+    customer = Customer.can_place_an_order.filter(user_id=user.id).first()
     if customer is None:
         raise Http404
     offer_item_id = sint(request.GET.get("offer_item", 0))

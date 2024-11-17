@@ -79,7 +79,7 @@ class CustomerForm(forms.Form):
 # @never_cache
 def my_profile_view(request):
     user = request.user
-    customer = Customer.objects.filter(id=user.customer_id).first()
+    customer = Customer.objects.filter(user_id=user.id).first()
     if customer is None:
         raise Http404
     from repanier.apps import (

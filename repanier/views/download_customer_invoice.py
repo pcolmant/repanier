@@ -22,7 +22,7 @@ def download_customer_invoice(request, customer_invoice_id):
             ).first()
         else:
             customer_invoice = CustomerInvoice.objects.filter(
-                customer__user_id=request.user.id,
+                customer__user_id=user.id,
                 id=customer_invoice_id,
                 # invoice_sort_order__isnull=False,
                 # status__in=[SaleStatus.INVOICED, SaleStatus.ARCHIVED],

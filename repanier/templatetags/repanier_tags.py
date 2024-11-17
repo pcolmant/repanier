@@ -312,7 +312,7 @@ def repanier_select_task(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     result = EMPTY_STRING
-    customer = Customer.objects.filter(id=user.customer_id, may_order=True).first()
+    customer = Customer.can_place_an_order.filter(user_id=user.id).first()
     if customer is not None:
         p_task_id = sint(kwargs.get("task_id", 0))
         if p_task_id > 0:

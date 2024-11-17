@@ -21,7 +21,7 @@ from repanier.tools import permanence_ok_or_404, get_repanier_template_name
 @login_required
 def order_filter_view(request, permanence_id):
     user = request.user
-    customer = Customer.objects.filter(user_id=user.id, may_order=True).first()
+    customer = Customer.can_place_an_order.filter(user_id=user.id).first()
     if customer is None:
         raise Http404
     translation.activate(customer.language)

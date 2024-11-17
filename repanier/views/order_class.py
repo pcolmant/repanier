@@ -59,7 +59,7 @@ class OrderView(ListView):
         self.is_basket = self.request.GET.get("is_basket", False)
         self.is_like = self.request.GET.get("is_like", False)
         if not self.user.is_anonymous:
-            self.customer = Customer.objects.filter(id=self.user.customer_id).first()
+            self.customer = Customer.objects.filter(user_id=self.user.id).first()
         if self.customer is None:
             self.may_order = False
         else:
