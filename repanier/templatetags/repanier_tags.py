@@ -1,6 +1,7 @@
 from django import template
 from django.conf import settings
 from django.urls import reverse
+from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -154,11 +155,10 @@ def repanier_user_bs3(context, *args, **kwargs):
         nodes.append("</ul></li>")
     else:
         nodes = [
-            '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
-                reverse("repanier:login_form"), _("Sign in")
+            '<li class="dropdown"><a href="{}?{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
+                reverse("repanier:login_form"), urlencode({'next': request.get_full_path()}), _("Sign in")
             )
         ]
-
     return mark_safe("".join(nodes))
 
 
