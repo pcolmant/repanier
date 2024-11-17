@@ -131,12 +131,12 @@ class OfferItem(Item):
     get_html_producer_price_purchased.short_description = _("Row amount")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
-    def get_html_like(self, user):
+    def get_html_like(self, user_id):
         if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
             return mark_safe(
                 '<span class="glyphicon glyphicon-heart{}" onclick="like_ajax({});return false;"></span>'.format(
                     EMPTY_STRING
-                    if self.product.likes.filter(id=user.id).only("id").exists()
+                    if self.product.likes.filter(id=user_id).only("id").exists()
                     else "-empty",
                     self.id,
                 )
@@ -145,7 +145,7 @@ class OfferItem(Item):
             return mark_safe(
                 '<span class="fa{} fa-heart" onclick="like_ajax({});return false;"></span>'.format(
                     "s"
-                    if self.product.likes.filter(id=user.id).only("id").exists()
+                    if self.product.likes.filter(id=user_id).only("id").exists()
                     else "r",
                     self.id,
                 )

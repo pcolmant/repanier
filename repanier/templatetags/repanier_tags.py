@@ -439,15 +439,10 @@ def select_offer_item(offer_item, result, user):
 @register.simple_tag(takes_context=True)
 def repanier_btn_like(context, *args, **kwargs):
     request = context["request"]
-    user = request.user
-    result = EMPTY_STRING
-    customer_is_active = Customer.objects.filter(
-        user_id=user.id, is_active=True
-    ).exists()
-    if customer_is_active:
-        offer_item = kwargs.get("offer_item", None)
-        str_id = str(offer_item.id)
-        result = '<br><span class="btn_like{str_id}" style="cursor: pointer;">{html}</span>'.format(
-            str_id=str_id, html=offer_item.get_html_like(user)
-        )
+    user_id = request.user.id
+    offer_item = kwargs.get("offer_item", None)
+    str_id = str(offer_item.id)
+    result = '<br><span class="btn_like{str_id}" style="cursor: pointer;">{html}</span>'.format(
+        str_id=str_id, html=offer_item.get_html_like(user_id)
+    )
     return mark_safe(result)
