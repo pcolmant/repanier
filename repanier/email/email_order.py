@@ -307,7 +307,6 @@ def export_order_2_1_customer(
 
             (
                 customer_last_balance,
-                customer_on_hold_movement,
                 customer_payment_needed,
                 customer_order_amount,
             ) = payment_message(customer, permanence, customer_invoice)
@@ -352,7 +351,6 @@ def export_order_2_1_customer(
                     ),
                     "last_balance": mark_safe(customer_last_balance),
                     "order_amount": mark_safe(customer_order_amount),
-                    "on_hold_movement": customer_on_hold_movement,
                     "payment_needed": mark_safe(customer_payment_needed),
                     "delivery_point": delivery_point,
                     "signature": order_responsible["html_signature"],
