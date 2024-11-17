@@ -1,4 +1,6 @@
-from django.conf import settings
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.views.generic import ListView
 
 from repanier.const import EMPTY_STRING
@@ -39,6 +41,12 @@ class OrderView(ListView):
         self.permanence = None
 
     def get(self, request, *args, **kwargs):
+        from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
+
+        if not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM:
+            if not request.user.is_authenticated:
+                return HttpResponseRedirect(
+                    "{}?{}".format(reverse('repanier:login_form'), urlencode({'next': request.get_full_path()})))
         self.first_page = kwargs.get("page", True)
         permanence_id = sint(kwargs.get("permanence_id", 0))
         self.permanence = (
