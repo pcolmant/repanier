@@ -17,17 +17,15 @@ from repanier.tools import (
 
 @require_GET
 def btn_confirm_order_ajax(request):
-    customer_id = request.user.customer_id
-    customer = Customer.can_place_an_order.filter(id=customer_id).first()
-    if customer is None:
-        raise Http404
-    translation.activate(customer.language)
     permanence_id = sint(request.GET.get("permanence", 0))
     permanence = Permanence.objects.filter(id=permanence_id).first()
     permanence_ok_or_404(permanence)
+    user_id = request.user.id
+    customer = Customer.can_place_an_order.filter(user_id=user_id).only("id").first()
+    translation.activate(customer.language)
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence_id,
-        customer_id=customer_id,
+        customer_id=customer.id,
         is_order_confirm_send=False,
         is_group=False,
     ).first()
