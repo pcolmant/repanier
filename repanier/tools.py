@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+
 from repanier import apps
 from repanier import const
 
@@ -185,100 +186,53 @@ def get_base_unit(order_unit, qty=0):
 
 
 def payment_message(customer, permanence, customer_invoice):
-    customer_order_amount = _("The amount of your order is %(amount)s.") % {
-        "amount": customer_invoice.get_total_price_with_tax()
-    }
-    if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-        balance = customer.get_admin_balance()
-    else:
-        balance = customer_invoice.get_total_price_with_tax()
-    if balance.amount != const.DECIMAL_ZERO:
-        if balance.amount < const.DECIMAL_ZERO:
-            html_balance = '<font color="#bd0926">{}</font>'.format(balance)
+    amount = customer_invoice.get_total_price_with_tax()
+    customer_order_amount = _("The amount of your order is {amount}.").format(amount=amount)
+    bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
+
+    html_customer_last_balance = const.EMPTY_STRING
+    ask_payment = False
+    balance = const.DECIMAL_ZERO
+
+    if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER or customer_invoice.is_order_confirm_send:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            balance = customer.get_admin_balance()
+            if balance.amount != const.DECIMAL_ZERO:
+                if balance.amount < const.DECIMAL_ZERO:
+                    html_balance = f'<font color="#bd0926">{balance}</font>'
+                    ask_payment = True
+                else:
+                    html_balance = f"{balance}"
+                html_customer_last_balance = _("Including this order, your account balance is {balance}.").format(
+                    balance=html_balance
+                )
         else:
-            html_balance = "{}".format(balance)
-        html_customer_last_balance = _(
-            "Including this order, your account balance is %(balance)s."
-            # "The balance of your account as of %(date)s is %(balance)s."
-        ) % {
-            # "date": customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
-            "balance": html_balance,
-        }
-    else:
-        html_customer_last_balance = const.EMPTY_STRING
+            ask_payment = (bank_account_number != const.EMPTY_STRING) and amount > const.DECIMAL_ZERO
+            balance = -amount
 
     if customer_invoice.customer_id != customer_invoice.customer_charged_id:
-        html_customer_on_hold_movement = const.EMPTY_STRING
-        html_customer_payment_needed = "{}".format(
-            _(
-                "Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments."
-            )
-            % {"name": customer_invoice.customer_charged.long_basket_name}
+        html_customer_payment_needed = _("Invoices for this delivery point are sent to {name} who is responsible for collecting the payments.").format(
+            name=customer_invoice.customer_charged.long_basket_name
         )
     else:
-        if (
-            not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
-            or customer_invoice.is_order_confirm_send
-        ):
-            # bank_not_invoiced = customer.get_bank_not_invoiced()
-            # order_not_invoiced = customer.get_order_not_invoiced()
-
-            # customer_on_hold_movement = customer.get_html_on_hold_movement(
-            #     bank_not_invoiced,
-            #     order_not_invoiced,
-            #     customer_invoice.get_total_price_with_tax(),
-            # )
-            # if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            #     payment_needed = -(
-            #         customer.balance - order_not_invoiced + bank_not_invoiced
-            #     )
-            # else:
-            #     payment_needed = customer_invoice.get_total_price_with_tax()
-            html_customer_on_hold_movement = const.EMPTY_STRING
-
-            bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
-            if bank_account_number is not None:
-                if balance.amount < const.DECIMAL_ZERO:
-                    if permanence.short_name_v2:
-                        communication = "{} ({})".format(
-                            customer.short_basket_name, permanence.short_name_v2
-                        )
-                    else:
-                        communication = customer.short_basket_name
-                    group_name = settings.REPANIER_SETTINGS_GROUP_NAME
-                    html_customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
-                        _(
-                            "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
-                        )
-                        % {
-                            "payment": -balance,
-                            "name": group_name,
-                            "number": bank_account_number,
-                            "communication": communication,
-                        }
-                    )
-
-                else:
-                    if balance.amount != const.DECIMAL_ZERO:
-                        html_customer_payment_needed = (
-                            '<br><font color="#51a351">{}.</font>'.format(
-                                _("Your account balance is sufficient")
-                            )
-                        )
-                    else:
-                        html_customer_payment_needed = const.EMPTY_STRING
+        if ask_payment:
+            if balance.amount < const.DECIMAL_ZERO:
+                communication = f"{customer.short_basket_name} ({permanence.short_name_v2})" if permanence.short_name_v2 else customer.short_basket_name
+                group_name = settings.REPANIER_SETTINGS_GROUP_NAME
+                customer_payment_needed = _("Please pay a provision of {payment} to the bank account {name} {number} with communication {communication}.").format(
+                    payment= -balance,
+                    name= group_name,
+                    number= bank_account_number,
+                    communication= communication,
+                )
+                html_customer_payment_needed = f'<br><font color="#bd0926">{customer_payment_needed}</font>'
             else:
-                html_customer_payment_needed = const.EMPTY_STRING
+                customer_payment_needed = _("Your account balance is sufficient") if balance.amount != const.DECIMAL_ZERO else const.EMPTY_STRING
+                html_customer_payment_needed = f'<br><font color="#51a351">{customer_payment_needed}.</font>'
         else:
-            html_customer_on_hold_movement = const.EMPTY_STRING
             html_customer_payment_needed = const.EMPTY_STRING
 
-    return (
-        html_customer_last_balance,
-        html_customer_on_hold_movement,
-        html_customer_payment_needed,
-        customer_order_amount,
-    )
+    return html_customer_last_balance, html_customer_payment_needed, customer_order_amount
 
 
 def get_html_selected_value(
@@ -631,13 +585,12 @@ def get_html_basket_message(customer, permanence, status, customer_invoice):
     payment_msg = const.EMPTY_STRING
     (
         customer_last_balance,
-        customer_on_hold_movement,
         customer_payment_needed,
         customer_order_amount,
     ) = payment_message(customer, permanence, customer_invoice)
     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING and customer_last_balance:
-        invoice_msg = "<br>{} {}".format(
-            customer_last_balance, customer_on_hold_movement
+        invoice_msg = "<br>{}".format(
+            customer_last_balance
         )
     if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None and customer_payment_needed:
         payment_msg = "<br>{}".format(customer_payment_needed)
