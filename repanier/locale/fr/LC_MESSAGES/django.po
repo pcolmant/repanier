@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-17 17:46+0100\n"
-"PO-Revision-Date: 2024-11-17 17:47+0100\n"
+"POT-Creation-Date: 2024-11-17 21:36+0100\n"
+"PO-Revision-Date: 2024-11-17 21:36+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -41,7 +41,7 @@ msgid "Only recorded"
 msgstr "Seulement enregistré"
 
 #: admin/admin_filter.py:39 admin/admin_filter.py:73 admin/admin_filter.py:101
-#: models/deliveryboard.py:32 models/invoice.py:25 models/permanence.py:74
+#: models/deliveryboard.py:32 models/invoice.py:26 models/permanence.py:74
 #: models/permanence.py:1798
 msgid "Status"
 msgstr "Statut"
@@ -51,7 +51,7 @@ msgid "Not booked"
 msgstr "Non comptabilisé"
 
 #: admin/admin_filter.py:45 models/customer.py:104 models/customer.py:222
-#: models/customer.py:357 models/invoice.py:81 models/producer.py:125
+#: models/customer.py:357 models/invoice.py:82 models/producer.py:125
 #: models/producer.py:199 models/producer.py:324 models/producer.py:354
 msgid "Balance"
 msgstr "Solde"
@@ -76,8 +76,8 @@ msgstr ""
 
 #: admin/bankaccount.py:217 admin/purchase.py:276
 #: admin/rule_of_3_per_product.py:128 models/bankaccount.py:27
-#: models/bankaccount.py:211 models/customer.py:546 models/invoice.py:113
-#: models/invoice.py:117 models/invoice.py:827 models/invoice.py:928
+#: models/bankaccount.py:211 models/customer.py:546 models/invoice.py:114
+#: models/invoice.py:118 models/invoice.py:806 models/invoice.py:907
 #: models/permanenceboard.py:10 models/purchase.py:58
 #: templates/bs3/admin/repanier/customersend/change_form.html:7
 #: templates/bs3/admin/repanier/offeritemsend/change_form.html:7
@@ -95,8 +95,8 @@ msgid "Customer"
 msgstr "Consommateur"
 
 #: admin/bankaccount.py:230 admin/forms.py:94 admin/purchase.py:305
-#: models/bankaccount.py:20 models/bankaccount.py:187 models/invoice.py:702
-#: models/invoice.py:830 models/item.py:24 models/producer.py:430
+#: models/bankaccount.py:20 models/bankaccount.py:187 models/invoice.py:681
+#: models/invoice.py:809 models/item.py:24 models/producer.py:430
 #: models/producer.py:459 models/purchase.py:55
 #: templates/bs3/repanier/customer_invoice_form.html:149
 #: templates/bs3/repanier/customer_invoice_form.html:332
@@ -110,20 +110,20 @@ msgid "Producer"
 msgstr "Producteur"
 
 #: admin/bankaccount.py:246 models/bankaccount.py:44 models/bankaccount.py:150
-#: models/invoice.py:66 xlsx/xlsx_invoice.py:84 xlsx/xlsx_invoice.py:162
+#: models/invoice.py:67 xlsx/xlsx_invoice.py:84 xlsx/xlsx_invoice.py:162
 msgid "Cash in"
 msgstr "Entrée d'argent"
 
-#: admin/bankaccount.py:247 models/bankaccount.py:45 models/invoice.py:67
+#: admin/bankaccount.py:247 models/bankaccount.py:45 models/invoice.py:68
 msgid "Payment on the account"
 msgstr "Entrée d'argent"
 
 #: admin/bankaccount.py:254 models/bankaccount.py:52 models/bankaccount.py:168
-#: models/invoice.py:73 xlsx/xlsx_invoice.py:90 xlsx/xlsx_invoice.py:168
+#: models/invoice.py:74 xlsx/xlsx_invoice.py:90 xlsx/xlsx_invoice.py:168
 msgid "Cash out"
 msgstr "Sortie d'argent"
 
-#: admin/bankaccount.py:255 models/bankaccount.py:53 models/invoice.py:74
+#: admin/bankaccount.py:255 models/bankaccount.py:53 models/invoice.py:75
 msgid "Payment from the account"
 msgstr "Sortie d'argent"
 
@@ -280,7 +280,7 @@ msgstr "Date du paiement"
 msgid "File to import"
 msgstr "Fichier à importer"
 
-#: admin/forms.py:91 admin/forms.py:125 models/invoice.py:726
+#: admin/forms.py:91 admin/forms.py:125 models/invoice.py:705
 msgid "Accounting reference"
 msgstr "Référence comptable"
 
@@ -295,11 +295,11 @@ msgstr "Référence comptable"
 msgid "Short name"
 msgstr "Nom abrégé"
 
-#: admin/forms.py:111 models/invoice.py:711
+#: admin/forms.py:111 models/invoice.py:690
 msgid "Amount due to the producer as calculated by Repanier"
 msgstr "Montant dû au producteur tel que calculé par Repanier"
 
-#: admin/forms.py:118 models/invoice.py:717
+#: admin/forms.py:118 models/invoice.py:696
 msgid "Amount claimed by the producer"
 msgstr "Montant réclamé par le producteur"
 
@@ -311,7 +311,7 @@ msgstr "Membres"
 msgid "Inform the group of orders placed by its members"
 msgstr "Informer le groupe des commandes passées par ses membres"
 
-#: admin/group.py:163 models/invoice.py:45 models/invoice.py:156
+#: admin/group.py:163 models/invoice.py:46 models/invoice.py:157
 #: models/lut.py:110 templates/bs3/repanier/customer_invoice_form.html:109
 #: templates/bs3/repanier/customer_invoice_form.html:288
 #: templates/bs3/repanier/producer_invoice_form.html:58
@@ -321,7 +321,7 @@ msgstr "Informer le groupe des commandes passées par ses membres"
 msgid "Shipping cost"
 msgstr "Frais"
 
-#: admin/group.py:171 models/invoice.py:163 models/lut.py:118
+#: admin/group.py:171 models/invoice.py:164 models/lut.py:118
 msgid "Minimum order amount for free shipping cost"
 msgstr "Montant minimum à commander pour éviter les frais"
 
@@ -335,7 +335,7 @@ msgstr "---------"
 msgid "Import an invoice"
 msgstr "Importer une facture"
 
-#: admin/permanence_done.py:151 models/invoice.py:695 models/invoice.py:821
+#: admin/permanence_done.py:151 models/invoice.py:674 models/invoice.py:800
 #: xlsx/xlsx_purchase.py:85
 msgid "Accounting entries"
 msgstr "Entrées comptable"
@@ -467,7 +467,7 @@ msgstr "1 --- Vérifier l'offre"
 
 #: admin/permanence_in_preparation.py:185
 #: admin/permanence_in_preparation.py:206 admin/purchase.py:97
-#: cms_toolbar.py:130 models/customer.py:547 models/invoice.py:929
+#: cms_toolbar.py:130 models/customer.py:547 models/invoice.py:908
 msgid "Customers"
 msgstr "Consommateurs"
 
@@ -521,9 +521,8 @@ msgstr ""
 "%(number)s avec comme communication \"%(communication)s\"."
 
 #: admin/permanence_in_preparation.py:471 admin/purchase.py:289
-#: models/deliveryboard.py:18 models/invoice.py:430 models/invoice.py:688
-#: models/lut.py:135 models/purchase.py:206
-#: templates/bs3/repanier/customer_invoice_form.html:87
+#: models/deliveryboard.py:18 models/invoice.py:667 models/lut.py:135
+#: models/purchase.py:206 templates/bs3/repanier/customer_invoice_form.html:87
 #: templates/bs3/repanier/customer_invoice_form.html:117
 #: templates/bs3/repanier/customer_invoice_form.html:268
 #: templates/bs3/repanier/customer_invoice_form.html:295
@@ -729,7 +728,7 @@ msgstr "Produit en offre"
 msgid "Producer amount invoiced"
 msgstr "Facturé par le producteur"
 
-#: admin/rule_of_3_per_customer.py:227 models/invoice.py:845
+#: admin/rule_of_3_per_customer.py:227 models/invoice.py:824
 #: models/offeritem.py:54
 msgid "Accounted to the customer w VAT"
 msgstr "Comptabilisé auprès du consommateur TVAC"
@@ -747,7 +746,7 @@ msgstr "Le même consommateur ne peut pas être sélectionné deux fois."
 msgid "Purchase price"
 msgstr "Prix d'achat"
 
-#: admin/rule_of_3_per_product.py:188 models/invoice.py:837
+#: admin/rule_of_3_per_product.py:188 models/invoice.py:816
 msgid "Producer amount booked"
 msgstr "Comptabilisé pour le producteur"
 
@@ -1143,18 +1142,18 @@ msgstr ""
 "⚠ Mail non transmis au producteur {} car le minimum de commande n'a pas été "
 "atteint."
 
-#: email/email_order.py:241 models/invoice.py:266
+#: email/email_order.py:241 models/invoice.py:286 models/invoice.py:293
 #: templates/bs3/repanier/customer_invoice_form.html:25
 #: templatetags/repanier_tags.py:146
 msgid "History"
 msgstr "Historique"
 
-#: email/email_order.py:322
+#: email/email_order.py:321
 msgid "⚠ Order cancelled"
 msgstr "⚠ Commande annulée"
 
-#: models/bankaccount.py:13 models/deliveryboard.py:24 models/invoice.py:19
-#: models/invoice.py:833 models/offeritem.py:32 models/permanence.py:1885
+#: models/bankaccount.py:13 models/deliveryboard.py:24 models/invoice.py:20
+#: models/invoice.py:812 models/offeritem.py:32 models/permanence.py:1885
 #: models/permanenceboard.py:18 models/purchase.py:41
 #: templatetags/repanier_tags.py:87
 msgid "Sale"
@@ -1172,8 +1171,8 @@ msgstr "Commentaire"
 msgid "Account balance status"
 msgstr "Statut du solde du compte"
 
-#: models/bankaccount.py:61 models/bankaccount.py:69 models/invoice.py:105
-#: models/invoice.py:694 models/invoice.py:820 models/purchase.py:65
+#: models/bankaccount.py:61 models/bankaccount.py:69 models/invoice.py:106
+#: models/invoice.py:673 models/invoice.py:799 models/purchase.py:65
 #: models/purchase.py:71 templates/bs3/repanier/producer_invoice_form.html:21
 #: templates/bs3/repanier/producer_invoice_form.html:23
 #: templates/bs5/repanier/producer_invoice_form.html:21
@@ -1513,7 +1512,7 @@ msgid "This multiplier is applied to each product ordered by this customer."
 msgstr ""
 "0,9 signifie -10% sur le prix tarif. 1,06 signifie +6% sur le prix tarif."
 
-#: models/customer.py:102 models/customer.py:206 models/invoice.py:79
+#: models/customer.py:102 models/customer.py:206 models/invoice.py:80
 #: models/producer.py:192
 msgid "Date balance"
 msgstr "Date de calcul du solde"
@@ -1523,7 +1522,7 @@ msgid "Represent_this_buyinggroup"
 msgstr "Représente ce groupement d'achats"
 
 #: models/customer.py:115 models/customer.py:130 models/group.py:12
-#: models/invoice.py:170 models/lut.py:95 models/producer.py:427
+#: models/invoice.py:171 models/lut.py:95 models/producer.py:427
 msgid "Group"
 msgstr "Groupe"
 
@@ -1599,7 +1598,7 @@ msgstr "Commentaire"
 msgid "Highest status"
 msgstr "Statut le plus élevé"
 
-#: models/deliveryboard.py:85 models/invoice.py:126
+#: models/deliveryboard.py:85 models/invoice.py:127
 msgid "Delivery board"
 msgstr "Tableau des livraisons"
 
@@ -1607,11 +1606,11 @@ msgstr "Tableau des livraisons"
 msgid "Deliveries board"
 msgstr "Tableaux des livraisons"
 
-#: models/invoice.py:28
+#: models/invoice.py:29
 msgid "Date previous balance"
 msgstr "Date de calcul du solde précédemment facturé"
 
-#: models/invoice.py:31 templates/bs3/repanier/customer_invoice_form.html:12
+#: models/invoice.py:32 templates/bs3/repanier/customer_invoice_form.html:12
 #: templates/bs3/repanier/producer_invoice_form.html:36
 #: templates/bs5/repanier/customer_invoice_form.html:38
 #: templates/bs5/repanier/producer_invoice_form.html:36 xlsx/xlsx_invoice.py:78
@@ -1619,33 +1618,33 @@ msgstr "Date de calcul du solde précédemment facturé"
 msgid "Previous balance"
 msgstr "Solde précédent"
 
-#: models/invoice.py:35
+#: models/invoice.py:36
 msgid "Accounted for w VAT"
 msgstr "Comptabilisé TVAC"
 
-#: models/invoice.py:38 models/permanence.py:409 models/permanence.py:434
+#: models/invoice.py:39 models/permanence.py:409 models/permanence.py:434
 msgid "Total amount"
 msgstr "Total avec TVA"
 
-#: models/invoice.py:39
+#: models/invoice.py:40
 msgid "Purchase to add amount w VAT"
 msgstr "Montant avec TVA à ajouter"
 
-#: models/invoice.py:46
+#: models/invoice.py:47
 msgid "Transport to add"
 msgstr "Transport à ajouter"
 
-#: models/invoice.py:53 models/item.py:66 models/item.py:69
+#: models/invoice.py:54 models/item.py:66 models/item.py:69
 #: models/purchase.py:107 models/purchase.py:110 xlsx/xlsx_invoice.py:359
 #: xlsx/xlsx_invoice.py:390 xlsx/xlsx_product.py:80 xlsx/xlsx_purchase.py:44
 msgid "VAT"
 msgstr "TVA"
 
-#: models/invoice.py:56
+#: models/invoice.py:57
 msgid "VAT to add"
 msgstr "TVA à ajouter"
 
-#: models/invoice.py:59 models/item.py:72 models/purchase.py:113
+#: models/invoice.py:60 models/item.py:72 models/purchase.py:113
 #: models/purchase.py:194 templates/bs3/repanier/customer_invoice_form.html:102
 #: templates/bs3/repanier/customer_invoice_form.html:281
 #: templates/bs5/repanier/customer_invoice_form.html:82
@@ -1655,21 +1654,21 @@ msgstr "TVA à ajouter"
 msgid "Deposit"
 msgstr "Consigne"
 
-#: models/invoice.py:60 templates/bs3/repanier/customer_invoice_form.html:135
+#: models/invoice.py:61 templates/bs3/repanier/customer_invoice_form.html:135
 #: templates/bs3/repanier/customer_invoice_form.html:313
 #: templates/bs5/repanier/customer_invoice_form.html:112
 msgid "Surcharge"
 msgstr "Surcharge appliquée"
 
-#: models/invoice.py:140
+#: models/invoice.py:141
 msgid "Confirmation of the order send"
 msgstr "Confirmation de la commande envoyée"
 
-#: models/invoice.py:143 models/invoice.py:723
+#: models/invoice.py:144 models/invoice.py:702
 msgid "Accounting entry sort order"
 msgstr "Ordonnancement de l'entrée comptable"
 
-#: models/invoice.py:147
+#: models/invoice.py:148
 msgid ""
 "Delivery point coefficient applied to the producer tariff to calculate the "
 "customer tariff"
@@ -1677,7 +1676,7 @@ msgstr ""
 "Coefficient appliqué au tarif producteur pour calculer le tarif consommateur "
 "pour ce point de livraison"
 
-#: models/invoice.py:164
+#: models/invoice.py:165
 msgid "This is the minimum order amount to avoid shipping cost."
 msgstr ""
 "Minimum à commander pour éviter des frais (0 = les frais s'appliquent "
@@ -1685,21 +1684,21 @@ msgstr ""
 "dans le cas où le groupe possède un consommateur responsable. Sinon il est "
 "porte sur le total de chaque facture individuelle."
 
-#: models/invoice.py:299
+#: models/invoice.py:308
 #: templates/bs3/repanier/communication_confirm_order.html:11
 #: templates/bs5/repanier/communication_confirm_order.html:11
 msgid "⚠ Unconfirmed orders will be canceled."
 msgstr "⚠ Les commandes non confirmées sont annulées."
 
-#: models/invoice.py:310
-msgid " ➜ Confirm this order and receive an email containing its summary."
-msgstr " ➜ Confirmer ma commande et recevoir un mail récapitulatif."
-
 #: models/invoice.py:319
+msgid "➜ Confirm this order and receive an email containing its summary."
+msgstr "➜ Confirmer ma commande et recevoir un mail récapitulatif."
+
+#: models/invoice.py:328
 msgid "➜ Go to the confirmation step of my order."
 msgstr "➜ Aller à l'étape de confirmation de ma commande."
 
-#: models/invoice.py:331
+#: models/invoice.py:340
 msgid "Receive an email containing this order summary."
 msgstr "Recevoir un mail récapitulatif de ma commande."
 
@@ -1707,45 +1706,29 @@ msgstr "Recevoir un mail récapitulatif de ma commande."
 msgid "Please, select a delivery point"
 msgstr "Veuillez sélectionner un point de livraison"
 
-#: models/invoice.py:390 views/delivery_select_ajax.py:74
+#: models/invoice.py:389 views/delivery_select_ajax.py:74
 msgid "No delivery point is open for you. You can not place order."
 msgstr ""
 "Vous ne pouvez pas passer commande car aucun point de livraison n'est ouvert "
 "pour vous."
 
-#: models/invoice.py:408
-#, python-format
-msgid ""
-"The shipping costs for this delivery point amount to %(transport)s for "
-"orders of less than %(min_transport)s."
-msgstr ""
-"Pour ce point de livraison, %(transport)s de frais sont ajoutés aux "
-"commandes de moins de %(min_transport)s."
-
-#: models/invoice.py:418
-#, python-format
-msgid "The shipping costs for this delivery point amount to %(transport)s."
-msgstr ""
-"Pour ce point de livraison, %(transport)s de frais seront ajoutés à votre "
-"commande."
-
-#: models/invoice.py:660
+#: models/invoice.py:639
 msgid "Canceled order"
 msgstr "Commande annulée"
 
-#: models/invoice.py:678
+#: models/invoice.py:657
 msgid "Qty not confirmed : {}"
 msgstr "Qté non confirmée : {}"
 
-#: models/invoice.py:708
+#: models/invoice.py:687
 msgid "To be booked"
 msgstr "A comptabiliser"
 
-#: models/invoice.py:838 models/invoice.py:846
+#: models/invoice.py:817 models/invoice.py:825
 msgid "Total selling amount vat included"
 msgstr "Facturé au consommateur à la pièce ou au kg TVA incluse"
 
-#: models/invoice.py:857 models/offeritem.py:131 models/purchase.py:170
+#: models/invoice.py:836 models/offeritem.py:131 models/purchase.py:170
 msgid "Row amount"
 msgstr "Total de la ligne"
 
@@ -2853,7 +2836,7 @@ msgid "Do not forget to confirm it again."
 msgstr "N'oubliez pas de la confirmer à nouveau."
 
 #: templates/bs3/repanier/communication_confirm_order.html:12
-#: templates/bs5/repanier/communication_confirm_order.html:12 tools.py:682
+#: templates/bs5/repanier/communication_confirm_order.html:12 tools.py:603
 msgid "You can increase the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
@@ -3645,17 +3628,17 @@ msgstr "pièce"
 msgid "pieces"
 msgstr "pièces"
 
-#: tools.py:271
+#: tools.py:190
 #, python-brace-format
 msgid "The amount of your order is {amount}."
 msgstr "Le montant de votre commande s'élève à {amount}."
 
-#: tools.py:277
+#: tools.py:206
 #, python-brace-format
 msgid "Including this order, your account balance is {balance}."
 msgstr "En incluant cette commande, le solde de votre compte est de {balance}."
 
-#: tools.py:283
+#: tools.py:214
 #, python-brace-format
 msgid ""
 "Invoices for this delivery point are sent to {name} who is responsible for "
@@ -3664,7 +3647,7 @@ msgstr ""
 "Vos factures pour ce point de livraison sont envoyées à {name} qui se charge "
 "de centraliser les paiements."
 
-#: tools.py:295
+#: tools.py:222
 #, python-brace-format
 msgid ""
 "Please pay a provision of {payment} to the bank account {name} {number} with "
@@ -3673,33 +3656,33 @@ msgstr ""
 "Veuillez verser une provision de {payment} sur le compte bancaire {name} "
 "{number} avec comme communication \"{communication}\"."
 
-#: tools.py:304
+#: tools.py:230
 msgid "Your account balance is sufficient"
 msgstr "Le solde de votre compte est suffisant"
 
-#: tools.py:328 views/order_select_ajax.py:85
+#: tools.py:250 views/order_select_ajax.py:85
 msgid "Sold out"
 msgstr "Épuisé"
 
-#: tools.py:330 views/order_select_ajax.py:152
+#: tools.py:252 views/order_select_ajax.py:152
 msgid "Closed"
 msgstr "Clôturé"
 
-#: tools.py:542
+#: tools.py:464
 msgid "to confirm"
 msgstr "à confirmer"
 
-#: tools.py:688
+#: tools.py:609
 msgid "You can change the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
 "les commandes sont ouvertes."
 
-#: tools.py:696
+#: tools.py:617
 msgid "The orders are closed for your delivery point."
 msgstr "Les commandes sont clôturées pour votre point de livraison."
 
-#: tools.py:699
+#: tools.py:620
 msgid "The orders are closed."
 msgstr "Les commandes sont clôturées."
 
@@ -4058,6 +4041,20 @@ msgstr "La comptabilisation a déjà été faite"
 #: xlsx/xlsx_purchase.py:998
 msgid "The permanence doesn't exists."
 msgstr "Cette permanence n'existe pas."
+
+#, python-format
+#~ msgid ""
+#~ "The shipping costs for this delivery point amount to %(transport)s for "
+#~ "orders of less than %(min_transport)s."
+#~ msgstr ""
+#~ "Pour ce point de livraison, %(transport)s de frais sont ajoutés aux "
+#~ "commandes de moins de %(min_transport)s."
+
+#, python-format
+#~ msgid "The shipping costs for this delivery point amount to %(transport)s."
+#~ msgstr ""
+#~ "Pour ce point de livraison, %(transport)s de frais seront ajoutés à votre "
+#~ "commande."
 
 #~ msgid "Unrecognised purchase"
 #~ msgstr "Achats en traitement"

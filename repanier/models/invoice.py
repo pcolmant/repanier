@@ -8,6 +8,7 @@ from django.utils.formats import number_format
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.deliveryboard import DeliveryBoard
@@ -259,37 +260,45 @@ class CustomerInvoice(Invoice):
         delivery_message=EMPTY_STRING,
     ):
 
-        msg_history = """
-            <a href="{}" class="btn btn-info" target="_blank">{}</a>
-        """.format(
-            reverse("repanier:customer_history_view", args=(self.customer.id,)),
-            _("History"),
-        )
+
         if not is_basket and not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
             # If REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER,
             # then permanence.with_delivery_point is also True
-            msg_html = msg_history
+            msg_html = EMPTY_STRING
         else:
             msg_unconfirmed_order_will_be_cancelled = EMPTY_STRING
             msg_goto_basket = EMPTY_STRING
             msg_confirm_basket = EMPTY_STRING
+
             if self.is_order_confirm_send:
+                msg_history = EMPTY_STRING
                 msg_my_order_confirmation_email_send_to = """
                     <p><font color="#51a351">{}</font><p/>
                 """.format(
                     self.customer.my_order_confirmation_email_send_to()
                 )
+                if is_basket:
+                    msg_history = """
+                        <a href="{}" class="btn btn-info" target="_blank">{}</a>
+                    """.format(
+                        reverse("repanier:customer_history_view", args=(self.customer.id,)),
+                        _("History"),
+                    )
             else:
+                msg_history = """
+                    <a href="{}" class="btn btn-info" target="_blank">{}</a>
+                """.format(
+                    reverse("repanier:customer_history_view", args=(self.customer.id,)),
+                    _("History"),
+                )
                 msg_my_order_confirmation_email_send_to = EMPTY_STRING
 
+
                 if self.status == SaleStatus.OPENED:
-                    if (
-                            permanence.with_delivery_point and self.delivery is None
-                    ) or not self.has_purchase:
-                        confirm_basket_disabled = "disabled"
-                    else:
-                        confirm_basket_disabled = EMPTY_STRING
+                    confirm_basket_disabled = "disabled" if (
+                            (permanence.with_delivery_point and self.delivery is None) or not self.has_purchase
+                    ) else EMPTY_STRING
                 else:
                     confirm_basket_disabled = "disabled"
                 if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
@@ -307,7 +316,7 @@ class CustomerInvoice(Invoice):
                         """.format(
                             confirm_basket_disabled,
                             _(
-                                " ➜ Confirm this order and receive an email containing its summary."
+                                "➜ Confirm this order and receive an email containing its summary."
                             )
                         )
                     else:
@@ -331,24 +340,15 @@ class CustomerInvoice(Invoice):
                                 "Receive an email containing this order summary."
                             )
                         )
-            msg_html = """
+            msg_html = f"""
                 <div class="row">
                 <div class="panel panel-default">
                 <div class="panel-heading">
-                {}{}{}{}{}{}{}{}
+                {delivery_message}{basket_message}{"<br>" if basket_message else EMPTY_STRING}{msg_my_order_confirmation_email_send_to}{msg_unconfirmed_order_will_be_cancelled}{msg_goto_basket}{msg_confirm_basket}{msg_history}
                 </div>
                 </div>
                 </div>
-             """.format(
-                delivery_message,
-                basket_message,
-                "<br>" if basket_message else EMPTY_STRING,
-                msg_my_order_confirmation_email_send_to,
-                msg_unconfirmed_order_will_be_cancelled,
-                msg_goto_basket,
-                msg_confirm_basket,
-                msg_history,
-            )
+            """
         return {"#span_btn_confirm_order": mark_safe(msg_html)}
 
     def get_html_select_delivery_point(self, permanence, status):
@@ -381,14 +381,12 @@ class CustomerInvoice(Invoice):
                     )
 
                 if qs.exists():
-                    label = "{}".format(_("Please, select a delivery point"))
+                    label = _("Please, select a delivery point")
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id, customer_id=self.customer_id
                     ).update(status=SaleStatus.OPENED)
                 else:
-                    label = "{}".format(
-                        _("No delivery point is open for you. You can not place order.")
-                    )
+                    label = _("No delivery point is open for you. You can not place order.")
                     # IMPORTANT :
                     # 1 / This prohibits to place an order into the customer UI
                     # 2 / task_order.close_send_order will delete any CLOSED orders without any delivery point
@@ -403,36 +401,17 @@ class CustomerInvoice(Invoice):
                     msg_transport = EMPTY_STRING
                 else:
                     if self.min_transport.amount > DECIMAL_ZERO:
-                        msg_transport = "{}<br>".format(
-                            _(
-                                "The shipping costs for this delivery point amount to %(transport)s for orders of less than %(min_transport)s."
-                            )
-                            % {
-                                "transport": self.transport,
-                                "min_transport": self.min_transport,
-                            }
-                        )
+                        msg_transport = f"{_('The shipping costs for this delivery point amount to %(transport)s for orders of less than %(min_transport)s.') % {'transport': self.transport, 'min_transport': self.min_transport} }<br>"
                     else:
-                        msg_transport = "{}<br>".format(
-                            _(
-                                "The shipping costs for this delivery point amount to %(transport)s."
-                            )
-                            % {"transport": self.transport}
-                        )
+                        msg_transport = f"{_('The shipping costs for this delivery point amount to %(transport)s.') % {'transport': self.transport} }<br>"
 
-            msg_delivery = """
-            {} :
-            <select name="delivery" id="delivery" onmouseover="show_select_delivery_list_ajax({})" onmouseout="clear_select_delivery_list_ajax()" onchange="delivery_ajax()" class="form-control">
-            <option value="{}" selected>{}</option>
+            msg_delivery = f"""
+            {_("Delivery point")} :
+            <select name="delivery" id="delivery" onmouseover="show_select_delivery_list_ajax({delivery_id})" onmouseout="clear_select_delivery_list_ajax()" onchange="delivery_ajax()" class="form-control">
+            <option value="{delivery_id}" selected>{label}</option>
             </select>
-            {}
-            """.format(
-                _("Delivery point"),
-                delivery_id,
-                delivery_id,
-                label,
-                msg_transport,
-            )
+            {msg_transport}
+            """
         else:
             msg_delivery = EMPTY_STRING
         return msg_delivery
