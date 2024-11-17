@@ -28,7 +28,9 @@ class OrderView(ListView):
         self.customer = None
         self.first_page = False
         self.producer_id = "all"
+        self.producer_set = Producer.objects.none()
         self.department_id = "all"
+        self.department_set = LUT_DepartmentForCustomer.objects.none()
         self.communication = 0
         self.q = None
         self.is_basket = False
@@ -56,13 +58,43 @@ class OrderView(ListView):
             self.may_order = self.customer.may_order
 
         self.q = self.request.GET.get("q", None)
-        if not self.q:
-            self.producer_id = self.request.GET.get("producer", "all")
-            if self.producer_id != "all":
-                self.producer_id = sint(self.producer_id)
-            self.department_id = self.request.GET.get("department", "all")
-            if self.department_id != "all":
-                self.department_id = sint(self.department_id)
+
+        self.producer_set = Producer.objects.filter(
+            permanence=self.permanence.id
+        ).only("id", "short_profile_name")
+
+        self.producer_id = self.request.GET.get("producer", "all")
+        if self.producer_id != "all":
+            self.producer_id = sint(self.producer_id)
+
+        if self.producer_id == "all":
+
+            self.department_set = (
+                LUT_DepartmentForCustomer.objects.filter(
+                    offeritem__permanence_id=self.permanence.id,
+                    offeritem__is_active=True,
+                    offeritem__may_order=True,  # Don't display technical products.
+                    offeritem__producer__in=self.producer_set,
+                )
+                .order_by("tree_id", "lft")
+                .distinct("id", "tree_id", "lft")
+            )
+        else:
+            self.department_set = (
+                LUT_DepartmentForCustomer.objects.filter(
+                    offeritem__permanence_id=self.permanence.id,
+                    offeritem__is_active=True,
+                    offeritem__may_order=True,  # Don't display technical products.
+                    offeritem__producer_id=self.producer_id,
+                )
+                .order_by("tree_id", "lft")
+                .distinct("id", "tree_id", "lft")
+            )
+
+        self.department_id = self.request.GET.get("department", "all")
+        if self.department_id != "all":
+            self.department_id = sint(self.department_id)
+
         if len(request.GET) == 0:
             # This to let display a communication into a popup when the user is on the first order screen
             self.communication = True
@@ -85,30 +117,8 @@ class OrderView(ListView):
             "notification"
         ] = REPANIER_SETTINGS_NOTIFICATION.get_notification_display()
         if self.first_page:
-            producer_set = Producer.objects.filter(
-                permanence=self.permanence.id
-            ).only("id", "short_profile_name")
-            context["producer_set"] = producer_set
-            if self.producer_id == "all":
-                department_set = (
-                    LUT_DepartmentForCustomer.objects.filter(
-                        offeritem__permanence_id=self.permanence.id,
-                        offeritem__is_active=True,
-                    )
-                    .order_by("tree_id", "lft")
-                    .distinct("id", "tree_id", "lft")
-                )
-            else:
-                department_set = (
-                    LUT_DepartmentForCustomer.objects.filter(
-                        offeritem__producer_id=self.producer_id,
-                        offeritem__permanence_id=self.permanence.id,
-                        offeritem__is_active=True,
-                    )
-                    .order_by("tree_id", "lft")
-                    .distinct("id", "tree_id", "lft")
-                )
-            context["department_set"] = department_set
+            context["producer_set"] = self.producer_set
+            context["department_set"] = self.department_set
             context["staff_order"] = Staff.get_or_create_order_responsible()
 
         # use of str() to avoid "12 345" when rendering the template
@@ -144,21 +154,24 @@ class OrderView(ListView):
         ):
             return OfferItemReadOnly.objects.none()
 
+        qs = OfferItemReadOnly.objects.filter(
+            permanence_id=self.permanence.id,
+        )
+
         if self.is_basket:
-            qs = OfferItemReadOnly.objects.filter(
-                permanence_id=self.permanence.id,
-                may_order=True,  # Don't display technical products.
+            qs = qs.filter(
                 purchase__customer__user=self.user,
                 purchase__quantity_ordered__gt=0,
             )
         else:
-            qs = OfferItemReadOnly.objects.filter(
-                permanence_id=self.permanence.id,
+            qs = qs.filter(
                 is_active=True,
                 may_order=True,  # Don't display technical products.
             )
             if self.producer_id != "all":
                 qs = qs.filter(producer_id=self.producer_id)
+            else:
+                qs = qs.filter(producer__in=self.producer_set)
             if self.department_id != "all":
                 department = (
                     LUT_DepartmentForCustomer.objects.filter(id=self.department_id)
@@ -166,21 +179,17 @@ class OrderView(ListView):
                     .first()
                 )
                 if department is not None:
-                    tmp_qs = qs.filter(
+                    qs = qs.filter(
                         department_for_customer__lft__gte=department.lft,
                         department_for_customer__rght__lte=department.rght,
                         department_for_customer__tree_id=department.tree_id,
                     )
-                    if tmp_qs.exists():
-                        # Restrict to this department only if no product exists in it
-                        qs = tmp_qs
-                    else:
-                        # otherwise, act like self.department_id == 'all'
-                        self.department_id = "all"
-            if self.q and self.may_order:
-                qs = qs.filter(
-                    long_name_v2__icontains=self.q,
-                )
+
+        if self.q and self.may_order:
+            qs = qs.filter(
+                long_name_v2__icontains=self.q,
+            )
+
         qs = qs.order_by("order_sort_order_v2")
         if self.is_like:
             qs = qs.filter(product__likes__id=self.user.id)
