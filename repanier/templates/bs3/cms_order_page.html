@@ -124,7 +124,7 @@
                                 <a href="{{ permanence.get_order_url }}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My" %} <span class="glyphicon glyphicon-heart"></span></a>
                             </li>
                             {% endif %}
-                            {% if producer_set %}
+                            {% if producer_set.count > 1 %}
                                 <li>
                                     <a href="{{ permanence.get_order_url }}?department={{ department_id }}"
                                        {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All producers" %}</a>
@@ -137,7 +137,7 @@
                                     </ul>
                                 </li>
                             {% endif %}
-                            {% if department_set %}
+                            {% if department_set.count > 1 %}
                                 <li>
                                     <a href="{{ permanence.get_order_url }}?producer={{ producer_id }}"
                                        {% if department_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All departments" %}</a>
