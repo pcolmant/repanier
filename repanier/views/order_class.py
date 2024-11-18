@@ -187,11 +187,17 @@ class OrderView(ListView):
                     .first()
                 )
                 if department is not None:
-                    qs = qs.filter(
+                    tmp_qs = qs.filter(
                         department_for_customer__lft__gte=department.lft,
                         department_for_customer__rght__lte=department.rght,
                         department_for_customer__tree_id=department.tree_id,
                     )
+                    if tmp_qs.exists():
+                        # Restrict to this department only if any product exists in it
+                        qs = tmp_qs
+                    else:
+                        # otherwise, act like self.department_id == 'all'
+                        self.department_id = "all"
 
         if self.q and self.may_order:
             qs = qs.filter(
