@@ -21,7 +21,7 @@ def btn_confirm_order_ajax(request):
     permanence = Permanence.objects.filter(id=permanence_id).first()
     permanence_ok_or_404(permanence)
     user_id = request.user.id
-    customer = Customer.can_place_an_order.filter(user_id=user_id).only("id").first()
+    customer = Customer.can_place_an_order.filter(user_id=user_id).first()
     translation.activate(customer.language)
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence_id,

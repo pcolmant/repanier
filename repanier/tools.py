@@ -186,29 +186,30 @@ def get_base_unit(order_unit, qty=0):
 
 
 def payment_message(customer, permanence, customer_invoice):
-    amount = customer_invoice.get_total_price_with_tax()
-    customer_order_amount = _("The amount of your order is {amount}.").format(amount=amount)
+    total_price_with_tax = customer_invoice.get_total_price_with_tax()
+    customer_order_amount = _("The amount of your order is {amount}.").format(amount=total_price_with_tax)
     bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
 
     html_customer_last_balance = const.EMPTY_STRING
     ask_payment = False
-    balance = const.DECIMAL_ZERO
+    # balance = const.REPANIER_MONEY_ZERO
+    # balance = const.DECIMAL_ZERO
 
-    if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER or customer_invoice.is_order_confirm_send:
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            balance = customer.get_admin_balance()
-            if balance.amount != const.DECIMAL_ZERO:
-                if balance.amount < const.DECIMAL_ZERO:
-                    html_balance = f'<font color="#bd0926">{balance}</font>'
-                    ask_payment = True
-                else:
-                    html_balance = f"{balance}"
-                html_customer_last_balance = _("Including this order, your account balance is {balance}.").format(
-                    balance=html_balance
-                )
-        else:
-            ask_payment = (bank_account_number != const.EMPTY_STRING) and amount > const.DECIMAL_ZERO
-            balance = -amount
+    # if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER or customer_invoice.is_order_confirm_send:
+    if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+        balance = customer.get_admin_balance()
+        if balance.amount != const.DECIMAL_ZERO:
+            if balance.amount < const.DECIMAL_ZERO:
+                html_balance = f'<font color="#bd0926">{balance}</font>'
+                ask_payment = True
+            else:
+                html_balance = f"{balance}"
+            html_customer_last_balance = _("Including this order, your account balance is {balance}.").format(
+                balance=html_balance
+            )
+    else:
+        ask_payment = (bank_account_number != const.EMPTY_STRING) and total_price_with_tax.amount > const.DECIMAL_ZERO
+        balance = -total_price_with_tax
 
     if customer_invoice.customer_id != customer_invoice.customer_charged_id:
         html_customer_payment_needed = _("Invoices for this delivery point are sent to {name} who is responsible for collecting the payments.").format(
@@ -225,10 +226,10 @@ def payment_message(customer, permanence, customer_invoice):
                     number= bank_account_number,
                     communication= communication,
                 )
-                html_customer_payment_needed = f'<br><font color="#bd0926">{customer_payment_needed}</font>'
+                html_customer_payment_needed = f'<font color="#bd0926">{customer_payment_needed}</font>'
             else:
                 customer_payment_needed = _("Your account balance is sufficient") if balance.amount != const.DECIMAL_ZERO else const.EMPTY_STRING
-                html_customer_payment_needed = f'<br><font color="#51a351">{customer_payment_needed}.</font>'
+                html_customer_payment_needed = f'<font color="#51a351">{customer_payment_needed}.</font>'
         else:
             html_customer_payment_needed = const.EMPTY_STRING
 
