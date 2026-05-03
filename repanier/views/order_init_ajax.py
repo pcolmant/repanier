@@ -136,7 +136,7 @@ def get_html_communication_message(customer):
                 permanence_date__lt=now,
                 permanence_date__gte=now
                 - datetime.timedelta(
-                    days=float(REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION) * 7
+                    days=float(REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION or 0) * 7
                 ),
             ).count()
         else:
