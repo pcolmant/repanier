@@ -126,9 +126,10 @@ class OrderView(ListView):
         ] = REPANIER_SETTINGS_NOTIFICATION.get_notification_display()
         if self.first_page:
             context["producer_set"] = self.producer_set
-            context["department_set"] = self.department_set
             context["staff_order"] = Staff.get_or_create_order_responsible()
 
+        # display it on all page for smartphone
+        context["department_set"] = self.department_set
         # use of str() to avoid "12 345" when rendering the template
         context["producer_id"] = str(self.producer_id)
         # use of str() to avoid "12 345" when rendering the template
