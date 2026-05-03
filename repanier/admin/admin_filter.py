@@ -112,6 +112,7 @@ class AdminFilterPermanenceDoneStatus(SimpleListFilter):
     def queryset(self, request, queryset):
         value = self.value()
         if value:
+            # Filters queryset by selected status value or returns unmodified
             if value == SaleStatus.SEND.value:
                 return queryset.filter(status__lt=SaleStatus.INVOICED.value)
             elif value == SaleStatus.INVOICED.value:
