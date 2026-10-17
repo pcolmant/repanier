@@ -1884,8 +1884,9 @@ class Permanence(models.Model):
     class Meta:
         verbose_name = _("Sale")
         verbose_name_plural = _("Sales")
-        # TODO : check how to remove vvvvv
-        index_together = [["permanence_date"]]
+        # TODO : check how to remove vvvvv as for Django 4.2, disabled in Django 5.1
+        # index_together = [["permanence_date"]]
+        indexes = [models.Index(fields=["permanence_date",])]
 
 
 class PermanenceInPreparation(Permanence):
