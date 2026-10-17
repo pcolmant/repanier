@@ -1884,7 +1884,9 @@ class Permanence(models.Model):
     class Meta:
         verbose_name = _("Sale")
         verbose_name_plural = _("Sales")
-        # TODO : check how to remove vvvvv as for Django 4.2, disabled in Django 5.1
+        # Remove vvvvv as for Django 4.2, disabled in Django 5.1
+        # Running the makemigrations command will generate a migration containing a RenameIndex operation which will rename the existing index. Next, consider squashing migrations to remove index_together from historical migrations.
+        # The AlterIndexTogether migration operation is now officially supported only for pre-Django 4.2 migration files. For backward compatibility reasons, it’s still part of the public API, and there’s no plan to deprecate or remove it, but it should not be used for new migrations. Use AddIndex and RemoveIndex operations instead.
         # index_together = [["permanence_date"]]
         indexes = [models.Index(fields=["permanence_date",])]
 
