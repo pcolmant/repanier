@@ -68,7 +68,7 @@ def configuration_post_save(sender, **kwargs):
             config.display_anonymous_order_form
         )
         apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
-        apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
+        # apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
         apps.REPANIER_SETTINGS_BANK_ACCOUNT = config.bank_account
         apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
