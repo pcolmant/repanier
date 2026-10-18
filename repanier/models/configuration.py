@@ -63,9 +63,9 @@ class Configuration(models.Model):
     display_who_is_who = models.BooleanField(
         _('Display the "who\'s who"'), default=True
     )
-    xlsx_portrait = models.BooleanField(
-        _("Always generate XLSX files in portrait mode"), default=False
-    )
+    # xlsx_portrait = models.BooleanField(
+    #     _("Always generate XLSX files in portrait mode"), default=False
+    # )
     bank_account = models.CharField(
         _("Bank account"), max_length=100, blank=True, default=EMPTY_STRING
     )
