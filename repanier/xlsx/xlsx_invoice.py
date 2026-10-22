@@ -1,8 +1,11 @@
-import repanier.apps
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from openpyxl import load_workbook
+from openpyxl.styles.numbers import FORMAT_TEXT
+
+import repanier.apps
 from repanier.const import *
 from repanier.models import CustomerInvoice
 from repanier.models.bankaccount import BankAccount
@@ -12,14 +15,12 @@ from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
-from repanier.packages.openpyxl import load_workbook
 from repanier.tools import (
-    get_invoice_unit,
     get_reverse_invoice_unit,
     create_or_update_one_purchase,
     reorder_offer_items,
     reorder_purchases,
-    round_tva,
+    round_tva, get_invoice_unit_display,
 )
 from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, get_header, get_row
@@ -73,7 +74,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after = customer.initial_balance.amount
 
         row = [
-            (_("Name"), 40, customer.long_basket_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 40, customer.long_basket_name, FORMAT_TEXT),
             (
                 _("Previous balance"),
                 15,
@@ -104,7 +105,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after,
                 repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
-            (_("Name"), 20, customer.short_basket_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 20, customer.short_basket_name, FORMAT_TEXT),
         ]
 
         if row_num == 0:
@@ -112,9 +113,9 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
             row_num += 1
 
         for col_num in range(len(row)):
-            c = ws.cell(row=row_num, column=col_num)
-            c.value = "{}".format(row[col_num][ROW_VALUE])
-            c.style.number_format.format_code = row[col_num][ROW_FORMAT]
+            c = ws.cell(row=row_num + 1, column=col_num + 1)
+            c.value = row[col_num][ROW_VALUE]
+            c.number_format = row[col_num][ROW_FORMAT]
 
         row_num += 1
 
@@ -151,7 +152,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after = -producer.initial_balance.amount
 
         row = [
-            (_("Name"), 40, producer.long_profile_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 40, producer.long_profile_name, FORMAT_TEXT),
             (
                 _("Previous balance"),
                 15,
@@ -182,7 +183,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after,
                 repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
-            (_("Name"), 20, producer.short_profile_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 20, producer.short_profile_name, FORMAT_TEXT),
         ]
 
         if row_num == 0:
@@ -190,9 +191,9 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
             row_num += 1
 
         for col_num in range(len(row)):
-            c = ws.cell(row=row_num, column=col_num)
-            c.value = "{}".format(row[col_num][ROW_VALUE])
-            c.style.number_format.format_code = row[col_num][ROW_FORMAT]
+            c = ws.cell(row=row_num +1, column=col_num + 1)
+            c.value = row[col_num][ROW_VALUE]
+            c.number_format = row[col_num][ROW_FORMAT]
 
         row_num += 1
 
@@ -216,28 +217,28 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
         # when invoicing the very first permanence.
         initial_bank_amount = DECIMAL_ZERO
     row_num += 1
-    c = ws.cell(row=row_num, column=1)
+    c = ws.cell(row=row_num + 1, column=1 + 1)
     c.value = initial_bank_amount
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-    c = ws.cell(row=row_num, column=4)
+    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c = ws.cell(row=row_num +1, column=4 +1)
     formula = "B{}+SUM(C{}:C{})-SUM(D{}:D{})".format(
         row_num + 1, 2, row_num - 1, 2, row_num - 1
     )
     c.value = "=" + formula
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
 
     row_num += 1
-    c = ws.cell(row=row_num, column=4)
+    c = ws.cell(row=row_num + 1, column=4 + 1)
     formula = "SUM(F{}:F{})-SUM(F{}:F{})".format(
         2, row_break, row_break + 2, row_num - 2
     )
     c.value = "=" + formula
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
 
     row_num += 1
-    c = ws.cell(row=row_num, column=4)
+    c = ws.cell(row=row_num + 1, column=4 + 1)
     c.value = final_bank_amount
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
 
     return wb
 
@@ -276,27 +277,27 @@ def export_invoice(
             if purchase.offer_item.unit_deposit.amount != DECIMAL_ZERO:
                 hide_column_deposit = False
 
-            unit = get_invoice_unit(order_unit=purchase.offer_item.order_unit, qty=qty)
+            unit = get_invoice_unit_display(order_unit=purchase.offer_item.order_unit, qty=qty)
             row = [
                 (
                     _("Permanence"),
                     20,
-                    purchase.permanence,
-                    NumberFormat.FORMAT_TEXT,
+                    purchase.permanence.get_permanence_display(),
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Producer"),
                     15,
                     purchase.producer.short_profile_name,
-                    NumberFormat.FORMAT_TEXT,
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Basket"),
                     20,
                     purchase.customer.short_basket_name,
-                    NumberFormat.FORMAT_TEXT,
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
@@ -305,14 +306,14 @@ def export_invoice(
                     purchase.offer_item.department_for_customer.short_name_v2
                     if purchase.offer_item.department_for_customer is not None
                     else EMPTY_STRING,
-                    NumberFormat.FORMAT_TEXT,
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Product"),
                     60,
                     purchase.get_long_name_with_customer_price(),
-                    NumberFormat.FORMAT_TEXT,
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
@@ -324,7 +325,7 @@ def export_invoice(
                     if purchase.offer_item.order_unit == OrderUnit.PC_KG
                     else False,
                 ),
-                (_("Unit"), 10, unit, NumberFormat.FORMAT_TEXT, False),
+                (_("Unit"), 10, unit, FORMAT_TEXT, False),
                 (
                     _("Deposit"),
                     10,
@@ -335,9 +336,9 @@ def export_invoice(
             ]
             if hide_producer_prices:
                 row += [
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, FORMAT_TEXT, False),
                 ]
             else:
                 row += [
@@ -366,9 +367,9 @@ def export_invoice(
 
             if hide_customer_prices:
                 row += [
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, FORMAT_TEXT, False),
                 ]
             else:
                 row += [
@@ -395,45 +396,45 @@ def export_invoice(
                     ),
                 ]
             if hide_producer_prices and hide_customer_prices:
-                row += [(_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)]
+                row += [(_("Empty"), 10, EMPTY_STRING, FORMAT_TEXT, False)]
             else:
                 row += [
                     (
                         _("VAT rate"),
                         10,
                         purchase.offer_item.get_vat_level_display(),
-                        NumberFormat.FORMAT_TEXT,
+                        FORMAT_TEXT,
                         False,
                     )
                 ]
             row += [
-                (_("Comment"), 30, purchase.comment, NumberFormat.FORMAT_TEXT, False),
+                (_("Comment"), 30, purchase.comment, FORMAT_TEXT, False),
                 (
                     _("Accounting entry status"),
                     10,
                     purchase.get_status_display(),
-                    NumberFormat.FORMAT_TEXT,
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Customer"),
                     10,
                     purchase.customer.user.email,
-                    NumberFormat.FORMAT_TEXT,
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Reference"),
                     10,
                     purchase.offer_item.reference,
-                    NumberFormat.FORMAT_TEXT,
+                    FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Wrapped"),
                     10,
-                    purchase.offer_item.wrapped,
-                    NumberFormat.FORMAT_TEXT,
+                    "{}".format(_("Yes") if purchase.offer_item.wrapped else _("No")),
+                    FORMAT_TEXT,
                     False,
                 ),
             ]
@@ -443,76 +444,72 @@ def export_invoice(
                 row_num += 1
 
             for col_num in range(len(row)):
-                c = ws.cell(row=row_num, column=col_num)
-                c.value = "{}".format(row[col_num][ROW_VALUE])
-                c.style.number_format.format_code = row[col_num][ROW_FORMAT]
+                c = ws.cell(row=row_num +1, column=col_num + 1)
+                c.value = row[col_num][ROW_VALUE]
+                c.number_format = row[col_num][ROW_FORMAT]
                 if row[col_num][ROW_BOX]:
-                    c.style.borders.top.border_style = Border.BORDER_THIN
-                    c.style.borders.bottom.border_style = Border.BORDER_THIN
-                    c.style.borders.left.border_style = Border.BORDER_THIN
-                    c.style.borders.right.border_style = Border.BORDER_THIN
+                    c.border = Border(top=Side(style='thin'),bottom=Side(style='thin'),left=Side(style='thin'),right=Side(style='thin'))
                 else:
-                    c.style.borders.bottom.border_style = Border.BORDER_HAIR
+                    c.border = Border(bottom=Side(style='hair'))
                 if col_num == 8:
-                    c.style.font.bold = True
+                    c.font = Font(bold=True)
 
             row_num += 1
 
         if ws is not None:
             if hide_column_deposit:
-                ws.column_dimensions[get_column_letter(8)].visible = False
+                ws.column_dimensions[get_column_letter(8)].hidden = True
             if hide_producer_prices:
-                ws.column_dimensions[get_column_letter(9)].visible = False
-                ws.column_dimensions[get_column_letter(10)].visible = False
-                ws.column_dimensions[get_column_letter(11)].visible = False
+                ws.column_dimensions[get_column_letter(9)].hidden = True
+                ws.column_dimensions[get_column_letter(10)].hidden = True
+                ws.column_dimensions[get_column_letter(11)].hidden = True
             if hide_customer_prices:
-                ws.column_dimensions[get_column_letter(12)].visible = False
-                ws.column_dimensions[get_column_letter(13)].visible = False
-                ws.column_dimensions[get_column_letter(14)].visible = False
+                ws.column_dimensions[get_column_letter(12)].hidden = True
+                ws.column_dimensions[get_column_letter(13)].hidden = True
+                ws.column_dimensions[get_column_letter(14)].hidden = True
             if hide_producer_prices and hide_customer_prices:
-                ws.column_dimensions[get_column_letter(15)].visible = False
-            ws.column_dimensions[get_column_letter(18)].visible = False
-            ws.column_dimensions[get_column_letter(19)].visible = False
-            ws.column_dimensions[get_column_letter(20)].visible = False
+                ws.column_dimensions[get_column_letter(15)].hidden = True
+            ws.column_dimensions[get_column_letter(18)].hidden = True
+            ws.column_dimensions[get_column_letter(19)].hidden = True
+            ws.column_dimensions[get_column_letter(20)].hidden = True
 
             if permanence_id_save is not None:
                 row_num = shipping_cost_row(customer, permanence_id_save, row, row_num, ws)
 
             for col_num in range(len(row)):
-                c = ws.cell(row=row_num, column=col_num)
-                c.style.borders.top.border_style = Border.BORDER_THIN
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
+                c = ws.cell(row=row_num + 1, column=col_num + 1)
+                c.border = Border(top=Side(style='thin'),bottom=Side(style='thin'))
                 if col_num == 2:
                     c.value = "{} {}".format(_("Total Price"), sheet_name)
-                    c.style.font.bold = True
+                    c.font = Font(bold=True)
                 if col_num == 9:
                     formula = "SUM(J{}:J{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.style.number_format.format_code = (
+                    c.number_format = (
                         repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
-                    c.style.font.bold = True
+                    c.font = Font(bold=True)
                 if col_num == 10:
                     formula = "SUM(K{}:K{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.style.number_format.format_code = (
+                    c.number_format = (
                         repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
-                    c.style.font.bold = True
+                    c.font = Font(bold=True)
                 if col_num == 12:
                     formula = "SUM(M{}:M{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.style.number_format.format_code = (
+                    c.number_format = (
                         repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
-                    c.style.font.bold = True
+                    c.font = Font(bold=True)
                 if col_num == 13:
                     formula = "SUM(N{}:N{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.style.number_format.format_code = (
+                    c.number_format = (
                         repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
-                    c.style.font.bold = True
+                    c.font = Font(bold=True)
 
             if customer is not None:
                 config = REPANIER_SETTINGS_CONFIG
@@ -520,12 +517,11 @@ def export_invoice(
                 if group_label:
                     row_num += 1
                     for col_num in range(len(row)):
-                        c = ws.cell(row=row_num, column=col_num)
-                        c.style.borders.top.border_style = Border.BORDER_THIN
-                        c.style.borders.bottom.border_style = Border.BORDER_THIN
+                        c = ws.cell(row=row_num + 1, column=col_num + 1)
+                        c.border = Border(top=Side(style='thin'),bottom=Side(style='thin'))
                         if col_num == 2:
-                            c.value = "{}".format(group_label)
-                            c.style.font.bold = True
+                            c.value = group_label
+                            c.font = Font(bold=True)
     return wb
 
 
@@ -539,15 +535,14 @@ def shipping_cost_row(customer, permanence_id_save, row, row_num, ws):
             # delivery is mandatory if transport
             delivery = customer_invoice.delivery or EMPTY_STRING
             for col_num in range(len(row)):
-                c = ws.cell(row=row_num, column=col_num)
-                c.style.borders.top.border_style = Border.BORDER_THIN
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
+                c = ws.cell(row=row_num + 1, column=col_num + 1)
+                c.border = Border(top=Side(style='thin'),bottom=Side(style='thin'))
                 if col_num == 2:
                     c.value = "{} {}".format(_("Shipping cost"), delivery)
-                    c.style.font.bold = True
+                    c.font = Font(bold=True)
                 if col_num == 12:
                     c.value = delta_transport
-                    c.style.number_format.format_code = (
+                    c.number_format = (
                         repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
             row_num += 1
@@ -563,7 +558,7 @@ def import_invoice_sheet(
     if header:
         now = timezone.now().date()
         import_counter = 0
-        row_num = 1
+        row_num = 2
         column_name = EMPTY_STRING
         sid = transaction.savepoint()
         try:

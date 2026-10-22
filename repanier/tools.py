@@ -153,6 +153,10 @@ def get_invoice_unit(order_unit, qty=0):
     return unit
 
 
+def get_invoice_unit_display(order_unit, qty):
+    return "{}".format(get_invoice_unit(order_unit, qty))
+
+
 def get_reverse_invoice_unit(unit):
     # reverse of tools get_invoice_unit
     if unit == _("/ kg"):

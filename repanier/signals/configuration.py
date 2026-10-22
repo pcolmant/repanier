@@ -68,7 +68,6 @@ def configuration_post_save(sender, **kwargs):
             config.display_anonymous_order_form
         )
         apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
-        # apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
         apps.REPANIER_SETTINGS_BANK_ACCOUNT = config.bank_account
         apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
@@ -86,7 +85,10 @@ def configuration_post_save(sender, **kwargs):
 
         apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = currency_display
         currency_display_xlsx = currency_display.replace(".", "\.")
-        apps.REPANIER_SETTINGS_CURRENCY_XLSX = f'_ {currency_display_xlsx} * #,##0.00_ ;_ {currency_display_xlsx} * -#,##0.00_ ;_ {currency_display_xlsx} * "-"??_ ;_ @_ '
+        if apps.REPANIER_SETTINGS_AFTER_AMOUNT:
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = f'_ #,##0.00 {currency_display_xlsx} _ ;_ -#,##0.00 {currency_display_xlsx} _ ;_ "-"?? {currency_display_xlsx} _ ;_ @_ '
+        else:
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = f'_ {currency_display_xlsx} * #,##0.00_ ;_ {currency_display_xlsx} * -#,##0.00_ ;_ {currency_display_xlsx} * "-"?? _ ;_ @_ '
 
         if config.home_site:
             apps.REPANIER_SETTINGS_HOME_SITE = config.home_site

@@ -956,138 +956,6 @@ class Permanence(models.Model):
             )
             producer_invoice.save()
 
-        # for customer_producer_invoice in CustomerProducerInvoice.objects.filter(
-        #     permanence_id=self.id
-        # ):
-        #     customer_producer_invoice.calculate_order_amount()
-        #     customer_producer_invoice.save()
-        #
-        # for offer_item in OfferItemReadOnly.objects.filter(permanence_id=self.id):
-        #     offer_item.calculate_order_amount()
-        #     offer_item.save()
-
-        # result_set = PurchaseWoReceiver.objects.filter(
-        #     permanence_id=self.id,
-        #     offer_item__is_resale_price_fixed=True,
-        # ).aggregate(
-        #     purchase_price=Sum(
-        #         "purchase_price",
-        #         output_field=DecimalField(
-        #             max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-        #         ),
-        #     ),
-        #     selling_price=Sum(
-        #         "selling_price",
-        #         output_field=DecimalField(
-        #             max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-        #         ),
-        #     ),
-        #     producer_vat=Sum(
-        #         "producer_vat",
-        #         output_field=DecimalField(
-        #             max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-        #         ),
-        #     ),
-        #     customer_vat=Sum(
-        #         "customer_vat",
-        #         output_field=DecimalField(
-        #             max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-        #         ),
-        #     ),
-        # )
-        #
-        # total_purchase_price_with_tax = (
-        #     result_set["purchase_price"]
-        #     if result_set["purchase_price"] is not None
-        #     else DECIMAL_ZERO
-        # )
-        # total_selling_price_with_tax = (
-        #     result_set["selling_price"]
-        #     if result_set["selling_price"] is not None
-        #     else DECIMAL_ZERO
-        # )
-        # total_customer_vat = (
-        #     result_set["customer_vat"]
-        #     if result_set["customer_vat"] is not None
-        #     else DECIMAL_ZERO
-        # )
-        # total_producer_vat = (
-        #     result_set["producer_vat"]
-        #     if result_set["producer_vat"] is not None
-        #     else DECIMAL_ZERO
-        # )
-        #
-        # purchases_delta_vat = total_customer_vat - total_producer_vat
-        # purchases_delta_price_with_tax = (
-        #     total_selling_price_with_tax - total_purchase_price_with_tax
-        # )
-        #
-        # purchases_delta_price_wo_tax = (
-        #     purchases_delta_price_with_tax - purchases_delta_vat
-        # )
-        #
-        # if purchases_delta_price_wo_tax != DECIMAL_ZERO:
-        #     BankAccount.objects.create(
-        #         permanence_id=self.id,
-        #         producer=None,
-        #         customer_id=customer_buyinggroup.id,
-        #         operation_date=payment_date,
-        #         operation_status=BANK_PROFIT,
-        #         operation_comment=_("Profit")
-        #         if purchases_delta_price_wo_tax >= DECIMAL_ZERO
-        #         else _("Lost"),
-        #         bank_amount_out=-purchases_delta_price_wo_tax
-        #         if purchases_delta_price_wo_tax < DECIMAL_ZERO
-        #         else DECIMAL_ZERO,
-        #         bank_amount_in=purchases_delta_price_wo_tax
-        #         if purchases_delta_price_wo_tax > DECIMAL_ZERO
-        #         else DECIMAL_ZERO,
-        #         customer_invoice_id=None,
-        #         producer_invoice=None,
-        #     )
-        # if purchases_delta_vat != DECIMAL_ZERO:
-        #     BankAccount.objects.create(
-        #         permanence_id=self.id,
-        #         producer=None,
-        #         customer_id=customer_buyinggroup.id,
-        #         operation_date=payment_date,
-        #         operation_status=BANK_TAX,
-        #         operation_comment=_("VAT to be paid to the administration")
-        #         if purchases_delta_vat >= DECIMAL_ZERO
-        #         else _("VAT receivable from the administration"),
-        #         bank_amount_out=-purchases_delta_vat
-        #         if purchases_delta_vat < DECIMAL_ZERO
-        #         else DECIMAL_ZERO,
-        #         bank_amount_in=purchases_delta_vat
-        #         if purchases_delta_vat > DECIMAL_ZERO
-        #         else DECIMAL_ZERO,
-        #         customer_invoice_id=None,
-        #         producer_invoice=None,
-        #     )
-
-        # for customer_invoice in CustomerInvoice.objects.filter(
-        #     permanence_id=self.id
-        # ).exclude(customer_id=customer_buyinggroup.id, delta_transport=DECIMAL_ZERO):
-        #     if customer_invoice.delta_transport != DECIMAL_ZERO:
-        #         # --> This bank movement is not a real entry
-        #         # customer_invoice_id=customer_invoice_buyinggroup.id
-        #         # making this, it will not be counted into the customer_buyinggroup movements twice
-        #         # because Repanier will see it has already been counted into the customer_buyinggroup movements
-        #         BankAccount.objects.create(
-        #             permanence_id=self.id,
-        #             producer=None,
-        #             customer_id=customer_buyinggroup.id,
-        #             operation_date=payment_date,
-        #             operation_status=BANK_PROFIT,
-        #             operation_comment="{} : {}".format(
-        #                 _("Shipping"), customer_invoice.customer.short_basket_name
-        #             ),
-        #             bank_amount_in=customer_invoice.delta_transport,
-        #             bank_amount_out=DECIMAL_ZERO,
-        #             customer_invoice_id=customer_invoice_buyinggroup.id,
-        #             producer_invoice=None,
-        #         )
-
         # generate bank account movements
 
         self.generate_bank_account_movement(payment_date=payment_date)
@@ -1466,32 +1334,22 @@ class Permanence(models.Model):
                         if producer.represent_this_buyinggroup:
                             operation_comment = self.get_permanence_display()
                         else:
-                            if producer_invoice is not None:
-                                if (
-                                    producer_invoice.get_total_price_with_tax().amount
-                                    == delta
-                                ):
-                                    operation_comment = _(
-                                        "Delivery %(current_site)s - %(permanence)s. Thanks!"
-                                    ) % {
-                                        "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
-                                        "permanence": self.get_permanence_display(),
-                                    }
-                                else:
-                                    operation_comment = _(
-                                        "Deliveries %(current_site)s - up to the %(permanence)s (included). Thanks!"
-                                    ) % {
-                                        "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
-                                        "permanence": self.get_permanence_display(),
-                                    }
-                            else:
+                            if (
+                                producer_invoice.get_total_price_with_tax().amount
+                                == delta
+                            ):
                                 operation_comment = _(
-                                    "Deliveries %(current_site)s - up to %(payment_date)s (included). Thanks!"
+                                    "Delivery %(current_site)s - %(permanence)s. Thanks!"
                                 ) % {
                                     "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
-                                    "payment_date": payment_date.strftime(
-                                        settings.DJANGO_SETTINGS_DATE
-                                    ),
+                                    "permanence": self.get_permanence_display(),
+                                }
+                            else:
+                                operation_comment = _(
+                                    "Deliveries %(current_site)s - up to the %(permanence)s (included). Thanks!"
+                                ) % {
+                                    "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
+                                    "permanence": self.get_permanence_display(),
                                 }
                     BankAccount.objects.create(
                         permanence_id=None,
@@ -1880,15 +1738,6 @@ class Permanence(models.Model):
 
     def get_order_url(self):
         return reverse("repanier:order_view", args=[self.id])
-
-    class Meta:
-        verbose_name = _("Sale")
-        verbose_name_plural = _("Sales")
-        # Remove vvvvv as for Django 4.2, disabled in Django 5.1
-        # Running the makemigrations command will generate a migration containing a RenameIndex operation which will rename the existing index. Next, consider squashing migrations to remove index_together from historical migrations.
-        # The AlterIndexTogether migration operation is now officially supported only for pre-Django 4.2 migration files. For backward compatibility reasons, it’s still part of the public API, and there’s no plan to deprecate or remove it, but it should not be used for new migrations. Use AddIndex and RemoveIndex operations instead.
-        # index_together = [["permanence_date"]]
-        indexes = [models.Index(fields=["permanence_date",])]
 
 
 class PermanenceInPreparation(Permanence):

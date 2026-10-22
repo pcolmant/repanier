@@ -7,6 +7,7 @@ from django.template import Template
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
+
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 
@@ -286,11 +287,10 @@ class Configuration(models.Model):
         from django.contrib.auth.models import Group
 
         page = api.create_page(
-            title=_("Home"),
+            title="{}".format(_("Home")),
             soft_root=False,
             template=settings.CMS_TEMPLATE_HOME,
             language=settings.LANGUAGE_CODE,
-            # published=False,
             parent=None,
             xframe_options=X_FRAME_OPTIONS_DENY,
             in_navigation=True,
@@ -333,21 +333,10 @@ class Configuration(models.Model):
             language=settings.LANGUAGE_CODE,
             body=settings.CMS_TEMPLATE_FOOTER,
         )
-        # static_placeholder.publish(
-        #     request=None, language=settings.LANGUAGE_CODE, force=True
-        # )
-        # placeholder = placeholders.filter(slot="footer").first()
-        # api.add_plugin(
-        #     placeholder=placeholder,
-        #     plugin_type="TextPlugin",
-        #     language=settings.LANGUAGE_CODE,
-        #     body=settings.CMS_TEMPLATE_FOOTER,
-        # )
         user = coordinator.customer_responsible.user
         user.groups.clear()
         group_id = Group.objects.filter(name=AuthGroup.WEBMASTER).first()
         user.groups.add(group_id)
-        # api.publish_page(page=page, user=user, language=settings.LANGUAGE_CODE)
         user.groups.remove(group_id)
 
     @classmethod

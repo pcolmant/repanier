@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from openpyxl.styles.numbers import FORMAT_TEXT
 
 from repanier.const import *
 from repanier.models.product import Product
@@ -41,7 +42,7 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
                 _("Reference"),
                 10,
                 product.reference if len(product.reference) < 36 else EMPTY_STRING,
-                NumberFormat.FORMAT_TEXT,
+                FORMAT_TEXT,
                 False,
             ),
             (
@@ -50,7 +51,7 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
                 product.department_for_customer.short_name_v2
                 if product.department_for_customer is not None
                 else " ",
-                NumberFormat.FORMAT_TEXT,
+                FORMAT_TEXT,
                 False,
             ),
             # (_("is_into_offer"), 7, _("Yes") if product.is_into_offer else _("No"),
@@ -58,29 +59,29 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
             (
                 _("Wrapped"),
                 7,
-                _("Yes") if product.wrapped else _("No"),
-                NumberFormat.FORMAT_TEXT,
+                "{}".format(_("Yes") if product.wrapped else _("No")),
+                FORMAT_TEXT,
                 False,
             ),
             (
                 _("Producer"),
                 15,
                 product.producer.short_profile_name,
-                NumberFormat.FORMAT_TEXT,
+                FORMAT_TEXT,
                 False,
             ),
             (
                 _("Long name"),
                 60,
                 product.get_long_name_with_customer_price(),
-                NumberFormat.FORMAT_TEXT,
+                FORMAT_TEXT,
                 False,
             ),
             (
                 _("VAT"),
                 10,
                 product.get_vat_level_display(),
-                NumberFormat.FORMAT_TEXT,
+                FORMAT_TEXT,
                 False,
             ),
         ]
@@ -90,16 +91,13 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
             row_num += 1
 
         for col_num in range(len(row)):
-            c = ws.cell(row=row_num, column=col_num)
-            c.value = "{}".format(row[col_num][ROW_VALUE])
-            c.style.number_format.format_code = row[col_num][ROW_FORMAT]
+            c = ws.cell(row=row_num + 1, column=col_num + 1)
+            c.value = row[col_num][ROW_VALUE]
+            c.number_format = row[col_num][ROW_FORMAT]
             if row[col_num][ROW_BOX]:
-                c.style.borders.top.border_style = Border.BORDER_THIN
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-                c.style.borders.left.border_style = Border.BORDER_THIN
-                c.style.borders.right.border_style = Border.BORDER_THIN
+                c.border = Border(top=Side(style='thin'),bottom=Side(style='thin'),left=Side(style='thin'),right=Side(style='thin'))
             else:
-                c.style.borders.bottom.border_style = Border.BORDER_HAIR
+                c.border = Border(bottom=Side(style='hair'))
         row_num += 1
         product = next_row(products)
     return wb

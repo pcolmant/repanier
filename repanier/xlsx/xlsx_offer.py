@@ -1,6 +1,9 @@
-import repanier.apps
 from django.utils.translation import gettext_lazy as _
-from repanier.const import LIMIT_ORDER_QTY_ITEM, SaleStatus
+from openpyxl.styles.numbers import FORMAT_TEXT
+
+import repanier.apps
+from repanier.const import DECIMAL_ZERO
+from repanier.const import LIMIT_ORDER_QTY_ITEM, SaleStatus, EMPTY_STRING
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -59,8 +62,7 @@ def export_offer_row(product, row_num, ws):
             _("Producer"),
             15,
             product.producer.short_profile_name,
-            NumberFormat.FORMAT_TEXT,
-            False,
+            FORMAT_TEXT,
         ),
         (
             _("Department"),
@@ -68,77 +70,65 @@ def export_offer_row(product, row_num, ws):
             product.department_for_customer.short_name_v2
             if product.department_for_customer is not None
             else EMPTY_STRING,
-            NumberFormat.FORMAT_TEXT,
-            False,
+            FORMAT_TEXT,
         ),
         (
             _("Product"),
             60,
             product.get_long_name_with_customer_price(),
-            NumberFormat.FORMAT_TEXT,
-            False,
+            FORMAT_TEXT,
         ),
         (
             _("Producer unit price"),
             10,
-            product.producer_unit_price
+            product.producer_unit_price.amount
             if product.producer_unit_price < product.customer_unit_price
-            else EMPTY_STRING,
+            else DECIMAL_ZERO,
             repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
-            False,
         ),
         (
             _("Customer unit price"),
             10,
-            product.customer_unit_price,
+            product.customer_unit_price.amount,
             repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
-            False,
         ),
         (
             _("Deposit"),
             10,
-            product.unit_deposit,
+            product.unit_deposit.amount,
             repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
-            False,
         ),
     ]
     if row_num == 0:
         worksheet_set_header(ws, row)
         row_num += 1
     for col_num in range(len(row)):
-        c = ws.cell(row=row_num, column=col_num)
-        c.value = "{}".format(row[col_num][ROW_VALUE])
-        c.style.number_format.format_code = row[col_num][ROW_FORMAT]
-        if row[col_num][ROW_BOX]:
-            c.style.borders.top.border_style = Border.BORDER_THIN
-            c.style.borders.bottom.border_style = Border.BORDER_THIN
-            c.style.borders.left.border_style = Border.BORDER_THIN
-            c.style.borders.right.border_style = Border.BORDER_THIN
-        else:
-            c.style.borders.bottom.border_style = Border.BORDER_HAIR
+        c = ws.cell(row=row_num + 1, column=col_num +1)
+        c.value = row[col_num][ROW_VALUE]
+        c.number_format = row[col_num][ROW_FORMAT]
     col_num = len(row)
     q_min = product.customer_minimum_order_quantity
     q_alert = product.get_q_alert()
     q_step = product.customer_increment_order_quantity
     # The q_min cannot be 0. In this case try to replace q_min by q_step.
     # In last ressort by q_alert.
-    c = ws.cell(row=row_num, column=col_num)
+    c = ws.cell(row=row_num + 1, column=col_num)
     c.value = "---"
     ws.column_dimensions[get_column_letter(col_num + 1)].width = 2.3
-    c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+    c.number_format = FORMAT_TEXT
     col_num += 1
     q_valid = q_min
     q_counter = 0  # Limit to avoid too long selection list
     while q_valid <= q_alert and q_counter <= LIMIT_ORDER_QTY_ITEM:
         q_counter += 1
-        c = ws.cell(row=row_num, column=col_num)
+        c = ws.cell(row=row_num +1, column=col_num+1)
         c.value = product.get_display(
             qty=q_valid,
             order_unit=product.order_unit,
             unit_price_amount=product.customer_unit_price.amount,
         )
         ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
-        c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+        c.number_format = FORMAT_TEXT
         col_num += 1
         if q_valid < q_step:
             # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2

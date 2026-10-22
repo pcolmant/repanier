@@ -1,5 +1,7 @@
 from django.template import Template, Context as TemplateContext
 from django.utils.translation import gettext_lazy as _
+
+from packages.openpyxl.writer.excel import save_virtual_workbook
 from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
 from repanier.models import Producer
@@ -9,7 +11,7 @@ from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
-from repanier.packages.openpyxl.writer.excel import save_virtual_workbook
+
 from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
@@ -187,11 +189,6 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             export_order_2_1_customer(
                 customer, filename, permanence, order_responsible, abstract_ws
             )
-            # customer_invoice = CustomerInvoice.objects.filter(
-            #     customer_id=customer.id, permanence_id=permanence_id
-            # ).first()
-            # customer_invoice.confirm_order()
-            # customer_invoice.save()
 
 
 def export_order_2_1_group(

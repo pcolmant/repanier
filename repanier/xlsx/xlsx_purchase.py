@@ -1,14 +1,15 @@
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
+from openpyxl.formatting.rule import CellIsRule
+from openpyxl.reader.excel import load_workbook
+from openpyxl.styles import PatternFill
+from openpyxl.styles.numbers import FORMAT_TEXT, FORMAT_DATE_DMYSLASH
 
 from repanier.apps import REPANIER_SETTINGS_CURRENCY_XLSX
 from repanier.const import *
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.purchase import Purchase
-from repanier.packages.openpyxl import load_workbook
-from repanier.packages.openpyxl.style import Fill
-from repanier.packages.openpyxl.styles import Color
-from repanier.tools import next_row
+from repanier.tools import next_row, cap
 from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import *
 
@@ -25,10 +26,7 @@ def next_purchase(purchases):
 
 
 def export_purchase(permanence=None, year=None, producer=None, customer=None, wb=None):
-    yellowFill = Fill()
-    yellowFill.start_color.index = "FFEEEE11"
-    yellowFill.end_color.index = "FFEEEE11"
-    yellowFill.fill_type = Fill.FILL_SOLID
+    yellow_fill = PatternFill(fill_type="solid", start_color="FFFF00", end_color="FFFF00")
 
     header = [
         (_("Format"), 5),
@@ -182,30 +180,26 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 and department_for_customer_save
                                 == purchase.offer_item.department_for_customer
                             ):
-                                c = ws.cell(row=row_num, column=1)
+                                c = ws.cell(row=row_num + 1, column=1 + 1)
                                 c.value = purchase.id
-                                c = ws.cell(row=row_num, column=2)
+                                c = ws.cell(row=row_num + 1, column=2 + 1)
                                 c.value = permanence_save.permanence_date
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_DATE_DDMMYYYY
-                                )
-                                c = ws.cell(row=row_num, column=3)
+                                c.number_format = FORMAT_DATE_DMYSLASH
+                                c = ws.cell(row=row_num + 1, column=3 + 1)
                                 c.value = "{}".format(producer_save.short_profile_name)
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
+                                c.number_format = FORMAT_TEXT
                                 if count_purchase == 0:
                                     row_start_purchase = row_num + 1
                                     if count_permanence_purchase == 0:
-                                        c.style.font.bold = True
+                                        c.font = Font(bold=True)
                                         row_start_permanence = row_start_purchase
-                                    c = ws.cell(row=row_num, column=0)
+                                    c = ws.cell(row=row_num + 1, column=0 + 1)
                                     c.value = "A"
                                 else:
-                                    c = ws.cell(row=row_num, column=0)
+                                    c = ws.cell(row=row_num + 1, column=0 + 1)
                                     c.value = "B"
                                 count_purchase += 1
-                                c = ws.cell(row=row_num, column=4)
+                                c = ws.cell(row=row_num + 1, column=4  +1)
                                 if department_for_customer_save__short_name is not None:
                                     c.value = "{} - {}".format(
                                         purchase.get_long_name_with_customer_price(),
@@ -215,42 +209,32 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     c.value = "{}".format(
                                         purchase.get_long_name_with_customer_price()
                                     )
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
-                                c = ws.cell(row=row_num, column=5)
+                                c.number_format = FORMAT_TEXT
+                                c = ws.cell(row=row_num + 1, column=5 + 1)
                                 c.value = "{}".format(customer_save.short_basket_name)
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
+                                c.number_format = FORMAT_TEXT
                                 if count_purchase == 0 and customer is None:
-                                    c.style.font.bold = True
-                                c = ws.cell(row=row_num, column=6)
+                                    c.font = Font(bold=True)
+                                c = ws.cell(row=row_num + 1, column=6 + 1)
                                 c.value = purchase.quantity_invoiced
-                                c.style.number_format.format_code = "#,##0.????"
+                                c.number_format = "#,##0.????"
                                 if year is None:
-                                    c.style.font.color = Color(Color.BLUE)
-                                    ws.conditional_formatting.addCellIs(
-                                        get_column_letter(7) + str(row_num + 1),
-                                        "notEqual",
-                                        [str(purchase.quantity_invoiced)],
-                                        True,
-                                        wb,
-                                        None,
-                                        None,
-                                        yellowFill,
+                                    c.font = Font(color="FF0000FF")
+                                    ws.conditional_formatting.add(
+                                        f"{get_column_letter(7)}{row_num + 1}",
+                                        CellIsRule(
+                                            operator="notEqual",
+                                            formula=[str(purchase.quantity_invoiced)],
+                                            fill=yellow_fill,
+                                        ),
                                     )
-                                c = ws.cell(row=row_num, column=7)
+                                c = ws.cell(row=row_num + 1, column=7 + 1)
                                 c.value = purchase.get_producer_unit_price()
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
-                                c = ws.cell(row=row_num, column=8)
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                c = ws.cell(row=row_num + 1, column=8 + 1)
                                 c.value = purchase.offer_item.unit_deposit.amount
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
-                                c = ws.cell(row=row_num, column=9)
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                c = ws.cell(row=row_num + 1, column=9 + 1)
                                 c.value = "=ROUND(G{}*(H{}+I{}),2)".format(
                                     row_num + 1, row_num + 1, row_num + 1
                                 )
@@ -263,74 +247,56 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         )
                                     ).quantize(RoundUpTo.TWO_DECIMALS)
                                     purchases_price += purchase_price
-                                    c.style.font.color = Color(Color.BLUE)
-                                    ws.conditional_formatting.addCellIs(
-                                        get_column_letter(10) + str(row_num + 1),
-                                        "notEqual",
-                                        [str(purchase_price)],
-                                        True,
-                                        wb,
-                                        None,
-                                        None,
-                                        yellowFill,
+                                    c.font = Font(color="FF0000FF")
+                                    ws.conditional_formatting.add(
+                                        f"{get_column_letter(10)}{row_num + 1}",
+                                        CellIsRule(
+                                            operator="notEqual",
+                                            formula=[str(purchase_price)],
+                                            fill=yellow_fill,
+                                        ),
                                     )
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
-                                c = ws.cell(row=row_num, column=10)
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                c = ws.cell(row=row_num +1, column=10 + 1)
                                 c.value = "=G{}*{}".format(
                                     row_num + 1, purchase.offer_item.customer_vat.amount
                                 )
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
-                                c = ws.cell(row=row_num, column=12)
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                c = ws.cell(row=row_num + 1, column=12 + 1)
                                 c.value = "{}".format(cap(purchase.comment, 100))
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
-                                c = ws.cell(row=row_num, column=13)
+                                c.number_format = FORMAT_TEXT
+                                c = ws.cell(row=row_num + 1, column=13 + 1)
                                 c.value = "{}".format(
                                     purchase.offer_item.get_vat_level_display()
                                 )
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
-                                c = ws.cell(row=row_num, column=14)
+                                c.number_format = FORMAT_TEXT
+                                c = ws.cell(row=row_num + 1, column=14 + 1)
                                 c.value = "{}".format(purchase.customer.user.email)
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
+                                c.number_format = FORMAT_TEXT
                                 delta = 5
                                 for col_num in range(5):
-                                    c = ws.cell(row=row_num, column=delta + col_num)
-                                    c.style.borders.top.border_style = (
-                                        Border.BORDER_THIN
-                                    )
+                                    c = ws.cell(row=row_num +1, column=delta + col_num + 1)
+                                    c.border = Border(top=Side(style="thin"))
                                 row_num += 1
                                 purchase = next_purchase(purchases)
 
                         count_permanence_purchase += count_purchase
                         if year is None and count_purchase > 1:
-                            c = ws.cell(row=row_num - 1, column=11)
+                            c = ws.cell(row=row_num - 1 + 1, column=11 + 1)
                             c.value = "=SUM(J{}:J{})".format(
                                 row_start_purchase, row_num
                             )
-                            c.style.number_format.format_code = (
-                                REPANIER_SETTINGS_CURRENCY_XLSX
+                            c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                            c.font = Font(color="FF0000FF")
+                            ws.conditional_formatting.add(
+                                f"{get_column_letter(12)}{row_num}",
+                                CellIsRule(
+                                    operator="notEqual",
+                                    formula=[str(purchases_price)],
+                                    fill=yellow_fill,
+                                ),
                             )
-                            c.style.font.color = Color(Color.BLUE)
-                            ws.conditional_formatting.addCellIs(
-                                get_column_letter(12) + str(row_num),
-                                "notEqual",
-                                [str(purchases_price)],
-                                True,
-                                wb,
-                                None,
-                                None,
-                                yellowFill,
-                            )
-                            c = ws.cell(row=row_num - 1, column=0)
+                            c = ws.cell(row=row_num - 1 + 1, column=0 + 1)
                             c.value = "C"
                             # row_num += 1
 
@@ -351,45 +317,35 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         tax_all_purchase.append(tax_producer_purchase)
 
                         row_num += 1
-                        c = ws.cell(row=row_num, column=8)
+                        c = ws.cell(row=row_num +1, column=8 +1)
                         c.value = "{} : {} {}".format(
                             _("Total"),
                             producer_save.short_profile_name,
                             permanence_save,
                         )
-                        c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                        c.style.font.bold = True
-                        c.style.alignment.horizontal = (
-                            c.style.alignment.HORIZONTAL_RIGHT
-                        )
-                        c = ws.cell(row=row_num, column=9)
+                        c.number_format = FORMAT_TEXT
+                        c.font = Font(bold=True)
+                        c.alignment = Alignment(horizontal="right")
+                        c = ws.cell(row=row_num +1, column=9 +1)
                         c.value = "={}".format(purchase_price_producer_purchase)
-                        c.style.number_format.format_code = (
-                            REPANIER_SETTINGS_CURRENCY_XLSX
-                        )
-                        c.style.font.bold = True
+                        c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                        c.font = Font(bold=True)
                         if year is None:
-                            ws.conditional_formatting.addCellIs(
-                                get_column_letter(10) + str(row_num + 1),
-                                "notEqual",
-                                [str(producer_price)],
-                                True,
-                                wb,
-                                None,
-                                None,
-                                yellowFill,
+                            ws.conditional_formatting.add(
+                                f"{get_column_letter(10)}{row_num + 1}",
+                                CellIsRule(
+                                    operator="notEqual",
+                                    formula=[str(producer_price)],
+                                    fill=yellow_fill,
+                                ),
                             )
-                        c = ws.cell(row=row_num, column=10)
+                        c = ws.cell(row=row_num +1, column=10 +1)
                         c.value = "={}".format(tax_producer_purchase)
-                        c.style.number_format.format_code = (
-                            REPANIER_SETTINGS_CURRENCY_XLSX
-                        )
+                        c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
                         row_num += 1
                         for col_num in range(14):
-                            c = ws.cell(row=row_num, column=col_num)
-                            c.style.borders.top.border_style = (
-                                Border.BORDER_MEDIUMDASHED
-                            )
+                            c = ws.cell(row=row_num +1, column=col_num +1)
+                            c.border = Border(top=Side(style="mediumDashed"))
                         row_num += 1
             else:
                 if year is None:
@@ -484,36 +440,32 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             row_first_offer_item = row_num
                             offer_items_price = DECIMAL_ZERO
                             for col_num in range(14):
-                                c = ws.cell(row=row_num, column=col_num)
-                                c.style.borders.top.border_style = Border.BORDER_THIN
+                                c = ws.cell(row=row_num +1, column=col_num +1)
+                                c.border = Border(top=Side(style="thin"))
                             row_start_offer_item = 0
                             while (
                                 purchase is not None
                                 and offer_item_save == purchase.offer_item
                             ):
-                                c = ws.cell(row=row_num, column=1)
+                                c = ws.cell(row=row_num + 1, column=1 +1)
                                 c.value = purchase.id
-                                c = ws.cell(row=row_num, column=2)
+                                c = ws.cell(row=row_num + 1, column=2 +1)
                                 c.value = permanence_save.permanence_date
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_DATE_DDMMYYYY
-                                )
-                                c = ws.cell(row=row_num, column=3)
+                                c.number_format = FORMAT_DATE_DMYSLASH
+                                c = ws.cell(row=row_num + 1, column=3 +1)
                                 c.value = "{}".format(producer_save.short_profile_name)
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
+                                c.number_format = FORMAT_TEXT
                                 if count_offer_item == 0:
                                     row_start_offer_item = row_num + 1
                                     if count_permanence_purchase == 0:
-                                        c.style.font.bold = True
+                                        c.font = Font(bold=True)
                                         row_start_permanence = row_start_offer_item
-                                    c = ws.cell(row=row_num, column=0)
+                                    c = ws.cell(row=row_num + 1, column=0 +1)
                                     c.value = "A"
                                 else:
-                                    c = ws.cell(row=row_num, column=0)
+                                    c = ws.cell(row=row_num +1, column=0 + 1)
                                     c.value = "B"
-                                c = ws.cell(row=row_num, column=4)
+                                c = ws.cell(row=row_num + 1, column=4 +1)
                                 if department_for_customer_save__short_name is not None:
                                     c.value = "{} - {}".format(
                                         purchase.get_long_name_with_customer_price(),
@@ -523,67 +475,53 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     c.value = "{}".format(
                                         purchase.get_long_name_with_customer_price()
                                     )
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
+                                c.number_format = FORMAT_TEXT
                                 if count_offer_item != 0:
-                                    c.style.font.color.index = "FF939393"
-                                c = ws.cell(row=row_num, column=5)
+                                    c.font = Font(color="FF939393")
+                                c = ws.cell(row=row_num +1, column=5 +1)
                                 c.value = "{}".format(
                                     purchase.customer.short_basket_name
                                 )
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
-                                c = ws.cell(row=row_num, column=6)
+                                c.number_format = FORMAT_TEXT
+                                c = ws.cell(row=row_num +1, column=6 +1)
                                 c.value = purchase.quantity_invoiced
-                                c.style.number_format.format_code = "#,##0.????"
+                                c.number_format = "#,##0.????"
                                 if year is None:
-                                    c.style.font.color = Color(Color.BLUE)
-                                    ws.conditional_formatting.addCellIs(
-                                        get_column_letter(7) + str(row_num + 1),
-                                        "notEqual",
-                                        [str(purchase.quantity_invoiced)],
-                                        True,
-                                        wb,
-                                        None,
-                                        None,
-                                        yellowFill,
+                                    c.font = Font(color="FF0000FF")
+                                    ws.conditional_formatting.add(
+                                        f"{get_column_letter(7)}{row_num + 1}",
+                                        CellIsRule(
+                                            operator="notEqual",
+                                            formula=[str(purchase.quantity_invoiced)],
+                                            fill=yellow_fill,
+                                        ),
                                     )
-                                c = ws.cell(row=row_num, column=7)
+                                c = ws.cell(row=row_num +1, column=7 +1)
                                 if count_offer_item == 0:
                                     producer_unit_price = (
                                         purchase.get_producer_unit_price()
                                     )
                                     c.value = producer_unit_price
-                                    c.style.font.color = Color(Color.BLUE)
-                                    ws.conditional_formatting.addCellIs(
-                                        get_column_letter(8) + str(row_num + 1),
-                                        "notEqual",
-                                        [str(producer_unit_price)],
-                                        True,
-                                        wb,
-                                        None,
-                                        None,
-                                        yellowFill,
+                                    c.font = Font(color="FF0000FF")
+                                    ws.conditional_formatting.add(
+                                        f"{get_column_letter(8)}{row_num + 1}",
+                                        CellIsRule(
+                                            operator="notEqual",
+                                            formula=[str(producer_unit_price)],
+                                            fill=yellow_fill,
+                                        ),
                                     )
                                 else:
                                     c.value = "=H{}".format(row_first_offer_item + 1)
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
-                                c = ws.cell(row=row_num, column=8)
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                c = ws.cell(row=row_num +1, column=8 +1)
                                 c.value = purchase.offer_item.unit_deposit.amount
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
-                                c = ws.cell(row=row_num, column=9)
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                c = ws.cell(row=row_num +1, column=9 +1)
                                 c.value = "=ROUND(G{}*(H{}+I{}),2)".format(
                                     row_num + 1, row_first_offer_item + 1, row_num + 1
                                 )
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
                                 if year is None:
                                     offer_item_price = (
                                         purchase.quantity_invoiced
@@ -598,47 +536,35 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         OrderUnit.PC_KG,
                                         OrderUnit.LT,
                                     ]:
-                                        c.style.font.color = Color(Color.BLUE)
-                                    ws.conditional_formatting.addCellIs(
-                                        get_column_letter(10) + str(row_num + 1),
-                                        "notEqual",
-                                        [str(offer_item_price)],
-                                        True,
-                                        wb,
-                                        None,
-                                        None,
-                                        yellowFill,
+                                        c.font = Font(color="FF0000FF")
+                                    ws.conditional_formatting.add(
+                                        f"{get_column_letter(10)}{row_num + 1}",
+                                        CellIsRule(
+                                            operator="notEqual",
+                                            formula=[str(offer_item_price)],
+                                            fill=yellow_fill,
+                                        ),
                                     )
-                                c = ws.cell(row=row_num, column=10)
+                                c = ws.cell(row=row_num +1, column=10 +1)
                                 c.value = "=G{}*{}".format(
                                     row_num + 1, purchase.offer_item.customer_vat.amount
                                 )
-                                c.style.number_format.format_code = (
-                                    REPANIER_SETTINGS_CURRENCY_XLSX
-                                )
-                                c = ws.cell(row=row_num, column=12)
+                                c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                c = ws.cell(row=row_num +1, column=12 +1)
                                 c.value = "{}".format(cap(purchase.comment, 100))
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
-                                c = ws.cell(row=row_num, column=13)
+                                c.number_format = FORMAT_TEXT
+                                c = ws.cell(row=row_num + 1, column=13 + 1)
                                 c.value = "{}".format(
                                     purchase.offer_item.get_vat_level_display()
                                 )
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
-                                c = ws.cell(row=row_num, column=14)
+                                c.number_format = FORMAT_TEXT
+                                c = ws.cell(row=row_num + 1, column=14 +1)
                                 c.value = "{}".format(purchase.customer.user.email)
-                                c.style.number_format.format_code = (
-                                    NumberFormat.FORMAT_TEXT
-                                )
+                                c.number_format = FORMAT_TEXT
                                 delta = 5
                                 for col_num in range(5):
-                                    c = ws.cell(row=row_num, column=delta + col_num)
-                                    c.style.borders.top.border_style = (
-                                        Border.BORDER_THIN
-                                    )
+                                    c = ws.cell(row=row_num + 1, column=delta + col_num + 1)
+                                    c.border = Border(top=Side(style="thin"))
 
                                 purchase = next_purchase(purchases)
                                 row_num += 1
@@ -655,25 +581,21 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         OrderUnit.LT,
                                     ]
                                 ):
-                                    c = ws.cell(row=row_num - 1, column=11)
+                                    c = ws.cell(row=row_num - 1 + 1, column=11 + 1)
                                     c.value = "=SUM(J{}:J{})".format(
                                         row_start_offer_item, row_num
                                     )
-                                    c.style.number_format.format_code = (
-                                        REPANIER_SETTINGS_CURRENCY_XLSX
+                                    c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                                    c.font = Font(color="FF0000FF")
+                                    ws.conditional_formatting.add(
+                                        f"{get_column_letter(12)}{row_num}",
+                                        CellIsRule(
+                                            operator="notEqual",
+                                            formula=[str(offer_items_price)],
+                                            fill=yellow_fill,
+                                        ),
                                     )
-                                    c.style.font.color = Color(Color.BLUE)
-                                    ws.conditional_formatting.addCellIs(
-                                        get_column_letter(12) + str(row_num),
-                                        "notEqual",
-                                        [str(offer_items_price)],
-                                        True,
-                                        wb,
-                                        None,
-                                        None,
-                                        yellowFill,
-                                    )
-                                    c = ws.cell(row=row_num - 1, column=0)
+                                    c = ws.cell(row=row_num - 1 + 1, column=0 + 1)
                                     c.value = "D"
                                     # row_num += 1
 
@@ -695,74 +617,64 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         tax_all_purchase.append(tax_producer_purchase)
 
                         row_num += 1
-                        c = ws.cell(row=row_num, column=8)
+                        c = ws.cell(row=row_num +1, column=8 +1)
                         c.value = "{} : {} {}".format(
                             _("Total"),
                             producer_save.short_profile_name,
                             permanence_save,
                         )
-                        c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                        c.style.font.bold = True
-                        c.style.alignment.horizontal = (
-                            c.style.alignment.HORIZONTAL_RIGHT
-                        )
-                        c = ws.cell(row=row_num, column=9)
+                        c.number_format = FORMAT_TEXT
+                        c.font = Font(bold=True)
+                        c.alignment = Alignment(horizontal="right")
+                        c = ws.cell(row=row_num +1, column=9 +1)
                         c.value = "={}".format(purchase_price_producer_purchase)
-                        c.style.number_format.format_code = (
-                            REPANIER_SETTINGS_CURRENCY_XLSX
-                        )
-                        c.style.font.bold = True
+                        c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+                        c.font = Font(bold=True)
                         if year is None:
-                            ws.conditional_formatting.addCellIs(
-                                get_column_letter(10) + str(row_num + 1),
-                                "notEqual",
-                                [str(producer_price)],
-                                True,
-                                wb,
-                                None,
-                                None,
-                                yellowFill,
+                            ws.conditional_formatting.add(
+                                f"{get_column_letter(10)}{row_num + 1}",
+                                CellIsRule(
+                                    operator="notEqual",
+                                    formula=[str(producer_price)],
+                                    fill=yellow_fill,
+                                ),
                             )
-                        c = ws.cell(row=row_num, column=10)
+                        c = ws.cell(row=row_num +1, column=10 +1)
                         c.value = "={}".format(tax_producer_purchase)
-                        c.style.number_format.format_code = (
-                            REPANIER_SETTINGS_CURRENCY_XLSX
-                        )
+                        c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
                         row_num += 1
                         for col_num in range(14):
-                            c = ws.cell(row=row_num, column=col_num)
-                            c.style.borders.top.border_style = (
-                                Border.BORDER_MEDIUMDASHED
-                            )
+                            c = ws.cell(row=row_num +1, column=col_num + 1)
+                            c.border = Border(top=Side(style="mediumDashed"))
                         row_num += 1
             producer = next_row(producers)
 
         if count_all_purchase > 0:
             row_num += 1
-            c = ws.cell(row=row_num, column=8)
+            c = ws.cell(row=row_num +1, column=8 +1)
             c.value = "{} : {}".format(_("Total"), title1)
-            c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-            c.style.font.bold = True
-            c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
-            c = ws.cell(row=row_num, column=9)
+            c.number_format = FORMAT_TEXT
+            c.font = Font(bold=True)
+            c.alignment = Alignment(horizontal="right")
+            c = ws.cell(row=row_num + 1, column=9 + 1)
             c.value = "={}".format("+".join(purchase_price_all_purchase))
-            c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
-            c.style.font.bold = True
-            c = ws.cell(row=row_num, column=10)
+            c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
+            c.font = Font(bold=True)
+            c = ws.cell(row=row_num + 1, column=10 + 1)
             c.value = "={}".format("+".join(tax_all_purchase))
-            c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
+            c.number_format = REPANIER_SETTINGS_CURRENCY_XLSX
             row_num += 1
             for col_num in range(14):
-                c = ws.cell(row=row_num, column=col_num)
-                c.style.borders.top.border_style = Border.BORDER_MEDIUMDASHED
+                c = ws.cell(row=row_num + 1, column=col_num + 1)
+                c.border = Border(top=Side(style="mediumDashed"))
 
         if year is None:
-            ws.column_dimensions[get_column_letter(3)].visible = False
-            ws.column_dimensions[get_column_letter(11)].visible = False
+            ws.column_dimensions[get_column_letter(3)].hidden = True
+            ws.column_dimensions[get_column_letter(11)].hidden = True
         else:
-            ws.column_dimensions[get_column_letter(12)].visible = False
-        ws.column_dimensions[get_column_letter(1)].visible = False
-        ws.column_dimensions[get_column_letter(15)].visible = False
+            ws.column_dimensions[get_column_letter(12)].hidden = True
+        ws.column_dimensions[get_column_letter(1)].hidden = True
+        ws.column_dimensions[get_column_letter(15)].hidden = True
 
     return wb
 
@@ -776,7 +688,7 @@ def import_purchase_sheet(
     import_counter = 0
     header = get_header(worksheet)
     if header:
-        row_num = 1
+        row_num = 2
         array_purchase = []
         rule_of_3_source = DECIMAL_ZERO
         row = get_row(worksheet, header, row_num)
@@ -981,15 +893,20 @@ def handle_uploaded_purchase(request, permanence, file_to_import, *args):
     if not error:
         if permanence is not None:
             if permanence.status == SaleStatus.SEND:
-                ws = wb.get_sheet_by_name(format_worksheet_title(permanence))
-                error, error_msg = import_purchase_sheet(
-                    ws,
-                    permanence=permanence,
-                    customer_2_id_dict=customer_2_id_dict,
-                    producer_2_id_dict=producer_2_id_dict,
-                )
-                if error:
-                    error_msg = format_worksheet_title(permanence) + " > " + error_msg
+                # ws = wb.get_sheet_by_name(format_worksheet_title(permanence))
+                ws = wb[format_worksheet_title(permanence)] if format_worksheet_title(permanence) in wb.sheetnames else None
+                if ws is not None:
+                    error, error_msg = import_purchase_sheet(
+                        ws,
+                        permanence=permanence,
+                        customer_2_id_dict=customer_2_id_dict,
+                        producer_2_id_dict=producer_2_id_dict,
+                    )
+                    if error:
+                        error_msg = format_worksheet_title(permanence) + " > " + error_msg
+                else:
+                    error = True
+                    error_msg = _("The permanence doesn't exists.")
             else:
                 error = True
                 error_msg = _("The accounting has already been done")

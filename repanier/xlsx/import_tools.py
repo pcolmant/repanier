@@ -1,3 +1,5 @@
+# from pip._internal.commands import index
+
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.producer import Producer
@@ -6,8 +8,8 @@ from repanier.models.producer import Producer
 def get_header(worksheet):
     header = []
     if worksheet is not None:
-        row_num = 0
-        col_num = 0
+        row_num = 1
+        col_num = 1
         c = worksheet.cell(row=row_num, column=col_num)
         while (c.value is not None) and (col_num < 50):
             header.append(c.value)
@@ -23,12 +25,12 @@ def get_row(worksheet, header, row_num):
         last_row = True
         i = 0
         while last_row and i < 10:
-            for col_num, col_header in enumerate(header):
+            for col_num, col_header in enumerate(header, start=1):
                 c = worksheet.cell(row=row_num, column=col_num)
                 # Important c.value==0 : Python (or Python lib) mix 0 and None
                 if c.value is not None or c.value == 0:
                     last_row = False
-                row[col_header] = None if c.data_type == c.TYPE_FORMULA else c.value
+                row[col_header] = None if c.data_type == "f" else c.value
             row_num += 1
             i += 1
         if last_row:

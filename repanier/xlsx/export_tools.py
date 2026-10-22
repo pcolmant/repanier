@@ -1,127 +1,125 @@
-from django.contrib.sites.models import Site
-from django.utils.text import slugify
-from django.utils.translation import gettext_lazy as _
+import re
 
-from repanier.const import EMPTY_STRING
+from django.contrib.sites.models import Site
+from django.utils.translation import gettext_lazy as _
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+
 from repanier.models.staff import Staff
-from repanier.packages.openpyxl.cell import get_column_letter
-from repanier.packages.openpyxl.style import NumberFormat
-from repanier.packages.openpyxl.styles import Border
-from repanier.packages.openpyxl.workbook import Workbook
-from repanier.tools import cap
 from repanier.xlsx.const import *
+
+INVALID_WORKSHEET_TITLE_CHARS = re.compile(r"[\\/*?:\[\]]")
 
 
 def format_worksheet_title(title):
-    return cap(slugify("{}".format(title)), 31)
+    """Return a valid Excel worksheet title while preserving Unicode text."""
+    title = INVALID_WORKSHEET_TITLE_CHARS.sub("-", str(title)).strip()
+    return title[:31] or "Sheet"
 
 
-def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
+def _new_a4_sheet(
+    workbook,
+    title1,
+    title2,
+    orientation,
+    header=None,
+    add_print_title=True,
+):
+    """Create a worksheet and apply the settings shared by all A4 exports."""
+    if workbook is None:
+        workbook = Workbook()
+        worksheet = workbook.active
+    else:
+        worksheet = workbook.create_sheet()
+
     worksheet.title = format_worksheet_title(title1)
     worksheet.page_setup.paperSize = worksheet.PAPERSIZE_A4
+    worksheet.page_setup.orientation = orientation
     worksheet.page_setup.fitToPage = True
     worksheet.page_setup.fitToHeight = 0
     worksheet.page_setup.fitToWidth = 1
     worksheet.print_gridlines = True
     if add_print_title:
-        worksheet.add_print_title(1, rows_or_cols="rows")
+        worksheet.print_title_rows = "1:1"
         worksheet.freeze_panes = "A2"
-    worksheet.header_footer.left_header.text = Site.objects.get_current().name
-    worksheet.header_footer.left_footer.text = "{}".format(title2)
-    worksheet.header_footer.center_footer.text = "{}".format(title1)
-    worksheet.header_footer.right_footer.text = "Page &[Page]/&[Pages]"
+    worksheet.oddHeader.left_header = worksheet.evenHeader.left_header = Site.objects.get_current().name
+    worksheet.oddHeader.left_footer = worksheet.evenHeader.left_footer = "{}".format(title2)
+    worksheet.oddHeader.center_footer = worksheet.evenHeader.center_footer = "{}".format(title1)
+    worksheet.oddHeader.right_footer = worksheet.evenHeader.right_footer = "Page &[Page]/&[Pages]"
     order_responsible = Staff.get_or_create_order_responsible()
     invoice_responsible = Staff.get_or_create_invoice_responsible()
     separator = chr(10) + " "
-    worksheet.header_footer.right_header.text = separator.join(
+    worksheet.oddHeader.right_header = worksheet.evenHeader.right_header = separator.join(
         (order_responsible["signature"], invoice_responsible["signature"])
     )
-    return worksheet
 
+    if header is not None:
+        worksheet_set_header(worksheet, header)
 
-def worksheet_setup_portrait_a4(worksheet, title1, title2, add_print_title=True):
-    worksheet = worksheet_setup_a4(worksheet, title1, title2, add_print_title)
-    worksheet.page_setup.orientation = worksheet.ORIENTATION_PORTRAIT
-    return worksheet
+    return workbook, worksheet
 
 
 def new_portrait_a4_sheet(workbook, title1, title2, header=None, add_print_title=True):
-    if workbook is None:
-        workbook = Workbook()
-        worksheet = workbook.get_active_sheet()
-    else:
-        worksheet = workbook.create_sheet()
-    worksheet = worksheet_setup_portrait_a4(
-        worksheet, title1, title2, add_print_title=add_print_title
+    """Create and configure a portrait-oriented A4 worksheet.
+
+    A new workbook is created when ``workbook`` is ``None``. Otherwise, a new
+    worksheet is appended to the supplied workbook. The optional header is
+    written on the first row.
+    """
+    return _new_a4_sheet(
+        workbook,
+        title1,
+        title2,
+        orientation="portrait",
+        header=header,
+        add_print_title=add_print_title,
     )
-    if header is not None:
-        worksheet_set_header(worksheet, header)
-    return workbook, worksheet
-
-
-def worksheet_setup_landscape_a4(worksheet, title1, title2, add_print_title=True):
-    from repanier.apps import REPANIER_SETTINGS_XLSX_PORTRAIT
-
-    worksheet = worksheet_setup_a4(worksheet, title1, title2, add_print_title)
-    worksheet.page_setup.orientation = (
-        worksheet.ORIENTATION_PORTRAIT
-        if REPANIER_SETTINGS_XLSX_PORTRAIT
-        else worksheet.ORIENTATION_LANDSCAPE
-    )
-    return worksheet
 
 
 def new_landscape_a4_sheet(workbook, title1, title2, header=None, add_print_title=True):
-    if workbook is None:
-        workbook = Workbook()
-        worksheet = workbook.get_active_sheet()
-    else:
-        worksheet = workbook.create_sheet()
-    worksheet = worksheet_setup_landscape_a4(
-        worksheet, title1, title2, add_print_title=add_print_title
+    """Create and configure a landscape-oriented A4 worksheet.
+
+    A new workbook is created when ``workbook`` is ``None``. Otherwise, a new
+    worksheet is appended to the supplied workbook. The optional header is
+    written on the first row.
+    """
+    return _new_a4_sheet(
+        workbook,
+        title1,
+        title2,
+        orientation="landscape",
+        header=header,
+        add_print_title=add_print_title,
     )
-    if header is not None:
-        worksheet_set_header(worksheet, header)
-    return workbook, worksheet
 
 
 def worksheet_set_header(worksheet, header):
-    for col_num in range(len(header)):
-        c = worksheet.cell(row=0, column=col_num)
-        c.value = "{}".format(header[col_num][ROW_TITLE])
-        c.style.font.bold = True
-        c.style.alignment.wrap_text = False
-        c.style.borders.bottom.border_style = Border.BORDER_THIN
-        worksheet.column_dimensions[get_column_letter(col_num + 1)].width = header[
-            col_num
-        ][ROW_WIDTH]
-        if header[col_num][ROW_TITLE] == _("Id"):
-            worksheet.column_dimensions[get_column_letter(col_num + 1)].visible = False
+    """Format the first worksheet row as column headers.
 
+    Each header entry has the following structure::
 
-def get_validation_formula(wb=None, valid_values=None):
-    if valid_values:
+        (title, width, value, format, boxed)
 
-        ws_dv_name = format_worksheet_title(_("Data validation"))
-        ws_dv = wb.get_sheet_by_name(ws_dv_name)
-        if ws_dv is None:
-            ws_dv = wb.create_sheet(index=0)
-            worksheet_setup_landscape_a4(ws_dv, ws_dv_name, EMPTY_STRING)
-        col_dv = 0
-        c = ws_dv.cell(row=0, column=col_dv)
-        while (c.value is not None) and (col_dv < 20):
-            col_dv += 1
-            c = ws_dv.cell(row=0, column=col_dv)
+    The fields used here are identified by these constants::
 
-        col_letter_dv = get_column_letter(col_dv + 1)
-        row_num = 0
-        for v in valid_values:
-            c = ws_dv.cell(row=row_num, column=col_dv)
-            c.value = "{}".format(v)
-            c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-            row_num += 1
-        return "'{}'!${}$1:${}${}".format(
-            ws_dv_name, col_letter_dv, col_letter_dv, row_num + 1
-        )
-    else:
-        return EMPTY_STRING
+        ROW_TITLE = 0
+        ROW_WIDTH = 1
+    """
+    # Worksheet columns are one-based, while enumerate normally starts at zero.
+    for column, item in enumerate(header, start=1):
+        c = worksheet.cell(row=1, column=column)
+
+        # Set the column title and format the header cell.
+        c.value = "{}".format(item[ROW_TITLE])
+        c.font = Font(bold=True)
+        c.alignment = Alignment(wrap_text=False)
+        c.border = Border(bottom=Side(style='thin'))
+
+        # Apply the configured width to the corresponding worksheet column.
+        dimensions = worksheet.column_dimensions[get_column_letter(column)]
+        dimensions.width = item[ROW_WIDTH]
+
+        # Keep identifiers in the export while hiding them from normal view.
+        if item[ROW_TITLE] == _("Id"):
+            dimensions.hidden = True
