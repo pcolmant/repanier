@@ -1,7 +1,6 @@
 from django.template import Template, Context as TemplateContext
 from django.utils.translation import gettext_lazy as _
 
-from packages.openpyxl.writer.excel import save_virtual_workbook
 from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
 from repanier.models import Producer
@@ -14,12 +13,13 @@ from repanier.models.staff import Staff
 
 from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
 
 # @debug_parameters
-def email_order(permanence_id, everything=True, deliveries_id=()):
+def email_order(permanence_id, everything : bool=True, deliveries_id=()):
     from repanier.apps import (
         REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
         REPANIER_SETTINGS_CONFIG,
@@ -86,9 +86,12 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 html_body=html_body,
                 to=to_email,
             )
+            buffer = BytesIO()
+            wb.save(buffer)
+            buffer.seek(0)
             email.attach(
                 filename,
-                save_virtual_workbook(wb),
+                buffer.getvalue(),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
             email.send_email()
@@ -166,9 +169,12 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 if producer.represent_this_buyinggroup:
                     if abstract_ws is not None:
                         wb.add_sheet(abstract_ws, index=0)
+                buffer = BytesIO()
+                wb.save(buffer)
+                buffer.seek(0)
                 email.attach(
                     filename,
-                    save_virtual_workbook(wb),
+                    buffer.getvalue(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
@@ -256,9 +262,12 @@ def export_order_2_1_group(
             html_body=html_body,
             to=to_email,
         )
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
         email.attach(
             filename,
-            save_virtual_workbook(wb),
+            buffer.getvalue(),
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -368,9 +377,12 @@ def export_order_2_1_customer(
             ):
                 if abstract_ws is not None:
                     wb.add_sheet(abstract_ws, index=0)
+            buffer = BytesIO()
+            wb.save(buffer)
+            buffer.seek(0)
             email.attach(
                 filename,
-                save_virtual_workbook(wb),
+                buffer.getvalue(),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 

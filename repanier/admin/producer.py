@@ -22,7 +22,7 @@ from repanier.xlsx.widget import (
     DecimalBooleanWidget,
 )
 from repanier.xlsx.xlsx_invoice import export_invoice
-from repanier.xlsx.xlsx_product import export_customer_prices
+from repanier.xlsx.xlsx_product import export_product_prices
 
 
 class ProducerResource(resources.ModelResource):
@@ -197,7 +197,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     list_per_page = 20
     list_max_show_all = 20
     list_filter = ("invoice_by_basket",)
-    actions = ["export_customer_prices"]
+    actions = ["export_product_prices"]
 
     def has_delete_permission(self, request, producer=None):
         user = request.user
@@ -214,8 +214,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_redirect_to_change_list_url(self):
         return "{}{}".format(self.change_list_url, get_query_filters())
 
-    def export_customer_prices(self, request, producer_qs):
-        wb = export_customer_prices(
+    def export_product_prices(self, request, producer_qs):
+        wb = export_product_prices(
             producer_qs=producer_qs, wb=None, producer_prices=False
         )
         if wb is not None:
@@ -230,7 +230,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
-    export_customer_prices.short_description = _("Export the customer tariff")
+    export_product_prices.short_description = _("Export the customer tariff")
 
     # def export_stock(self, request):
     #     wb = export_producer_stock(
