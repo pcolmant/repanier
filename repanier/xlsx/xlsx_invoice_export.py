@@ -36,6 +36,7 @@ def export_invoice(
     """
     Exporte le détail des achats préparés pour facturation (filtrable par permanence, année, client ou producteur).
     """
+
     from repanier.apps import REPANIER_SETTINGS_CONFIG
 
     hide_producer_prices = producer is None
@@ -227,8 +228,11 @@ def export_invoice(
                 worksheet_set_header(ws, row)
                 row_num += 1
 
+            # Use current_row/current_col to avoid repeated +1 calculations
+            current_row = row_num + 1
+            current_col = 1
             for col_num in range(len(row)):
-                c = ws.cell(row=row_num + 1, column=col_num + 1)
+                c = ws.cell(row=current_row, column=current_col)
                 c.value = row[col_num][ROW_VALUE]
                 c.number_format = row[col_num][ROW_FORMAT]
                 if row[col_num][ROW_BOX]:
@@ -237,6 +241,7 @@ def export_invoice(
                     c.border = BORDER_HAIR
                 if col_num == 8:
                     c.font = FONT_BOLD
+                current_col += 1
 
             row_num += 1
 
@@ -260,8 +265,11 @@ def export_invoice(
             if permanence_id_save is not None:
                 row_num = shipping_cost_row(customer, permanence_id_save, row, row_num, ws)
 
+            # Use current_row/current_col for totals row
+            current_row = row_num + 1
+            current_col = 1
             for col_num in range(len(row)):
-                c = ws.cell(row=row_num + 1, column=col_num + 1)
+                c = ws.cell(row=current_row, column=current_col)
                 c.border = BORDER_TOP_THIN_BOTTOM_THIN
                 if col_num == 2:
                     c.value = "{} {}".format(_("Total Price"), sheet_name)
@@ -269,50 +277,48 @@ def export_invoice(
                 if col_num == 9:
                     formula = "SUM(J{}:J{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.number_format = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    )
+                    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.font = FONT_BOLD
                 if col_num == 10:
                     formula = "SUM(K{}:K{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.number_format = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    )
+                    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.font = FONT_BOLD
                 if col_num == 12:
                     formula = "SUM(M{}:M{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.number_format = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    )
+                    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.font = FONT_BOLD
                 if col_num == 13:
                     formula = "SUM(N{}:N{})".format(2, row_num)
                     c.value = "=" + formula
-                    c.number_format = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    )
+                    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.font = FONT_BOLD
+                current_col += 1
 
             if customer is not None:
                 config = REPANIER_SETTINGS_CONFIG
                 group_label = config.group_label_v2
                 if group_label:
                     row_num += 1
+                    # Use current_row/current_col for group label row
+                    current_row = row_num + 1
+                    current_col = 1
                     for col_num in range(len(row)):
-                        c = ws.cell(row=row_num + 1, column=col_num + 1)
+                        c = ws.cell(row=current_row, column=current_col)
                         c.border = BORDER_TOP_THIN_BOTTOM_THIN
                         if col_num == 2:
                             c.value = group_label
                             c.font = FONT_BOLD
+                        current_col += 1
     return wb
 
 
 def shipping_cost_row(customer, permanence_id_save, row, row_num, ws):
     """
-    Ajoute une ligne pour les frais de livraison le cas échéant.
+    Add a row for shipping costs if applicable.
     """
+
     if customer is not None and permanence_id_save is not None:
         customer_invoice = CustomerInvoice.objects.filter(
             permanence_id=permanence_id_save, customer_id=customer.id
@@ -320,16 +326,18 @@ def shipping_cost_row(customer, permanence_id_save, row, row_num, ws):
         delta_transport = customer_invoice.delta_transport.amount
         if delta_transport:
             delivery = customer_invoice.delivery or EMPTY_STRING
+            # Use current_row/current_col for consistency
+            current_row = row_num + 1
+            current_col = 1
             for col_num in range(len(row)):
-                c = ws.cell(row=row_num + 1, column=col_num + 1)
+                c = ws.cell(row=current_row, column=current_col)
                 c.border = BORDER_TOP_THIN_BOTTOM_THIN
                 if col_num == 2:
                     c.value = "{} {}".format(_("Shipping cost"), delivery)
                     c.font = FONT_BOLD
                 if col_num == 12:
                     c.value = delta_transport
-                    c.number_format = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    )
+                    c.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                current_col += 1
             row_num += 1
     return row_num
