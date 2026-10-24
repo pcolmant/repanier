@@ -1,12 +1,11 @@
 """
-Importation de factures d'achat à partir de fichiers Excel.
+Import invoices from Excel files.
 """
 
 from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from openpyxl import load_workbook
 
 from repanier.const import EMPTY_STRING, SaleStatus, DICT_ALL_VAT_REVERSE
 from repanier.models.permanence import Permanence
@@ -18,6 +17,7 @@ from repanier.tools import (
     reorder_purchases,
     round_tva,
 )
+from repanier.xlsx.import_handlers import process_uploaded_excel, validate_invoice_upload, get_first_sheet
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, get_header, get_row
 
 
@@ -25,7 +25,16 @@ def import_invoice_sheet(
     worksheet, invoice_reference=EMPTY_STRING, customer_2_id_dict=None, producer=None
 ):
     """
-    Lit une feuille de facturation Excel et crée/met à jour la permanence, les produits et les achats correspondants.
+    Read an invoice Excel sheet and create/update the permanence, products, and purchases accordingly.
+
+    Args:
+        worksheet: OpenPyXL worksheet object.
+        invoice_reference: Reference string for the invoice (default: EMPTY_STRING).
+        customer_2_id_dict: Dictionary mapping customer names/emails to IDs.
+        producer: Producer model instance.
+
+    Returns:
+        tuple: (error: bool, error_msg: str)
     """
     error = False
     error_msg = None
@@ -135,23 +144,26 @@ def import_invoice_sheet(
     return error, error_msg
 
 
-def handle_uploaded_invoice(
-    request, permanences, file_to_import, producer, invoice_reference
-):
+def handle_uploaded_invoice(request, permanences, file_to_import, producer, invoice_reference):
     """
-    Point d'entrée pour traiter un fichier Excel de facturation téléversé.
+    Process an uploaded invoice Excel file.
+
+    Args:
+        request: Django HTTP request.
+        permanences: QuerySet of permanences (unused but kept for backward compatibility).
+        file_to_import: Uploaded Excel file.
+        producer: Producer model instance.
+        invoice_reference: Reference string for the invoice.
+
+    Returns:
+        tuple: (error: bool, error_msg: str)
     """
-    if producer is None:
-        error = True
-        error_msg = _("A producer must be given.")
-    else:
-        wb = load_workbook(file_to_import)
-        customer_2_id_dict = get_customer_email_2_id_dict()
-        ws = wb.worksheets[0]
-        error, error_msg = import_invoice_sheet(
-            ws,
-            invoice_reference=invoice_reference,
-            customer_2_id_dict=customer_2_id_dict,
-            producer=producer,
-        )
-    return error, error_msg
+    return process_uploaded_excel(
+        file_to_import,
+        pre_validation_func=validate_invoice_upload,
+        sheet_getter_func=get_first_sheet,
+        import_func=import_invoice_sheet,
+        producer=producer,
+        invoice_reference=invoice_reference,
+        customer_2_id_dict=get_customer_email_2_id_dict(),
+    )

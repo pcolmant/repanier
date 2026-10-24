@@ -1,11 +1,10 @@
 """
-Importation des données d'achat à partir de fichiers Excel.
+Import purchase data from Excel files.
 """
 
 from decimal import Decimal
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
-from openpyxl.reader.excel import load_workbook
 
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING, RoundUpTo, SaleStatus, DECIMAL_ONE
 from repanier.models.offeritem import OfferItemReadOnly
@@ -13,6 +12,7 @@ from repanier.models.purchase import Purchase
 from repanier.tools import cap
 from repanier.xlsx.export_tools import format_worksheet_title
 from repanier.xlsx.import_tools import get_header, get_row, get_customer_2_id_dict, get_producer_2_id_dict
+from repanier.xlsx.import_handlers import process_uploaded_excel, validate_purchase_upload, get_permanence_sheet
 
 
 @transaction.atomic
@@ -20,7 +20,16 @@ def import_purchase_sheet(
     worksheet, permanence=None, customer_2_id_dict=None, producer_2_id_dict=None
 ):
     """
-    Importe les données d'achat depuis une feuille Excel.
+    Import purchase data from an Excel worksheet.
+
+    Args:
+        worksheet: OpenPyXL worksheet object.
+        permanence: Permanence model instance (default: None).
+        customer_2_id_dict: Dictionary mapping customer names to IDs.
+        producer_2_id_dict: Dictionary mapping producer names to IDs.
+
+    Returns:
+        tuple: (error: bool, error_msg: str)
     """
     error = False
     error_msg = None
@@ -166,44 +175,43 @@ def import_purchase_sheet(
 
 def handle_uploaded_purchase(request, permanence, file_to_import, *args):
     """
-    Gère le fichier d'achat téléversé.
-    """
-    error = False
-    error_msg = None
+    Process an uploaded purchase Excel file.
 
-    wb = load_workbook(file_to_import)
+    Args:
+        request: Django HTTP request.
+        permanence: Permanence model instance.
+        file_to_import: Uploaded Excel file.
+        *args: Additional arguments (unused but kept for backward compatibility).
+
+    Returns:
+        tuple: (error: bool, error_msg: str)
+    """
     customer_buyinggroup_id, customer_2_id_dict = get_customer_2_id_dict()
     producer_buyinggroup_id, producer_2_id_dict = get_producer_2_id_dict()
 
     if customer_buyinggroup_id is None:
-        error = True
-        error_msg = _("At least one customer must represent the buying group.")
-    elif producer_buyinggroup_id is None:
-        error = True
-        error_msg = _("At least one producer must represent the buying group.")
+        return True, _("At least one customer must represent the buying group.")
+    if producer_buyinggroup_id is None:
+        return True, _("At least one producer must represent the buying group.")
 
-    if not error:
-        if permanence is not None:
-            if permanence.status == SaleStatus.SEND:
-                ws_name = format_worksheet_title(permanence)
-                if ws_name in wb.sheetnames:
-                    ws = wb[ws_name]
-                    error, error_msg = import_purchase_sheet(
-                        ws,
-                        permanence=permanence,
-                        customer_2_id_dict=customer_2_id_dict,
-                        producer_2_id_dict=producer_2_id_dict,
-                    )
-                    if error:
-                        error_msg = f"{ws_name} > {error_msg}"
-                else:
-                    error = True
-                    error_msg = _("The permanence doesn't exist.")
-            else:
-                error = True
-                error_msg = _("The accounting has already been done")
-        else:
-            error = True
-            error_msg = _("The permanence doesn't exist.")
+    # Custom sheet getter to preserve original error messages
+    def get_purchase_sheet(wb, permanence, **_):
+        ws_name = format_worksheet_title(permanence)
+        return wb[ws_name] if ws_name in wb.sheetnames else None
+
+    error, error_msg = process_uploaded_excel(
+        file_to_import,
+        pre_validation_func=validate_purchase_upload,
+        sheet_getter_func=get_purchase_sheet,
+        import_func=import_purchase_sheet,
+        permanence=permanence,
+        customer_2_id_dict=customer_2_id_dict,
+        producer_2_id_dict=producer_2_id_dict,
+    )
+
+    # Preserve original behavior: prefix error messages with sheet name
+    if error and error_msg and not error_msg.startswith(_("The permanence doesn't exist.")):
+        ws_name = format_worksheet_title(permanence)
+        error_msg = f"{ws_name} > {error_msg}"
 
     return error, error_msg

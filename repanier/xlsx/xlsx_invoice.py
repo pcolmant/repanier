@@ -1,6 +1,6 @@
 """
-Façade rétrocompatible pour les exports et imports de factures Repanier.
-Expose à l'identique les fonctions historiques : export_bank, export_invoice, handle_uploaded_invoice.
+Backward-compatible facade for Repanier invoice exports and imports.
+Re-exports historical functions: export_bank, export_invoice, handle_uploaded_invoice.
 """
 
 from repanier.xlsx.xlsx_invoice_bank import export_bank
