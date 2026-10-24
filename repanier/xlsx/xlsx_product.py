@@ -7,13 +7,14 @@ This module provides:
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from openpyxl.styles import Border, Side
 from openpyxl.styles.numbers import FORMAT_TEXT
 
 from repanier.const import EMPTY_STRING
 from repanier.models.product import Product
 from repanier.tools import next_row
 from repanier.xlsx.export_tools import new_landscape_a4_sheet, worksheet_set_header
+from repanier.xlsx.xlsx_styles import BORDER_HAIR
+
 
 def export_product_prices(producer_qs, wb=None, producer_prices=True):
     """
@@ -33,7 +34,6 @@ def export_product_prices(producer_qs, wb=None, producer_prices=True):
 
     wb, ws = new_landscape_a4_sheet(wb, title, subtitle)
 
-    # Get active products from selected producers
     products = (
         Product.objects
         .filter(
@@ -55,7 +55,6 @@ def export_product_prices(producer_qs, wb=None, producer_prices=True):
     if current_product is None:
         return wb
 
-    # Build and write header from first product
     header = [
         (_("Reference"), 10),          # Col A - Product reference
         (_("Department"), 15),        # Col B - Department name
@@ -66,11 +65,9 @@ def export_product_prices(producer_qs, wb=None, producer_prices=True):
     ]
 
     worksheet_set_header(ws, header)
-    current_row = 2  # Move to first data row after header
+    current_row = 2
 
-    # Process each product
     while current_product is not None:
-        # Prepare cell values
         reference = (
             current_product.reference
             if len(current_product.reference) < 36
@@ -88,32 +85,32 @@ def export_product_prices(producer_qs, wb=None, producer_prices=True):
         # --- COLUMN A: Reference ---
         cell = ws.cell(row=current_row, column=1, value=reference)
         cell.number_format = FORMAT_TEXT
-        cell.border = Border(bottom=Side(style='hair'))
+        cell.border = BORDER_HAIR
 
         # --- COLUMN B: Department ---
         cell = ws.cell(row=current_row, column=2, value=department)
         cell.number_format = FORMAT_TEXT
-        cell.border = Border(bottom=Side(style='hair'))
+        cell.border = BORDER_HAIR
 
         # --- COLUMN C: Wrapped ---
         cell = ws.cell(row=current_row, column=3, value=wrapped)
         cell.number_format = FORMAT_TEXT
-        cell.border = Border(bottom=Side(style='hair'))
+        cell.border = BORDER_HAIR
 
         # --- COLUMN D: Producer ---
         cell = ws.cell(row=current_row, column=4, value=current_product.producer.short_profile_name)
         cell.number_format = FORMAT_TEXT
-        cell.border = Border(bottom=Side(style='hair'))
+        cell.border = BORDER_HAIR
 
         # --- COLUMN E: Long name ---
         cell = ws.cell(row=current_row, column=5, value=current_product.get_long_name_with_customer_price())
         cell.number_format = FORMAT_TEXT
-        cell.border = Border(bottom=Side(style='hair'))
+        cell.border = BORDER_HAIR
 
         # --- COLUMN F: VAT ---
         cell = ws.cell(row=current_row, column=6, value=current_product.get_vat_level_display())
         cell.number_format = FORMAT_TEXT
-        cell.border = Border(bottom=Side(style='hair'))
+        cell.border = BORDER_HAIR
 
         current_row += 1
         current_product = next_row(products)

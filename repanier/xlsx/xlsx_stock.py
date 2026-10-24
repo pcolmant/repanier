@@ -10,7 +10,7 @@ This module generates an Excel sheet detailing:
 
 from django.utils.translation import gettext_lazy as _
 from openpyxl.formatting.rule import CellIsRule
-from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+from openpyxl.styles import Alignment
 from openpyxl.styles.numbers import FORMAT_TEXT
 from openpyxl.utils import get_column_letter
 
@@ -22,6 +22,15 @@ from repanier.xlsx.export_tools import (
     new_landscape_a4_sheet,
     format_worksheet_title,
 )
+from repanier.xlsx.xlsx_styles import (
+    FILL_YELLOW,
+    BORDER_BOTTOM_THIN,
+    BORDER_BOTTOM_MEDIUM_DASHED,
+    FONT_BOLD,
+    FONT_BOLD_ITALIC,
+    FONT_GRAY,
+)
+
 
 def export_permanence_stock(
     permanence,
@@ -46,15 +55,6 @@ def export_permanence_stock(
     if wb is None:
         return None
 
-    # Style configurations
-    yellow_fill = PatternFill(fill_type="solid", start_color="FFFF00", end_color="FFFF00")
-    thin_border = Border(bottom=Side(style="thin"))
-    medium_dashed_border = Border(bottom=Side(style="mediumDashed"))
-    bold_font = Font(bold=True)
-    bold_italic_font = Font(bold=True, italic=True)
-    gray_font = Font(color="FF939393")
-
-    # Column definitions for the export
     header = [
         (_("Id"), 5),                                  # Col A - Producer ID (hidden)
         (_("OfferItem"), 5),                           # Col B - OfferItem ID (hidden)
@@ -72,7 +72,6 @@ def export_permanence_stock(
         (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),  # Col N - Remaining stock value
     ]
 
-    # Get offer items with stock management enabled
     offer_items = (
         OfferItemReadOnly.objects
         .filter(
@@ -84,18 +83,15 @@ def export_permanence_stock(
         .iterator()
     )
 
-    # Create Excel worksheet
     wb, ws = new_landscape_a4_sheet(wb, _("Stock check"), permanence, header)
 
-    # Tracking variables
-    formula_main_total_a = []  # Formulas for column J total
-    formula_main_total_b = []  # Formulas for column N total
+    formula_main_total_a = []
+    formula_main_total_b = []
     show_column_reference = False
     show_column_qty_ordered = False
     show_column_add2stock = False
-    current_row = 2  # Start at row 2 (after header at row 1)
+    current_row = 2
 
-    # Get delivery worksheet names for references
     deliveries_ws = []
     if deliveries_id:
         for delivery_idx, delivery_id in enumerate(deliveries_id):
@@ -107,18 +103,15 @@ def export_permanence_stock(
         if any(ws_name == sheet.title for sheet in wb.worksheets):
             deliveries_ws.append(ws_name)
 
-    # Process each offer item
     offer_item = next_row(offer_items)
     while offer_item is not None:
         current_producer = offer_item.producer
         producer_start_row = current_row
 
-        # Producer header
         cell = ws.cell(row=current_row, column=3)
         cell.value = current_producer.short_profile_name
-        cell.font = bold_italic_font
+        cell.font = FONT_BOLD_ITALIC
 
-        # Process all items from the same producer
         while offer_item is not None and current_producer.id == offer_item.producer_id:
             current_department_id = offer_item.department_for_customer_id
             current_department_name = (
@@ -127,14 +120,11 @@ def export_permanence_stock(
                 else None
             )
 
-            # Process all items from the same producer and department
             while (offer_item is not None and
                    current_producer.id == offer_item.producer_id and
                    current_department_id == offer_item.department_for_customer_id):
 
-                # Skip deposit-type items
                 if offer_item.order_unit < OrderUnit.DEPOSIT:
-                    # Get quantities
                     asked_qty = offer_item.get_producer_quantity(permanence.status)
                     initial_stock = offer_item.stock
                     unit_deposit = offer_item.unit_deposit.amount
@@ -145,26 +135,21 @@ def export_permanence_stock(
                     )
                     price_with_deposit = unit_price + unit_deposit
 
-                    # --- COLUMN A: Producer ID (hidden) ---
                     ws.cell(row=current_row, column=1, value=offer_item.producer_id)
-
-                    # --- COLUMN B: OfferItem ID (hidden) ---
                     ws.cell(row=current_row, column=2, value=offer_item.id)
 
-                    # --- COLUMN C: Reference ---
                     ref = offer_item.reference
                     if len(ref) < 36:
                         if ref.isdigit():
-                            ref = f"[{ref}]"  # Avoid exponent display in Excel
+                            ref = f"[{ref}]"
                         show_column_reference = True
                     else:
                         ref = EMPTY_STRING
 
                     cell = ws.cell(row=current_row, column=3, value=ref)
                     cell.number_format = FORMAT_TEXT
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN D: Product name ---
                     product_name = offer_item.get_long_name_with_customer_price()
                     if current_department_name:
                         product_name = f"{product_name} - {current_department_name}"
@@ -172,19 +157,16 @@ def export_permanence_stock(
                     cell = ws.cell(row=current_row, column=4, value=product_name)
                     cell.number_format = FORMAT_TEXT
                     cell.alignment = Alignment(wrap_text=True)
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN E: Unit price ---
                     cell = ws.cell(row=current_row, column=5, value=unit_price)
                     cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN F: Deposit ---
                     cell = ws.cell(row=current_row, column=6, value=unit_deposit)
                     cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN G: Requested quantity ---
                     cell = ws.cell(row=current_row, column=7)
                     if ws_customer_title is None:
                         cell.value = asked_qty
@@ -198,10 +180,8 @@ def export_permanence_stock(
                         else:
                             cell.value = DECIMAL_ZERO
                     cell.number_format = "#,##0.???"
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN H: Ordered quantity (calculated) ---
-                    # Formula: Requested - Used + Additional
                     cell = ws.cell(
                         row=current_row,
                         column=8,
@@ -210,137 +190,122 @@ def export_permanence_stock(
                     if (asked_qty - min(asked_qty, initial_stock)) > 0:
                         show_column_qty_ordered = True
                     cell.number_format = "#,##0.???"
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN I: Initial stock ---
                     cell = ws.cell(row=current_row, column=9, value=initial_stock)
                     cell.number_format = "#,##0.???"
-                    cell.border = thin_border
-                    cell.font = gray_font
+                    cell.border = BORDER_BOTTOM_THIN
+                    cell.font = FONT_GRAY
 
-                    # Highlight if stock value differs from stored value
                     ws.conditional_formatting.add(
                         f"{get_column_letter(9)}{current_row}",
                         CellIsRule(
                             operator="notEqual",
                             formula=[str(initial_stock)],
-                            fill=yellow_fill,
+                            fill=FILL_YELLOW,
                         ),
                     )
 
-                    # --- COLUMN J: Initial stock value (price * quantity) ---
                     cell = ws.cell(
                         row=current_row,
                         column=10,
                         value=f"=ROUND(I{current_row}*{price_with_deposit},2)"
                     )
                     cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN K: Used stock (min of requested and initial) ---
                     cell = ws.cell(
                         row=current_row,
                         column=11,
                         value=f"=MIN(G{current_row},I{current_row})"
                     )
                     cell.number_format = "#,##0.???"
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN L: Additional (placeholder) ---
                     cell = ws.cell(row=current_row, column=12, value=DECIMAL_ZERO)
                     cell.number_format = "#,##0.???"
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
-                    # --- COLUMN M: Remaining stock ---
                     cell = ws.cell(
                         row=current_row,
                         column=13,
                         value=f"=I{current_row}-K{current_row}+L{current_row}"
                     )
                     cell.number_format = "#,##0.???"
-                    cell.border = thin_border
-                    cell.font = bold_font
+                    cell.border = BORDER_BOTTOM_THIN
+                    cell.font = FONT_BOLD
 
-                    # --- COLUMN N: Remaining stock value ---
                     cell = ws.cell(
                         row=current_row,
                         column=14,
                         value=f"=ROUND(M{current_row}*{price_with_deposit},2)"
                     )
                     cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    cell.border = thin_border
+                    cell.border = BORDER_BOTTOM_THIN
 
                     current_row += 1
 
                 offer_item = next_row(offer_items)
 
-        # --- PRODUCER TOTAL ROW ---
         cell = ws.cell(row=current_row, column=4)
         cell.value = f"{_('Total price')} {current_producer.short_profile_name}"
         cell.number_format = FORMAT_TEXT
-        cell.font = bold_font
+        cell.font = FONT_BOLD
         cell.alignment = Alignment(horizontal="right")
 
-        # Total for column J (initial stock value)
         formula_j = f"SUM(J{producer_start_row}:J{current_row - 1})"
         cell = ws.cell(row=current_row, column=10, value=f"={formula_j}")
         cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-        cell.font = bold_font
+        cell.font = FONT_BOLD
         formula_main_total_a.append(formula_j)
 
-        # Total for column N (remaining stock value)
         formula_n = f"SUM(N{producer_start_row}:N{current_row - 1})"
         cell = ws.cell(row=current_row, column=14, value=f"={formula_n}")
         cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-        cell.font = bold_font
+        cell.font = FONT_BOLD
         formula_main_total_b.append(formula_n)
 
-        # Separator line between producers
         if offer_items is not None:
             current_row += 1
             for col in range(16):
-                ws.cell(row=current_row, column=col + 1).border = medium_dashed_border
+                ws.cell(row=current_row, column=col + 1).border = BORDER_BOTTOM_MEDIUM_DASHED
             current_row += 2
 
-    # --- GRAND TOTAL ROW ---
     cell = ws.cell(row=current_row, column=4)
     cell.value = str(_("Total price"))
     cell.number_format = FORMAT_TEXT
-    cell.font = bold_font
+    cell.font = FONT_BOLD
     cell.alignment = Alignment(horizontal="right")
 
-    # Grand total for column J
     cell = ws.cell(
         row=current_row,
         column=10,
         value=f"={'+'.join(formula_main_total_a)}"
     )
     cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-    cell.font = bold_font
+    cell.font = FONT_BOLD
 
-    # Grand total for column N
     cell = ws.cell(
         row=current_row,
         column=14,
         value=f"={'+'.join(formula_main_total_b)}"
     )
     cell.number_format = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-    cell.font = bold_font
+    cell.font = FONT_BOLD
 
     current_row += 1
     for col in range(16):
-        ws.cell(row=current_row, column=col + 1).border = medium_dashed_border
+        ws.cell(row=current_row, column=col + 1).border = BORDER_BOTTOM_MEDIUM_DASHED
 
-    # Hide unnecessary columns
-    ws.column_dimensions[get_column_letter(1)].hidden = True   # A: Producer ID
-    ws.column_dimensions[get_column_letter(2)].hidden = True   # B: OfferItem ID
-    ws.column_dimensions[get_column_letter(11)].hidden = True  # K: Used stock
+    ws.column_dimensions[get_column_letter(1)].hidden = True
+    ws.column_dimensions[get_column_letter(2)].hidden = True
+    ws.column_dimensions[get_column_letter(11)].hidden = True
 
     if not show_column_reference:
-        ws.column_dimensions[get_column_letter(3)].hidden = True  # C: Reference
+        ws.column_dimensions[get_column_letter(3)].hidden = True
     if not show_column_qty_ordered:
-        ws.column_dimensions[get_column_letter(8)].hidden = True  # H: Ordered quantity
+        ws.column_dimensions[get_column_letter(8)].hidden = True
     if not show_column_add2stock:
-        ws.column_dimensions[get_column_letter(12)].hidden = True  # L: Additional
+        ws.column_dimensions[get_column_letter(12)].hidden = True
 
     return wb

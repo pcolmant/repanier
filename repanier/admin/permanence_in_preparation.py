@@ -2,8 +2,6 @@ import logging
 import threading
 
 from django.contrib import admin
-
-import repanier.apps
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
 from django.http import HttpResponseRedirect, HttpResponse
@@ -15,7 +13,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from repanier.models import PermanenceInPreparation
+import repanier.apps
 from repanier.admin.admin_filter import AdminFilterPermanenceInPreparationStatus
 from repanier.admin.forms import (
     OpenAndSendOfferForm,
@@ -34,6 +32,7 @@ from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.middleware import add_filter
+from repanier.models import PermanenceInPreparation
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
@@ -43,7 +42,7 @@ from repanier.task import task_order
 from repanier.task.task_order import open_order, close_order
 from repanier.tools import get_recurrence_dates, get_repanier_template_name
 from repanier.xlsx.xlsx_offer import export_offer
-from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
+from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
 logger = logging.getLogger(__name__)
 

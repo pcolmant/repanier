@@ -1,7 +1,4 @@
-# from pip._internal.commands import index
-
 from repanier.models.customer import Customer
-from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.producer import Producer
 
 
@@ -66,15 +63,3 @@ def get_producer_2_id_dict():
         if producer.represent_this_buyinggroup:
             represent_this_buyinggroup = producer.id
     return represent_this_buyinggroup, producer_2_id_dict
-
-
-def get_department_for_customer_2_id_dict():
-    department_for_customer_2_id_dict = {}
-    department_for_customer_set = LUT_DepartmentForCustomer.objects.filter(
-        is_active=True
-    )
-    for department_for_customer in department_for_customer_set:
-        department_for_customer_2_id_dict[
-            department_for_customer.short_name_v2
-        ] = department_for_customer.id
-    return department_for_customer_2_id_dict

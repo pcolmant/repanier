@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from django.template import Template, Context as TemplateContext
 from django.utils.translation import gettext_lazy as _
 
@@ -10,10 +12,8 @@ from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
-
 from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
-from io import BytesIO
 
 logger = logging.getLogger(__name__)
 

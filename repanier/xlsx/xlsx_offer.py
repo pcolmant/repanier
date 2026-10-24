@@ -33,12 +33,6 @@ def export_offer(permanence, wb=None):
             )
         ):
             row_num = export_offer_row(product, row_num, ws)
-        # for product in (
-        #     Product.objects.prefetch_related("producer", "department_for_customer")
-        #     .filter(is_into_offer=True)
-        #     .order_by("customer_unit_price", "unit_deposit", "long_name_v2")
-        # ):
-        #     row_num = export_offer_row(product, row_num, ws)
 
     elif permanence.status == SaleStatus.OPENED.value:
         for offer_item in (
@@ -103,25 +97,23 @@ def export_offer_row(product, row_num, ws):
         worksheet_set_header(ws, row)
         row_num += 1
     for col_num in range(len(row)):
-        c = ws.cell(row=row_num + 1, column=col_num +1)
+        c = ws.cell(row=row_num + 1, column=col_num + 1)
         c.value = row[col_num][ROW_VALUE]
         c.number_format = row[col_num][ROW_FORMAT]
     col_num = len(row)
     q_min = product.customer_minimum_order_quantity
     q_alert = product.get_q_alert()
     q_step = product.customer_increment_order_quantity
-    # The q_min cannot be 0. In this case try to replace q_min by q_step.
-    # In last ressort by q_alert.
     c = ws.cell(row=row_num + 1, column=col_num)
     c.value = "---"
     ws.column_dimensions[get_column_letter(col_num + 1)].width = 2.3
     c.number_format = FORMAT_TEXT
     col_num += 1
     q_valid = q_min
-    q_counter = 0  # Limit to avoid too long selection list
+    q_counter = 0
     while q_valid <= q_alert and q_counter <= LIMIT_ORDER_QTY_ITEM:
         q_counter += 1
-        c = ws.cell(row=row_num +1, column=col_num+1)
+        c = ws.cell(row=row_num + 1, column=col_num + 1)
         c.value = product.get_display(
             qty=q_valid,
             order_unit=product.order_unit,
@@ -131,12 +123,8 @@ def export_offer_row(product, row_num, ws):
         c.number_format = FORMAT_TEXT
         col_num += 1
         if q_valid < q_step:
-            # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
-            # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
             q_valid = q_step
         else:
-            # 1; 2; 3; 4 ... q_min = 1; q_step = 1
-            # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
             q_valid = q_valid + q_step
     row_num += 1
     return row_num
