@@ -1,13 +1,33 @@
 {% load menu_tags %}
 {% for child in children %}
     {% if child.children %}
-        <li class="nav-item dropdown {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
-            <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" class="nav-link dropdown-toggle"
-               data-bs-toggle="dropdown">{{ child.get_menu_title |safe }} <b class="caret"></b></a>
-            <ul class="dropdown-menu">
-                {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
-            </ul>
-        </li>
+{#        <li class="nav-item dropdown {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">#}
+{#            <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" class="nav-link dropdown-toggle"#}
+{#               data-bs-toggle="dropdown">{{ child.get_menu_title |safe }} <b class="caret"></b></a>#}
+{#            <ul class="dropdown-menu">#}
+{#                {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}#}
+{#            </ul>#}
+{#        </li>#}
+        {% if REPANIER_SETTINGS__BREAKING_MIGRATION_TEMPLATE == "BS5" %}
+            {# HTML Bootstrap 5 #}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ child.get_menu_title |safe }}
+                </a>
+                <ul class="dropdown-menu">
+                    {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
+                </ul>
+            </li>
+        {% else %}
+            {# HTML Bootstrap 3 #}
+            <li class="dropdown {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
+                <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" class="dropdown-toggle"
+                   data-toggle="dropdown">{{ child.get_menu_title |safe }} <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
+                </ul>
+            </li>
+        {% endif %}
     {% else %}
         {% if child.get_menu_title == '------' %}
             <li class="dropdown-divider"></li>
@@ -19,3 +39,4 @@
         {% endif %}
     {% endif %}
 {% endfor %}
+
