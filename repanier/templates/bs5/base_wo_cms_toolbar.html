@@ -1,14 +1,17 @@
 {% load cms_tags menu_tags djangocms_alias_tags sekizai_tags i18n l10n static repanier_tags %}
 {% addtoblock "css" %}
-    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endaddtoblock %}
+    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
+{% endaddtoblock %}
 {% addtoblock "css" %}
-    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">{% endaddtoblock %}
+    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
+{% endaddtoblock %}
 {% addtoblock "jshead" %}
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>{% endaddtoblock %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+{% endaddtoblock %}
 {% addtoblock "jshead" %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>{% endaddtoblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endaddtoblock %}
 {% addtoblock "css" %}{% spaceless %}
-    {# django CMS toolbar adjustment #}
     {% if request.toolbar %}
         <style>
             .cms-toolbar-expanded .navbar-custom {
@@ -44,13 +47,13 @@
 <body>
 <a href="#content" class="skip_link">{% translate "Skip to main content" %}</a>
 <a id="top"></a>
+{#{% cms_toolbar %}#}
 {% spaceless %}
     <section>
         <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top navbar-custom" role="navigation">
             <div class="container-fluid">
                 <div class="navbar-header d-lg-none">
-                    <button type="button" class="btn btn-info" data-bs-toggle="collapse" data-bs-target="#mySideNav" aria-controls="mySideNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="sr-only">{% translate "Toggle navigation" %}</span>
+                    <button class="btn btn-info" type="button" onclick="openNav()" aria-label="{% translate 'Toggle navigation' %}">
                         <span class="bi bi-list"></span>
                     </button>
                     <span id="link_to_order_or_filter_view"></span>
@@ -64,8 +67,8 @@
                 </div>
 
                 <div class="container-menu">
-                    <div id="mySideNav" class="collapse navbar-collapse">
-                        <ul class="navbar-nav navbar-left me-auto mb-2 mb-lg-0">
+                    <div id="mySideNav" class="sidenav collapse navbar-collapse">
+                        <ul class="nav navbar-nav navbar-left">
                             <li class="nav-item dropdown">
                                 <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                     <span class="bi bi-arrow-left-right"></span>
@@ -83,17 +86,15 @@
                                     <li><a class="dropdown-item" href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson (Oeudeghien)</a></li>
                                     <li><a class="dropdown-item" href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit (Péruwelz)</a></li>
                                     <li><a class="dropdown-item" href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
-                                    <li><hr class="dropdown-divider"/></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="https://colibera.be/" target="_blank">Colibéra</a></li>
                                     <li><a class="dropdown-item" href="https://projet.repanier.be/" target="_blank">Projet Repanier</a></li>
                                 </ul>
                             </li>
                         </ul>
-
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                             {% show_menu 0 1 1 1 %}
                         </ul>
-
                         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                             {% repanier_user_bs5 permanence_id=permanence_id %}
                             {% if REPANIER_DISPLAY_LANGUAGE %}
@@ -102,7 +103,7 @@
                                         {% translate "Language" %}
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        {% language_chooser "native" %}
+                                        {% language_chooser %}
                                     </ul>
                                 </li>
                             {% endif %}
@@ -111,10 +112,51 @@
                 </div>
             </div>
         </nav>
-        <a id="content"></a>
+    </section>
 
-        {% block base_content %}{% endblock %}
+    <a id="content"></a>
+
+    <section>
+        {% if current_page.is_home %}
+            <div class="container-info" id="containerInfo">&nbsp;</div>
+        {% endif %}
+
+        {% block base_content %}
+            <div class="container-repanier">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <div class="aliases">
+                                {% block aliases_content %}{% endblock aliases_content %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endblock %}
+    </section>
+
+    <section>
+        <div class="footer">
+            <div class="container-fluid">
+                <p class="text-muted">
+                    {% static_alias "footer" %}
+                </p>
+            </div>
+        </div>
     </section>
 {% endspaceless %}
+{% render_block "js" %}
+{% render_block "lastjs" %}
+<script>
+    function openNav() {
+        const el = document.getElementById('mySideNav');
+        if (el) el.classList.add('show');
+    }
+    function closeNav() {
+        const el = document.getElementById('mySideNav');
+        if (el) el.classList.remove('show');
+    }
+</script>
 </body>
 </html>
