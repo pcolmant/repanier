@@ -3,8 +3,8 @@
 {% for language in languages %}
     {% get_language_info for language.0 as lang %}
     {% if current_language == language.0 %}
-        <li><a href="{% page_language_url language.0 %}"><b>{{ lang.name_local }}</b></a></li>
+        <li><a class="dropdown-item" href="{% page_language_url language.0 %}"><b>{{ lang.name_local }}</b></a></li>
     {% else %}
-        <li><a href="{% page_language_url language.0 %}">{{ lang.name_local }}</a></li>
+        <li><a class="dropdown-item" href="{% page_language_url language.0 %}">{{ lang.name_local }}</a></li>
     {% endif %}
 {% endfor %}
