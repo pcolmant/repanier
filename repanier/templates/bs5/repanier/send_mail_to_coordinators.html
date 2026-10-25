@@ -10,8 +10,8 @@
                     {% csrf_token %}
                     {{ form|crispy }}
                     {% if not send %}
-                        <div class="form-group form-sticky-update-button">
-                            <button type="submit" class="btn btn-info pull-right">{% translate "Send email" %}</button>
+                        <div class="form-sticky-update-button mt-3 text-end">
+                            <button type="submit" class="btn btn-info">{% translate "Send email" %}</button>
                         </div>
                     {% endif %}
                 </form>
