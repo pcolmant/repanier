@@ -880,8 +880,6 @@ CMS_TEMPLATES = (
     (CMS_TEMPLATE_SUB_PAGE, gettext("Internal page with menu on left")),
     (CMS_TEMPLATE_PAGE, gettext("Internal page")),
     (CMS_TEMPLATE_HOME, gettext("Home page")),
-    # ('cms_bootstrap_page.html', gettext("Bootstrap page")),
-    # ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
 )
 CMS_TEMPLATE_INHERITANCE = False
 
