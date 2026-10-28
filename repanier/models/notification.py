@@ -20,7 +20,7 @@ class Notification(models.Model):
         return self.notification_v2
 
     def get_html_notification_card_display(self):
-        if settings.REPANIER_SETTINGS_TEMPLATE != "bs3":
+        if settings.REPANIER_SETTINGS_TEMPLATE == "bs5":
             notification = self.get_notification_display()
             if notification:
                 html = []

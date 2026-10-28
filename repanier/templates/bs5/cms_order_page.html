@@ -35,12 +35,12 @@
             <div class="row">
             <div class="panel panel-default">
                 {% if permanence.offer_description_v2 and permanence.offer_description_v2.strip %}
-                <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse-offer-description">
+                <div class="panel-heading accordion-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#collapse-offer-description">
                     <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
                 </div>
                 <div id="collapse-offer-description" class="panel-collapse collapse">
                     <div class="panel-body">
-                        <div class="col-xs-12">
+                        <div class="col-12">
                             {% if permanence.picture %}<img class="img-responsive img-rounded" style="float: left; margin: 5px;" alt="{{ permanence.get_permanence_display }}" title="{{ permanence.get_permanence_customer_display }}" src="{{ MEDIA_URL }}{{ permanence.picture }}"/><div class="clearfix visible-xs-block visible-sm-block"></div>{%  endif %}
                             {{ permanence.offer_description_v2 | safe }}
                         </div>
@@ -60,12 +60,12 @@
 {#            {% if is_basket %}#}
 {#                <div class="row">#}
 {#                <div class="panel panel-default">#}
-{#                    <div class="panel-heading accordion-toggle" data-toggle="collapse" data-target="#collapse-basket-description" aria-expanded="true">#}
+{#                    <div class="panel-heading accordion-toggle" data-bs-toggle="collapse" data-bs-target="#collapse-basket-description" aria-expanded="true">#}
 {#                        <h4 class="panel-title">{% translate "Details of your order" %}</h4>#}
 {#                    </div>#}
 {#                    <div id="collapse-basket-description" class="panel-collapse collapse in" aria-expanded="true">#}
 {#                        <div class="panel-body bg-primary">#}
-{#                            <div class="col-xs-12">#}
+{#                            <div class="col-12">#}
 {#                            <span id="span_btn_confirm_order"></span>#}
 {#                            </div>#}
 {#                        </div>#}
@@ -81,7 +81,7 @@
     {% endspaceless %}{% endblock confirm_basket %}{% spaceless %}
     {% if may_order or display_anonymous_order_form %}
         <div class="row">
-            <div class="col-xs-11 col-sm-5 col-md-3 bs-docs-sidebar">
+            <div class="col-11 col-sm-5 col-md-3 bs-docs-sidebar">
                 <div class="fixed">
         {#            q : {{ q }}<br>#}
         {#            producer_id : {{ producer_id }}<br>#}
@@ -91,7 +91,7 @@
         {#            is_basket : {{ is_basket }}<br>#}
         {#            is_box : {{ is_box }}<br>#}
                     {% if may_order %}
-                        <form action="{% url "repanier:order_view" permanence_id %}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
+                        <form action="{{ permanence.get_order_url }}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
                             {% csrf_token %}
                             <div class="input-group">
                                 {% if q %}
@@ -101,7 +101,7 @@
                                            name="q">
                                 {% endif %}
                                 <div class="input-group-btn">
-                                    <button class="btn btn-info" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                                    <button class="btn btn-info" type="submit"><i class="bi bi-search"></i></button>
                                 </div>
                             </div>
                             <input type="hidden" name="producer" value="{{ producer_id }}">
@@ -115,49 +115,49 @@
                         <ul class="nav nav-stacked" id="sidebar">
                             {% if may_order %}
                             <li>
-                                <a href="{% url "repanier:order_view" permanence_id %}" {% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All products" %}</a>
+                                <a href="{{ permanence.get_order_url }}" {% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All products" %}</a>
                             </li>
                             <li>
-                                <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes" {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My cart" %}</a>
+                                <a href="{{ permanence.get_order_url }}?is_basket=yes" {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My cart" %}</a>
                             </li>
                             <li>
-                                <a href="{% url "repanier:order_view" permanence_id %}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My" %} <span class="glyphicon glyphicon-heart"></span></a>
+                                <a href="{{ permanence.get_order_url }}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My" %} <span class="glyphicon glyphicon-heart"></span></a>
                             </li>
                             {% endif %}
-                            {% if producer_set %}
+                            {% if producer_set.count > 1 %}
                                 <li>
-                                    <a href="{% url "repanier:order_view" permanence_id %}?department={{ department_id }}"
+                                    <a href="{{ permanence.get_order_url }}?department={{ department_id }}"
                                        {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All producers" %}</a>
                                     <ul class="nav nav-stacked">
                                 {% for producer in producer_set.all %}
-                                    <li><a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer.id|unlocalize }}&department={{ department_id }}"
+                                    <li><a href="{{ permanence.get_order_url }}?producer={{ producer.id|unlocalize }}&department={{ department_id }}"
                                            {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span></a>
                                     </li>
                                 {% endfor %}
                                     </ul>
                                 </li>
                             {% endif %}
-                            {% if department_set %}
+                            {% if department_set.count > 1 %}
                                 <li>
-                                    <a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}"
+                                    <a href="{{ permanence.get_order_url }}?producer={{ producer_id }}"
                                        {% if department_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All departments" %}</a>
                                     <ul class="nav nav-stacked">
                                         {% for department in department_set.all %}
                                             {% if department.level > 0 %}
                                                 {% ifchanged department.parent_id %}
                                                 {% if department.parent.level == 0 %}</ul>{% endif %}
-                                                <li><a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department.parent_id|unlocalize }}"
+                                                <li><a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.parent_id|unlocalize }}"
                                                        {% if department.parent_id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.parent.short_name_v2 }}</a>
                                                 </li>
                                                 {% if department.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
                                                 {% endifchanged %}
                                                 <li>
-                                                    <a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department.id|unlocalize }}"
+                                                    <a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.id|unlocalize }}"
                                                        {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name_v2 }}</a>
                                                 </li>
                                             {% else %}
                                                     </ul><li>
-                                                    <a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department.id|unlocalize }}"
+                                                    <a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.id|unlocalize }}"
                                                        {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name_v2 }}</a>
                                                     </li><ul class="nav nav-stacked">
                                             {% endif %}
@@ -169,7 +169,7 @@
                     {% endspaceless %}{% endblock product_filter %}
                 </div>
             </div>
-            <div class="col-xs-12 col-sm-7 col-md-9">
+            <div class="col-12 col-sm-7 col-md-9">
                 {% block product_list %}{% endblock product_list %}
             </div>
         </div>
@@ -190,7 +190,7 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true">x</button>
                             <h4 class="modal-title" id="otherQtyModalLabel"></h4>
                         </div>
                         <div class="modal-body">
@@ -199,7 +199,7 @@
                             </span>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
+                            <button class="btn btn-info" data-bs-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
                         </div>
                     </div>
                 </div>
@@ -406,7 +406,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_filter_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_filter_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}
@@ -415,7 +415,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}

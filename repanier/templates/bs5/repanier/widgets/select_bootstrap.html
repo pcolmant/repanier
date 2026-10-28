@@ -2,8 +2,8 @@
 {% spaceless %}
 {% with id=widget.attrs.id name=widget.name %}
 <div id="{{ id }}_dropdown" class="btn-group pull-left btn-group-form">
-    <button id="{{ id }}_button_label" class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown"></button>
-    <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown"><span class="caret"></span></button>
+    <button id="{{ id }}_button_label" class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown"></button>
+    <button class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown"><span class="caret"></span></button>
     <ul class="dropdown-menu">
         {% for group, options, index in widget.optgroups %}
             {% for option in options %}

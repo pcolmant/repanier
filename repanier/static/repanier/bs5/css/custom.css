@@ -1,13 +1,23 @@
-/* Sticky footer styles */
-html {
-    position: relative;
-    min-height: 100%;
+/* =================================================================adan
+   1. Sticky footer styles (Compatible Bootstrap 5 flexbox approach)
+   =================================================================== */
+html, body {
+    height: 100%;
 }
 
 body {
-    /* Margin bottom by footer height */
+    display: flex;
+    flex-direction: column;
+    /* Remplacement de la marge fixe par un layout flexbox natif (recommandé en BS5) */
+    min-height: 100vh;
+}
+
+/* Si vous gardez la structure classique avec le body en display block : */
+/*
+body {
     margin-bottom: 60px;
 }
+*/
 
 @media screen and (min-width: 768px) and (max-width: 979px) {
     body {
@@ -16,23 +26,24 @@ body {
 }
 
 .footer {
+    /* En BS5, on peut utiliser position-absolute ou laisser le flexbox gérer le footer.
+       On conserve votre positionnement absolu d'origine : */
     position: absolute;
     bottom: 0;
     width: 100%;
-    /* Set the fixed height of the footer here */
     height: 60px;
-    /* background-color: #f5f5f5; */
     text-align: center;
 }
 
-/* sidebar */
+/* =================================================================
+   2. Sidebar (.bs-docs-sidebar)
+   =================================================================== */
 .bs-docs-sidebar {
     padding: 0 0 1px 20px;
     margin-top: 1px;
     margin-bottom: 1px;
 }
 
-/* all links */
 .bs-docs-sidebar .nav > li > a {
     color: #3c3c3c;
     padding-top: 0;
@@ -40,14 +51,11 @@ body {
     border-left: 2px solid transparent;
 }
 
-/* nested links */
 .bs-docs-sidebar .nav .nav > li > a {
     padding-left: 30px;
-    /*font-size: 16px;*/
     font-weight: normal;
 }
 
-/* active & hover links */
 .bs-docs-sidebar .nav > .active > a,
 .bs-docs-sidebar .nav > li > a:hover,
 .bs-docs-sidebar .nav > li > a:focus {
@@ -56,7 +64,6 @@ body {
     background-color: transparent;
 }
 
-/* selected links */
 .bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
     color: #51a351;
     text-decoration: none;
@@ -64,16 +71,19 @@ body {
     border-left: 2px solid #51a351;
 }
 
+/* =================================================================
+   3. Utilitaires et composants (Panneaux / Accordéons)
+   =================================================================== */
 .display_none {
-    display: none;
+    display: none !important; /* Ajout de !important pour s'aligner sur les utilitaires natifs BS5 (.d-none) */
 }
 
+/* Note : Les panneaux .panel de Bootstrap 3 n'existent plus en BS5 (remplacés par .card).
+   Ce bloc est conservé si vous utilisez un wrapper personnalisé ou une rétrocompatibilité. */
+.accordion-button:not(.collapsed):after,
 .panel-heading.accordion-toggle:after {
-    /* symbol for "opening" panels */
-    font-family: 'Glyphicons Halflings';
-    /* essential for enabling glyphicon */
+    font-family: 'bootstrap-icons'; /* ou 'Glyphicons Halflings' si conservé */
     content: "\e114";
-    /* adjust as needed, taken from bootstrap.css */
     float: right;
     position: relative;
     bottom: 23px;
@@ -81,8 +91,8 @@ body {
     color: grey;
 }
 
+.accordion-button.collapsed:after,
 .panel-heading.accordion-toggle.collapsed:after {
-    /* symbol for "collapsed" panels */
     content: "\e080";
 }
 
@@ -118,9 +128,11 @@ code {
     font-size: 80%;
 }
 
+/* =================================================================
+   4. Navigation / Dropdowns et Menu Mobile (Offcanvas natif en BS5)
+   =================================================================== */
 @media only screen and (min-width: 768px) {
-    /* automatically display menu on mouse over if not xs */
-    ul.nav li.dropdown:hover > ul.dropdown-menu {
+    .navbar-nav li.dropdown:hover > .dropdown-menu {
         display: block;
     }
 }
@@ -137,7 +149,7 @@ code {
         left: 0;
         background-color: #4d4d4f;
         overflow-x: hidden;
-        transition: 0.5s;
+        transition: transform 0.5s ease; /* Standardisé */
         padding-top: 15px;
     }
 
@@ -160,7 +172,6 @@ code {
         top: 0;
         right: 20px;
     }
-
 }
 
 a.skip_link {
@@ -173,19 +184,17 @@ a.skip_link {
     color: #fff;
 }
 
+/* =6. Conteneurs spécifiques */
 @media only screen and (min-width: 768px) {
     .container-bootstrap {
         margin-top: 65px;
     }
-
     .container-repanier {
         margin: 75px 0 0;
     }
-
     .container-info {
         margin: 75px 0 -75px 0;
     }
-
     .container-menu {
         padding: 0 15px 0;
     }
@@ -195,27 +204,22 @@ a.skip_link {
     .container-bootstrap {
         margin-top: 36px;
     }
-
     .container-repanier {
         margin: 46px 0 0;
     }
-
     .container-info {
         margin: 46px 0 -46px 0;
     }
-
-    .container-menu {
-    }
 }
 
-/* https://codepen.io/msaetre/pen/Ekyaz */
+/* =================================================================
+   7. Icône Panier (Pur CSS)
+   =================================================================== */
 .icon-cart {
     width: 48px;
     height: 48px;
     position: relative;
     overflow: hidden;
-    /*margin-left: 25px;*/
-    /*margin-bottom: 25px;*/
     margin-top: -10px;
 }
 
@@ -225,10 +229,7 @@ a.skip_link {
     position: absolute;
     left: 8%;
     top: 25%;
-    -webkit-transform: rotate(5deg);
-    -moz-transform: rotate(5deg);
-    -ms-transform: rotate(5deg);
-    transform: rotate(5deg);
+    transform: rotate(5deg); /* Suppression des préfixes -webkit-/-moz-/etc. obsolètes en BS5 */
     border-bottom-left-radius: 35%;
 }
 
@@ -238,9 +239,6 @@ a.skip_link {
     position: absolute;
     left: 6%;
     top: 40%;
-    -webkit-transform: rotate(80deg);
-    -moz-transform: rotate(80deg);
-    -ms-transform: rotate(80deg);
     transform: rotate(80deg);
 }
 
@@ -251,9 +249,6 @@ a.skip_link {
     position: absolute;
     left: 45%;
     top: -280%;
-    -webkit-transform: rotate(-80deg);
-    -moz-transform: rotate(-80deg);
-    -ms-transform: rotate(-80deg);
     transform: rotate(-80deg);
     background-color: inherit;
 }
@@ -266,9 +261,6 @@ a.skip_link {
     left: 59%;
     top: -670%;
     background-color: inherit;
-    -webkit-transform: rotate(40deg);
-    -moz-transform: rotate(40deg);
-    -ms-transform: rotate(40deg);
     transform: rotate(40deg);
     border-top-left-radius: 50%;
     border-bottom-left-radius: 25%;
@@ -312,7 +304,9 @@ a.skip_link {
     bottom: 0;
 }
 
-/* Bootstrap : Let's align right the cart button on small devices */
+/* =================================================================
+   8. Navbar et Boutons divers
+   =================================================================== */
 .navbar-header {
     width: 100%;
 }
@@ -322,7 +316,6 @@ a.skip_link {
     color: #fff;
 }
 
-/* Bootstrap : Wordwrap button */
 .btn {
     white-space: normal !important;
     word-wrap: break-word;
@@ -330,19 +323,16 @@ a.skip_link {
     overflow-wrap: break-word;
 }
 
-/* Disable link using css */
 .not-active {
     pointer-events: none;
     cursor: default;
 }
 
-/* sticky "Update" button */
 .form-sticky-update-button {
     position: sticky;
     bottom: 65px;
 }
 
-/* https://www.w3schools.com/howto/howto_js_scroll_to_top.asp */
 .back-to-top-sticky-button {
     display: none;
     position: fixed;
@@ -351,52 +341,25 @@ a.skip_link {
     z-index: 2000;
 }
 
-/* Bootstrap refresh animated */
+/* =================================================================
+   9. Animations (Spinners - Nettoyés des préfixes navigateurs obsolètes)
+   =================================================================== */
 .gly-spin {
-    -webkit-animation: spin 2s infinite linear;
-    -moz-animation: spin 2s infinite linear;
-    -o-animation: spin 2s infinite linear;
     animation: spin 2s infinite linear;
-}
-
-@-moz-keyframes spin {
-    0% {
-        -moz-transform: rotate(0deg);
-    }
-    100% {
-        -moz-transform: rotate(359deg);
-    }
-}
-
-@-webkit-keyframes spin {
-    0% {
-        -webkit-transform: rotate(0deg);
-    }
-    100% {
-        -webkit-transform: rotate(359deg);
-    }
-}
-
-@-o-keyframes spin {
-    0% {
-        -o-transform: rotate(0deg);
-    }
-    100% {
-        -o-transform: rotate(359deg);
-    }
 }
 
 @keyframes spin {
     0% {
-        -webkit-transform: rotate(0deg);
         transform: rotate(0deg);
     }
     100% {
-        -webkit-transform: rotate(359deg);
         transform: rotate(359deg);
     }
 }
 
+/* =================================================================
+   10. Formulaires et Checkboxes personnalisées
+   =================================================================== */
 .form-group input[type="checkbox"] {
     display: none;
 }

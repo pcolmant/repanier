@@ -173,7 +173,7 @@ def repanier_user_bs5(context, *args, **kwargs):
         p_permanence_id = sint(kwargs.get("permanence_id", 0))
         if p_permanence_id > 0:
             nodes.append(
-                '<li id="li_my_basket" style="display:none;" class="dropdown">'
+                '<li id="li_my_basket" style="display:none;" class="nav-item dropdown">'
             )
             nodes.append(
                 '<a href="{}?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>'.format(
@@ -183,29 +183,28 @@ def repanier_user_bs5(context, *args, **kwargs):
             nodes.append("</li>")
         nodes.append(
             """
-            <li id="li_my_name" class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}<b class="caret"></b></a>
-            <ul class="dropdown-menu">
+            <li id="li_my_name" class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="bi bi-person" aria-hidden="true"></span> {}</a>
+            <ul class="dropdown-menu dropdown-menu-end">
             """.format(
-                # _('Welkom'),
                 user.username
-                or '<span id = "my_name"></ span>'
+                or '<span id="my_name"></span>'
             )
         )
         nodes.append(
-            '<li><a href="{}">{}</a></li>'.format(
+            '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
                 reverse("repanier:send_mail_to_coordinators_view"), _("Inform")
             )
         )
         if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
             nodes.append(
-                '<li><a href="{}">{}</a></li>'.format(
+                '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
                     reverse("repanier:who_is_who_view"), _("Who's who")
                 )
             )
         if user.customer_id is not None:
             nodes.append(
-                '<li><a href="{}">{}</a></li>'.format(
+                '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
                     reverse("repanier:my_profile_view"), _("My profile")
                 )
             )
@@ -242,20 +241,20 @@ def repanier_user_bs5(context, *args, **kwargs):
                 else:
                     my_balance = _("My balance")
                 nodes.append(
-                    '<li><a href="{}">{}</a></li>'.format(
+                    '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
                         reverse("repanier:customer_invoice_view", args=(0,user.customer_id,)), my_balance
                     )
                 )
-            nodes.append('<li class="divider"></li>')
+            nodes.append('<li><hr class="dropdown-divider"></li>')
         nodes.append(
-            '<li><a href="{}">{}</a></li>'.format(
+            '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
                 reverse("repanier:logout"), _("Logout")
             )
         )
         nodes.append("</ul></li>")
     else:
         nodes = [
-            '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
+            '<li id="li_my_name" class="nav-item"><a href="{}" role="button" class="btn btn-info"><span class="bi bi-person" aria-hidden="true"></span> {}</a></li>'.format(
                 reverse("repanier:login_form"), _("Sign in")
             )
         ]

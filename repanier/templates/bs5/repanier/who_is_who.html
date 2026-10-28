@@ -4,15 +4,21 @@
     <div class="container">
         <div class="row">
             <div class="col">
-                <form id="search_form" class="navbar-form" role="search" method="post">
+                <form id="search_form" class="form-horizontal" class="navbar-form" role="search" method="post">
                     {% csrf_token %}
-                    <div class="input-group mb-3">
+                    <div class="input-group">
                         {% if q != None %}
-                            <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
+                            <input type="search" autosave="repanier" class="form-control" value="{{ q }}"
+                                   name="q">
                         {% else %}
-                            <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}" name="q">
+                            <input type="search" autosave="repanier" class="form-control"
+                                   placeholder="{% translate "Search" %}"
+                                   name="q">
                         {% endif %}
-                        <button class="btn btn-info" type="submit"><i class="bi bi-search"></i></button>
+                        <div class="input-group-btn">
+                            <button class="btn btn-info" type="submit"><i class="bi bi-search"></i>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -26,34 +32,38 @@
                     {{ staff.get_str_member }}<br>
                 {% endfor %}
                 <br>
-                <p>{% translate "If you want to show information about you, then" %} <a href="{% url 'repanier:my_profile_view' %}">{% translate "update your profil" %}</a>.</p>
+                <p>{% translate "If you want to show information about you, then" %} <a
+                        href="{% url 'repanier:my_profile_view' %}">{% translate "update your profil" %}</a>.</p>
             </div>
         </div>
     </div>
     <div class="container">
         <div class="row">
-            <div class="accordion" id="accordion">
+            <div class="panel-group" id="accordion">
                 {% for customer in customer_list %}
-                    <div class="accordion-item my-2">
-                        <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse-{{ forloop.counter }}">
-                                {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}){% endif %}
-                            </button>
-                        </h2>
-                        <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ forloop.counter }}" data-bs-parent="#accordion">
-                            <div class="accordion-body">
-                                <div class="row">
-                                    <div class="col-xs-2">
-                                        {% if customer.picture %}
-                                            <img class="img-rounded" style="margin: 5px;" alt="{{ customer.long_basket_name }}" title="{{ customer.long_basket_name }}" src="{{ MEDIA_URL }}{{ customer.picture }}"/>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-xs-10">
-                                        {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}<br>{% endif %}
-                                        {% translate "Phone" %} : {{ customer.get_phones }}<br>
-                                        {% translate "Email" %} : {{ customer.get_email_postfixed }}
-                                    </div>
-                                </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}
+                                    ){% endif %}</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-2">
+                                {% if customer.picture %}
+                                    <img class="img-rounded" style="margin: 5px;"
+                                         alt="{{ customer.long_basket_name }}"
+                                         title="{{ customer.long_basket_name }}"
+                                         src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+                                {% endif %}
+                            </div>
+                            <div class="col-10">
+                                {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}
+                                    <br>{% endif %}
+                                {% translate "Phone" %} :
+                                    {{ customer.get_phones }}
+                                    <br>
+                                {% translate "Email" %} :
+                                    {{ customer.get_email_postfixed }}
                             </div>
                         </div>
                     </div>

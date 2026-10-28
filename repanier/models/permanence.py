@@ -1701,7 +1701,7 @@ class Permanence(models.Model):
                 )
 
     def get_html_permanence_card_display(self):
-        if settings.REPANIER_SETTINGS_TEMPLATE != "bs4":
+        if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
             offer_description = Truncator(self.offer_description_v2)
             return mark_safe(
                 """

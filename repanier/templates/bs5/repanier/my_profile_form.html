@@ -9,14 +9,14 @@
                 <form name="{{ form.form_name }}" method="post" action="">
                     {% csrf_token %}
                     {% if display_who_is_who %}
-                        {% translate "All the information below is visible in the &quot;who&#39;s who&quot; except your phone numbers and email addresses for which you must validate your agreement before appearing publicly." %}
+                        {% translate "All the information below is visible in the &quot;who&#39;s who&quot; except your phone numbers and email addresses for which you must validate your agreement." %}
                     {% endif %}
                     <p>{% if membership_fee_valid_until %}<i>{% translate "Your membership fee is valid until" %} :
                         <u>{{ membership_fee_valid_until }}</u></i>{% endif %}</p>
                     {{ form|crispy }}
                     {% if not update %}
-                        <div class="form-sticky-update-button mt-3 text-end">
-                            <button type="submit" class="btn btn-info">{% translate "Update" %}</button>
+                        <div class="form-group form-sticky-update-button">
+                            <button type="submit" class="btn btn-info pull-right">{% translate "Update" %}</button>
                         </div>{% endif %}
                 </form>
                 {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}
