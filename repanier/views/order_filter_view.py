@@ -36,6 +36,7 @@ def order_filter_view(request, permanence_id):
         producer_set = None
         department_set = None
         may_order = False
+        hide_cart_button = True  # <-- Masque le panier pour les tâches
     else:
         permanence = Permanence.objects.filter(id=permanence_id).first()
         permanence_ok_or_404(permanence)
@@ -60,6 +61,7 @@ def order_filter_view(request, permanence_id):
         if producer_id != "all":
             department_set = department_set.filter(offeritem__producer_id=producer_id)
         may_order = customer.may_order
+        hide_cart_button = False
 
     template_name = get_repanier_template_name("order_filter.html")
     return render(
@@ -76,5 +78,6 @@ def order_filter_view(request, permanence_id):
             "may_order": may_order,
             "producer_set": producer_set,
             "department_set": department_set,
+            "hide_cart_button": hide_cart_button,  # <-- S'assurer que le bouton du panier soit affiché ou non
         },
     )

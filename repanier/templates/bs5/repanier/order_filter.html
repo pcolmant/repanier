@@ -87,17 +87,10 @@
             </ul>
         {% endif %}
     </div>
-{% endblock sub_content %}
 
-{% block order_modal %}{% endblock order_modal %}
-{% block my_order_js %}{% endblock my_order_js %}
-{% block link_to_filter_js %}{% endblock link_to_filter_js %}
-
-{# Inclusion du bloc JavaScript pour charger dynamiquement le montant du panier (identique à cms_order_page.html) #}
-{% block my_cart_amount_js %}{% spaceless %}
-    {% if may_order and permanence_id %}
-        {% addtoblock "lastjs" %}
-            <script>
+    <!-- Chargement direct et inconditionnel de l'AJAX du panier -->
+    {% if may_order and permanence_id and permanence_id != 0 and permanence_id != "0" %}
+        <script>
             $(document).ready(function () {
                 var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
                 $.ajax({
@@ -105,14 +98,18 @@
                     cache: false,
                     dataType: 'json',
                     success: function (result) {
-                            $.each(result, function (key, val) {
-                                $(key).html(val);
-                            });
+                        $.each(result, function (key, val) {
+                            $(key).html(val);
+                        });
                     }
                 });
                 $("#li_my_basket").show();
-                });
-            </script>
-        {% endaddtoblock %}
+            });
+        </script>
     {% endif %}
-{% endspaceless %}{% endblock my_cart_amount_js %}
+{% endblock sub_content %}
+
+{% block order_modal %}{% endblock order_modal %}
+{% block my_order_js %}{% endblock my_order_js %}
+{% block link_to_filter_js %}{% endblock link_to_filter_js %}
+{% block my_cart_amount_js %}{% endblock my_cart_amount_js %}
