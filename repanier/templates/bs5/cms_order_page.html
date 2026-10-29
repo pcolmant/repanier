@@ -179,7 +179,7 @@
                             </span>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-info" data-bs-dismiss="modal">{% translate "Close" %}</button>
+                            <button class="btn btn-success" data-bs-dismiss="modal">{% translate "Close" %}</button>
                         </div>
                     </div>
                 </div>
@@ -386,7 +386,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_filter_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_filter_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-success" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}
@@ -396,7 +396,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-success" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}

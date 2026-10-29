@@ -62,14 +62,14 @@
                             </div>
                             {% if page_obj.has_next %}
                                 <div class="loading my-3 text-center" style="display: none;">
-                                    <a href="?page={{ page_obj.next_page_number }}" class="infinite-more-link btn btn-info">
+                                    <a href="?page={{ page_obj.next_page_number }}" class="infinite-more-link btn btn-success">
                                         <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                                         {% translate "Loading..." %}
                                     </a>
                                 </div>
                             {% endif %}
 
-                            <a class="btn btn-info back-to-top-sticky-button" id="backToTop" href="#top" aria-label="{% translate 'Back to top' %}">
+                            <a class="btn btn-success back-to-top-sticky-button" id="backToTop" href="#top" aria-label="{% translate 'Back to top' %}">
                                 <span class="bi bi-chevron-up" aria-hidden="true"></span>
                             </a>
 
@@ -127,14 +127,14 @@
                         });
                         // Forcer le déplacement propre de la loupe juste à côté du bouton Menu
                         var $menuBtn = $('button[data-bs-target="#mobileSidebar"]');
-                        var $loupe = $('<a href="{% url "repanier:order_filter_view" 0 %}" class="btn btn-info ms-2" aria-label="Rechercher"><span class="bi bi-search" aria-hidden="true"></span></a>');
+                        var $loupe = $('<a href="{% url "repanier:order_filter_view" 0 %}" class="btn btn-success ms-2" aria-label="Rechercher"><span class="bi bi-search" aria-hidden="true"></span></a>');
 
                         // On insère la loupe juste après le bouton menu
                         $menuBtn.after($loupe);
 
                         // On nettoie les anciens emplacements encombrants
                         $("#link_to_order_or_filter_view").remove();
-                        $("a.btn-outline-info.d-lg-none").remove();
+                        $("a.btn-outline-success.d-lg-none").remove();
                     });
                 </script>
             {% endspaceless %}{% endaddtoblock %}

@@ -55,14 +55,14 @@
             {% if page_obj.has_next %}
                 <div class="loading my-3 text-center" style="display: none;">
                     <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"
-                   class="infinite-more-link btn btn-info">
+                   class="infinite-more-link btn btn-success">
                         <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                         {% translate "Loading..." %}
                     </a>
                 </div>
             {% endif %}
 
-            <a class="btn btn-info back-to-top-sticky-button" id="backToTop" href="#top" aria-label="{% translate 'Back to top' %}">
+            <a class="btn btn-success back-to-top-sticky-button" id="backToTop" href="#top" aria-label="{% translate 'Back to top' %}">
                 <span class="bi bi-chevron-up" aria-hidden="true"></span>
             </a>
 

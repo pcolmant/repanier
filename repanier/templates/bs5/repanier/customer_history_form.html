@@ -7,7 +7,7 @@
                 <div class="col-12">
                     <div class="btn-group" role="group">
                         <a href="{% url 'repanier:customer_invoice_view' 0 object.id %}"
-                           class="btn btn-info"> {% translate "Detail" %} <span
+                           class="btn btn-success"> {% translate "Detail" %} <span
                                 class="bi bi-fullscreen"></span> </a>
                     </div>
                 </div>
@@ -118,7 +118,7 @@
                         <div class="col-12">
                             {% if bank_account.bank_amount_in != 0 %}
                                 <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id object.id %}"
-                                   class="btn btn-sm btn-info text-dark">
+                                   class="btn btn-sm btn-success text-dark">
                                     {% translate "Provision" %}
                                 </a>
                                 &nbsp;: {{ bank_account.bank_amount_in }}
@@ -131,7 +131,7 @@
                             {% endif %}
                             {% if bank_account.bank_amount_out != 0 %}
                                 <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id object.id %}"
-                                   class="btn btn-sm btn-info text-dark">
+                                   class="btn btn-sm btn-success text-dark">
                                     {% translate "Refund" %}
                                 </a>
                                 &nbsp;: {{ bank_account.bank_amount_out }}

@@ -14,7 +14,7 @@
                     <div class="btn-group" role="group">
                         {% if previous_producer_invoice_id %}
                             <a href="{% url 'repanier:producer_invoice_view' previous_producer_invoice_id object.producer.id %}"
-                               class="btn btn-info">&nbsp;&nbsp;&nbsp;&nbsp;<span class="bi bi-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                               class="btn btn-success">&nbsp;&nbsp;&nbsp;&nbsp;<span class="bi bi-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                         {% endif %}
                         {% if next_producer_invoice_id %}
                             <a href="{% url 'repanier:producer_invoice_view' 0 object.producer.id %}"
@@ -24,7 +24,7 @@
                         {% endif %}
                         {% if next_producer_invoice_id %}
                             <a href="{% url 'repanier:producer_invoice_view' next_producer_invoice_id object.producer.id %}"
-                               class="btn btn-info">&nbsp;&nbsp;&nbsp;&nbsp;<span class="bi bi-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                               class="btn btn-success">&nbsp;&nbsp;&nbsp;&nbsp;<span class="bi bi-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                         {% endif %}
                     </div>
                 </div>

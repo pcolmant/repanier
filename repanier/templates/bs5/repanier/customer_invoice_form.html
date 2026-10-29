@@ -12,20 +12,20 @@
             <div class="col-lg-12">
                 <div class="btn-group" role="group">
                     {% if previous_customer_invoice_id %}
-                        <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id customer.id %}" class="btn btn-info disabled">
+                        <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id customer.id %}" class="btn btn-success disabled">
                             <span class="bi bi-arrow-left"></span>
                         </a>
                     {% endif %}
                     {% if next_customer_invoice_id %}
                         <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id customer.id %}"
-                           class="btn btn-info"><span class="bi bi-arrow-right"></span></a>
+                           class="btn btn-success"><span class="bi bi-arrow-right"></span></a>
                         <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
-                           class="btn btn-info"> <span class="bi bi-arrow-right"></span>
+                           class="btn btn-success"> <span class="bi bi-arrow-right"></span>
                             <span class="bi bi-arrow-right"></span> </a>
                     {% endif %}
                     {% if download_invoice %}
                     <a href="{% url 'repanier:download_customer_invoice' object.id %}"
-                       class="btn btn-info"> {% translate "Export" %} <span class="bi bi-download"></span> </a>
+                       class="btn btn-success"> {% translate "Export" %} <span class="bi bi-download"></span> </a>
                     {% endif %}
                 </div>
             </div>

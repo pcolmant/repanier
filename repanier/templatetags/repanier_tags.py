@@ -178,7 +178,7 @@ def repanier_user_bs5(context, *args, **kwargs):
                 '<li id="li_my_basket" style="display:none;" class="nav-item dropdown">'
             )
             nodes.append(
-                '<a href="{}?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>'.format(
+                '<a href="{}?is_basket=yes" class="btn btn-success"><span id="my_basket"></span></a>'.format(
                     reverse("repanier:order_view", args=(p_permanence_id,))
                 )
             )
@@ -256,7 +256,7 @@ def repanier_user_bs5(context, *args, **kwargs):
         nodes.append("</ul></li>")
     else:
         nodes = [
-            '<li id="li_my_name" class="nav-item"><a href="{}" role="button" class="btn btn-info"><span class="bi bi-person" aria-hidden="true"></span> {}</a></li>'.format(
+            '<li id="li_my_name" class="nav-item"><a href="{}" role="button" class="btn btn-success"><span class="bi bi-person" aria-hidden="true"></span> {}</a></li>'.format(
                 reverse("repanier:login_form"), _("Sign in")
             )
         ]
