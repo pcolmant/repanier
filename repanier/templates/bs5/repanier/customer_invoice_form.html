@@ -1,345 +1,309 @@
 {% extends 'bs5/base_wo_cms_toolbar.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags cache %}
 {% block base_content %}
-    <div class="container-repanier">
-        <div class="container">
-            <div class="row mb-3">
-                <div class="col-12">
-                    <div class="btn-group" role="group">
-                        {% if previous_customer_invoice_id %}
-                            <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id customer.id %}"
-                               class="btn btn-info">
-                                {% translate "Previous balance" %} <span class="bi bi-arrow-left"></span>
-                            </a>
-                        {% endif %}
-                        {% if next_customer_invoice_id %}
-                            <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id customer.id %}"
-                               class="btn btn-info"> {% translate "Next balance" %} <span
-                                    class="bi bi-arrow-right"></span></a>
-                            <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
-                               class="btn btn-danger"> {% translate "Current balance" %} <span
-                                    class="bi bi-arrow-right"></span>
-                                <span class="bi bi-arrow-right"></span> </a>
-                        {% endif %}
-                        <a href="{% url 'repanier:customer_history_view' customer.id %}"
-                           class="btn btn-info"> {% translate "History" %} <span
-                                class="bi bi-film"></span> </a>
-                        {% if download_invoice %}
-                            <a href="{% url 'repanier:download_customer_invoice' object.id %}"
-                               class="btn btn-info"> {% translate "Export" %} <span
-                                    class="bi bi-download"></span> </a>
-                        {% endif %}
-                    </div>
+<div class="container-repanier">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <h4>{{ customer.long_basket_name }} : {{ object.permanence }}</h4>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="btn-group" role="group">
+                    {% if previous_customer_invoice_id %}
+                        <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id customer.id %}" class="btn btn-info disabled">
+                            <span class="bi bi-arrow-left"></span>
+                        </a>
+                    {% endif %}
+                    {% if next_customer_invoice_id %}
+                        <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id customer.id %}"
+                           class="btn btn-info"><span class="bi bi-arrow-right"></span></a>
+                        <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
+                           class="btn btn-info"> <span class="bi bi-arrow-right"></span>
+                            <span class="bi bi-arrow-right"></span> </a>
+                    {% endif %}
+                    {% if download_invoice %}
+                    <a href="{% url 'repanier:download_customer_invoice' object.id %}"
+                       class="btn btn-info"> {% translate "Export" %} <span class="bi bi-download"></span> </a>
+                    {% endif %}
                 </div>
             </div>
-
-            <div class="row mb-3">
-                <div class="col-12">
-                    {% if my_invoices %}{% else %}
-                        <h4>
-                            {{ customer.long_basket_name }},
-                            <span class="bi bi-telephone"></span> {{ customer.phone1 }},
-                            <span class="bi bi-envelope"></span> {{ customer.user.email }}
-                        </h4>
-                    {% endif %}
-
-                    {% if display_admin_balance %}
-                        {% with balance=customer.get_admin_balance %}
-                            <h4>
-                                <span class="badge bg-{% if balance < 0 %}danger{% else %}info text-dark{% endif %}">
-                                    {% translate "My current balance" %}&nbsp;: {{ balance }}
-                                </span>
-                            </h4>
-                        {% endwith %}
-                    {% endif %}
-
-                    {% for bank_account in not_invoiced_bank_account_set %}
-                        <div class="row mb-2">
-                            <div class="col-12">
-                                {% if bank_account.bank_amount_in != 0 %}
-                                    <span class="badge bg-info text-dark">{% translate "Pending provision" %}</span>
-                                    &nbsp;: {{ bank_account.bank_amount_in }}
-                                    <small class="text-muted">(
-                                        {% if bank_account.operation_comment %}
-                                            {{ bank_account.operation_comment }},
-                                        {% endif %}
-                                        {{ bank_account.operation_date | date:"DATE_FORMAT" }}
-                                        )</small>
-                                {% endif %}
-                                {% if bank_account.bank_amount_out != 0 %}
-                                    <span class="badge bg-info text-dark">{% translate "Pending refund" %}</span>
-                                    &nbsp;: {{ bank_account.bank_amount_out }}
-                                    <small class="text-muted">(
-                                        {% if bank_account.operation_comment %}
-                                            {{ bank_account.operation_comment }},
-                                        {% endif %}
-                                        {{ bank_account.operation_date | date:"DATE_FORMAT" }}
-                                        )</small>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-
-                    {% for not_invoiced in not_invoiced_array %}
-                        <div class="row mb-2">
-                            <div class="col-12">
-                                <span class="badge bg-secondary">{% translate "Pending purchase" %}</span>
-                                &nbsp;: {{ not_invoiced.customer_invoice.get_total_price_with_tax }}
-                                <small class="text-muted">({{ not_invoiced.customer_invoice.permanence }})</small>
-                            </div>
-                        </div>
-
-                        {% if not_invoiced.customer_invoice.customer_id != not_invoiced.customer_invoice.customer_charged_id %}
-                            {% if not_invoiced.customer_invoice.delivery %}
-                                <div class="row mb-1">
-                                    <div class="col-12">
-                                        <small class="text-muted">{% translate "Delivery point" %} : {{ not_invoiced.customer_invoice.delivery }}.</small>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            <div class="row mb-1">
-                                <div class="col-12">
-                                    <small class="text-muted">{% translate "Payment centralized by" %} : {{ not_invoiced.customer_invoice.customer_charged }}.</small>
-                                </div>
-                            </div>
-                        {% else %}
-                            {% if not_invoiced.customer_invoice.total_deposit != 0 %}
-                                <div class="row mb-1">
-                                    <div class="col-12">
-                                        {% translate "Deposit" %} : {{ not_invoiced.customer_invoice.total_deposit }}.
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.transport != 0 %}
-                                <div class="row mb-1">
-                                    <div class="col-12">
-                                        {% translate "Shipping cost" %} : {{ not_invoiced.customer_invoice.delta_transport }}.
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.delivery %}
-                                <div class="row mb-1">
-                                    <div class="col-12">
-                                        {% translate "Delivery point" %} : {{ not_invoiced.customer_invoice.delivery }}.
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.price_list_multiplier != 1 %}
-                                <div class="row mb-1">
-                                    <div class="col-12">
-                                        <small class="text-muted">{% translate "Coefficient applied to the producer tariff to calculate the customer tariff" %} : {{ not_invoiced.customer_invoice.price_list_multiplier }}.</small>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.get_delta_price_with_tax != 0 or not_invoiced.customer_invoice.delta_vat != 0 %}
-                                <div class="row mb-1">
-                                    <div class="col-12">
-                                        <small class="text-muted">
-                                            {% if not_invoiced.customer_invoice.get_delta_price_with_tax < 0 %}
-                                                {% translate "Reduction granted" %}
-                                            {% else %}
-                                                {% translate "Surcharge" %}
-                                            {% endif %} : {{ not_invoiced.customer_invoice.get_abs_delta_price_with_tax }}.
-                                        </small>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-
-                        {% if not_invoiced.purchase_set %}
-                            <div class="table-responsive my-3">
-                                <table class="table table-hover table-bordered align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>
-                                                {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                                    {% translate "Producer" %}
-                                                {% else %}
-                                                    {% translate "Department" %}
-                                                {% endif %}
-                                            </th>
-                                            <th>{% translate "Product" %}</th>
-                                            <th class="text-end">{% translate "Qty" %}</th>
-                                            <th class="text-end">{% translate "Unit price" %}</th>
-                                            <th class="text-end">{% translate "Total price" %}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for purchase in not_invoiced.purchase_set %}
-                                        <tr>
-                                            <td>
-                                                {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                                    {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
-                                                {% else %}
-                                                    {{ purchase.offer_item.department_for_customer.short_name_v2 | truncatechars:15 }}
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ purchase.get_long_name_with_customer_price }}</td>
-                                            <td class="text-end">{{ purchase.get_quantity | floatformat:3 }}</td>
-                                            <td class="text-end">
-                                                {{ purchase.get_customer_unit_price }}
-                                                {% if purchase.offer_item.unit_deposit != 0 %}
-                                                    + ♻ {{ purchase.offer_item.unit_deposit }}
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end">
-                                                {% if purchase.selling_price.amount != 0 %}
-                                                    {{ purchase.selling_price }}
-                                                {% else %}
-                                                    --
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+        </div>
+        {% if object %}
+            <div class="row">
+                <div class="col-lg-12 mt-3">
+                    <span class="bi bi-box-arrow-right" aria-hidden="true"></span>
+                        {% translate "Previous balance" %} : {{ object.previous_balance }}
+                        <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br>
                 </div>
             </div>
-
-            {% if object %}
-                <div class="row mb-3">
-                    <div class="col-12">
-                        {% with balance=object.balance %}
-                            <h4>
-                                <span class="badge bg-{% if balance < 0 %}danger{% else %}info text-dark{% endif %}">
-                                    {% translate "My balance at" %} {{ object.date_balance | date:"DATE_FORMAT" }}&nbsp;: {{ balance }}
-                                </span>
-                            </h4>
-                        {% endwith %}
-                    </div>
+        {%  endif %}
+        {% if purchase_set or purchase_by_other_set %}
+            <div class="row mt-2">
+                <div class="col-lg-1 col-1 text-center">
+                    <span class="bi bi-dash" aria-hidden="true"></span>
                 </div>
-            {% endif %}
-
-            {% for bank_account in bank_account_set %}
-                <div class="row mb-2">
-                    <div class="col-12">
-                        {% if bank_account.bank_amount_in != 0 %}
-                            <span class="badge bg-info text-dark">{% translate "Provision" %}</span>
-                            &nbsp;: {{ bank_account.bank_amount_in }}
-                            <small class="text-muted">(
-                                {% if bank_account.operation_comment %}
-                                    {{ bank_account.operation_comment }},
-                                {% endif %}
-                                {{ bank_account.operation_date | date:"DATE_FORMAT" }}
-                                )</small>
-                        {% endif %}
-                        {% if bank_account.bank_amount_out != 0 %}
-                            <span class="badge bg-info text-dark">{% translate "Refund" %}</span>
-                            &nbsp;: {{ bank_account.bank_amount_out }}
-                            <small class="text-muted">(
-                                {% if bank_account.operation_comment %}
-                                    {{ bank_account.operation_comment }},
-                                {% endif %}
-                                {{ bank_account.operation_date | date:"DATE_FORMAT" }}
-                                )</small>
-                        {% endif %}
-                    </div>
+                <div class="col-lg-11 col-11">
+                    {% translate "Purchases" %} : {{ object.permanence }} : {{ object.get_total_price_with_tax }}
                 </div>
-            {% endfor %}
-
-            {% if purchase_set or purchase_by_other_set %}
-                <div class="row mb-2">
-                    <div class="col-12">
-                        <span class="badge bg-secondary">
-                            {% if object.is_invoiced %}
-                                {% translate "Invoiced purchases" %}
-                            {% elif object.is_archived %}
-                                {% translate "Archived purchases" %}
-                            {% else %}
-                                {% translate "Pending purchase" %}
-                            {% endif %}
-                        </span>
-                        &nbsp;: {{ object.get_total_price_with_tax }}
-                        <small class="text-muted">({{ object.permanence }})</small>
-                    </div>
-                </div>
-
-                {% if customer.id != object.customer_charged_id %}
-                    {% if object.delivery %}
-                        <div class="row mb-1">
-                            <div class="col-12">
-                                <small class="text-muted">{% translate "Delivery point" %} : {{ object.delivery }}.</small>
-                            </div>
-                        </div>
-                    {% endif %}
-                    <div class="row mb-1">
-                        <div class="col-12">
-                            <small class="text-muted">{% translate "Payment centralized by" %} : {{ object.customer_charged }}.</small>
+            </div>
+            {% if customer.id != object.customer_charged_id %}
+                {% if object.delivery %}
+                    <div class="row">
+                        <div class="col-lg-12 ms-sm-4">
+                            <small>{% translate "Delivery point" %} : {{ object.delivery }}.</small>
                         </div>
                     </div>
-                {% else %}
-                    {% if object.total_deposit != 0 %}
-                        <div class="row mb-1">
-                            <div class="col-12">{% translate "Deposit" %} : {{ object.total_deposit }}.</div>
-                        </div>
-                    {% endif %}
-                    {% if object.transport != 0 %}
-                        <div class="row mb-1">
-                            <div class="col-12">{% translate "Shipping cost" %} : {{ object.delta_transport }}.</div>
-                        </div>
-                    {% endif %}
-                    {% if object.delivery %}
-                        <div class="row mb-1">
-                            <div class="col-12">{% translate "Delivery point" %} : {{ object.delivery }}.</div>
-                        </div>
-                    {% endif %}
-                    {% if object.price_list_multiplier != 1 %}
-                        <div class="row mb-1">
-                            <div class="col-12">
-                                <small class="text-muted">{% translate "Coefficient applied to the producer tariff to calculate the customer tariff" %} : {{ object.price_list_multiplier }}.</small>
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% if object.get_delta_price_with_tax != 0 or object.delta_vat != 0 %}
-                        <div class="row mb-1">
-                            <div class="col-12">
-                                <small class="text-muted">
-                                    {% if object.get_delta_price_with_tax < 0 %}
-                                        {% translate "Reduction granted" %}
-                                    {% else %}
-                                        {% translate "Surcharge" %}
-                                    {% endif %} : {{ object.get_abs_delta_price_with_tax }}.
-                                </small>
-                            </div>
-                        </div>
-                    {% endif %}
                 {% endif %}
-
-                {% if purchase_set %}
-                    <div class="table-responsive my-3">
-                        <table class="table table-hover table-bordered align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    {% if purchase_by_other_set %}
-                                        <th>{% translate "Customer" %}</th>
-                                    {% endif %}
+                <div class="row">
+                    <div class="col-lg-12 ms-sm-4">
+                        <small>{% translate "Payment centralized by" %} : {{ object.customer_charged }}.</small>
+                    </div>
+                </div>
+            {% else %}
+                {% if object.total_deposit != 0 %}
+                    <div class="row">
+                        <div class="col-lg-12 ms-sm-4">
+                            {% translate "Deposit" %} : {{ object.total_deposit }}.
+                        </div>
+                    </div>
+                {% endif %}
+                {% if object.transport != 0 %}
+                    <div class="row">
+                        <div class="col-lg-12 ms-sm-4">
+                            {% translate "Shipping cost" %} : {{ object.delta_transport }}.
+                        </div>
+                    </div>
+                {% endif %}
+                {% if object.delivery %}
+                    <div class="row">
+                        <div class="col-lg-12 ms-sm-4">
+                            {% translate "Delivery point" %} : {{ object.delivery }}.
+                        </div>
+                    </div>
+                {% endif %}
+                {% if object.price_list_multiplier != 1 %}
+                    <div class="row">
+                        <div class="col-lg-12 ms-sm-4">
+                            <small>{% translate "Coefficient applied to the producer tariff to calculate the customer tariff" %} :
+{{ object.price_list_multiplier }}. </small>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if object.get_delta_price_with_tax != 0 or object.delta_vat != 0 %}
+                    <div class="row">
+                        <div class="col-lg-12 ms-sm-4">
+                            <small>{% if object.get_delta_price_with_tax < 0 %}{% translate "Reduction granted" %}{%  else %}
+{% translate "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}. </small>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+        {% for bank_account in bank_account_set %}
+            <div class="row mt-1">
+                <div class="col-lg-12">
+                    {% if bank_account.bank_amount_in != 0 %}
+                        <span class="bi bi-plus text-success" aria-hidden="true"></span> {% translate "Provision" %} :
+                        {% if bank_account.operation_comment %}
+                            {{ bank_account.operation_comment }}
+                        {% else %}
+                            {% translate "Payment" %}
+                        {% endif %} : {{ bank_account.bank_amount_in }}
+                        <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small>
+                        <br>
+                    {% endif %}
+                    {% if bank_account.bank_amount_out != 0 %}
+                        <span class="bi bi-dash text-danger" aria-hidden="true"></span> {% translate "Refund" %} :
+                        {% if bank_account.operation_comment %}
+                            {{ bank_account.operation_comment }}
+                        {% else %}
+                            {% translate "Refund" %}
+                        {% endif %} : {{ bank_account.bank_amount_out }}
+                        <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small>
+                        <br>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+        {% if object %}
+            <div class="row mt-2">
+                <div class="col-lg-12 fw-bold">
+                    <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span>
+{% translate "New balance" %} : {{ object.balance }} <small class="fw-normal">({{ object.date_balance | date:"DATE_FORMAT" }}
+{% if not next_customer_invoice_id %} - {% translate "last accounting entry" %}{% endif %})</small>
+                </div>
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-lg-12">
+                <span id="basket_message">{{ basket_message }}</span>
+            </div>
+        </div>
+    </div>
+    {% if purchase_set %}
+        <div class="container-fluid">
+            <div class="row my-3">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                {% if purchase_by_other_set %}
                                     <th>
-                                        {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                            {% translate "Producer" %}
-                                        {% else %}
-                                            {% translate "Department" %}
-                                        {% endif %}
+                                        {% translate "Customer" %}
                                     </th>
-                                    <th>{% translate "Product" %}</th>
-                                    <th class="text-end">{% translate "Qty" %}</th>
-                                    <th class="text-end">{% translate "Unit price" %}</th>
-                                    <th class="text-end">{% translate "Total price" %}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            {% for purchase in purchase_set %}
-                                <tr>
-                                    {% if purchase_by_other_set %}
-                                        <td>{{ purchase.customer.short_basket_name }}</td>
-                                    {% endif %}
+                                {%  endif %}
+                                <th>
+                                {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                                    {% translate "Producer" %}
+                                {% else %}
+                                    {% translate "Department" %}
+                                {% endif %}
+                                </th>
+                                <th>
+                                    {% translate "Product" %}
+                                </th>
+                                <th>
+                                    {% translate "Qty" %}
+                                </th>
+                                <th>
+                                    {% translate "Unit price" %}
+                                </th>
+                                <th>
+                                    {% translate "Total price" %}
+                                </th>
+                                <th>
+                                    {% translate "Comment" %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for purchase in purchase_set %}
+                            <tr>
+                                {% if purchase_by_other_set %}
                                     <td>
-                                        {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                            {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
-                                        {% else %}
-                                            {{ purchase.offer_item.department_for_customer.short_name_v2 | truncatechars:15 }}
-                                        {% endif %}
+                                        {{ purchase.customer.short_basket_name }}
                                     </td>
-                                    <td>{{ purchase.get_
+                                {%  endif %}
+                                <td>
+                                {%  if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                                    {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
+                                {% else %}
+                                    {{ purchase.offer_item.department_for_customer.short_name_v2 | truncatechars:15 }}
+                                {% endif %}
+                                </td>
+                                <td>
+                                    {{ purchase.get_long_name_with_customer_price }}
+                                </td>
+                                <td class="text-end">
+                                    {{ purchase.quantity_invoiced | floatformat:3 }}
+                                </td>
+                                <td class="text-end">
+                                    {{ purchase.get_customer_unit_price }}{% if purchase.offer_item.unit_deposit != 0 %}
+                                    + ♻ {{ purchase.offer_item.unit_deposit }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if purchase.selling_price.amount != 0  %}
+                                        {{ purchase.selling_price }}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ purchase.comment|default:"" }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        {% if not purchase_by_other_set %}
+            <div class="container mt-3">
+                <div class="row">
+                    <h4>{{ object.permanence }} - {% translate "No purchase found" %}</h4>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+    {% if purchase_by_other_set %}
+        <div class="container-fluid">
+            <div class="row my-3">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    {% translate "Customer" %}
+                                </th>
+                                <th>
+                                    {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                                        {% translate "Producer" %}
+                                    {% else %}
+                                        {% translate "Department" %}
+                                    {% endif %}
+                                </th>
+                                <th>
+                                    {% translate "Product" %}
+                                </th>
+                                <th>
+                                    {% translate "Qty" %}
+                                </th>
+                                <th>
+                                    {% translate "Unit price" %}
+                                </th>
+                                <th>
+                                    {% translate "Total price" %}
+                                </th>
+                                <th>
+                                    {% translate "Comment" %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for purchase in purchase_by_other_set %}
+                            <tr>
+                                <td>
+                                    {{ purchase.customer.short_basket_name }}
+                                </td>
+                                <td>
+                                    {%  if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                                        {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
+                                    {% else %}
+                                        {{ purchase.offer_item.department_for_customer.short_name_v2 | truncatechars:15 }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ purchase.get_long_name_with_customer_price }}
+                                </td>
+                                <td class="text-end">
+                                    {{ purchase.quantity_invoiced | floatformat:3 }}
+                                </td>
+                                <td class="text-end">
+                                    {{ purchase.get_customer_unit_price }}{% if purchase.offer_item.unit_deposit != 0 %}, ♻ {{ purchase.offer_item.unit_deposit }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if purchase.selling_price.amount != 0  %}
+                                        {{ purchase.selling_price }}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ purchase.comment|default:"" }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
