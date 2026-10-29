@@ -450,22 +450,25 @@ def repanier_btn_like(context, *args, **kwargs):
 
 
 @register.inclusion_tag('menu/permanence_sidebar.html', takes_context=True)
-def show_permanence_menu(context):
+def show_permanence_menu(context, permanence_id=0):
     request = context['request']
     renderer = menu_pool.get_renderer(request)
     menu = PermanenceMenu(renderer)
     nodes = menu.get_nodes(request)
 
-    # Récupération de l'URL complète avec les paramètres (ex: ?is_basket=yes)
-    full_path = request.get_full_path()
-    path = request.path
+    p_id = str(permanence_id)
+    current_path = request.path
 
     for node in nodes:
         node.selected = False
         if node.url:
-            # On compare soit avec l'URL complète (avec ?is_basket=yes),
-            # soit avec le chemin de base (request.path) si l'URL n'a pas de paramètres
-            if node.url == full_path or node.url == path:
+            # Si permanence_id est "0" (ou 0), on sélectionne "Inscription aux tâches"
+            if p_id == "0" and "permanence" in node.url:
+                node.selected = True
+            # Sinon, si on correspond à la permanence spécifique
+            elif p_id != "0" and f"/order/{p_id}/" in node.url:
+                node.selected = True
+            elif node.url == request.get_full_path() or node.url == current_path:
                 node.selected = True
 
     return {

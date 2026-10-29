@@ -25,43 +25,56 @@ def order_filter_view(request, permanence_id):
     if customer is None:
         raise Http404
     translation.activate(customer.language)
-    permanence = Permanence.objects.filter(id=permanence_id).first()
-    permanence_ok_or_404(permanence)
-    is_basket = request.GET.get("is_basket", EMPTY_STRING)
-    is_like = request.GET.get("is_like", EMPTY_STRING)
-    producer_id = request.GET.get("producer", "all")
-    department_id = request.GET.get("department", "all")
-    q = request.GET.get("q", None)
+    if permanence_id == 0:
+        permanence = None
+        is_basket = EMPTY_STRING
+        is_like = EMPTY_STRING
+        q = None
+        producer_id = "0"
+        department_id = "0"
+        permanence_id = "0"
+        producer_set = None
+        department_set = None
+        may_order = False
+    else:
+        permanence = Permanence.objects.filter(id=permanence_id).first()
+        permanence_ok_or_404(permanence)
+        is_basket = request.GET.get("is_basket", EMPTY_STRING)
+        is_like = request.GET.get("is_like", EMPTY_STRING)
+        producer_id = request.GET.get("producer", "all")
+        department_id = request.GET.get("department", "all")
+        q = request.GET.get("q", None)
 
-    producer_set = Producer.objects.filter(permanence=permanence_id).only(
-        "id", "short_profile_name"
-    )
-
-    department_set = (
-        LUT_DepartmentForCustomer.objects.filter(
-            offeritem__permanence_id=permanence_id,
-            offeritem__is_active=True,
+        producer_set = Producer.objects.filter(permanence=permanence_id).only(
+            "id", "short_profile_name"
         )
-        .order_by("tree_id", "lft")
-        .distinct("id", "tree_id", "lft")
-    )
-    if producer_id != "all":
-        department_set = department_set.filter(offeritem__producer_id=producer_id)
+
+        department_set = (
+            LUT_DepartmentForCustomer.objects.filter(
+                offeritem__permanence_id=permanence_id,
+                offeritem__is_active=True,
+            )
+            .order_by("tree_id", "lft")
+            .distinct("id", "tree_id", "lft")
+        )
+        if producer_id != "all":
+            department_set = department_set.filter(offeritem__producer_id=producer_id)
+        may_order = customer.may_order
+
     template_name = get_repanier_template_name("order_filter.html")
     return render(
         request,
         template_name,
         {
             "permanence": permanence,
-            "is_like": is_like,
             "is_basket": is_basket,
+            "is_like": is_like,
             "q": q,
             "producer_id": producer_id,
             "department_id": department_id,
             "permanence_id": permanence_id,
-            "may_order": True,
+            "may_order": may_order,
             "producer_set": producer_set,
             "department_set": department_set,
-            "is_filter_view": "active",
         },
     )
