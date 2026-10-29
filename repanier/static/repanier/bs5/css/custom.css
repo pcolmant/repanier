@@ -21,6 +21,13 @@ main {
     }
 }
 
+@media (min-width: 1200px) {
+    .container-repanier,
+    .container {
+        max-width: 95% !important; /* Utilise 95% de la largeur de l'écran au lieu d'une largeur fixe */
+    }
+}
+
 .footer {
     flex-shrink: 0;
     position: relative !important;
