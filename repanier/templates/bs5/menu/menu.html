@@ -1,6 +1,9 @@
 {% load menu_tags %}
 {% for child in children %}
-    {% if child.children %}
+    {% if child.get_menu_title == '------' %}
+        <!-- Diviseur propre Bootstrap 5 pour le bureau et le mobile -->
+        <li><hr class="dropdown-divider"></li>
+    {% elif child.children %}
         <!-- Version Bureau : Dropdown classique -->
         <li class="nav-item dropdown d-none d-lg-block {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}" data-page-id="{{ child.id }}">
             <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}"
@@ -38,7 +41,7 @@
                 <ul class="nav flex-column ms-3 my-2">
                     {% for subchild in child.children %}
                         {% if subchild.get_menu_title == '------' %}
-                            <li class="mb-3 pb-2 border-bottom"></li>
+                            <li><hr class="dropdown-divider"></li>
                         {% else %}
                             <li class="nav-item">
                                 <a href="{{ subchild.attr.redirect_url|default:subchild.get_absolute_url }}"
@@ -52,7 +55,7 @@
                                         <ul class="nav flex-column ms-3 my-1">
                                             {% for subsubchild in subchild.children %}
                                                 {% if subsubchild.get_menu_title == '------' %}
-                                                    <li class="mb-3 pb-2 border-bottom"></li>
+                                                    <li><hr class="dropdown-divider"></li>
                                                 {% else %}
                                                     <li class="nav-item">
                                                         <a href="{{ subsubchild.attr.redirect_url|default:subsubchild.get_absolute_url }}"

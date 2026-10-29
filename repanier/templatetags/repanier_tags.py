@@ -1,10 +1,12 @@
 from django import template
+from django import template
 from django.conf import settings
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-
+from menus.menu_pool import menu_pool
+from repanier.cms_menus import PermanenceMenu
 from repanier.const import (
     EMPTY_STRING,
     DECIMAL_ZERO,
@@ -445,3 +447,28 @@ def repanier_btn_like(context, *args, **kwargs):
         str_id=str_id, html=offer_item.get_html_like(user_id)
     )
     return mark_safe(result)
+
+
+@register.inclusion_tag('menu/permanence_sidebar.html', takes_context=True)
+def show_permanence_menu(context):
+    request = context['request']
+    renderer = menu_pool.get_renderer(request)
+    menu = PermanenceMenu(renderer)
+    nodes = menu.get_nodes(request)
+
+    # Récupération de l'URL complète avec les paramètres (ex: ?is_basket=yes)
+    full_path = request.get_full_path()
+    path = request.path
+
+    for node in nodes:
+        node.selected = False
+        if node.url:
+            # On compare soit avec l'URL complète (avec ?is_basket=yes),
+            # soit avec le chemin de base (request.path) si l'URL n'a pas de paramètres
+            if node.url == full_path or node.url == path:
+                node.selected = True
+
+    return {
+        'nodes': nodes,
+        'request': request,
+    }

@@ -65,7 +65,7 @@
                     <span class="navbar-brand d-lg-none fs-6"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
                 {% else %}
                     <span id="link_to_order_or_filter_view" class="d-lg-none"></span>
-                    {% if user.is_authenticated %}
+                    {% if user.is_authenticated and not hide_cart_button %}
                         <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes"
                            class="btn btn-outline-info d-lg-none ms-auto me-2">
                             <span id="prepared_amount_visible_xs"></span>

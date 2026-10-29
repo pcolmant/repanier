@@ -1,5 +1,5 @@
 {% extends 'bs5/cms_page.html' %}
-{% load cms_tags sekizai_tags i18n l10n menu_tags %}
+{% load cms_tags sekizai_tags i18n l10n menu_tags repanier_tags %}
 
 {% block sub_content %}
     {% block notification %}
@@ -32,11 +32,14 @@
 
     {% block permanence_description %}{% spaceless %}
         {% if may_order or display_anonymous_order_form %}
-            <div class="row">
+            <div class="row mb-4">
             <div class="card">
                 {% if permanence.offer_description_v2 and permanence.offer_description_v2.strip %}
-                <div class="card-header accordion-toggle collapsed cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-offer-description" role="button" aria-expanded="false">
+                <!-- Utilisation de d-flex pour positionner le titre à gauche et l'icône à droite -->
+                <div class="card-header accordion-toggle collapsed cursor-pointer d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapse-offer-description" role="button" aria-expanded="false">
                     <h4 class="card-title mb-0">{{ permanence.get_permanence_display }}</h4>
+                    <!-- Icône Bootstrap chevron qui bascule dynamiquement -->
+                    <i class="bi bi-chevron-right chevron-icon fs-6"></i>
                 </div>
                 <div id="collapse-offer-description" class="collapse">
                     <div class="card-body">
@@ -72,9 +75,7 @@
                 <div class="fixed">
                     <!-- Menu secondaire CMS de gauche sur grand écran -->
                     <div class="mb-4 pb-3 border-bottom">
-                        <ul class="nav flex-column">
-                            {% show_menu 1 4 0 4 "menu/menu_subpage.html" %}
-                        </ul>
+                        {% show_permanence_menu %}
                     </div>
 
                     {% if may_order %}
@@ -108,7 +109,7 @@
                                 <a class="nav-link {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_basket=yes">{% translate "My cart" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if is_like %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_like=yes{% if q %}&q={{ q }}{% endif %}">{% translate "My" %} <span class="bi bi-heart"></span></a>
+                                <a class="nav-link {% if is_like %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_like=yes{% if q %}&q={{ q }}{% endif %}">{% translate "My" %} <span class="bi bi-heart-fill"></span></a>
                             </li>
                             {% endif %}
                             {% if producer_set.count > 1 %}

@@ -14,6 +14,18 @@ class PermanenceView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        page_obj = context.get("page_obj")
+        if page_obj and page_obj.object_list:
+            first_item = page_obj.object_list[0]
+            if hasattr(first_item, "permanence_id"):
+                context["permanence_id"] = first_item.permanence_id
+
+        # Sécurité pour s'assurer qu'on transmet bien une URL de filtre exploitable par le template
+        qs = self.get_queryset()
+        if qs.exists():
+            context["first_permanence_filter_url"] = qs.first().permanence.get_order_filter_url()
+
+        context["hide_cart_button"] = True
         return context
 
     def get_queryset(self):

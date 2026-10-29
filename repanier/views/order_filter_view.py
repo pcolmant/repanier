@@ -47,12 +47,12 @@ def order_filter_view(request, permanence_id):
     )
     if producer_id != "all":
         department_set = department_set.filter(offeritem__producer_id=producer_id)
-
     template_name = get_repanier_template_name("order_filter.html")
     return render(
         request,
         template_name,
         {
+            "permanence": permanence,
             "is_like": is_like,
             "is_basket": is_basket,
             "q": q,

@@ -142,11 +142,13 @@ class OfferItem(Item):
                 )
             )
         else:
+            # Si le produit est liké (exists() == True), on met "-fill" (noir), sinon chaîne vide (transparent)
+            is_liked = self.product.likes.filter(id=user_id).only("id").exists()
+            heart_class = "bi bi-heart-fill" if is_liked else "bi bi-heart"
+
             return mark_safe(
-                '<span class="fa{} fa-heart" onclick="like_ajax({});return false;"></span>'.format(
-                    "s"
-                    if self.product.likes.filter(id=user_id).only("id").exists()
-                    else "r",
+                '<span class="{}" onclick="like_ajax({});return false;" style="cursor: pointer;"></span>'.format(
+                    heart_class,
                     self.id,
                 )
             )

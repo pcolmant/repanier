@@ -460,21 +460,29 @@ def my_basket(is_order_confirm_send, order_amount):
         json_dict["#prepared_amount_visible_xs"] = msg_html
     else:
         if (
-            settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
-            and not is_order_confirm_send
+                settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+                and not is_order_confirm_send
         ):
-            msg_html = """
-            {order_amount} <span class="badge">{to_confirm}</span>
-            """.format(
-                order_amount=order_amount, to_confirm=_("to confirm")
+            if order_amount.amount <= const.DECIMAL_ZERO:
+                msg_confirm = const.EMPTY_STRING
+            else:
+                msg_confirm = '<span class="bi bi-exclamation-circle"></span>&nbsp;<span class="bi bi-floppy"></span>'
+            msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
+                order_amount=order_amount, msg_confirm=msg_confirm
             )
         else:
-            msg_html = """
-            {order_amount}
-            """.format(
-                order_amount=order_amount
+            if order_amount.amount <= const.DECIMAL_ZERO:
+                msg_confirm = const.EMPTY_STRING
+            else:
+                msg_confirm = '<span class="bi bi-check-lg"></span>'
+            msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
+                order_amount=order_amount, msg_confirm=msg_confirm
             )
         json_dict = {"#my_basket": msg_html}
+        msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
+            order_amount=order_amount, msg_confirm=msg_confirm
+        )
+        json_dict["#prepared_amount_visible_xs"] = msg_html
     return json_dict
 
 

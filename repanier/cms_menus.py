@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class PermanenceMenu(Menu):
+    namespace = "PermanenceMenu"
+
     def get_nodes(self, request):
         from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
 

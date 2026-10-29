@@ -8,9 +8,7 @@
                 <div class="col-11 col-sm-5 col-md-3 bs-docs-sidebar d-none d-lg-block">
                     <div class="fixed">
                         <div class="mb-4 pb-3 border-bottom">
-                            <ul class="nav flex-column">
-                                {% show_menu 1 4 0 4 "menu/menu_subpage.html" %}
-                            </ul>
+                            {% show_permanence_menu %}
                         </div>
                     </div>
                 </div>
@@ -127,6 +125,19 @@
                         $("select").focus(function () {
                             $(this).data('oldValue', $(this).val());
                         });
+
+                        // Forcer le déplacement propre de la loupe juste à côté du bouton Menu
+                        {% if first_permanence_filter_url %}
+                            var $menuBtn = $('button[data-bs-target="#mobileSidebar"]');
+                            var $loupe = $('<a href="{{ first_permanence_filter_url }}" class="btn btn-info ms-2" aria-label="Rechercher"><span class="bi bi-search" aria-hidden="true"></span></a>');
+
+                            // On insère la loupe juste après le bouton menu
+                            $menuBtn.after($loupe);
+
+                            // On nettoie les anciens emplacements encombrants
+                            $("#link_to_order_or_filter_view").remove();
+                            $("a.btn-outline-info.d-lg-none").remove();
+                        {% endif %}
                     });
                 </script>
             {% endspaceless %}{% endaddtoblock %}

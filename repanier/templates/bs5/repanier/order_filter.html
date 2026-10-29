@@ -1,13 +1,90 @@
 {% extends 'bs5/cms_order_page.html' %}
-{% load cms_tags sekizai_tags i18n l10n %}
+{% load cms_tags sekizai_tags i18n l10n menu_tags repanier_tags %}
+
 {% block notification %}{% endblock notification %}
 {% block may_order %}{% endblock may_order %}
-{% block permanence_description %}{% endblock permanence_description %}
 {% block confirm_basket %}{% endblock confirm_basket %}
-{#{% block product_filter %}{{ block.super }}{% endblock product_filter %}#}
 {% block product_list %}{% endblock product_list %}
+
+{# Remplacement total du contenu pour l'adapter exclusivement au mobile #}
+{% block sub_content %}
+    <div class="container px-3 py-2">
+        <!-- Menu secondaire de permanence -->
+        <div class="mb-4 pb-3 border-bottom">
+            {% show_permanence_menu %}
+        </div>
+
+        <!-- Formulaire de recherche -->
+        {% if may_order %}
+            <form action="{{ permanence.get_order_url }}" id="search_form" class="form-horizontal mb-3" role="search" method="get">
+                {% csrf_token %}
+                <div class="input-group">
+                    {% if q %}
+                        <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
+                    {% else %}
+                        <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}" name="q">
+                    {% endif %}
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <input type="hidden" name="producer" value="{{ producer_id }}">
+                <input type="hidden" name="department" value="{{ department_id }}">
+                <input type="hidden" name="is_like" value="{{ is_like }}">
+                <input type="hidden" name="is_basket" value="{{ is_basket }}">
+            </form>
+        {% endif %}
+
+        <!-- Liste des filtres (Produits, Panier, Favoris, Producteurs, Rayons) -->
+        <ul class="nav flex-column" id="sidebar">
+            {% if may_order %}
+            <li class="nav-item">
+                <a class="nav-link {% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}">{% translate "All products" %}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_basket=yes">{% translate "My cart" %}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if is_like %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_like=yes{% if q %}&q={{ q }}{% endif %}">{% translate "My" %} <span class="bi bi-heart-fill"></span></a>
+            </li>
+            {% endif %}
+
+            {% if producer_set.count > 1 %}
+                <li class="nav-item mt-2">
+                    <a class="nav-link fw-bold {% if producer_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?department={{ department_id }}">{% translate "All producers" %}</a>
+                    <ul class="nav flex-column ms-3">
+                    {% for producer in producer_set.all %}
+                        <li class="nav-item"><a class="nav-link {% if producer.id == producer_id|add:0 %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?producer={{ producer.id|unlocalize }}&department={{ department_id }}">{{ producer.short_profile_name | truncatechars:25 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span></a></li>
+                    {% endfor %}
+                    </ul>
+                </li>
+            {% endif %}
+
+            {% if department_set.count > 1 %}
+                <li class="nav-item mt-2">
+                    <a class="nav-link fw-bold {% if department_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?producer={{ producer_id }}">{% translate "All departments" %}</a>
+                    <ul class="nav flex-column ms-3">
+                        {% for department in department_set.all %}
+                            {% if department.level > 0 %}
+                                {% ifchanged department.parent_id %}
+                                {% if department.parent.level == 0 %}</ul>{% endif %}
+                                <li class="nav-item"><a class="nav-link {% if department.parent_id == department_id|add:0 %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.parent_id|unlocalize }}">{{ department.parent.short_name_v2 }}</a></li>
+                                {% if department.parent.level == 0 %}<ul class="nav flex-column ms-3">{% endif %}
+                                {% endifchanged %}
+                                <li class="nav-item">
+                                    <a class="nav-link {% if department.id == department_id|add:0 %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.id|unlocalize }}">{{ department.short_name_v2 }}</a>
+                                </li>
+                            {% else %}
+                                    </ul><li class="nav-item">
+                                    <a class="nav-link {% if department.id == department_id|add:0 %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.id|unlocalize }}">{{ department.short_name_v2 }}</a>
+                                    </li><ul class="nav flex-column ms-3">
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+{% endblock sub_content %}
+
 {% block order_modal %}{% endblock order_modal %}
-{#{% block my_cart_amount_js %}{{ block.super }}{% endblock my_cart_amount_js %}#}
 {% block my_order_js %}{% endblock my_order_js %}
 {% block link_to_filter_js %}{% endblock link_to_filter_js %}
-{#{% block link_to_order_js %}{{ block.super }}{% endblock link_to_order_js %}#}

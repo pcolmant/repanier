@@ -1,0 +1,16 @@
+<ul class="nav flex-column">
+    {% for node in nodes %}
+        {% if node.parent_id == 0 %}
+            {% if node.get_menu_title == '------' or node.title == '------' %}
+                <li class="my-2"><hr class="dropdown-divider"></li>
+            {% else %}
+                <li class="nav-item">
+                    <a href="{{ node.get_absolute_url }}"
+                       class="nav-link {% if node.selected %}bs-docs-sidebar-active text-success fw-bold{% else %}text-dark fw-normal{% endif %}">
+                        {{ node.get_menu_title|default:node.title |safe }}
+                    </a>
+                </li>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+</ul>

@@ -393,3 +393,35 @@ a.skip_link {
     color: initial !important;
     cursor: initial !important;
 }
+
+/* =================================================================
+   11. Uniformise la taille et le comportement des cœurs Bootstrap
+   =================================================================== */
+
+.bi-heart, .bi-heart-fill {
+    font-size: 1.2rem; /* Force exactement la même taille */
+    vertical-align: -0.125em; /* Assure un alignement vertical parfait avec le texte voisin */
+}
+
+/* =================================================================
+   12. La flèche pivote de 90 degrés vers le bas lorsque l'attribut aria-expanded passe à true
+   =================================================================== */
+.card-header[aria-expanded="true"] .chevron-icon {
+    transform: rotate(90deg);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-header .chevron-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+/* =================================================================
+   13. Force les éléments mobiles de la navbar à rester groupés à gauche sans espace vide excessif
+   =================================================================== */
+@media (max-width: 991.98px) {
+    .navbar-custom .container-fluid {
+        display: flex;
+        justify-content: flex-start !important;
+        flex-wrap: nowrap;
+    }
+}
