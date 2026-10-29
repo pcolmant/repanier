@@ -1,9 +1,10 @@
 {% load menu_tags %}
 {% for child in children %}
     {% if child.children %}
-        <li class="nav-item dropdown {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
+        <!-- Version Bureau : Dropdown classique -->
+        <li class="nav-item dropdown d-none d-lg-block {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}" data-page-id="{{ child.id }}">
             <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}"
-               class="nav-link dropdown-toggle"
+               class="nav-link dropdown-toggle text-dark"
                role="button"
                data-bs-toggle="dropdown"
                aria-expanded="false">
@@ -13,16 +14,70 @@
                 {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
             </ul>
         </li>
-    {% else %}
-        {% if child.get_menu_title == '------' %}
-            <li><hr class="dropdown-divider"></li>
-        {% else %}
-            <li class="nav-item {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
+
+        <!-- Version Mobile : Élément avec gestion imbriquée des sous-pages -->
+        <li class="nav-item d-lg-none {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}" data-page-id="{{ child.id }}">
+            <!-- Pour "Permanences", on pointe vers le premier sous-élément (ex: Inscription aux tâches) si c'est le premier enfant avec des sous-éléments de type permanence -->
+            {% if child.get_menu_title == 'Permanences' %}
+                {% for sub in child.children %}
+                    {% if forloop.first %}
+                        <a href="{{ sub.attr.redirect_url|default:sub.get_absolute_url }}"
+                           class="nav-link text-dark {% if child.selected %}fw-bold text-success{% endif %}">
+                            {{ child.get_menu_title |safe }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
                 <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}"
-                   class="{% if child.selected %}nav-link active{% else %}nav-link{% endif %}">
+                   class="nav-link text-dark {% if child.selected %}fw-bold text-success{% endif %}">
                     {{ child.get_menu_title |safe }}
                 </a>
-            </li>
-        {% endif %}
+            {% endif %}
+
+            {% if child.selected or child.ancestor or child.descendant %}
+                <ul class="nav flex-column ms-3 my-2">
+                    {% for subchild in child.children %}
+                        {% if subchild.get_menu_title == '------' %}
+                            <li class="mb-3 pb-2 border-bottom"></li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a href="{{ subchild.attr.redirect_url|default:subchild.get_absolute_url }}"
+                                   class="nav-link fw-normal {% if subchild.selected %}bs-docs-sidebar-active fw-bold text-success{% else %}text-dark{% endif %}">
+                                    {{ subchild.get_menu_title |safe }}
+                                </a>
+
+                                <!-- Affichage direct des sous-sous-pages en texte normal -->
+                                {% if subchild.selected or subchild.ancestor or subchild.descendant %}
+                                    {% if subchild.children %}
+                                        <ul class="nav flex-column ms-3 my-1">
+                                            {% for subsubchild in subchild.children %}
+                                                {% if subsubchild.get_menu_title == '------' %}
+                                                    <li class="mb-3 pb-2 border-bottom"></li>
+                                                {% else %}
+                                                    <li class="nav-item">
+                                                        <a href="{{ subsubchild.attr.redirect_url|default:subsubchild.get_absolute_url }}"
+                                                           class="nav-link fw-normal {% if subsubchild.selected %}bs-docs-sidebar-active fw-bold text-success{% else %}text-dark{% endif %}">
+                                                            {{ subsubchild.get_menu_title |safe }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endif %}
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </li>
+    {% else %}
+        <!-- Éléments sans enfants -->
+        <li class="nav-item {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
+            <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}"
+               class="nav-link text-dark {% if child.selected %}fw-bold text-success{% endif %}">
+                {{ child.get_menu_title |safe }}
+            </a>
+        </li>
     {% endif %}
 {% endfor %}

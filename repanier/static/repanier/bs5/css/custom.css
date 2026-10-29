@@ -1,4 +1,4 @@
-/* =================================================================adan
+/* =================================================================
    1. Sticky footer styles (Compatible Bootstrap 5 flexbox approach)
    =================================================================== */
 html, body {
@@ -8,16 +8,12 @@ html, body {
 body {
     display: flex;
     flex-direction: column;
-    /* Remplacement de la marge fixe par un layout flexbox natif (recommandé en BS5) */
     min-height: 100vh;
 }
 
-/* Si vous gardez la structure classique avec le body en display block : */
-/*
-body {
-    margin-bottom: 60px;
+main {
+    flex: 1 0 auto;
 }
-*/
 
 @media screen and (min-width: 768px) and (max-width: 979px) {
     body {
@@ -26,13 +22,13 @@ body {
 }
 
 .footer {
-    /* En BS5, on peut utiliser position-absolute ou laisser le flexbox gérer le footer.
-       On conserve votre positionnement absolu d'origine : */
-    position: absolute;
-    bottom: 0;
+    flex-shrink: 0;
+    position: relative !important;
     width: 100%;
-    height: 60px;
     text-align: center;
+    border-top: 1px solid #dee2e6; /* Ligne de séparation subtile sur toute la largeur */
+    padding-top: 15px; /* Un peu d'espace au-dessus du texte */
+    margin-top: 15px;  /* Espace pour détacher le footer du contenu principal */
 }
 
 /* =================================================================
@@ -44,45 +40,52 @@ body {
     margin-bottom: 1px;
 }
 
-.bs-docs-sidebar .nav > li > a {
-    color: #3c3c3c;
-    padding-top: 0;
+/* Éléments de premier niveau en gras avec bordure transparente par défaut */
+.bs-docs-sidebar .nav > li > .nav-link {
+    color: #3c3c3c !important;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
     font-weight: bold;
     border-left: 2px solid transparent;
 }
 
-.bs-docs-sidebar .nav .nav > li > a {
+/* Sous-menus en poids normal et décalés */
+.bs-docs-sidebar .nav .nav > li > .nav-link {
     padding-left: 30px;
     font-weight: normal;
+    color: #3c3c3c !important;
+    border-left: 2px solid transparent;
 }
 
-.bs-docs-sidebar .nav > .active > a,
-.bs-docs-sidebar .nav > li > a:hover,
-.bs-docs-sidebar .nav > li > a:focus {
-    color: #51a351;
+/* Couleur verte au survol et au focus (sans barre verticale) */
+.bs-docs-sidebar .nav > li > .nav-link:hover,
+.bs-docs-sidebar .nav > li > .nav-link:focus,
+.bs-docs-sidebar .nav .nav > li > .nav-link:hover,
+.bs-docs-sidebar .nav .nav > li > .nav-link:focus {
+    color: #51a351 !important;
+    background-color: transparent !important;
     text-decoration: none;
-    background-color: transparent;
 }
 
-.bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
-    color: #51a351;
+/* Couleur verte et barre verticale (à gauche) pour la page active */
+.bs-docs-sidebar .nav > li > .nav-link.bs-docs-sidebar-active,
+.bs-docs-sidebar .nav .nav > li > .nav-link.bs-docs-sidebar-active {
+    color: #51a351 !important;
+    background-color: transparent !important;
     text-decoration: none;
-    background-color: transparent;
-    border-left: 2px solid #51a351;
+    border-left: 2px solid #51a351 !important;
 }
 
 /* =================================================================
    3. Utilitaires et composants (Panneaux / Accordéons)
    =================================================================== */
 .display_none {
-    display: none !important; /* Ajout de !important pour s'aligner sur les utilitaires natifs BS5 (.d-none) */
+    display: none !important;
 }
 
-/* Note : Les panneaux .panel de Bootstrap 3 n'existent plus en BS5 (remplacés par .card).
-   Ce bloc est conservé si vous utilisez un wrapper personnalisé ou une rétrocompatibilité. */
 .accordion-button:not(.collapsed):after,
 .panel-heading.accordion-toggle:after {
-    font-family: 'bootstrap-icons'; /* ou 'Glyphicons Halflings' si conservé */
+    font-family: 'bootstrap-icons';
     content: "\e114";
     float: right;
     position: relative;
@@ -149,7 +152,7 @@ code {
         left: 0;
         background-color: #4d4d4f;
         overflow-x: hidden;
-        transition: transform 0.5s ease; /* Standardisé */
+        transition: transform 0.5s ease;
         padding-top: 15px;
     }
 
@@ -184,7 +187,9 @@ a.skip_link {
     color: #fff;
 }
 
-/* =6. Conteneurs spécifiques */
+/* =================================================================
+   6. Conteneurs spécifiques
+   =================================================================== */
 @media only screen and (min-width: 768px) {
     .container-bootstrap {
         margin-top: 65px;
@@ -229,7 +234,7 @@ a.skip_link {
     position: absolute;
     left: 8%;
     top: 25%;
-    transform: rotate(5deg); /* Suppression des préfixes -webkit-/-moz-/etc. obsolètes en BS5 */
+    transform: rotate(5deg);
     border-bottom-left-radius: 35%;
 }
 
@@ -342,7 +347,7 @@ a.skip_link {
 }
 
 /* =================================================================
-   9. Animations (Spinners - Nettoyés des préfixes navigateurs obsolètes)
+   9. Animations (Spinners)
    =================================================================== */
 .gly-spin {
     animation: spin 2s infinite linear;

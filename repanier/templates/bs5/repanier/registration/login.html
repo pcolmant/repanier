@@ -1,63 +1,68 @@
 {% extends "bs5/base.html" %}{% load i18n %}
 {% block base_content %}
-    <div id="content-main" class="container-repanier">
+    <div id="content-main" class="container-repanier py-4">
         <div class="container">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form role="form" action="{{ app_path }}" method="post" accept-charset="UTF-8"
-                          id="login-form">{% csrf_token %}
-                        <div class="modal-header">
-                            <h4 class="modal-title" id="loginModalLabel">{% translate "Sign in" %}</h4>
-                        </div>
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card shadow-sm">
+                        <form role="form" action="{{ app_path }}" method="post" accept-charset="UTF-8"
+                              id="login-form">{% csrf_token %}
+                            <div class="card-header bg-light">
+                                <h4 class="card-title mb-0" id="loginModalLabel">{% translate "Sign in" %}</h4>
+                            </div>
 
-                        <div class="modal-body">
-                            <div class="form-group">
+                            <div class="card-body">
                                 {% if staff_responsibilities %}
                                     <p>{% translate "You are now logged in as a customer." %}</p>
-                                    <p><b>{% translate "Do you want to become:" %}</b></p>
-                                    {% for staff_responsibility in staff_responsibilities %}
-                                        <a href="{% url "repanier:login_form" %}?as_id={{ staff_responsibility.id }}"
-                                           class="btn btn-info">{{ staff_responsibility.long_name_v2 }}</a><br>
-                                    {% endfor %}
+                                    <p class="fw-bold">{% translate "Do you want to become:" %}</p>
+                                    <div class="d-grid gap-2">
+                                        {% for staff_responsibility in staff_responsibilities %}
+                                            <a href="{% url "repanier:login_form" %}?as_id={{ staff_responsibility.id }}"
+                                               class="btn btn-info text-white">{{ staff_responsibility.long_name_v2 }}</a>
+                                        {% endfor %}
+                                    </div>
                                 {% else %}
                                     {% if form.non_field_errors %}
                                         <div class="alert alert-danger" role="alert">
-                                            <p>
-                                                {% for error in form.non_field_errors %}
-                                                    {{ error }}
-                                                {% endfor %}
-                                            </p>
+                                            {% for error in form.non_field_errors %}
+                                                <p class="mb-0">{{ error }}</p>
+                                            {% endfor %}
                                         </div>
                                     {% endif %}
-                                    <label for="id_username">{% translate "E-mail address" %}</label>
-                                    {% if form.username.errors %}
-                                        <p class="text-danger">
-                                            {% for error in form.username.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </p>
-                                    {% endif %}
-                                    <input type="text" class="form-control" id="id_username"
-                                           placeholder="{% translate "E-mail address" %}" name="username" autofocus>
-                                    <br>
-                                    <label for="id_password">{% translate "Password" %}</label>
-                                    {% if form.password.errors %}
-                                        <p class="text-danger">
-                                            {% for error in form.password.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </p>
-                                    {% endif %}
-                                    <input type="password" class="form-control" id="id_password"
-                                           placeholder="{% translate "Password" %}" name="password">
-                                    {% if how_to_register %}
-                                        <p></p>
-                                        <div class="form-group">
-                                            <div class="accordion-toggle collapsed" data-bs-toggle="collapse"
-                                                 data-bs-target="#collapse">
-                                                <span class="btn btn-info">{% translate "Create an account ?" %}</span>
+
+                                    <div class="mb-3">
+                                        <label for="id_username" class="form-label">{% translate "E-mail address" %}</label>
+                                        {% if form.username.errors %}
+                                            <div class="text-danger small mb-1">
+                                                {% for error in form.username.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
                                             </div>
-                                            <div id="collapse" class="panel-collapse collapse">
+                                        {% endif %}
+                                        <input type="text" class="form-control" id="id_username"
+                                               placeholder="{% translate "E-mail address" %}" name="username" autofocus>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="id_password" class="form-label">{% translate "Password" %}</label>
+                                        {% if form.password.errors %}
+                                            <div class="text-danger small mb-1">
+                                                {% for error in form.password.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <input type="password" class="form-control" id="id_password"
+                                               placeholder="{% translate "Password" %}" name="password">
+                                    </div>
+
+                                    {% if how_to_register %}
+                                        <div class="mb-3">
+                                            <div class="accordion-toggle collapsed cursor-pointer mb-2" data-bs-toggle="collapse"
+                                                 data-bs-target="#collapse">
+                                                <span class="btn btn-outline-info btn-sm">{% translate "Create an account ?" %}</span>
+                                            </div>
+                                            <div id="collapse" class="collapse mt-2">
                                                 {{ how_to_register | safe }}
                                             </div>
                                         </div>
@@ -66,22 +71,23 @@
                                 <input type="hidden" name="this_is_the_login_form" value="1"/>
                                 <input type="hidden" name="next" value="{{ next }}"/>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <div class="form-group">
-                                {% if staff_responsibilities %}
-                                    <a href="{{ next }}" class="btn btn-info">{% translate "Continue as a customer." %}</a>
-                                    <a href="{% url "repanier:logout" %}" class="btn btn-info">{% translate "Logout" %}</a>
-                                {% else %}
-                                    <button class="btn btn-info" type="submit">{% translate "Sign in" %}</button>
-                                    <a href="{% url "repanier:password_reset" %}"
-                                       class="btn btn-info">{% translate "Password reset" %}</a>
-                                {% endif %}
+
+                            <div class="card-footer bg-light py-3">
+                                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                                    {% if staff_responsibilities %}
+                                        <a href="{{ next }}" class="btn btn-info text-white">{% translate "Continue as a customer." %}</a>
+                                        <a href="{% url "repanier:logout" %}" class="btn btn-outline-secondary">{% translate "Logout" %}</a>
+                                    {% else %}
+                                        <button class="btn btn-info text-white" type="submit">{% translate "Sign in" %}</button>
+                                        <a href="{% url "repanier:password_reset" %}"
+                                           class="btn btn-link text-decoration-none">{% translate "Password reset" %}</a>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                </div><!-- /.modal-content -->
-            </div><!-- /.modal-dialog -->
+                        </form>
+                    </div><!-- /.card -->
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

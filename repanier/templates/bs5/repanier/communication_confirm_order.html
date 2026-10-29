@@ -2,18 +2,21 @@
 <div class="modal-dialog modal-lg">
     <div class="modal-content">
         <div class="modal-header">
-            <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true">x</button>
             <h4 class="modal-title">{% translate "Personnal communication" %}</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
         </div>
         <div class="modal-body">
-            {% translate "Your order is no longer confirmed because you just changed it." %}
-            <br>{% translate "Do not forget to confirm it again." %}
-            <br><br><span style="color: red; ">{% translate "⚠ Unconfirmed orders will be canceled." %}</span>
-            <br>{% translate "You can increase the order quantities as long as the orders are open." %}
+            <p class="mb-1">{% translate "Your order is no longer confirmed because you just changed it." %}</p>
+            <p class="mb-3">{% translate "Do not forget to confirm it again." %}</p>
+
+            <p class="text-danger fw-bold mb-3">
+                {% translate "⚠ Unconfirmed orders will be canceled." %}
+            </p>
+
+            <p class="mb-0">{% translate "You can increase the order quantities as long as the orders are open." %}</p>
         </div>
-        <div class="clearfix"></div>
         <div class="modal-footer">
-            <button class="btn btn-info" data-bs-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
+            <button type="button" class="btn btn-info" data-bs-dismiss="modal">{% translate "Close" %}</button>
         </div>
     </div>
 </div>

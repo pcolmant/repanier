@@ -9,9 +9,9 @@
 {% if offer.picture2 %}
     {% with order_name=offer.get_order_name %}
         <br>
-        <span data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}">
-        <img class="img-thumbnail" style="margin-top: 5px;" alt="{{ order_name }}" title="{{ order_name }}"
-             src="{{ MEDIA_URL }}{{ offer.picture2 }}" height="110" width="110"/>
+        <span data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" role="button">
+            <img class="img-thumbnail mt-1" alt="{{ order_name }}" title="{{ order_name }}"
+                 src="{{ MEDIA_URL }}{{ offer.picture2 }}" height="110" width="110"/>
         </span>
     {% endwith %}
 {% endif %}

@@ -1,69 +1,66 @@
 {% extends 'bs5/cms_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n %}
 {% block sub_content %}
-    <div class="container">
+    <div class="container mb-4">
         <div class="row">
             <div class="col">
-                <form id="search_form" class="form-horizontal" class="navbar-form" role="search" method="post">
+                <form id="search_form" class="form-horizontal" role="search" method="post">
                     {% csrf_token %}
                     <div class="input-group">
                         {% if q != None %}
-                            <input type="search" autosave="repanier" class="form-control" value="{{ q }}"
-                                   name="q">
+                            <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
                         {% else %}
-                            <input type="search" autosave="repanier" class="form-control"
-                                   placeholder="{% translate "Search" %}"
-                                   name="q">
+                            <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}" name="q">
                         {% endif %}
-                        <div class="input-group-btn">
-                            <button class="btn btn-info" type="submit"><i class="bi bi-search"></i>
-                            </button>
-                        </div>
+                        <button class="btn btn-info" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <div class="container">
+
+    <div class="container mb-4">
         <div class="row">
             <div class="col">
-                <br>
                 {% for staff in staff_list %}
                     {{ staff.get_str_member }}<br>
                 {% endfor %}
-                <br>
-                <p>{% translate "If you want to show information about you, then" %} <a
-                        href="{% url 'repanier:my_profile_view' %}">{% translate "update your profil" %}</a>.</p>
+                <p class="mt-3">{% translate "If you want to show information about you, then" %} <a href="{% url 'repanier:my_profile_view' %}">{% translate "update your profil" %}</a>.</p>
             </div>
         </div>
     </div>
+
     <div class="container">
         <div class="row">
-            <div class="panel-group" id="accordion">
+            <div class="col" id="accordion">
                 {% for customer in customer_list %}
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}
-                                    ){% endif %}</h4>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">
+                                {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}){% endif %}
+                            </h4>
                         </div>
-                        <div class="panel-body">
-                            <div class="col-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
                                 {% if customer.picture %}
-                                    <img class="img-rounded" style="margin: 5px;"
-                                         alt="{{ customer.long_basket_name }}"
-                                         title="{{ customer.long_basket_name }}"
-                                         src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+                                    <div class="col-12 col-md-2 text-center mb-3 mb-md-0">
+                                        <img class="img-fluid rounded" style="margin: 5px;"
+                                             alt="{{ customer.long_basket_name }}"
+                                             title="{{ customer.long_basket_name }}"
+                                             src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+                                    </div>
+                                    <div class="col-12 col-md-10">
+                                {% else %}
+                                    <div class="col-12">
                                 {% endif %}
-                            </div>
-                            <div class="col-10">
-                                {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}
-                                    <br>{% endif %}
-                                {% translate "Phone" %} :
-                                    {{ customer.get_phones }}
-                                    <br>
-                                {% translate "Email" %} :
-                                    {{ customer.get_email_postfixed }}
+                                    {% if customer.about_me and customer.about_me.strip %}
+                                        {{ customer.about_me | safe }}<br>
+                                    {% endif %}
+                                    {% translate "Phone" %} : {{ customer.get_phones }}<br>
+                                    {% translate "Email" %} : {{ customer.get_email_postfixed }}
+                                </div>
                             </div>
                         </div>
                     </div>

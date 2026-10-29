@@ -4,11 +4,11 @@
     <div id="{{ id }}_file_dropbox">
         {% if bootstrap %}
             <a id="{{ id }}_file_select" style="display:{{ repanier_display_picture }}" target="_blank" href="{{ repanier_file_url }}">
-                <img id="{{ id }}_file_img" src="{{ repanier_file_url }}" class="img-responsive img-thumbnail" style="margin:5px; min-height:32px; min-width:32px; max-height:225px; max-width:225px;">
+                <img id="{{ id }}_file_img" src="{{ repanier_file_url }}" class="img-fluid img-thumbnail m-1" style="min-height:32px; min-width:32px; max-height:225px; max-width:225px;">
             </a>
             <p id="{{ id }}_file_remove" style="display:{{ repanier_display_picture }}"><a id="{{ id }}_file_remove" class="btn btn-danger" href="#remove">{% translate "Remove" %}</a></p>
             <input id="{{ id }}_file_elem" type="file" style="display:none" accept="image/*"/>
-            <a href="#" id="{{ id }}_file_elem_select" class="btn btn-info" style="display:{{ repanier_display_upload }}"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+            <a href="#" id="{{ id }}_file_elem_select" class="btn btn-info" style="display:{{ repanier_display_upload }}"><span class="bi bi-camera" aria-hidden="true"></span></a>
         {% else %}
             <a id="{{ id }}_file_select" style="display:{{ repanier_display_picture }}" target="_blank" href="{{ repanier_file_url }}">
                 <img id="{{ id }}_file_img" src="{{ repanier_file_url }}" style="min-height:32px; min-width:32px; max-height:225px; max-width:225px;">

@@ -1,9 +1,7 @@
 {% load i18n %}
 {% spaceless %}
     {% with id=widget.attrs.id name=widget.name %}
-{#        <input type="submit" id="{{ id }}" href="#"#}
-{#           onclick="{{ id }}_test_mail_config();return false;" value="{% translate "Send a test email" %}">#}
-        <a id="{{ id }}" href="#"
+        <a id="{{ id }}" class="btn btn-outline-primary btn-sm" href="#" role="button"
            onclick="{{ id }}_test_mail_config();return false;">{% translate "Send a test email" %}</a>
 
         <script>

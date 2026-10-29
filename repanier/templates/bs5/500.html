@@ -21,35 +21,52 @@
 </head>
 <body>{% spaceless %}
     {# <!-- Header and Nav --> #}
-    <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
-        <div class="navbar-header visible-xs-inline-block">
-            <a href="#" class="btn btn-info" onclick="openNav()">
-                <span class="sr-only">{% translate "Toggle navigation" %}</span>
-                <span class="glyphicon glyphicon-list"></span>
-            </a>
-            <span class="navbar-group-name"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
-        </div>
-        <div class="container-menu">
-            <div id="mySideNav" class="sidenav collapse navbar-collapse">
-                {# <!-- Left Nav Section --> #}
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li>
-                        <a href="{{ REPANIER_HOME_SITE }}"><span class="glyphicon glyphicon glyphicon-home"></span></a>
-                    </li>
-                </ul>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top navbar-custom" role="navigation">
+            <div class="container-fluid">
+                <div class="navbar-header d-lg-none">
+                    <button class="btn btn-info" type="button" onclick="openNav()" aria-label="{% translate 'Toggle navigation' %}">
+                        <span class="bi bi-list"></span>
+                    </button>
+                    <span class="navbar-group-name"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
+                </div>
+                <div id="mySideNav" class="sidenav collapse navbar-collapse">
+                    {# <!-- Left Nav Section --> #}
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ REPANIER_HOME_SITE }}"><span class="bi bi-house"></span></a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
+
     <a id="content"></a>
-    <section>
-        {% block base_content %}
-            <br><br><br><br>
-            <h1>{% translate "Internal Error" %}</h1>
-            <p>{% translate "An internal error in this web site has just occurred" %}.</p>
-            <p>{% translate "An email containing the detailed content of the error has been sent to" %}
-                <strong>{% repanier_admins %}</strong>.</p>
-            <p>{% translate "You will eventually be contacted in case further details of the action you are making would be needed to understand the cause of the error" %}.</p>
-        {% endblock %}
-    </section>
-{% endspaceless %}</body>
+
+    <main class="container mt-5 pt-5">
+        <section>
+            {% block base_content %}
+                <br><br>
+                <h1>{% translate "Internal Error" %}</h1>
+                <p>{% translate "An internal error in this web site has just occurred" %}.</p>
+                <p>{% translate "An email containing the detailed content of the error has been sent to" %}
+                    <strong>{% repanier_admins %}</strong>.</p>
+                <p>{% translate "You will eventually be contacted in case further details of the action you are making would be needed to understand the cause of the error" %}.</p>
+            {% endblock %}
+        </section>
+    </main>
+{% endspaceless %}
+
+<script>
+    function openNav() {
+        const el = document.getElementById('mySideNav');
+        if (el) el.classList.add('show');
+    }
+    function closeNav() {
+        const el = document.getElementById('mySideNav');
+        if (el) el.classList.remove('show');
+    }
+</script>
+</body>
 </html>

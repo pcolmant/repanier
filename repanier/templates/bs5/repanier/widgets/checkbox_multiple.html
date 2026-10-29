@@ -1,17 +1,17 @@
 {% spaceless %}
-<b>{{ repanier_label }}</b>
-<p></p>
+<div class="fw-bold mb-2">{{ repanier_label }}</div>
 {% with id=widget.attrs.id %}
 <div ng-form="{{ widget.name }}"{% if id %} id="{{ id }}"{% endif %}{% include "django/forms/widgets/attrs.html" %}>
     {% for group, options, index in widget.optgroups %}
         {% for option in options %}
-            <div class="checkbox">
-	       <label{% if option.attrs.id %} for="{{ option.attrs.id }}"{% endif %} class="checkbox-inline">
-                <input name="{{ option.name }}" type="checkbox" value="{{ option.value }}"{% include "django/forms/widgets/attrs.html" with widget=option %} />
-                <span class="cr"><i class="cr-icon glyphicon glyphicon-ok"></i></span>{{ option.label }}
-           </label>
+            <div class="form-check">
+                <input class="form-check-input" name="{{ option.name }}" type="checkbox" value="{{ option.value }}"{% if option.attrs.id %} id="{{ option.attrs.id }}"{% endif %}{% include "django/forms/widgets/attrs.html" with widget=option %} />
+                <label class="form-check-label" {% if option.attrs.id %} for="{{ option.attrs.id }}"{% endif %}>
+                    {{ option.label }}
+                </label>
             </div>
         {% endfor %}
-    {% endfor %}</div>
+    {% endfor %}
+</div>
 {% endwith %}
 {% endspaceless %}

@@ -1,8 +1,8 @@
 {% spaceless %}
-<div class="repanier-checkbox">
-    <label class="checkbox-inline">
-        <input type="checkbox" name="{{ widget.name }}" {% include "django/forms/widgets/attrs.html" %}>
-        <span class="cr"><i class="cr-icon glyphicon glyphicon-ok"></i></span>{{ repanier_label }}
+<div class="form-check">
+    <input class="form-check-input" type="checkbox" name="{{ widget.name }}" {% if widget.attrs.id %}id="{{ widget.attrs.id }}"{% endif %} {% include "django/forms/widgets/attrs.html" %}>
+    <label class="form-check-label" {% if widget.attrs.id %}for="{{ widget.attrs.id }}"{% endif %}>
+        {{ repanier_label }}
     </label>
 </div>
 {% endspaceless %}

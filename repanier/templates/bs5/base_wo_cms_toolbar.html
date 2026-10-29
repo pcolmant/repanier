@@ -3,6 +3,9 @@
     <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
 {% endaddtoblock %}
 {% addtoblock "css" %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+{% endaddtoblock %}
+{% addtoblock "css" %}
     <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
 {% endaddtoblock %}
 {% addtoblock "jshead" %}
@@ -47,71 +50,127 @@
 <body>
 <a href="#content" class="skip_link">{% translate "Skip to main content" %}</a>
 <a id="top"></a>
-{#    {% cms_toolbar %}#}
+
 {% spaceless %}
-    <section>
+    <header>
+        <!-- Navbar principale (Bureau & Mobile) -->
         <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top navbar-custom" role="navigation">
             <div class="container-fluid">
-                <div class="navbar-header d-lg-none">
-                    <button class="btn btn-info" type="button" onclick="openNav()" aria-label="{% translate 'Toggle navigation' %}">
-                        <span class="bi bi-list"></span>
-                    </button>
-                    {% if not permanence_id %}
-                        <span class="navbar-group-name"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
-                    {% else %}
-                        <span id="link_to_order_or_filter_view"></span>
-                        {% if user.is_authenticated %}
-                            <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes"
-                               class="btn btn-info ms-auto"
-                               style="margin-right: 10px;">
-                                <span id="prepared_amount_visible_xs"></span>
-                            </a>
-                        {% endif %}
-                    {% endif %}
-                </div>
+                <!-- Bouton Menu et éléments de droite pour mobile uniquement -->
+                <button class="btn btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="bi bi-list"></i> {% translate "Menu" %}
+                </button>
 
-<!--                <div class="container-menu">-->
-                    <div id="mySideNav" class="sidenav collapse navbar-collapse">
-                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                            <li class="nav-item dropdown">
-                                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span class="bi bi-arrow-left-right"></span>
-                                    <b class="caret d-none d-lg-inline"></b>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="https://gasath.repanier.be/" target="_blank">GasAth (Ath)</a></li>
-                                    <li><a class="dropdown-item" href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco (Charleroi)</a></li>
-                                    <li><a class="dropdown-item" href="https://gaschievres.repanier.be/" target="_blank">GasChièvres (Chièvres)</a></li>
-                                    <li><a class="dropdown-item" href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de Romuald (Forest)</a></li>
-                                    <li><a class="dropdown-item" href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel (Frasnes)</a></li>
-                                    <li><a class="dropdown-item" href="https://gac-jalhay.repanier.be/" target="_blank">Gac Jalhay (Jalhay)</a></li>
-                                    <li><a class="dropdown-item" href="https://lepanierlensois.repanier.be/fr/" target="_blank">Le Panier Lensois (Lens)</a></li>
-                                    <li><a class="dropdown-item" href="https://epicentre.repanier.be/" target="_blank">Epicentre (Meix-devant-Virton)</a></li>
-                                    <li><a class="dropdown-item" href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson (Oeudeghien)</a></li>
-                                    <li><a class="dropdown-item" href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit (Péruwelz)</a></li>
-                                    <li><a class="dropdown-item" href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="https://colibera.be/" target="_blank">Colibéra</a></li>
-                                    <li><a class="dropdown-item" href="https://projet.repanier.be/" target="_blank">Projet Repanier</a></li>
-                                </ul>
-                            </li>
-                            {% show_menu 0 1 1 1 %}
-                        </ul>
-                        <ul class="nnavbar-nav ms-auto mb-2 mb-lg-0">
-                            {% repanier_user_bs5 permanence_id=0 %}
-                            {% if REPANIER_DISPLAY_LANGUAGE %}
-                                {% language_chooser %}
-                            {% endif %}
-                        </ul>
-                    </div>
-<!--                </div>-->
+                {% if not permanence_id %}
+                    <span class="navbar-brand d-lg-none fs-6"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
+                {% else %}
+                    <span id="link_to_order_or_filter_view" class="d-lg-none"></span>
+                    {% if user.is_authenticated %}
+                        <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes"
+                           class="btn btn-outline-info d-lg-none ms-auto me-2">
+                            <span id="prepared_amount_visible_xs"></span>
+                        </a>
+                    {% endif %}
+                {% endif %}
+
+                <!-- Navbar grand écran (Bureau) -->
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-center">
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="bi bi-arrow-left-right"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="https://gasath.repanier.be/" target="_blank">GasAth (Ath)</a></li>
+                                <li><a class="dropdown-item" href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco (Charleroi)</a></li>
+                                <li><a class="dropdown-item" href="https://gaschievres.repanier.be/" target="_blank">GasChièvres (Chièvres)</a></li>
+                                <li><a class="dropdown-item" href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de Romuald (Forest)</a></li>
+                                <li><a class="dropdown-item" href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel (Frasnes)</a></li>
+                                <li><a class="dropdown-item" href="https://gac-jalhay.repanier.be/" target="_blank">Gac Jalhay (Jalhay)</a></li>
+                                <li><a class="dropdown-item" href="https://lepanierlensois.repanier.be/fr/" target="_blank">Le Panier Lensois (Lens)</a></li>
+                                <li><a class="dropdown-item" href="https://epicentre.repanier.be/" target="_blank">Epicentre (Meix-devant-Virton)</a></li>
+                                <li><a class="dropdown-item" href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson (Oeudeghien)</a></li>
+                                <li><a class="dropdown-item" href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit (Péruwelz)</a></li>
+                                <li><a class="dropdown-item" href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="https://colibera.be/" target="_blank">Colibéra</a></li>
+                                <li><a class="dropdown-item" href="https://projet.repanier.be/" target="_blank">Projet Repanier</a></li>
+                            </ul>
+                        </li>
+                        <!-- Profondeur augmentée à 3 pour charger les sous-pages -->
+                        {% show_menu 0 3 1 1 %}
+                    </ul>
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                        {% repanier_user_bs5 permanence_id=permanence_id %}
+                        {% if REPANIER_DISPLAY_LANGUAGE %}
+                            {% language_chooser %}
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
         </nav>
-    </section>
+
+        <!-- Menu Offcanvas Mobile (Regroupant tout pour les petits écrans) -->
+        <div class="offcanvas offcanvas-start bg-light text-dark" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+            <div class="offcanvas-header border-bottom">
+                <h5 class="offcanvas-title" id="mobileSidebarLabel">{% translate "Menu" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column">
+                <!-- Sélecteur de sites (Switch site) -->
+                <div class="mb-3 pb-3 border-bottom">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link dropdown-toggle text-dark px-0" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#sitesCollapse" aria-expanded="false">
+                                <span class="bi bi-arrow-left-right"></span> {% translate "Switch site" %}
+                            </a>
+                            <div class="collapse ms-3" id="sitesCollapse">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://gasath.repanier.be/" target="_blank">GasAth (Ath)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://commande.coopeco-supermarche.be/" target="_blank">Coopéco (Charleroi)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://gaschievres.repanier.be/" target="_blank">GasChièvres (Chièvres)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://lejardinderomuald.repanier.be/" target="_blank">Le Jardin de Romuald (Forest)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://exceptionnel.repanier.be/" target="_blank">Exceptionnel (Frasnes)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://gac-jalhay.repanier.be/" target="_blank">Gac Jalhay (Jalhay)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://lepanierlensois.repanier.be/fr/" target="_blank">Le Panier Lensois (Lens)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://epicentre.repanier.be/" target="_blank">Epicentre (Meix-devant-Virton)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://commande.lebuisson.be/" target="_blank">La ferme du Buisson (Oeudeghien)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://courtcircuit.repanier.be/" target="_blank">Court Circuit (Péruwelz)</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://pigal.repanier.be/" target="_blank">PiGal (Pipaix)</a></li>
+                                    <li class="nav-item"><hr class="dropdown-divider"></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://colibera.be/" target="_blank">Colibéra</a></li>
+                                    <li class="nav-item"><a class="nav-link py-1 text-secondary" href="https://projet.repanier.be/" target="_blank">Projet Repanier</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Menu CMS Principal (Profondeur augmentée à 3) -->
+                <div class="mb-3 pb-3 border-bottom">
+                    <ul class="nav flex-column">
+                        {% show_menu 0 3 1 1 "menu/menu.html" %}
+                    </ul>
+                </div>
+
+                <!-- Utilisateur et Sélecteur de langue -->
+                <div class="mt-auto pt-2">
+                    <ul class="nav flex-column">
+                        {% repanier_user_bs5 permanence_id=permanence_id %}
+                        {% if REPANIER_DISPLAY_LANGUAGE %}
+                            <li class="nav-item mt-2">
+                                {% language_chooser %}
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
 
     <a id="content"></a>
 
-    <section>
+    <main>
         {% if current_page.is_home %}
             <div class="container-info" id="containerInfo">&nbsp;</div>
         {% endif %}
@@ -120,7 +179,7 @@
             <div class="container-repanier">
                 <div class="container">
                     <div class="row">
-                        <div class="col">
+                        <div class="col-12">
                             <div class="aliases">
                                 {% block aliases_content %}{% endblock aliases_content %}
                             </div>
@@ -129,29 +188,17 @@
                 </div>
             </div>
         {% endblock %}
-    </section>
+    </main>
 
-    <section>
-        <div class="footer">
-            <div class="container-fluid">
-                <p class="text-muted">
-                    {% static_alias "footer" %}
-                </p>
-            </div>
+    <footer class="footer">
+        <div class="container-fluid">
+            <p class="text-muted mb-0">
+                {% static_alias "footer" %}
+            </p>
         </div>
-    </section>
+    </footer>
 {% endspaceless %}
 {% render_block "js" %}
 {% render_block "lastjs" %}
-<script>
-    function openNav() {
-        const el = document.getElementById('mySideNav');
-        if (el) el.classList.add('show');
-    }
-    function closeNav() {
-        const el = document.getElementById('mySideNav');
-        if (el) el.classList.remove('show');
-    }
-</script>
 </body>
 </html>

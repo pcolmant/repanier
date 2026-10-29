@@ -2,7 +2,7 @@
     {% if not repanier_currency_after %}
         <span class="repanier-money-input-icon">{{ repanier_currency_str | safe }}</span>
     {% endif %}
-{#        {% include "django/forms/widgets/input.html" %}#}
+    {# {% include "django/forms/widgets/input.html" %} #}
     <input type="text" name="{{ widget.name }}" class="repanier-stock-input-field"
            {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
            oninput="this.value=evaluateAsFloat(this.value)"
