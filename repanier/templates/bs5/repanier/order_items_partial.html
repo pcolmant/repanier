@@ -1,0 +1,46 @@
+{% load thumbnail filer_image_tags repanier_tags i18n l10n %}
+{% for offer in offeritem_list %}
+    <div class="col-12 col-md-6 col-xl-4 col-xxl-3">
+        <div class="card h-100 shadow-sm p-3">
+            <div class="row g-0 align-items-center h-100">
+                <!-- Partie gauche : Image et Infos -->
+                <div class="col-6">
+                    {% if offer.picture %}
+                        {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+                        <div data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="{{ product_thumbnail.url }}" role="button">
+                    {% else %}
+                        <div data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="" role="button">
+                    {% endif %}
+                    {{ offer.cache_part_a_v2 | safe }}
+                        </div>
+                </div>
+                <!-- Partie droite : Sélecteur, Prix et Cœur dynamique -->
+                <div class="col-6 d-flex flex-column justify-content-between h-100" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}">
+                    <div>
+                        {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
+                        <div class="mt-2">
+                            {{ offer.cache_part_b_v2 | safe }}
+                        </div>
+                    </div>
+                    {% if may_order %}
+                        <div class="mt-3">
+                            {% repanier_btn_like offer_item=offer %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- S'il y a une page suivante, on renvoie un nouveau déclencheur htmx qui remplace l'ancien -->
+{% if page_obj.has_next %}
+    <div class="loading my-4 text-center col-12" 
+         hx-get="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"
+         hx-trigger="revealed"
+         hx-target="this"
+         hx-swap="outerHTML">
+        <span class="spinner-border spinner-border-sm me-1 text-success" role="status" aria-hidden="true"></span>
+        <span class="text-muted">{% translate "Loading..." %}</span>
+    </div>
+{% endif %}

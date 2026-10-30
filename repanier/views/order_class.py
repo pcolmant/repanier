@@ -40,6 +40,11 @@ class OrderView(ListView):
         self.may_order = False
         self.permanence = None
 
+    def get_template_names(self):
+        if self.request.headers.get("HX-Request"):
+            return [get_repanier_template_name("order_items_partial.html")]
+        return [get_repanier_template_name("order_form.html")]
+
     def get(self, request, *args, **kwargs):
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
 

@@ -1,96 +1,50 @@
 {% extends 'bs5/cms_order_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n thumbnail filer_image_tags repanier_tags %}
-{#{% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags repanier_tags %}#}
 {% block notification %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock notification %}
 {% block may_order %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock may_order %}
 {% block permanence_description %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock permanence_description %}
 {% block confirm_basket %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock confirm_basket %}
 {% block product_filter %}{% if not page_obj.has_previous %}<div class="d-none d-sm-block">{{ block.super }}</div>{% endif %}{% endblock product_filter %}
+
 {% block product_list %}{% spaceless %}
     {% if may_order or display_anonymous_order_form %}
+        <!-- Chargement d'htmx pour remplacer Waypoints -->
         {% addtoblock "jshead" %}
-            <script src="{{ STATIC_URL}}repanier/bs5/waypoints/jquery.waypoints.min.js"></script>
-            <script src="{{ STATIC_URL}}repanier/bs5/waypoints/shortcuts/infinite.min.js"></script>
+            <script src="https://unpkg.com/htmx.org@1.9.10"></script>
         {% endaddtoblock %}
+
         {% if offeritem_list %}
             <!-- Utilisation de container-fluid avec un padding pour occuper toute la largeur de l'écran -->
             <div class="container-fluid px-lg-4">
                 <div class="infinite-container row g-4">
-                {% for offer in offeritem_list %}
-                    <div class="infinite-item col-12 col-md-6 col-xl-4 col-xxl-3">
-                        <div class="card h-100 shadow-sm p-3">
-                            <div class="row g-0 align-items-center h-100">
-                                <!-- Partie gauche : Image et Infos -->
-                                <div class="col-6">
-                                    {% if offer.picture %}
-                                        {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
-                                        <div data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="{{ product_thumbnail.url }}" role="button">
-                                    {% else %}
-                                        <div data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="" role="button">
-                                    {% endif %}
-                                    {{ offer.cache_part_a_v2 | safe }}
-                                        </div>
-                                </div>
-                                <!-- Partie droite : Sélecteur, Prix et Cœur dynamique -->
-                                <div class="col-6 d-flex flex-column justify-content-between h-100" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}">
-                                    <div>
-                                        {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
-                                        <div class="mt-2">
-                                            {{ offer.cache_part_b_v2 | safe }}
-                                        </div>
-                                    </div>
-                                    {% if may_order %}
-                                        <div class="mt-3">
-                                            {% repanier_btn_like offer_item=offer %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
+                    {% include 'bs5/repanier/order_items_partial.html' %}
                 </div>
             </div>
-
-            {% if page_obj.has_next %}
-                <div class="loading my-3 text-center" style="display: none;">
-                    <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"
-                   class="infinite-more-link btn btn-success">
-                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                        {% translate "Loading..." %}
-                    </a>
-                </div>
-            {% endif %}
 
             <a class="btn btn-success back-to-top-sticky-button" id="backToTop" href="#top" aria-label="{% translate 'Back to top' %}">
                 <span class="bi bi-chevron-up" aria-hidden="true"></span>
             </a>
 
             <script>
-                window.onscroll = function() {scrollFunction()};
+                // Gestion du bouton de retour en haut (Vanilla JS)
+                window.onscroll = function() { scrollFunction() };
                 function scrollFunction() {
-                    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-                        document.getElementById("backToTop").style.display = "block";
-                    } else {
-                        document.getElementById("backToTop").style.display = "none";
+                    var backToTopBtn = document.getElementById("backToTop");
+                    if (backToTopBtn) {
+                        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                            backToTopBtn.style.display = "block";
+                        } else {
+                            backToTopBtn.style.display = "none";
+                        }
                     }
                 }
-                var infinite = new Waypoint.Infinite({
-                  element: $('.infinite-container')[0],
-                  offset: function() { return Waypoint.viewportHeight() - this.element.clientHeight + 3500 },
-                  onBeforePageLoad: function () {
-                    $('.loading').show();
-                  },
-                  onAfterPageLoad: function ($items) {
-                    $('.loading').hide();
-                  }
-                });
             </script>
         {% else %}
             <h3 class="my-4">{% translate "No offer found" %}</h3>
         {% endif %}
     {% endif %}
 {% endspaceless %}{% endblock product_list %}
+
 {% block order_modal %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock order_modal %}
 {% block my_cart_amount_js %}{% endblock my_cart_amount_js %}
 {% block my_order_js %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock my_order_js %}
