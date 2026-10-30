@@ -3,159 +3,169 @@
 {% block base_content %}
     <div class="container-repanier">
         <div class="container">
-            <div class="row mb-3">
+            <div class="row">
                 <div class="col-12">
                     <div class="btn-group" role="group">
                         <a href="{% url 'repanier:customer_invoice_view' 0 object.id %}"
-                           class="btn btn-success"> {% translate "Detail" %} <span
-                                class="bi bi-fullscreen"></span> </a>
+                           class="btn btn-success"> {% translate "Detail" %}&nbsp;&nbsp;&nbsp;<i class="bi bi-arrows-angle-expand"></i></i></a>
                     </div>
                 </div>
             </div>
-
-            <div class="row mb-3">
+            <div class="row mt-3">
                 <div class="col-12">
-                    {% if my_invoices %}{% else %}
-                        <h4>
-                            {{ object.short_basket_name }}{% if object.long_basket_name %} / {{ object.long_basket_name }}{% endif %}
-                            {% if object.phone1 %}, <span class="bi bi-telephone"></span> {{ object.phone1 }}{% endif %},
-                            <span class="bi bi-envelope"></span> {{ object.user.email }}
-                        </h4>
-                    {% endif %}
-
+                    {% if my_invoices %}{% else %}<h4>{{ object.short_basket_name }}{% if object.long_basket_name %}/
+                        {{ object.long_basket_name }}{% endif %}{% if object.phone1 %}, <i
+                            class="bi bi-telephone"></i> {{ object.phone1 }}{% endif %}, <i class="bi bi-envelope"></i> {{ object.user.email }}</h4>{% endif %}
                     {% with balance=object.get_admin_balance %}
-                        <h4>
-                            <span class="badge bg-{% if balance < 0 %}danger{% else %}info text-dark{% endif %}">
-                                {% translate "My current balance" %}&nbsp;: {{ balance }}
+                        <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
+                            {% translate "My current balance" %}
+                        &nbsp;: {{ balance }}
                             </span>
-                        </h4>
                     {% endwith %}
+                    <div class="mb-3"></div>
                 </div>
             </div>
-
             {% for not_invoiced in not_invoiced_customer_invoice_set %}
-                <div class="row mb-2">
+                <div class="row">
                     <div class="col-12">
                         <a href="{% url 'repanier:customer_invoice_view' not_invoiced.id object.id %}"
-                           class="btn btn-sm btn-outline-secondary">
+                           class="btn btn-outline-secondary btn-sm">
                             {% translate "Pending purchase" %}
                         </a>
                         &nbsp;: {{ not_invoiced.get_total_price_with_tax }}
-                        <small class="text-muted">(
+                        <small>(
                             {{ not_invoiced.permanence }}
                             {% if not_invoiced.customer_id != not_invoiced.customer_charged_id %}
-                                , {% translate "Payment centralized by" %} : {{ not_invoiced.customer_charged }}.
+                                , {% translate "Payment centralized by" %}
+                                : {{ not_invoiced.customer_charged }}.
                             {% endif %}
                             )</small>
+                        <div class="mb-2"></div>
                     </div>
                 </div>
             {% endfor %}
-
             {% for bank_account in not_invoiced_bank_account_set %}
-                <div class="row mb-2">
+                <div class="row">
                     <div class="col-12">
                         {% if bank_account.bank_amount_in != 0 %}
-                            <span class="badge bg-info text-dark">{% translate "Pending provision" %} :</span>
+                            <span class="btn btn-outline-secondary btn-sm">{% translate "Pending provision" %} :</span>
                             {{ bank_account.bank_amount_in }}
-                            <small class="text-muted">(
+                            <small>(
                                 {% if bank_account.operation_comment %}
                                     {{ bank_account.operation_comment }},
                                 {% endif %}
                                 {{ bank_account.operation_date | date:"DATE_FORMAT" }}
                                 )</small>
+                            <div class="mb-2"></div>
                         {% endif %}
                         {% if bank_account.bank_amount_out != 0 %}
-                            <span class="badge bg-info text-dark">{% translate "Pending refund" %} :</span>
+                            <span class="btn btn-outline-secondary btn-sm">{% translate "Pending refund" %} :</span>
                             {{ bank_account.bank_amount_out }}
-                            <small class="text-muted">(
+                            <small>(
                                 {% if bank_account.operation_comment %}
                                     {{ bank_account.operation_comment }},
                                 {% endif %}
                                 {{ bank_account.operation_date | date:"DATE_FORMAT" }}
                                 )</small>
+                            <div class="mb-2"></div>
                         {% endif %}
                     </div>
                 </div>
             {% endfor %}
-
             {% for invoiced in invoiced_array %}
                 {% with balance=invoiced.customer_invoice.balance %}
                     {% if balance != 0 %}
-                        <div class="row mb-2">
+                        <div class="row">
                             <div class="col-12">
                                 <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id object.id %}"
-                                   class="btn btn-sm btn-{% if balance < 0 %}danger{% else %}info{% endif %}">
+                                   class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %} btn-sm">
                                     {% translate "My balance at" %} {{ invoiced.customer_invoice.date_balance | date:"DATE_FORMAT" }}
-                                    : {{ balance }}
+                                    :
+                                    {{ balance }}
                                 </a>
+                                <div class="mb-2"></div>
                             </div>
                         </div>
                     {% endif %}
                 {% endwith %}
-
                 {% with total_price=invoiced.customer_invoice.get_total_price_with_tax %}
                     {% if total_price != 0 %}
-                        <div class="row mb-2">
+
+
+                                                <div class="row">
+                            <div class="col-12">
+                                <span class="btn btn-outline-secondary btn-sm">{% translate "Pending purchase" %}</span>
+                                &nbsp;: {{ not_invoiced.customer_invoice.get_total_price_with_tax }}
+                                <small>({{ not_invoiced.customer_invoice.permanence }})</small>
+                                <div class="mb-2"></div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
                             <div class="col-12">
                                 <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id object.id %}"
-                                   class="btn btn-sm btn-outline-secondary">
+                                   class="btn btn-outline-secondary btn-sm">
                                     {% translate "Purchases" %}
                                 </a>
                                 &nbsp;: {{ total_price }}
-                                <small class="text-muted">(
+                                <small>(
                                     {{ invoiced.customer_invoice.permanence }}
                                     {% if invoiced.customer_invoice.customer_id != invoiced.customer_invoice.customer_charged_id %}
-                                        , {% translate "Payment centralized by" %} : {{ invoiced.customer_invoice.customer_charged }}.
+                                        , {% translate "Payment centralized by" %}
+                                        : {{ invoiced.customer_invoice.customer_charged }}.
                                     {% endif %}
                                     )</small>
+                                <div class="mb-2"></div>
                             </div>
                         </div>
                     {% endif %}
                 {% endwith %}
-
                 {% for bank_account in invoiced.bank_account_set %}
-                    <div class="row mb-2">
+                    <div class="row">
                         <div class="col-12">
                             {% if bank_account.bank_amount_in != 0 %}
                                 <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id object.id %}"
-                                   class="btn btn-sm btn-success text-dark">
+                                   class="btn btn-outline-secondary btn-sm">
                                     {% translate "Provision" %}
                                 </a>
                                 &nbsp;: {{ bank_account.bank_amount_in }}
-                                <small class="text-muted">(
+                                <small>(
                                     {% if bank_account.operation_comment %}
                                         {{ bank_account.operation_comment }},
                                     {% endif %}
                                     {{ bank_account.operation_date | date:"DATE_FORMAT" }}
                                     )</small>
+                                <div class="mb-2"></div>
                             {% endif %}
                             {% if bank_account.bank_amount_out != 0 %}
                                 <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id object.id %}"
-                                   class="btn btn-sm btn-success text-dark">
+                                   class="btn btn-outline-secondary btn-sm">
                                     {% translate "Refund" %}
                                 </a>
                                 &nbsp;: {{ bank_account.bank_amount_out }}
-                                <small class="text-muted">(
+                                <small>(
                                     {% if bank_account.operation_comment %}
                                         {{ bank_account.operation_comment }},
                                     {% endif %}
                                     {{ bank_account.operation_date | date:"DATE_FORMAT" }}
                                     )</small>
+                                <div class="mb-2"></div>
                             {% endif %}
                         </div>
                     </div>
                 {% endfor %}
             {% endfor %}
-
             {% for archived in archived_customer_invoice_set %}
-                <div class="row mb-2">
+                <div class="row">
                     <div class="col-12">
                         <a href="{% url 'repanier:customer_invoice_view' archived.id object.id %}"
-                           class="btn btn-sm btn-outline-secondary">
+                           class="btn btn-outline-secondary btn-sm">
                             {% translate "Archived purchases" %}
                         </a>
                         &nbsp;: {{ archived.get_total_price_with_tax }}
-                        <small class="text-muted">({{ archived.permanence }})</small>
+                        <small>({{ archived.permanence }})</small>
+                        <div class="mb-2"></div>
                     </div>
                 </div>
             {% endfor %}
