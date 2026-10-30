@@ -1,143 +1,141 @@
 {% extends 'bs5/base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags menu_tags %}
 {% block base_content %}
-    <div class="container-repanier">
-        <div class="container">
-            <div class="row">
-                <!-- Colonne de gauche : Menu secondaire et arborescence visibles uniquement sur grand écran -->
-                <div class="col-11 col-sm-5 col-md-3 bs-docs-sidebar d-none d-lg-block">
-                    <div class="fixed">
-                        <div class="mb-4 pb-3 border-bottom">
-                            {% show_permanence_menu 0 %}
-                        </div>
+    <div class="container-fluid px-4 container-repanier">
+        <div class="row">
+            <!-- Colonne de gauche : Menu secondaire et arborescence visibles uniquement sur grand écran -->
+            <div class="col-12 col-lg-3 bs-docs-sidebar d-none d-lg-block">
+                <div class="fixed-sidebar-container">
+                    <div class="mb-4 pb-3 border-bottom">
+                        {% show_permanence_menu 0 %}
                     </div>
-                </div>
-
-                <!-- Colonne de droite : Contenu principal des tâches -->
-                <div class="col-12 col-sm-7 col-md-9">
-                    {% block permanenceboard %}{% spaceless %}
-                        {% addtoblock "jshead" %}
-                            <script src="{{ STATIC_URL }}repanier/bs5/waypoints/jquery.waypoints.min.js"></script>
-                            <script src="{{ STATIC_URL }}repanier/bs5/waypoints/shortcuts/infinite.min.js"></script>
-                        {% endaddtoblock %}
-                        {% if permanenceboard_list %}
-                            <div class="infinite-container">
-                                {% for permanenceboard in permanenceboard_list %}
-                                    <div class="infinite-item">
-                                        <form>
-                                            {% ifchanged permanenceboard.permanence %}
-                                                {% if not forloop.first %}
-                                                    <div class="row">
-                                                        <div class="col-12">
-                                                            <hr class="my-4"/>
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
-                                                <div class="row mb-3">
-                                                    <div class="col-12">
-                                                        <span class="fw-bold fs-5">{{ permanenceboard.permanence }}</span>
-                                                        {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}&nbsp;:&nbsp;
-                                                            {% for producer in permanenceboard.permanence.producers.all %}
-                                                                {{ producer }}{% if not forloop.last %}, {% endif %}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            {% endifchanged %}
-                                            <div class="row mb-3 align-items-center">
-                                                <div class="col-md-2 d-none d-md-block">
-                                                </div>
-                                                <div class="col-12 col-md-5">
-                                                    {% repanier_display_task task_id=permanenceboard.id %}
-                                                </div>
-                                                <div class="col-12 col-md-5 mt-2 mt-md-0">
-                                                    {% if user.is_authenticated %}
-                                                        {% repanier_select_task task_id=permanenceboard.id %}
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            {% if page_obj.has_next %}
-                                <div class="loading my-3 text-center" style="display: none;">
-                                    <a href="?page={{ page_obj.next_page_number }}" class="infinite-more-link btn btn-success">
-                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                                        {% translate "Loading..." %}
-                                    </a>
-                                </div>
-                            {% endif %}
-
-                            <a class="btn btn-success back-to-top-sticky-button" id="backToTop" href="#top" aria-label="{% translate 'Back to top' %}">
-                                <span class="bi bi-chevron-up" aria-hidden="true"></span>
-                            </a>
-
-                            <script>
-                                window.onscroll = function () {
-                                    scrollFunction();
-                                };
-
-                                function scrollFunction() {
-                                    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-                                        document.getElementById("backToTop").style.display = "block";
-                                    } else {
-                                        document.getElementById("backToTop").style.display = "none";
-                                    }
-                                }
-
-                                var infinite = new Waypoint.Infinite({
-                                    element: $('.infinite-container')[0],
-                                    offset: '75%',
-                                    onBeforePageLoad: function () {
-                                        $('.loading').show();
-                                    },
-                                    onAfterPageLoad: function ($items) {
-                                        $('.loading').hide();
-                                    }
-                                });
-                            </script>
-                        {% else %}
-                            <h3 class="my-4">{% translate "No permanence found" %}</h3>
-                        {% endif %}
-                    {% endspaceless %}{% endblock permanenceboard %}
                 </div>
             </div>
 
-            {% addtoblock "lastjs" %}{% spaceless %}
-                <script>
-                    function task_ajax(task_id) {
-                        var $task = $("#task" + task_id);
-                        var lien = '{% url 'repanier:task_form_ajax' %}?value=' + $task.val() + "&task=" + task_id;
-                        $.ajax({
-                            url: lien,
-                            cache: false,
-                            async: true,
-                            success: function (result) {
-                                $.each(result, function (key, val) {
-                                    $(key).html(val);
-                                });
+            <!-- Colonne de droite : Contenu principal des tâches -->
+            <div class="col-12 col-lg-9">
+                {% block permanenceboard %}{% spaceless %}
+                    {% addtoblock "jshead" %}
+                        <script src="{{ STATIC_URL }}repanier/bs5/waypoints/jquery.waypoints.min.js"></script>
+                        <script src="{{ STATIC_URL }}repanier/bs5/waypoints/shortcuts/infinite.min.js"></script>
+                    {% endaddtoblock %}
+                    {% if permanenceboard_list %}
+                        <div class="infinite-container">
+                            {% for permanenceboard in permanenceboard_list %}
+                                <div class="infinite-item">
+                                    <form>
+                                        {% ifchanged permanenceboard.permanence %}
+                                            {% if not forloop.first %}
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <hr class="my-4"/>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <span class="fw-bold fs-5">{{ permanenceboard.permanence }}</span>
+                                                    {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}&nbsp;:&nbsp;
+                                                        {% for producer in permanenceboard.permanence.producers.all %}
+                                                            {{ producer }}{% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endifchanged %}
+                                        <div class="row mb-3 align-items-center">
+                                            <div class="col-md-2 d-none d-md-block">
+                                            </div>
+                                            <div class="col-12 col-md-5">
+                                                {% repanier_display_task task_id=permanenceboard.id %}
+                                            </div>
+                                            <div class="col-12 col-md-5 mt-2 mt-md-0">
+                                                {% if user.is_authenticated %}
+                                                    {% repanier_select_task task_id=permanenceboard.id %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if page_obj.has_next %}
+                            <div class="loading my-3 text-center" style="display: none;">
+                                <a href="?page={{ page_obj.next_page_number }}" class="infinite-more-link btn btn-success">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    {% translate "Loading..." %}
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <a class="btn btn-success back-to-top-sticky-button" id="backToTop" href="#top" aria-label="{% translate 'Back to top' %}">
+                            <span class="bi bi-chevron-up" aria-hidden="true"></span>
+                        </a>
+
+                        <script>
+                            window.onscroll = function () {
+                                scrollFunction();
+                            };
+
+                            function scrollFunction() {
+                                if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                                    document.getElementById("backToTop").style.display = "block";
+                                } else {
+                                    document.getElementById("backToTop").style.display = "none";
+                                }
                             }
-                        });
-                    }
 
-                    $(document).ready(function () {
-                        $("select").focus(function () {
-                            $(this).data('oldValue', $(this).val());
-                        });
-                        // Forcer le déplacement propre de la loupe juste à côté du bouton Menu
-                        var $menuBtn = $('button[data-bs-target="#mobileSidebar"]');
-                        var $loupe = $('<a href="{% url "repanier:order_filter_view" 0 %}" class="btn btn-success ms-2" aria-label="Rechercher"><span class="bi bi-search" aria-hidden="true"></span></a>');
-
-                        // On insère la loupe juste après le bouton menu
-                        $menuBtn.after($loupe);
-
-                        // On nettoie les anciens emplacements encombrants
-                        $("#link_to_order_or_filter_view").remove();
-                        $("a.btn-outline-success.d-lg-none").remove();
-                    });
-                </script>
-            {% endspaceless %}{% endaddtoblock %}
+                            var infinite = new Waypoint.Infinite({
+                                element: $('.infinite-container')[0],
+                                offset: '75%',
+                                onBeforePageLoad: function () {
+                                    $('.loading').show();
+                                },
+                                onAfterPageLoad: function ($items) {
+                                    $('.loading').hide();
+                                }
+                            });
+                        </script>
+                    {% else %}
+                        <h3 class="my-4">{% translate "No permanence found" %}</h3>
+                    {% endif %}
+                {% endspaceless %}{% endblock permanenceboard %}
+            </div>
         </div>
+
+        {% addtoblock "lastjs" %}{% spaceless %}
+            <script>
+                function task_ajax(task_id) {
+                    var $task = $("#task" + task_id);
+                    var lien = '{% url 'repanier:task_form_ajax' %}?value=' + $task.val() + "&task=" + task_id;
+                    $.ajax({
+                        url: lien,
+                        cache: false,
+                        async: true,
+                        success: function (result) {
+                            $.each(result, function (key, val) {
+                                $(key).html(val);
+                            });
+                        }
+                    });
+                }
+
+                $(document).ready(function () {
+                    $("select").focus(function () {
+                        $(this).data('oldValue', $(this).val());
+                    });
+                    // Forcer le déplacement propre de la loupe juste à côté du bouton Menu
+                    var $menuBtn = $('button[data-bs-target="#mobileSidebar"]');
+                    var $loupe = $('<a href="{% url "repanier:order_filter_view" 0 %}" class="btn btn-success ms-2" aria-label="Rechercher"><span class="bi bi-search" aria-hidden="true"></span></a>');
+
+                    // On insère la loupe juste après le bouton menu
+                    $menuBtn.after($loupe);
+
+                    // On nettoie les anciens emplacements encombrants
+                    $("#link_to_order_or_filter_view").remove();
+                    $("a.btn-outline-success.d-lg-none").remove();
+                });
+            </script>
+        {% endspaceless %}{% endaddtoblock %}
     </div>
 {% endblock %}
