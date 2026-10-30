@@ -15,10 +15,6 @@
             <!-- Colonne de droite : Contenu principal des tâches -->
             <div class="col-12 col-lg-9">
                 {% block permanenceboard %}{% spaceless %}
-                    {% addtoblock "jshead" %}
-                        <script src="{{ STATIC_URL }}repanier/bs5/waypoints/jquery.waypoints.min.js"></script>
-                        <script src="{{ STATIC_URL }}repanier/bs5/waypoints/shortcuts/infinite.min.js"></script>
-                    {% endaddtoblock %}
                     {% if permanenceboard_list %}
                         <div class="infinite-container">
                             {% for permanenceboard in permanenceboard_list %}
@@ -60,9 +56,8 @@
                             {% endfor %}
                         </div>
                         {% if page_obj.has_next %}
-                            <div class="loading my-3 text-center" style="display: none;">
-                                <a href="?page={{ page_obj.next_page_number }}" class="infinite-more-link btn btn-success">
-                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <div class="loading my-3 text-center">
+                                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-success">
                                     {% translate "Loading..." %}
                                 </a>
                             </div>
@@ -84,17 +79,6 @@
                                     document.getElementById("backToTop").style.display = "none";
                                 }
                             }
-
-                            var infinite = new Waypoint.Infinite({
-                                element: $('.infinite-container')[0],
-                                offset: '75%',
-                                onBeforePageLoad: function () {
-                                    $('.loading').show();
-                                },
-                                onAfterPageLoad: function ($items) {
-                                    $('.loading').hide();
-                                }
-                            });
                         </script>
                     {% else %}
                         <h3 class="my-4">{% translate "No permanence found" %}</h3>
@@ -106,34 +90,49 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
                 function task_ajax(task_id) {
-                    var $task = $("#task" + task_id);
-                    var lien = '{% url 'repanier:task_form_ajax' %}?value=' + $task.val() + "&task=" + task_id;
-                    $.ajax({
-                        url: lien,
-                        cache: false,
-                        async: true,
-                        success: function (result) {
-                            $.each(result, function (key, val) {
-                                $(key).html(val);
-                            });
-                        }
-                    });
+                    var taskElement = document.getElementById("task" + task_id);
+                    if (!taskElement) return;
+
+                    var lien = '{% url "repanier:task_form_ajax" %}?value=' + taskElement.value + "&task=" + task_id;
+
+                    fetch(lien, { cache: 'no-store' })
+                        .then(response => response.json())
+                        .then(result => {
+                            for (var key in result) {
+                                if (result.hasOwnProperty(key)) {
+                                    document.querySelectorAll(key).forEach(el => {
+                                        el.innerHTML = result[key];
+                                    });
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Erreur lors de la mise à jour de la tâche:', error));
                 }
 
-                $(document).ready(function () {
-                    $("select").focus(function () {
-                        $(this).data('oldValue', $(this).val());
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Gestion du focus sur les selects
+                    document.querySelectorAll("select").forEach(function(element) {
+                        element.addEventListener("focus", function () {
+                            this.setAttribute('data-old-value', this.value);
+                        });
                     });
-                    // Forcer le déplacement propre de la loupe juste à côté du bouton Menu
-                    var $menuBtn = $('button[data-bs-target="#mobileSidebar"]');
-                    var $loupe = $('<a href="{% url "repanier:order_filter_view" 0 %}" class="btn btn-success ms-2" aria-label="Rechercher"><span class="bi bi-search" aria-hidden="true"></span></a>');
 
-                    // On insère la loupe juste après le bouton menu
-                    $menuBtn.after($loupe);
+                    // Déplacement de la loupe juste à côté du bouton Menu
+                    var menuBtn = document.querySelector('button[data-bs-target="#mobileSidebar"]');
+                    if (menuBtn) {
+                        var loupe = document.createElement('a');
+                        loupe.href = '{% url "repanier:order_filter_view" 0 %}';
+                        loupe.className = 'btn btn-success ms-2';
+                        loupe.setAttribute('aria-label', 'Rechercher');
+                        loupe.innerHTML = '<span class="bi bi-search" aria-hidden="true"></span>';
+                        menuBtn.after(loupe);
+                    }
 
-                    // On nettoie les anciens emplacements encombrants
-                    $("#link_to_order_or_filter_view").remove();
-                    $("a.btn-outline-success.d-lg-none").remove();
+                    // Nettoyage des anciens emplacements superflus
+                    var linkToOrder = document.getElementById("link_to_order_or_filter_view");
+                    if (linkToOrder) linkToOrder.remove();
+
+                    document.querySelectorAll("a.btn-outline-success.d-lg-none").forEach(el => el.remove());
                 });
             </script>
         {% endspaceless %}{% endaddtoblock %}
