@@ -86,15 +86,13 @@ def order_init_ajax(request):
     else:
         basket_message = EMPTY_STRING
 
-    if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
-        json_dict = customer_invoice.get_html_my_order_confirmation(
-            permanence=permanence,
-            is_basket=basket,
-            delivery_message=delivery_message,
-            basket_message=basket_message,
-        )
-    else:
-        json_dict = {}
+
+    json_dict = customer_invoice.get_html_my_order_confirmation(
+        permanence=permanence,
+        is_basket=basket,
+        delivery_message=delivery_message,
+        basket_message=basket_message,
+    )
 
     for producer_invoice in ProducerInvoice.objects.filter(
         permanence_id=permanence.id, producer__minimum_order_value__gt=DECIMAL_ZERO

@@ -121,8 +121,13 @@ class OrderView(ListView):
             REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM,
             REPANIER_SETTINGS_NOTIFICATION,
         )
+        from repanier.cms_menus import PermanenceMenu
 
         context = super().get_context_data(**kwargs)
+
+        # On instancie le menu en passant renderer=None pour contourner l'attribut requis
+        context["nodes"] = PermanenceMenu(renderer=None).get_nodes(self.request)
+
         context["first_page"] = self.first_page
         context["permanence"] = self.permanence
         context["permanence_id"] = self.permanence.id
@@ -133,11 +138,8 @@ class OrderView(ListView):
             context["producer_set"] = self.producer_set
             context["staff_order"] = Staff.get_or_create_order_responsible()
 
-        # display it on all page for smartphone
         context["department_set"] = self.department_set
-        # use of str() to avoid "12 345" when rendering the template
         context["producer_id"] = str(self.producer_id)
-        # use of str() to avoid "12 345" when rendering the template
         context["department_id"] = str(self.department_id)
 
         if self.is_basket:

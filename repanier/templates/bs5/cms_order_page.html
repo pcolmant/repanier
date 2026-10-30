@@ -70,36 +70,42 @@
     {% spaceless %}
     {% if may_order or display_anonymous_order_form %}
         <div class="row">
-            <!-- Colonne de gauche : Visible uniquement sur grand écran (d-none d-lg-block) -->
-            <div class="col-11 col-sm-5 col-md-3 bs-docs-sidebar d-none d-lg-block">
-                <div class="fixed">
-                    <!-- Menu secondaire CMS de gauche sur grand écran -->
-                    <div class="mb-4 pb-3 border-bottom">
-                        {% show_permanence_menu permanence_id %}
+            <!-- Colonne latérale gauche -->
+            <div class="col-12 col-lg-3 bs-docs-sidebar d-none d-lg-block">
+                <div class="fixed-sidebar-container">
+
+                    <!-- PARTIE HAUTE FIXE : Permanences et Recherche -->
+                    <div>
+                        <!-- Menu des permanences -->
+                        <div class="mb-4 pb-3 border-bottom">
+                            {% include 'bs5/menu/permanence_sidebar.html' %}
+                        </div>
+
+                        <!-- Formulaire de recherche -->
+                        {% if may_order %}
+                            <form action="{{ permanence.get_order_url }}" id="search_form" class="form-horizontal navbar-form mb-3" role="search" method="get">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    {% if q %}
+                                        <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
+                                    {% else %}
+                                        <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}" name="q">
+                                    {% endif %}
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="producer" value="{{ producer_id }}">
+                                <input type="hidden" name="department" value="{{ department_id }}">
+                                <input type="hidden" name="is_like" value="{{ is_like }}">
+                                <input type="hidden" name="is_basket" value="{{ is_basket }}">
+                            </form>
+                        {% endif %}
                     </div>
 
-                    {% if may_order %}
-                        <form action="{{ permanence.get_order_url }}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
-                            {% csrf_token %}
-                            <div class="input-group mb-3">
-                                {% if q %}
-                                    <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
-                                {% else %}
-                                    <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}"
-                                           name="q">
-                                {% endif %}
-                                <div class="input-group-btn">
-                                    <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
-                                </div>
-                            </div>
-                            <input type="hidden" name="producer" value="{{ producer_id }}">
-                            <input type="hidden" name="department" value="{{ department_id }}">
-                            <input type="hidden" name="is_like" value="{{ is_like }}">
-                            <input type="hidden" name="is_basket" value="{{ is_basket }}">
-                        </form>
-                    {% endif %}
-
-                    {% block product_filter %}{% spaceless %}
+                    <!-- PARTIE BASSE DÉFILANTE : Filtres, Producteurs et Rayons -->
+                    <div class="sidebar-scrollable-area">
+                        {% block product_filter %}{% spaceless %}
                         <ul class="nav flex-column" id="sidebar">
                             {% if may_order %}
                             <li class="nav-item">
@@ -148,12 +154,14 @@
                                 </li>
                             {% endif %}
                         </ul>
-                    {% endspaceless %}{% endblock product_filter %}
+                        {% endspaceless %}{% endblock product_filter %}
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Colonne de droite : Contenu principal -->
-            <div class="col-12 col-sm-7 col-md-9">
+            <!-- Colonne principale de droite (produits) -->
+            <div class="col-12 col-lg-9">
                 {% block product_list %}{% endblock product_list %}
             </div>
         </div>

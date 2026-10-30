@@ -432,3 +432,23 @@ a.skip_link {
         flex-wrap: nowrap;
     }
 }
+
+/* =================================================================
+   14. Sidebar Sticky avec défilement interne pour les longs menus
+   =================================================================== */
+@media (min-width: 992px) {
+    .bs-docs-sidebar .fixed-sidebar-container {
+        position: sticky;
+        top: 5rem; /* Ajustez selon la hauteur de votre navbar fixe */
+        max-height: calc(100vh - 6rem);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Le menu des rayons/producteurs devient scrollable si l'écran est trop petit */
+    .bs-docs-sidebar .sidebar-scrollable-area {
+        overflow-y: auto;
+        flex-grow: 1;
+        padding-right: 5px; /* Évite de coller la scrollbar au texte */
+    }
+}

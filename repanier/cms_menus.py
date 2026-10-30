@@ -56,9 +56,10 @@ class PermanenceMenu(Menu):
             submenu_id = self.append_permanence(
                 nodes, parent_node, submenu_id, is_anonymous, permanence
             )
-        if len(nodes) > 1:
-            return nodes
-        return []
+        # if len(nodes) > 1:
+        #     return nodes
+        # return []
+        return nodes
 
     def append_permanence_board(self, nodes, parent_node, submenu_id):
         permanence_board_set = PermanenceBoard.objects.filter(

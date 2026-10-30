@@ -6,7 +6,7 @@
             {% else %}
                 <li class="nav-item">
                     <a href="{{ node.get_absolute_url }}"
-                       class="nav-link {% if node.selected %}bs-docs-sidebar-active text-success fw-bold{% else %}text-dark fw-normal{% endif %}">
+                       class="nav-link {% if node.selected or permanence_id and permanence_id|stringformat:'s' in node.get_absolute_url %}bs-docs-sidebar-active text-success fw-bold{% else %}text-dark fw-normal{% endif %}">
                         {{ node.get_menu_title|default:node.title |safe }}
                     </a>
                 </li>
