@@ -1,12 +1,8 @@
-import codecs
 import configparser
 import os
-from pathlib import Path
 
-from django.urls import reverse_lazy
-from django.utils.text import format_lazy
 from django.utils.translation import get_language_info
-from django.utils.translation import gettext_lazy as _
+
 from .settings import *
 
 EMPTY_STRING = ""
@@ -39,6 +35,7 @@ def get_group_name(site_name):
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
 PROJECT_DIR = Path(__file__).parent
+REPANIER_DIR = PROJECT_DIR.parent / "repanier"
 PROJECT_PATH = Path(".")
 DJANGO_SETTINGS_SITE_NAME = PROJECT_DIR.name
 # PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -278,7 +275,7 @@ SECURE_REFERRER_POLICY = "same-origin"
 
 
 ##################### Application definition : Django & Django CMS
-LOCALE_PATHS = (PROJECT_DIR / "locale",)
+LOCALE_PATHS = (PROJECT_DIR / "locale", REPANIER_DIR / "locale")
 
 INSTALLED_APPS = (
     "dal",  # django-autocomplete-light for template precedence

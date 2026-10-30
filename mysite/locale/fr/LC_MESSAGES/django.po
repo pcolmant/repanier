@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:57+0200\n"
-"PO-Revision-Date: 2016-11-22 18:20+0100\n"
+"POT-Creation-Date: 2026-10-30 12:05+0100\n"
+"PO-Revision-Date: 2026-10-30 11:13+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -16,49 +16,49 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 1.7.1\n"
+"X-Generator: Poedit 3.10\n"
 
-#: common_settings.py:478
+#: _a_dev_site/common_settings.py:488
 msgid "Repanier guide"
-msgstr ""
+msgstr "Mode d'emploi de Repanier"
 
-#: common_settings.py:479
+#: _a_dev_site/common_settings.py:492
 msgid "django CMS guide"
-msgstr ""
+msgstr "Mode d'emploi de Django CMS"
 
-#: common_settings.py:904
+#: _a_dev_site/common_settings.py:874
 msgid "Internal page with menu on left"
 msgstr "Page interne avec menu à gauche"
 
-#: common_settings.py:905
+#: _a_dev_site/common_settings.py:875
 msgid "Internal page"
 msgstr "Page interne"
 
-#: common_settings.py:906
+#: _a_dev_site/common_settings.py:876
 msgid "Home page"
 msgstr "Page d'accueil"
 
-#: common_settings.py:970
+#: _a_dev_site/common_settings.py:938
 msgid "Hero"
 msgstr "Bannière"
 
-#: common_settings.py:978
+#: _a_dev_site/common_settings.py:946
 msgid "Column 1"
 msgstr "Colonne 1"
 
-#: common_settings.py:986
+#: _a_dev_site/common_settings.py:954
 msgid "Column 2"
 msgstr "Colonne 2"
 
-#: common_settings.py:994
+#: _a_dev_site/common_settings.py:962
 msgid "Column 3"
 msgstr "Colonne 3"
 
-#: common_settings.py:1002
+#: _a_dev_site/common_settings.py:970
 msgid "Content"
 msgstr "Contenu"
 
-#: common_settings.py:1019
+#: _a_dev_site/common_settings.py:987
 msgid "Footer"
 msgstr "Pied de page"
 
