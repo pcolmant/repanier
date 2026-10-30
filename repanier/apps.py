@@ -1,6 +1,7 @@
 import logging
 import sys
 import time
+import warnings
 from decimal import setcontext, DefaultContext, ROUND_HALF_UP
 
 from django.apps import AppConfig
@@ -8,6 +9,14 @@ from django.conf import settings
 from django.db import connection
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+
+# --- SOLUTION GLOBALE ---
+# On ignore globalement cet avertissement précis dès le chargement du module
+warnings.filterwarnings(
+    "ignore",
+    message="Accessing the database during app initialization is discouraged.",
+    category=RuntimeWarning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +39,6 @@ REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = None
 REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = None
 REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = None
 REPANIER_SETTINGS_VAT_ID = None
-# REPANIER_SETTINGS_XLSX_PORTRAIT = None
 
 
 class RepanierConfig(AppConfig):
@@ -44,10 +52,7 @@ class RepanierConfig(AppConfig):
         DefaultContext.rounding = ROUND_HALF_UP
         setcontext(DefaultContext)
 
-        # If PostgreSQL service is not started the const may not be set
-        # Django doesn't complain
-        # This happens when the server starts at power up
-        # first launching uwsgi before PostgreSQL
+        # Boucle de sécurité pour s'assurer que PostgreSQL est prêt
         db_started = False
         while not db_started:
             try:
@@ -57,15 +62,11 @@ class RepanierConfig(AppConfig):
                 print("---- repanier:apps.py - ready : Waiting for database connection")
                 time.sleep(1)
 
-        # Imports are inside the function because its point is to avoid importing
-        # the models when django.contrib."MODELS" isn't installed.
-
-        from repanier.models.configuration import Configuration
-        from repanier.models.notification import Notification
-        from repanier.const import DECIMAL_ONE
-
         try:
-            # Create if needed and load RepanierSettings var when performing config.save()
+            from repanier.models.configuration import Configuration
+            from repanier.models.notification import Notification
+            from repanier.const import DECIMAL_ONE
+
             translation.activate(settings.LANGUAGE_CODE)
 
             notification = Notification.objects.filter(id=DECIMAL_ONE).first()
@@ -73,11 +74,10 @@ class RepanierConfig(AppConfig):
                 notification = Notification.objects.create()
             notification.save()
 
-            config = Configuration.init_repanier()
+            Configuration.init_repanier()
 
             if not settings.DEBUG:
                 from repanier.email.email import RepanierEmail
-
                 RepanierEmail.send_startup_email(sys.argv[0])
 
         except Exception as error_str:
