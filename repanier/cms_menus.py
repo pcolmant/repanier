@@ -20,9 +20,36 @@ class PermanenceMenu(Menu):
 
         is_anonymous = request.user.is_anonymous
         nodes = []
+
+        # 1. Récupérer d'abord les permanences
+        qs = Permanence.objects.filter(
+            status__in=[SaleStatus.OPENED, SaleStatus.CLOSED, SaleStatus.SEND],
+            master_permanence__isnull=True,
+        ).order_by(
+            "-permanence_date", "id"
+        )
+
+        # 2. Vérifier l'existence de tâches (PermanenceBoard)
+        permanence_board_set = PermanenceBoard.objects.filter(
+            permanence__status__lte=SaleStatus.WAIT_FOR_INVOICED
+        ).only("id")
+
+        # 3. Déterminer l'URL intelligente du nœud parent :
+        # - S'il y a des tâches, on pointe vers la vue des tâches.
+        # - S'il n'y a pas de tâches mais des permanences, on pointe DIRECTEMENT vers la première permanence (évite le menu vide).
+        # - Sinon, repli sur "/".
+        parent_url = "/"
+        if permanence_board_set.exists():
+            parent_url = reverse("repanier:permanence_view")
+        elif qs.exists():
+            first_perm = qs.first()
+            parent_url = first_perm.get_order_url()
+            if not is_anonymous and first_perm.status > SaleStatus.OPENED:
+                parent_url = parent_url + "?is_basket=yes"
+
         parent_node = NavigationNode(
             "{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
-            "/",
+            parent_url,
             id=0,
             visible=True,
             attr={"soft_root": False},
@@ -35,12 +62,6 @@ class PermanenceMenu(Menu):
         )
 
         first_pass = True
-        qs = Permanence.objects.filter(
-            status__in=[SaleStatus.OPENED, SaleStatus.CLOSED, SaleStatus.SEND],
-            master_permanence__isnull=True,
-        ).order_by(
-            "-permanence_date", "id"
-        )
         for permanence in qs:
             if first_pass and separator_needed:
                 submenu_id = self.append_separator(nodes, parent_node, submenu_id)
@@ -49,6 +70,7 @@ class PermanenceMenu(Menu):
             submenu_id = self.append_permanence(
                 nodes, parent_node, submenu_id, is_anonymous, permanence
             )
+
         return nodes
 
     def append_permanence_board(self, nodes, parent_node, submenu_id):

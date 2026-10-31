@@ -467,17 +467,31 @@ def show_permanence_menu(context, permanence_id=0):
     p_id = str(permanence_id)
     current_path = request.path
 
+    explicit_selection = False
+
     for node in nodes:
         node.selected = False
         if node.url:
-            # Si permanence_id est "0" (ou 0), on sélectionne "Inscription aux tâches"
-            if p_id == "0" and "permanence" in node.url:
+            # Si on cible une permanence spécifique par son ID
+            if p_id != "0" and f"/order/{p_id}/" in node.url:
                 node.selected = True
-            # Sinon, si on correspond à la permanence spécifique
-            elif p_id != "0" and f"/order/{p_id}/" in node.url:
-                node.selected = True
+                explicit_selection = True
+            # Si l'URL correspond exactement au chemin actuel de la requête
             elif node.url == request.get_full_path() or node.url == current_path:
                 node.selected = True
+                explicit_selection = True
+
+    # Si aucun ID spécifique n'est passé (permanence_id == 0)
+    if not explicit_selection:
+        # 1. Tenter de sélectionner par défaut l'inscription aux tâches si elle existe
+        task_node = next((node for node in nodes if node.url and "permanence" in node.url), None)
+        if task_node:
+            task_node.selected = True
+        else:
+            # 2. Sinon (pas de tâches / nouveau groupe), basculer sur la permanence la plus récente
+            first_permanence_node = next((node for node in nodes if node.parent_id == 0 and node.url and node.url != "/"), None)
+            if first_permanence_node:
+                first_permanence_node.selected = True
 
     return {
         'nodes': nodes,
