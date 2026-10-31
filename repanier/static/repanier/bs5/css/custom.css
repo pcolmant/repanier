@@ -404,14 +404,13 @@ a.skip_link {
 /* =================================================================
    11. Uniformise la taille et le comportement des cœurs Bootstrap
    =================================================================== */
-
 .bi-heart, .bi-heart-fill {
-    font-size: 1.2rem; /* Force exactement la même taille */
-    vertical-align: -0.125em; /* Assure un alignement vertical parfait avec le texte voisin */
+    font-size: 1.2rem;
+    vertical-align: -0.125em;
 }
 
 /* =================================================================
-   12. La flèche pivote de 90 degrés vers le bas lorsque l'attribut aria-expanded passe à true
+   12. La flèche pivote de 90 degrés vers le bas lorsque aria-expanded=true
    =================================================================== */
 .card-header[aria-expanded="true"] .chevron-icon {
     transform: rotate(90deg);
@@ -423,7 +422,7 @@ a.skip_link {
 }
 
 /* =================================================================
-   13. Force les éléments mobiles de la navbar à rester groupés à gauche sans espace vide excessif
+   13. Force les éléments mobiles de la navbar à rester groupés à gauche
    =================================================================== */
 @media (max-width: 991.98px) {
     .navbar-custom .container-fluid {
@@ -434,21 +433,20 @@ a.skip_link {
 }
 
 /* =================================================================
-   14. Sidebar Sticky avec défilement interne pour les longs menus
+   14. Sidebar Sticky avec défilement interne
    =================================================================== */
 @media (min-width: 992px) {
     .bs-docs-sidebar .fixed-sidebar-container {
         position: sticky;
-        top: 5rem; /* Ajustez selon la hauteur de votre navbar fixe */
+        top: 5rem;
         max-height: calc(100vh - 6rem);
         display: flex;
         flex-direction: column;
     }
 
-    /* Le menu des rayons/producteurs devient scrollable si l'écran est trop petit */
     .bs-docs-sidebar .sidebar-scrollable-area {
         overflow-y: auto;
         flex-grow: 1;
-        padding-right: 5px; /* Évite de coller la scrollbar au texte */
+        padding-right: 5px;
     }
 }

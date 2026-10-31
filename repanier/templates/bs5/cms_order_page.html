@@ -35,16 +35,14 @@
             <div class="row mb-4">
             <div class="card">
                 {% if permanence.offer_description_v2 and permanence.offer_description_v2.strip %}
-                <!-- Utilisation de d-flex pour positionner le titre à gauche et l'icône à droite -->
                 <div class="card-header accordion-toggle collapsed cursor-pointer d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapse-offer-description" role="button" aria-expanded="false">
                     <h4 class="card-title mb-0">{{ permanence.get_permanence_display }}</h4>
-                    <!-- Icône Bootstrap chevron qui bascule dynamiquement -->
                     <i class="bi bi-chevron-right chevron-icon fs-6"></i>
                 </div>
                 <div id="collapse-offer-description" class="collapse">
                     <div class="card-body">
                         <div class="col-12">
-                            {% if permanence.picture %}<img class="img-fluid rounded" style="float: left; margin: 5px;" alt="{{ permanence.get_permanence_display }}" title="{{ permanence.get_permanence_customer_display }}" src="{{ MEDIA_URL }}{{ permanence.picture }}"/><div class="clearfix visible-xs-block visible-sm-block"></div>{%  endif %}
+                            {% if permanence.picture %}<img class="img-fluid rounded float-start me-2 mb-2" alt="{{ permanence.get_permanence_display }}" title="{{ permanence.get_permanence_customer_display }}" src="{{ MEDIA_URL }}{{ permanence.picture }}"/><div class="clearfix"></div>{% endif %}
                             {{ permanence.offer_description_v2 | safe }}
                         </div>
                     </div>
@@ -91,9 +89,7 @@
                                     {% else %}
                                         <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}" name="q">
                                     {% endif %}
-                                    <div class="input-group-btn">
-                                        <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
-                                    </div>
+                                    <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
                                 </div>
                                 <input type="hidden" name="producer" value="{{ producer_id }}">
                                 <input type="hidden" name="department" value="{{ department_id }}">
@@ -167,14 +163,18 @@
         </div>
 
         {% block order_modal %}{% spaceless %}
-            <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="communicationModalLabel"
-                 aria-hidden="true">
+            <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="communicationModalLabel" aria-hidden="true"></div>
+
+            <!-- Modale structurée fixe pour Bootstrap 5 -->
+            <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <!-- Le contenu AJAX s'injecte proprement ici -->
+                    </div>
+                </div>
             </div>
-            <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
-                 aria-hidden="true">
-            </div>
-            <div id="otherQtyModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="otherQtyModalLabel"
-                 aria-hidden="true">
+
+            <div id="otherQtyModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="otherQtyModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -200,190 +200,247 @@
         {% if may_order %}
             {% addtoblock "lastjs" %}
                 <script>
-                $(document).ready(function () {
+                document.addEventListener("DOMContentLoaded", function () {
                     var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
-                    $.ajax({
-                        url: lien,
-                        cache: false,
-                        dataType: 'json',
-                        success: function (result) {
-                                $.each(result, function (key, val) {
-                                    $(key).html(val);
-                                });
-                        }
-                    });
-                    $("#li_my_basket").show();
-                    });
+                    fetch(lien, { cache: 'no-store' })
+                        .then(response => response.json())
+                        .then(result => {
+                            for (var key in result) {
+                                if (result.hasOwnProperty(key)) {
+                                    document.querySelectorAll(key).forEach(el => {
+                                        el.innerHTML = result[key];
+                                    });
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Erreur cart amount:', error));
+
+                    var liMyBasket = document.getElementById("li_my_basket");
+                    if (liMyBasket) liMyBasket.style.display = "block";
+                });
                 </script>
             {% endaddtoblock %}
         {% endif %}
     {% endspaceless %}{% endblock my_cart_amount_js %}
 
     {% block my_order_js %}
-        {% addtoblock "lastjs" %}{% spaceless %}
-            <script>
-                $(document).ready(function () {
-                    $('#orderModal').modal({
-                        keyboard: true,
-                        backdrop: false,
-                        show: false
-                    }).on('show.bs.modal', function (event) {
-                        t_row=$(event.relatedTarget);
-                        var getIdFromRow = t_row.data('id');
-                        var lien = '{% url 'repanier:order_product_description_ajax' %}?offer_item=' + getIdFromRow;
-                        $.ajax({
-                            url: lien,
-                            cache: false,
-                            success: function (result) {
-                                $.each(result, function (key, val) {
-                                    $(key).html(val);
-                                });
-                            }
-                        });
-                    });
-                });
-            </script>
-        {% endspaceless %}{% endaddtoblock %}
         {% if may_order %}
             {% addtoblock "lastjs" %}{% spaceless %}
                 <script>
                 var saved_offer_item_id = -1;
                 var saved_delivery_id = -1;
-                $(document).ready(function () {
-                    var lien = '{% url 'repanier:order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
-                    $.ajax({
-                        url: lien,
-                        cache: false,
-                        dataType: 'json',
-                        success: function (result) {
-                            $.each(result, function (key, val) {
-                                if(key === "#communicationModal") {
-                                    $(key).html(val).modal('show');
-                                } else {
-                                    $(key).html(val);
-                                }
-                            });
-                        }
-                    });
-                    $("#li_my_basket").show();
-                    $('#btn_receive_email').on('click', function(event) {
-                        event.preventDefault();
-                        $("#receive_email").hide();
-                    });
-                });
-                function order_ajax(offer_item_id) {
-                    saved_offer_item_id = -1;
-                    var offer_item = $("#offer_item" + offer_item_id);
-                    var offer_item_val = $("option:selected", offer_item).val();
 
-                    if (offer_item_val === 'other_qty') {
-                        var getProductFromRow = offer_item.closest('div').data('product');
-                        $('#otherQtyModalLabel').html(getProductFromRow);
-                        $('#otherQtyModal').modal('show');
-                    } else {
-                        var lien = '{% url 'repanier:order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if is_basket %}&is_basket=yes{%  endif %}";
-                        $.ajax({
-                            url: lien,
-                            cache: false,
-                            success: function (result) {
-                                $.each(result, function (key, val) {
-                                    if(key === "#communicationModal") {
-                                        $(key).html(val).modal('show');
-                                    } else {
-                                        $(key).html(val);
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Gestionnaire global par délégation d'événements (compatible éléments dynamiques htmx)
+                    document.addEventListener('click', function(event) {
+                        var trigger = event.target.closest('[data-bs-target="#orderModal"]');
+                        if (!trigger) return;
+
+                        var container = trigger.closest('[data-id]');
+                        if (!container) return;
+
+                        var offerItemid = container.getAttribute('data-id');
+                        if (!offerItemid) return;
+
+                        event.preventDefault();
+
+                        var lien = '{% url "repanier:order_product_description_ajax" %}?offer_item=' + offerItemid;
+                        fetch(lien, { cache: 'no-store' })
+                            .then(response => response.json())
+                            .then(result => {
+                                for (var key in result) {
+                                    if (result.hasOwnProperty(key)) {
+                                        document.querySelectorAll(key).forEach(el => {
+                                            el.innerHTML = result[key];
+                                        });
                                     }
-                                });
+                                }
+                                var modalEl = document.getElementById('orderModal');
+                                var modalObj = bootstrap.Modal.getOrCreateInstance(modalEl);
+                                modalObj.show();
+                            })
+                            .catch(error => console.error('Erreur chargement description produit:', error));
+                    });
+
+                    var lien = '{% url 'repanier:order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
+                    fetch(lien, { cache: 'no-store' })
+                        .then(response => response.json())
+                        .then(result => {
+                            for (var key in result) {
+                                if (result.hasOwnProperty(key)) {
+                                    document.querySelectorAll(key).forEach(el => {
+                                        el.innerHTML = result[key];
+                                        if (key === "#communicationModal") {
+                                            var modalObj = bootstrap.Modal.getOrCreateInstance(el);
+                                            modalObj.show();
+                                        }
+                                    });
+                                }
                             }
+                        })
+                        .catch(error => console.error('Erreur order init:', error));
+
+                    var liMyBasket = document.getElementById("li_my_basket");
+                    if (liMyBasket) liMyBasket.style.display = "block";
+
+                    var btnReceiveEmail = document.getElementById('btn_receive_email');
+                    if (btnReceiveEmail) {
+                        btnReceiveEmail.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            var receiveEmailDiv = document.getElementById("receive_email");
+                            if (receiveEmailDiv) receiveEmailDiv.style.display = "none";
                         });
                     }
+                });
+
+                function order_ajax(offer_item_id) {
+                    saved_offer_item_id = -1;
+                    var offer_item = document.getElementById("offer_item" + offer_item_id);
+                    if (!offer_item) return;
+
+                    var selectedOption = offer_item.options[offer_item.selectedIndex];
+                    var offer_item_val = selectedOption ? selectedOption.value : '';
+
+                    if (offer_item_val === 'other_qty') {
+                        var parentDiv = offer_item.closest('div');
+                        var getProductFromRow = parentDiv ? parentDiv.getAttribute('data-product') : '';
+                        var labelEl = document.getElementById('otherQtyModalLabel');
+                        if (labelEl) labelEl.textContent = getProductFromRow;
+
+                        var otherQtyModalEl = document.getElementById('otherQtyModal');
+                        if (otherQtyModalEl) {
+                            var modal = bootstrap.Modal.getOrCreateInstance(otherQtyModalEl);
+                            modal.show();
+                        }
+                    } else {
+                        var lien = '{% url 'repanier:order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if is_basket %}&is_basket=yes{%  endif %}";
+                        fetch(lien, { cache: 'no-store' })
+                            .then(response => response.json())
+                            .then(result => {
+                                for (var key in result) {
+                                    if (result.hasOwnProperty(key)) {
+                                        document.querySelectorAll(key).forEach(el => {
+                                            el.innerHTML = result[key];
+                                            if (key === "#communicationModal") {
+                                                var modalObj = bootstrap.Modal.getOrCreateInstance(el);
+                                                modalObj.show();
+                                            }
+                                        });
+                                    }
+                                }
+                            })
+                            .catch(error => console.error('Erreur order ajax:', error));
+                    }
                 }
+
                 function clear_select_order_list_ajax() {
                     saved_offer_item_id = -1;
                 }
+
                 function show_select_order_list_ajax(offer_item_id) {
                     if(saved_offer_item_id !== offer_item_id) {
                         saved_offer_item_id = offer_item_id;
                         var lien1 = '{% url 'repanier:order_select_ajax' %}?offer_item=' + offer_item_id;
-                        $.ajax({
-                            url: lien1,
-                            cache: false,
-                            dataType: 'json',
-                            async: false,
-                            success: function (result) {
-                                $.each(result, function (key, val) {
-                                    $(key).html(val);
-                                });
-                            }
-                        });
+                        fetch(lien1, { cache: 'no-store' })
+                            .then(response => response.json())
+                            .then(result => {
+                                for (var key in result) {
+                                    if (result.hasOwnProperty(key)) {
+                                        document.querySelectorAll(key).forEach(el => {
+                                            el.innerHTML = result[key];
+                                        });
+                                    }
+                                }
+                            })
+                            .catch(error => console.error('Erreur select order list:', error));
                     }
                 }
+
                 function delivery_ajax() {
-                    var delivery = $("#delivery");
-                    var delivery_val = $("option:selected", delivery).val();
+                    var delivery = document.getElementById("delivery");
+                    if (!delivery) return;
+                    var selectedOption = delivery.options[delivery.selectedIndex];
+                    var delivery_val = selectedOption ? selectedOption.value : '';
 
                     var lien = '{% url 'repanier:delivery_ajax' %}?delivery=' + delivery_val + "&permanence=" + {{ permanence.id|unlocalize }} + "{% if is_basket %}&is_basket=yes{%  endif %}";
-                    $.ajax({
-                        url: lien,
-                        cache: false,
-                        success: function (result) {
-                            $.each(result, function (key, val) {
-                                if(key === "#communicationModal") {
-                                    $(key).html(val).modal('show');
-                                } else {
-                                    $(key).html(val);
+                    fetch(lien, { cache: 'no-store' })
+                        .then(response => response.json())
+                        .then(result => {
+                            for (var key in result) {
+                                if (result.hasOwnProperty(key)) {
+                                    document.querySelectorAll(key).forEach(el => {
+                                        el.innerHTML = result[key];
+                                        if (key === "#communicationModal") {
+                                            var modalObj = bootstrap.Modal.getOrCreateInstance(el);
+                                            modalObj.show();
+                                        }
+                                    });
                                 }
-                            });
-                        }
-                    });
+                            }
+                        })
+                        .catch(error => console.error('Erreur delivery ajax:', error));
                 }
+
                 function clear_select_delivery_list_ajax() {
                     saved_delivery_id = -1;
                 }
+
                 function show_select_delivery_list_ajax(delivery_id) {
                     if(saved_delivery_id !== delivery_id) {
                         saved_delivery_id = delivery_id;
                         var lien2 = '{% url 'repanier:delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
-                        $.ajax({
-                            url: lien2,
-                            cache: false,
-                            dataType: 'json',
-                            async: false,
-                            success: function (result) {
-                                $.each(result, function (key, val) {
-                                    $(key).html(val);
-                                });
-                            }
-                        });
+                        fetch(lien2, { cache: 'no-store' })
+                            .then(response => response.json())
+                            .then(result => {
+                                for (var key in result) {
+                                    if (result.hasOwnProperty(key)) {
+                                        document.querySelectorAll(key).forEach(el => {
+                                            el.innerHTML = result[key];
+                                        });
+                                    }
+                                }
+                            })
+                            .catch(error => console.error('Erreur select delivery list:', error));
                     }
                 }
+
                 function btn_receive_order_email() {
-                    var receive_email = $("#btn_confirm_order");
-                    receive_email.attr("disabled", true);
-                    receive_email.html('<span class="bi bi-arrow-repeat gly-spin"></span> ' + '{% translate "Your order is being processed..." %}');
+                    var receive_email = document.getElementById("btn_confirm_order");
+                    if (receive_email) {
+                        receive_email.setAttribute("disabled", "true");
+                        receive_email.innerHTML = '<span class="bi bi-arrow-repeat gly-spin"></span> ' + '{% translate "Your order is being processed..." %}';
+                    }
 
                     var lien = '{% url 'repanier:btn_confirm_order_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
-                    $.ajax({
-                        url: lien,
-                        cache: false,
-                        success: function (result) {
-                                $.each(result, function (key, val) {
-                                    $(key).html(val);
-                                });
-                        }
-                    });
+                    fetch(lien, { cache: 'no-store' })
+                        .then(response => response.json())
+                        .then(result => {
+                            for (var key in result) {
+                                if (result.hasOwnProperty(key)) {
+                                    document.querySelectorAll(key).forEach(el => {
+                                        el.innerHTML = result[key];
+                                    });
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Erreur confirm order:', error));
                     saved_delivery_id = -1;
                 }
+
                 function like_ajax(offer_item_id) {
                     var lien = '{% url 'repanier:like_ajax' %}?offer_item=' + offer_item_id;
-                    $.ajax({
-                        url: lien,
-                        cache: false,
-                        success: function (result) {
-                                $.each(result, function (key, val) {
-                                    $(key).html(val);
-                                });
-                        }
-                    });
+                    fetch(lien, { cache: 'no-store' })
+                        .then(response => response.json())
+                        .then(result => {
+                            for (var key in result) {
+                                if (result.hasOwnProperty(key)) {
+                                    document.querySelectorAll(key).forEach(el => {
+                                        el.innerHTML = result[key];
+                                    });
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Erreur like ajax:', error));
                 }
                 </script>
             {% endspaceless %}{% endaddtoblock %}
@@ -393,8 +450,11 @@
     {% block link_to_filter_js %}
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
-            $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_filter_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-success" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
+            document.addEventListener("DOMContentLoaded", function () {
+                var linkContainer = document.getElementById("link_to_order_or_filter_view");
+                if (linkContainer) {
+                    linkContainer.innerHTML = '<a href="{{ permanence.get_order_filter_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-success" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>';
+                }
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}
@@ -403,8 +463,11 @@
     {% block link_to_order_js %}
         {% addtoblock "lastjs" %}{% spaceless %}
             <script>
-            $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-success" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>');
+            document.addEventListener("DOMContentLoaded", function () {
+                var linkContainer = document.getElementById("link_to_order_or_filter_view");
+                if (linkContainer) {
+                    linkContainer.innerHTML = '<a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-success" style="margin-left: 10px;"><span class="bi bi-search" aria-hidden="true"></span></a>';
+                }
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}

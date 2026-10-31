@@ -25,4 +25,5 @@ def order_product_description_ajax(request):
             template_order_product_description,
             {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
         )
-        return JsonResponse({"#orderModal": mark_safe(html)})
+        # On cible uniquement le .modal-content à l'intérieur de #orderModal
+        return JsonResponse({"#orderModal .modal-content": mark_safe(html)})

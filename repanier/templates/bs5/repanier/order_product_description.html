@@ -1,42 +1,64 @@
 {% load i18n l10n %}{% spaceless %}
-<div class="modal-dialog modal-lg">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h4 class="modal-title" id="orderModalLabel">{{ offer.get_long_name_with_customer_price }}</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            {{ offer.producer.short_profile_name }}<br>
-            <small>{{ offer.department_for_customer.short_name_v2 }}</small><br>
-            {% if offer.picture2 %}
-                <img class="img-fluid img-thumbnail rounded" style="float: left; margin: 5px;" alt="{{ offer.get_long_name_with_customer_price }}"
+<div class="modal-header">
+    <h4 class="modal-title" id="orderModalLabel">{{ offer.get_long_name_with_customer_price }}</h4>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+</div>
+<div class="modal-body">
+    {% if offer.picture2 %}
+        <!-- Disposition en grille Bootstrap 5 : Image à gauche, Texte/Infos à droite -->
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center mb-3 mb-md-0">
+                <img class="img-fluid img-thumbnail rounded shadow-sm" alt="{{ offer.get_long_name_with_customer_price }}"
                      title="{{ offer.get_long_name_with_customer_price }}" src="{{ MEDIA_URL }}{{ offer.picture2 }}"/>
-            {% endif %}
+            </div>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <strong>{{ offer.producer.short_profile_name }}</strong><br>
+                    <small class="text-muted">{{ offer.department_for_customer.short_name_v2 }}</small>
+                </div>
+                <hr class="my-2">
+                <div>
+                    {% if offer.product.offer_description_v2 %}
+                        {{ offer.product.offer_description_v2 | safe }}
+                    {% else %}
+                        <p class="text-muted">{% translate "There is no more product's information." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- S'il n'y a pas d'image, affichage simple du texte sur toute la largeur -->
+        <div class="mb-2">
+            <strong>{{ offer.producer.short_profile_name }}</strong><br>
+            <small class="text-muted">{{ offer.department_for_customer.short_name_v2 }}</small>
+        </div>
+        <hr class="my-2">
+        <div>
             {% if offer.product.offer_description_v2 %}
                 {{ offer.product.offer_description_v2 | safe }}
             {% else %}
-                {% translate "There is no more product's information." %}
+                <p class="text-muted">{% translate "There is no more product's information." %}</p>
             {% endif %}
-            <br>
+        </div>
+    {% endif %}
+
+    <!-- Modes de production -->
+    {% if offer.product.production_mode.all %}
+        <hr class="my-3">
+        <div class="d-flex flex-wrap align-items-center gap-2">
             {% for production_mode in offer.product.production_mode.all %}
-                {% if production_mode.picture2 %}
-                    <img class="rounded" style="float: left; margin: 5px;" alt="{{ production_mode }}"
-                         title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}" height="24" width="24"/>
-                    {% if production_mode.description %}<br>
-                        <small>{{ production_mode.description | safe }}</small>{% if not forloop.last %}<br>{% endif %}{% endif %}
-                {% else %}
+                <span class="badge bg-light text-dark border d-inline-flex align-items-center p-1">
+                    {% if production_mode.picture2 %}
+                        <img class="rounded me-1" alt="{{ production_mode }}"
+                             title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}" height="20" width="20"/>
+                    {% endif %}
                     {{ production_mode }}
-                    {% if production_mode.description %}<br>
-                        <small>{{ production_mode.description | safe }}</small>{% if not forloop.last %}<br>{% endif %}{% else %}
-                    {% if not forloop.last %}
-                        <small> -</small>{% endif %}{% endif %}
-                {% endif %}
+                </span>
             {% endfor %}
         </div>
-        <div class="clearfix"></div>
-        <div class="modal-footer">
-            <button class="btn btn-success" data-bs-dismiss="modal">{% translate "Close" %}</button>
-        </div>
-    </div>
+    {% endif %}
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-success" data-bs-dismiss="modal">{% translate "Close" %}</button>
 </div>
 {% endspaceless %}
