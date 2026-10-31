@@ -246,8 +246,19 @@
 
                         var lien = '{% url "repanier:order_product_description_ajax" %}?offer_item=' + offerItemid;
                         fetch(lien, { cache: 'no-store' })
-                            .then(response => response.json())
+                            .then(response => {
+                                // Si la requête échoue (403, 404, etc.), on stoppe tout et on ne fait rien
+                                if (!response.ok) {
+                                    return null;
+                                }
+                                return response.json();
+                            })
                             .then(result => {
+                                // Si le résultat est vide ou invalide, on s'arrête net (pas d'ouverture de modale)
+                                if (!result || Object.keys(result).length === 0) {
+                                    return;
+                                }
+
                                 for (var key in result) {
                                     if (result.hasOwnProperty(key)) {
                                         document.querySelectorAll(key).forEach(el => {
@@ -255,9 +266,14 @@
                                         });
                                     }
                                 }
-                                var modalEl = document.getElementById('orderModal');
-                                var modalObj = bootstrap.Modal.getOrCreateInstance(modalEl);
-                                modalObj.show();
+
+                                // DOUBLE SÉCURITÉ : On vérifie que le contenu de la modale n'est pas vide avant de l'afficher
+                                var modalContent = document.querySelector('#orderModal .modal-content');
+                                if (modalContent && modalContent.innerHTML.trim() !== "") {
+                                    var modalEl = document.getElementById('orderModal');
+                                    var modalObj = bootstrap.Modal.getOrCreateInstance(modalEl);
+                                    modalObj.show();
+                                }
                             })
                             .catch(error => console.error('Erreur chargement description produit:', error));
                     });

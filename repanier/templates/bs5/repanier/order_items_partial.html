@@ -3,8 +3,8 @@
     <div class="col-12 col-md-6 col-xl-4 col-xxl-3">
         <div class="card h-100 shadow-sm p-3">
             <div class="row g-0 align-items-center h-100">
-                <!-- Partie gauche : Nom, Producteur, Rayon, Modes de production (Cliquable) -->
-                <div class="col-6" data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" role="button" style="cursor: pointer;">
+                <!-- Partie gauche : Nom, Producteur, Rayon, Modes de production (Cliquable sans le toggle auto Bootstrap) -->
+                <div class="col-6" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" role="button" style="cursor: pointer;">
                     <b class="text-dark">{{ offer.get_order_name }}</b>
                     {% if offer.product.offer_description_v2|length > 0 %}&nbsp;<span class="bi bi-info-circle text-muted"></span>{% endif %}
                     <br><small class="text-muted">{{ offer.producer.short_profile_name }}</small>
@@ -36,7 +36,7 @@
                             {% endif %}
 
                             {% if offer.picture2 %}
-                                <div class="mt-2" data-bs-toggle="modal" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" role="button" style="cursor: pointer;">
+                                <div class="mt-2" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" role="button" style="cursor: pointer;">
                                     <img class="img-thumbnail rounded" alt="{{ offer.get_order_name }}" title="{{ offer.get_order_name }}"
                                          src="{{ MEDIA_URL }}{{ offer.picture2 }}" height="110" width="110" />
                                 </div>
@@ -53,6 +53,17 @@
         </div>
     </div>
 {% endfor %}
+
+{% if page_obj.has_next %}
+    <div class="loading my-4 text-center col-12"
+         hx-get="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"
+         hx-trigger="load delay:300ms"
+         hx-target="this"
+         hx-swap="outerHTML">
+        <span class="spinner-border spinner-border-sm me-1 text-success" role="status" aria-hidden="true" style="display:none;"></span>
+        <span class="text-muted" style="display:none;">{% translate "Loading..." %}</span>
+    </div>
+{% endif %}
 
 <!-- S'il y a une page suivante, on renvoie un nouveau déclencheur htmx qui remplace l'ancien -->
 {#{% if page_obj.has_next %}#}
@@ -77,14 +88,14 @@
 {#    </div>#}
 {#{% endif %}#}
 
-{% if page_obj.has_next %}
-    <div class="loading my-4 text-center col-12"
-         hx-get="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"
+{#{% if page_obj.has_next %}#}
+{#    <div class="loading my-4 text-center col-12"#}
+{#         hx-get="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"#}
 {#         Dès que la page actuelle est affichée, htmx attend 300 millisecondes (le temps que l'œil humain perçoive l'affichage initial) et lance silencieusement le chargement de la page suivante en arrière-plan.#}
-         hx-trigger="load delay:300ms"
-         hx-target="this"
-         hx-swap="outerHTML">
-        <span class="spinner-border spinner-border-sm me-1 text-success" role="status" aria-hidden="true" style="display:none;"></span>
-        <span class="text-muted" style="display:none;">{% translate "Loading..." %}</span>
-    </div>
-{% endif %}
+{#         hx-trigger="load delay:300ms"#}
+{#         hx-target="this"#}
+{#         hx-swap="outerHTML">#}
+{#        <span class="spinner-border spinner-border-sm me-1 text-success" role="status" aria-hidden="true" style="display:none;"></span>#}
+{#        <span class="text-muted" style="display:none;">{% translate "Loading..." %}</span>#}
+{#    </div>#}
+{#{% endif %}#}
