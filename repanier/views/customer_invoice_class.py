@@ -67,7 +67,9 @@ class CustomerInvoiceView(DetailView):
                 customer_invoice__customer_charged_id=self.customer_id,
                 permanence_id=customer_invoice.permanence_id,
             ).exists()
-            if customer_invoice.status in [SaleStatus.INVOICED, SaleStatus.ARCHIVED]:
+            previous_customer_invoice = None
+            next_customer_invoice = None
+            if customer_invoice.status == SaleStatus.INVOICED:
                 previous_customer_invoice = (
                     CustomerInvoice.objects.filter(
                         customer_id=self.customer_id,
@@ -96,7 +98,7 @@ class CustomerInvoiceView(DetailView):
                         customer_id=customer.id,
                         status__lt=SaleStatus.INVOICED,
                     ).first()
-            else:
+            elif customer_invoice.status != SaleStatus.ARCHIVED:
                 previous_customer_invoice = CustomerInvoice.objects.filter(
                     customer_id=customer.id,
                     status=SaleStatus.INVOICED,
