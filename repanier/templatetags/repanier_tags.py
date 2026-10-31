@@ -1,11 +1,11 @@
 from django import template
-from django import template
 from django.conf import settings
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from menus.menu_pool import menu_pool
+
 from repanier.cms_menus import PermanenceMenu
 from repanier.const import (
     EMPTY_STRING,
@@ -210,43 +210,12 @@ def repanier_user_bs5(context, *args, **kwargs):
                     reverse("repanier:my_profile_view"), _("My profile")
                 )
             )
-            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-                last_customer_invoice = (
-                    CustomerInvoice.objects.filter(
-                        customer__user_id=request.user.id,
-                        invoice_sort_order__isnull=False,
-                        status__lte=SaleStatus.INVOICED,
-                    )
-                    .only("balance", "date_balance")
-                    .order_by("-invoice_sort_order")
-                    .first()
+            my_balance = history_label(request)
+            nodes.append(
+                '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
+                    reverse("repanier:customer_invoice_view", args=(0,user.customer_id,)), my_balance
                 )
-                if last_customer_invoice is not None:
-                    if last_customer_invoice.balance < DECIMAL_ZERO:
-                        my_balance = _(
-                            'My balance : <font color="red">%(balance)s</font> at %(date)s'
-                        ) % {
-                            "balance": last_customer_invoice.balance,
-                            "date": last_customer_invoice.date_balance.strftime(
-                                settings.DJANGO_SETTINGS_DATE
-                            ),
-                        }
-                    else:
-                        my_balance = _(
-                            'My balance : <font color="green">%(balance)s</font> at %(date)s'
-                        ) % {
-                            "balance": last_customer_invoice.balance,
-                            "date": last_customer_invoice.date_balance.strftime(
-                                settings.DJANGO_SETTINGS_DATE
-                            ),
-                        }
-                else:
-                    my_balance = _("My balance")
-                nodes.append(
-                    '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
-                        reverse("repanier:customer_invoice_view", args=(0,user.customer_id,)), my_balance
-                    )
-                )
+            )
             nodes.append('<li><hr class="dropdown-divider"></li>')
         nodes.append(
             '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
@@ -262,6 +231,45 @@ def repanier_user_bs5(context, *args, **kwargs):
         ]
 
     return mark_safe("".join(nodes))
+
+
+def history_label(request) -> str:
+    user = request.user
+    if not user.is_authenticated or not user.customer_id:
+        return "{}".format(_("My balance"))
+
+    last_customer_invoice = (
+        CustomerInvoice.objects.filter(
+            customer_id=user.customer_id,
+            invoice_sort_order__isnull=False,
+            status__lte=SaleStatus.INVOICED,
+        )
+        .only("balance", "date_balance")
+        .order_by("-invoice_sort_order")
+        .first()
+    )
+    if last_customer_invoice is not None:
+        if last_customer_invoice.balance < DECIMAL_ZERO:
+            my_balance = _(
+                'My balance : <font color="red">%(balance)s</font> at %(date)s'
+            ) % {
+                "balance": last_customer_invoice.balance,
+                "date": last_customer_invoice.date_balance.strftime(
+                    settings.DJANGO_SETTINGS_DATE
+                ),
+            }
+        else:
+            my_balance = _(
+                'My balance : <font color="green">%(balance)s</font> at %(date)s'
+            ) % {
+                "balance": last_customer_invoice.balance,
+                "date": last_customer_invoice.date_balance.strftime(
+                    settings.DJANGO_SETTINGS_DATE
+                ),
+            }
+    else:
+        my_balance = "{}".format(_("My balance"))
+    return my_balance
 
 
 @register.simple_tag(takes_context=False)
@@ -474,4 +482,5 @@ def show_permanence_menu(context, permanence_id=0):
     return {
         'nodes': nodes,
         'request': request,
+        'my_balance': mark_safe(history_label(request))
     }

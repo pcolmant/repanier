@@ -1,3 +1,4 @@
+{% load i18n %}
 <ul class="nav flex-column">
     {% for node in nodes %}
         {% if node.parent_id == 0 %}
@@ -13,4 +14,14 @@
             {% endif %}
         {% endif %}
     {% endfor %}
+
+    {% if request.user.is_authenticated and request.user.customer_id %}
+        <li class="my-2"><hr class="dropdown-divider"></li>
+        <li class="nav-item">
+            <a href="{% url 'repanier:customer_history_view' request.user.customer_id %}"
+               class="nav-link text-dark fw-normal">
+                {{ my_balance|safe }}
+            </a>
+        </li>
+    {% endif %}
 </ul>
