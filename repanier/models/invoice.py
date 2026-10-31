@@ -193,6 +193,9 @@ class CustomerInvoice(Invoice):
         # round to 2 decimals
         return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
 
+    def is_pending(self):
+        return self.status < SaleStatus.CLOSED
+
     def is_invoiced(self):
         return self.status == SaleStatus.INVOICED
 

@@ -16,10 +16,12 @@
                             <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id customer.id %}"
                                class="btn btn-success"> {% translate "Next balance" %} <i
                                     class="bi bi-arrow-right"></i></a>
-                            <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
-                               class="btn btn-success"> {% translate "Current balance" %} <i
-                                    class="bi bi-arrow-right"></i>
-                                <i class="bi bi-arrow-right"></i> </a>
+                            {% if fast_forward %}
+                                <a href="{% url 'repanier:customer_invoice_view' 0 customer.id %}"
+                                   class="btn btn-success"> {% translate "Current balance" %} <i
+                                        class="bi bi-arrow-right"></i>
+                                    <i class="bi bi-arrow-right"></i> </a>
+                            {% endif %}
                         {% endif %}
                         <a href="{% url 'repanier:customer_history_view' customer.id %}"
                            class="btn btn-success"> {% translate "History" %} <i
@@ -34,16 +36,9 @@
             </div>
             <div class="row mt-3">
                 <div class="col-12">
-                    {% if my_invoices %}{% else %}<h4>{{ customer.long_basket_name }}, <i class="bi bi-telephone"></i> {{ customer.phone1 }}, <i class="bi bi-envelope"></i> {{ customer.user.email }}</h4>{% endif %}
-                    {% if display_admin_balance %}
-                        {% with balance=customer.get_admin_balance %}
-                        <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
-                            {% translate "My current balance" %}
-                        &nbsp;: {{ balance }}
-                        </span>
-                        {% endwith %}
-                        <div class="mb-3"></div>
-                    {% endif %}
+                    {% if my_invoices %}{% else %}
+                        <h4>{{ customer.long_basket_name }}, <i class="bi bi-telephone"></i> {{ customer.phone1 }}, <i
+                                class="bi bi-envelope"></i> {{ customer.user.email }}</h4>{% endif %}
                     {% for bank_account in not_invoiced_bank_account_set %}
                         <div class="row">
                             <div class="col-12">
@@ -72,152 +67,27 @@
                             </div>
                         </div>
                     {% endfor %}
-                    {% for not_invoiced in not_invoiced_array %}
-                        <div class="row">
-                            <div class="col-12">
-                                <span class="btn btn-outline-secondary btn-sm">{% translate "Pending purchase" %}</span>
-                                &nbsp;: {{ not_invoiced.customer_invoice.get_total_price_with_tax }}
-                                <small>({{ not_invoiced.customer_invoice.permanence }})</small>
-                                <div class="mb-2"></div>
-                            </div>
-                        </div>
-                        {% if not_invoiced.customer_invoice.customer_id != not_invoiced.customer_invoice.customer_charged_id %}
-                            {% if not_invoiced.customer_invoice.delivery %}
-                                <div class="row">
-                                    <div class="col-12">
-                                        <small>{% translate "Delivery point" %}
-                                            : {{ not_invoiced.customer_invoice.delivery }}.</small>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            <div class="row">
-                                <div class="col-12">
-                                    <small>{% translate "Payment centralized by" %}
-                                        : {{ not_invoiced.customer_invoice.customer_charged }}.</small>
-                                </div>
-                            </div>
-                        {% else %}
-                            {% if not_invoiced.customer_invoice.total_deposit != 0 %}
-                                <div class="row">
-                                    <div class="col-12">
-                                        {% translate "Deposit" %} : {{ not_invoiced.customer_invoice.total_deposit }}.
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.transport != 0 %}
-                                <div class="row">
-                                    <div class="col-12">
-                                        {% translate "Shipping cost" %}
-                                        : {{ not_invoiced.customer_invoice.delta_transport }}.
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.delivery %}
-                                <div class="row">
-                                    <div class="col-12">
-                                        {% translate "Delivery point" %} : {{ not_invoiced.customer_invoice.delivery }}.
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.price_list_multiplier != 1 %}
-                                <div class="row">
-                                    <div class="col-12">
-                                        <small>{% translate "Coefficient applied to the producer tariff to calculate the customer tariff" %}
-                                            :
-                                            {{ not_invoiced.customer_invoice.price_list_multiplier }}. </small>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            {% if not_invoiced.customer_invoice.get_delta_price_with_tax != 0 or not_invoiced.customer_invoice.delta_vat != 0 %}
-                                <div class="row">
-                                    <div class="col-12">
-                                        <small>{% if not_invoiced.customer_invoice.get_delta_price_with_tax < 0 %}
-                                            {% translate "Reduction granted" %}{% else %}
-                                            {% translate "Surcharge" %}{% endif %}
-                                            : {{ not_invoiced.customer_invoice.get_abs_delta_price_with_tax }}. </small>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                        {% if not_invoiced.purchase_set %}
-                            <div class="container-fluid px-0">
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-bordered">
-                                                <thead>
-                                                <tr>
-                                                    <th>
-                                                        {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                                            {% translate "Producer" %}
-                                                        {% else %}
-                                                            {% translate "Department" %}
-                                                        {% endif %}
-                                                    </th>
-                                                    <th>
-                                                        {% translate "Product" %}
-                                                    </th>
-                                                    <th class="text-end">
-                                                        {% translate "Qty" %}
-                                                    </th>
-                                                    <th class="text-end">
-                                                        {% translate "Unit price" %}
-                                                    </th>
-                                                    <th class="text-end">
-                                                        {% translate "Total price" %}
-                                                    </th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                {% for purchase in not_invoiced.purchase_set %}
-                                                    <tr>
-                                                        <td>
-                                                            {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                                                {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
-                                                            {% else %}
-                                                                {{ purchase.offer_item.department_for_customer.short_name_v2 | truncatechars:15 }}
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            {{ purchase.get_long_name_with_customer_price }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ purchase.get_quantity | floatformat:3 }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ purchase.get_customer_unit_price }}
-                                                            {% if purchase.offer_item.unit_deposit != 0 %}
-                                                                + ♻ {{ purchase.offer_item.unit_deposit }}
-                                                            {% endif %}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {% if purchase.selling_price.amount != 0 %}
-                                                                {{ purchase.selling_price }}
-                                                            {% else %}
-                                                                --
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
                 </div>
             </div>
             {% if object %}
                 <div class="row">
                     <div class="col-12">
-                        {% with balance=object.balance %}
-                            <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
-                                {% translate "My balance at" %} {{ object.date_balance | date:"DATE_FORMAT" }}
-                                &nbsp;: {{ balance }}</span>
-                        {% endwith %}
-                        <div class="mb-3"></div>
+                        {% if object.is_pending %}
+                            {% with balance=customer.get_admin_balance %}
+                                <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
+                                {% translate "My current balance" %}
+                                   &nbsp;: {{ balance }}
+                                </span>
+                            {% endwith %}
+                            <div class="mb-3"></div>
+                        {% else %}
+                            {% with balance=object.balance %}
+                                <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
+                                    {% translate "My balance at" %} {{ object.date_balance | date:"DATE_FORMAT" }}
+                                    &nbsp;: {{ balance }}</span>
+                            {% endwith %}
+                            <div class="mb-3"></div>
+                        {% endif %}
                     </div>
                 </div>
             {% endif %}

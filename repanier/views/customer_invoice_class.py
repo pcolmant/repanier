@@ -35,6 +35,7 @@ class CustomerInvoiceView(DetailView):
         context["not_invoiced_array"] = None
         context["not_invoiced_bank_account_set"] = None
         context["display_admin_balance"] = False
+        context["fast_forward"] = True
         if customer_invoice is None:
             # This customer has never been invoiced
             context["bank_account_set"] = BankAccount.objects.none()
@@ -66,85 +67,46 @@ class CustomerInvoiceView(DetailView):
                 customer_invoice__customer_charged_id=self.customer_id,
                 permanence_id=customer_invoice.permanence_id,
             ).exists()
-            display_unrecognized_purchases = False
-            if customer_invoice.status == SaleStatus.INVOICED:
-                if customer_invoice.invoice_sort_order is not None:
-                    previous_customer_invoice = (
-                        CustomerInvoice.objects.filter(
-                            customer_id=self.customer_id,
-                            invoice_sort_order__isnull=False,
-                            invoice_sort_order__lt=customer_invoice.invoice_sort_order,
-                            status=SaleStatus.INVOICED,
-                        )
-                        .order_by("-invoice_sort_order")
-                        .only("id")
-                        .first()
-                    )
-                    next_customer_invoice = (
-                        CustomerInvoice.objects.filter(
-                            customer_id=self.customer_id,
-                            invoice_sort_order__isnull=False,
-                            invoice_sort_order__gt=customer_invoice.invoice_sort_order,
-                            status=SaleStatus.INVOICED,
-                        )
-                        .order_by("invoice_sort_order")
-                        .only("id")
-                        .first()
-                    )
-                else:
-                    previous_customer_invoice = None
-                    next_customer_invoice = (
-                        CustomerInvoice.objects.filter(
-                            customer_id=self.customer_id,
-                            invoice_sort_order__isnull=False,
-                            status=SaleStatus.INVOICED,
-                        )
-                        .order_by("invoice_sort_order")
-                        .only("id")
-                        .first()
-                    )
-                if previous_customer_invoice is not None:
-                    context["previous_customer_invoice_id"] = previous_customer_invoice.id
-                if next_customer_invoice is None:
-                    display_unrecognized_purchases = True
-                else:
-                    context["next_customer_invoice_id"] = next_customer_invoice.id
-            else:
-                display_unrecognized_purchases = not (
+            if customer_invoice.status in [SaleStatus.INVOICED, SaleStatus.ARCHIVED]:
+                previous_customer_invoice = (
                     CustomerInvoice.objects.filter(
-                        id__gt=customer_invoice.id,
                         customer_id=self.customer_id,
-                        status=SaleStatus.ARCHIVED,
-                    ).order_by(
-                        "id"
-                    ).exists()
-                )
-            if display_unrecognized_purchases:
-                customer_invoice_not_invoiced_set = CustomerInvoice.objects.filter(
-                    customer_id=self.customer_id,
-                    status__lt=SaleStatus.INVOICED,
-                )
-                not_invoiced_array = []
-                for customer_invoice_not_invoiced in customer_invoice_not_invoiced_set:
-                    purchase_set = Purchase.objects.filter(
-                        customer_invoice_id=customer_invoice_not_invoiced.id
-                    ).order_by(
-                        "customer", "producer", "offer_item__order_sort_order_v2"
+                        invoice_sort_order__isnull=False,
+                        invoice_sort_order__lt=customer_invoice.invoice_sort_order,
+                        status__gte=SaleStatus.INVOICED,
                     )
-                    not_invoiced_array += [
-                        {
-                            "customer_invoice": customer_invoice_not_invoiced,
-                            "purchase_set": purchase_set,
-                        }
-                    ]
-                context["not_invoiced_array"] = not_invoiced_array
-                not_invoiced_bank_account_set = BankAccount.objects.filter(
-                    customer=self.customer_id,
-                    customer_invoice__isnull=True,
-                ).order_by("operation_date")
-                context["not_invoiced_bank_account_set"] = not_invoiced_bank_account_set
-                context["display_admin_balance"] = True
+                    .order_by("-invoice_sort_order")
+                    .only("id")
+                    .first()
+                )
+                next_customer_invoice = (
+                    CustomerInvoice.objects.filter(
+                        customer_id=self.customer_id,
+                        invoice_sort_order__isnull=False,
+                        invoice_sort_order__gt=customer_invoice.invoice_sort_order,
+                        status__gte=SaleStatus.INVOICED,
+                    )
+                    .order_by("invoice_sort_order")
+                    .only("id")
+                    .first()
+                )
+                if next_customer_invoice is None:
+                    context["fast_forward"] = False
+                    next_customer_invoice = CustomerInvoice.objects.filter(
+                        customer_id=customer.id,
+                        status__lt=SaleStatus.INVOICED,
+                    ).first()
+            else:
+                previous_customer_invoice = CustomerInvoice.objects.filter(
+                    customer_id=customer.id,
+                    status=SaleStatus.INVOICED,
+                ).order_by("-invoice_sort_order").first()
+                next_customer_invoice = None
 
+            if previous_customer_invoice is not None:
+                context["previous_customer_invoice_id"] = previous_customer_invoice.id
+            if next_customer_invoice is not None:
+                context["next_customer_invoice_id"] = next_customer_invoice.id
         return context
 
     def get_queryset(self):
