@@ -9,14 +9,16 @@
                         {{ object.long_basket_name }}{% endif %}{% if object.phone1 %}, <i
                             class="bi bi-telephone"></i> {{ object.phone1 }}{% endif %}, <i
                             class="bi bi-envelope"></i> {{ object.user.email }}</h4>{% endif %}
-                    {% with balance=object.get_admin_balance %}
-                        <div class="btn-group" role="group">
-                            <a href="{% url 'repanier:customer_invoice_view' 0 object.id %}"
-                               class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
-                                {% translate "My current balance" %} &nbsp;: {{ balance }} &nbsp;
-                                &nbsp;&nbsp;&nbsp;<i class="bi bi-zoom-in"></i>
-                            </a>
-                        </div>
+                    {% with balance=object.get_customer_balance %}
+                        {% if balance is not None %}
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'repanier:customer_invoice_view' 0 object.id %}"
+                                   class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
+                                    {% translate "My current balance" %} &nbsp;: {{ balance }} &nbsp;
+                                    &nbsp;&nbsp;&nbsp;<i class="bi bi-zoom-in"></i>
+                                </a>
+                            </div>
+                        {% endif %}
                     {% endwith %}
                     <div class="mb-3"></div>
                 </div>

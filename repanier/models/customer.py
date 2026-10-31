@@ -221,6 +221,16 @@ class Customer(models.Model):
 
     get_admin_balance.short_description = _("Balance")
 
+    def get_customer_balance(self):
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            return (
+                self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
+            )
+        else:
+            return None
+
+    get_admin_balance.short_description = _("Balance")
+
     def get_phone1(self, prefix=EMPTY_STRING, postfix=EMPTY_STRING):
         # return ", phone1" if prefix = ", "
         # return " (phone1)" if prefix = " (" and postfix = ")"

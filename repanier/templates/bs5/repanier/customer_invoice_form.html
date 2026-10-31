@@ -73,20 +73,26 @@
                 <div class="row">
                     <div class="col-12">
                         {% if object.is_pending %}
-                            {% with balance=customer.get_admin_balance %}
-                                <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
-                                {% translate "My current balance" %}
-                                   &nbsp;: {{ balance }}
-                                </span>
+                            {% with balance=customer.get_customer_balance %}
+                                {% if balance is not None %}
+                                    <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
+                                    {% translate "My current balance" %}
+                                       &nbsp;: {{ balance }}
+                                    </span>
+                                    <div class="mb-3"></div>
+                                {% endif %}
                             {% endwith %}
-                            <div class="mb-3"></div>
+
                         {% else %}
-                            {% with balance=object.balance %}
-                                <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
-                                    {% translate "My balance at" %} {{ object.date_balance | date:"DATE_FORMAT" }}
-                                    &nbsp;: {{ balance }}</span>
+                            {% with balance=customer.get_customer_balance %}
+                                {% if balance is not None %}
+                                    <span class="btn btn-{% if balance < 0 %}primary{% else %}success{% endif %}">
+                                        {% translate "My balance at" %} {{ object.date_balance | date:"DATE_FORMAT" }}
+                                        &nbsp;: {{ balance }}</span>
+                                    <div class="mb-3"></div>
+                                {% endif %}
                             {% endwith %}
-                            <div class="mb-3"></div>
+
                         {% endif %}
                     </div>
                 </div>
