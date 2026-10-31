@@ -117,12 +117,13 @@
                         });
                     });
 
-                    // Déplacement de la loupe juste à côté du bouton Menu
+                    // Déplacement de la loupe à côté du bouton Menu UNIQUEMENT sur mobile (grâce à la classe d-lg-none sur le bouton)
                     var menuBtn = document.querySelector('button[data-bs-target="#mobileSidebar"]');
                     if (menuBtn) {
                         var loupe = document.createElement('a');
                         loupe.href = '{% url "repanier:order_filter_view" 0 %}';
-                        loupe.className = 'btn btn-success ms-2';
+                        // Ajout de "d-lg-none" pour qu'elle n'apparaisse que sur mobile, comme le bouton Menu !
+                        loupe.className = 'btn btn-success ms-2 d-lg-none';
                         loupe.setAttribute('aria-label', 'Rechercher');
                         loupe.innerHTML = '<span class="bi bi-search" aria-hidden="true"></span>';
                         menuBtn.after(loupe);
