@@ -14,13 +14,24 @@
                 {{ child.get_menu_title |safe }}
             </a>
             <ul class="dropdown-menu">
-                {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
+                {% for sub in child.children %}
+                    {% if sub.get_menu_title == '------' %}
+                        <li><hr class="dropdown-divider"></li>
+                    {% else %}
+                        <li>
+                            <a class="dropdown-item {% if sub.selected %}active{% endif %}"
+                               href="{{ sub.attr.redirect_url|default:sub.get_absolute_url }}">
+                                {{ sub.get_menu_title |safe }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
             </ul>
         </li>
 
         <!-- Version Mobile : Élément avec gestion imbriquée des sous-pages -->
         <li class="nav-item d-lg-none {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}" data-page-id="{{ child.id }}">
-            <!-- Pour "Permanences", on pointe vers le premier sous-élément (ex: Inscription aux tâches) si c'est le premier enfant avec des sous-éléments de type permanence -->
+            <!-- Pour "Permanences", on pointe vers le premier sous-élément si c'est le premier enfant -->
             {% if child.get_menu_title == 'Permanences' %}
                 {% for sub in child.children %}
                     {% if forloop.first %}

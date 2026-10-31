@@ -195,32 +195,81 @@ a.skip_link {
 }
 
 /* =================================================================
-   6. Conteneurs spécifiques
+   6. Conteneurs spécifiques (Ajustés pour éviter le masquage par la navbar)
    =================================================================== */
-@media only screen and (min-width: 768px) {
+/*@media only screen and (min-width: 768px) {*/
+/*    .container-bootstrap {*/
+/*        margin-top: 100px;*/
+/*    }*/
+/*    .container-repanier {*/
+/*        margin: 100px 0 0;*/
+/*    }*/
+/*    .container-info {*/
+/*        margin: 100px 0 -85px 0;*/
+/*    }*/
+/*    .container-menu {*/
+/*        padding: 0 15px 0;*/
+/*    }*/
+/*}*/
+
+/*@media only screen and (max-width: 767px) {*/
+/*    .container-bootstrap {*/
+/*        margin-top: 85px;*/
+/*    }*/
+/*    .container-repanier {*/
+/*        margin: 85px 0 0;*/
+/*    }*/
+/*    .container-info {*/
+/*        margin: 85px 0 -85px 0;*/
+/*    }*/
+/*}*/
+
+/* =================================================================
+   6. Conteneurs spécifiques (3 états)
+   =================================================================== */
+
+/* Petits écrans / Mobiles (< 768px) */
+@media only screen and (max-width: 767px) {
     .container-bootstrap {
-        margin-top: 65px;
+        margin-top: 90px;
     }
     .container-repanier {
-        margin: 75px 0 0;
+        margin: 90px 0 0;
     }
     .container-info {
-        margin: 75px 0 -75px 0;
+        margin: 90px 0 -90px 0;
+    }
+}
+
+/* État intermédiaire / Tablettes (entre 768px et 991px) */
+@media only screen and (min-width: 768px) and (max-width: 976px) {
+    .container-bootstrap {
+        margin-top: 35px;
+    }
+    .container-repanier {
+        margin: 35px 0 0;
+    }
+    .container-info {
+        margin: 35px 0 -35px 0;
     }
     .container-menu {
         padding: 0 15px 0;
     }
 }
 
-@media only screen and (max-width: 767px) {
+/* Grands écrans (>= 992px) */
+@media only screen and (min-width: 977px) {
     .container-bootstrap {
-        margin-top: 36px;
+        margin-top: 85px;
     }
     .container-repanier {
-        margin: 46px 0 0;
+        margin: 85px 0 0;
     }
     .container-info {
-        margin: 46px 0 -46px 0;
+        margin: 85px 0 -85px 0;
+    }
+    .container-menu {
+        padding: 0 15px 0;
     }
 }
 
