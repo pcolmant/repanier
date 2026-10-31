@@ -435,6 +435,7 @@ class CustomerInvoice(Invoice):
                             </div>
                         </div>
                     </div>
+                    <div class="mb-3">
                 """
         return {"#span_btn_confirm_order": mark_safe(msg_html)}
 
