@@ -35,19 +35,12 @@ class PermanenceMenu(Menu):
         )
 
         first_pass = True
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            qs = Permanence.objects.filter(
-                status__in=[SaleStatus.OPENED, SaleStatus.CLOSED, SaleStatus.SEND],
-                master_permanence__isnull=True,
-            ).order_by(
-                "-permanence_date", "id"
-            )
-        else:
-            qs = Permanence.objects.filter(
-                status=SaleStatus.OPENED, master_permanence__isnull=True
-            ).order_by(
-                "-permanence_date", "id"
-            )
+        qs = Permanence.objects.filter(
+            status__in=[SaleStatus.OPENED, SaleStatus.CLOSED, SaleStatus.SEND],
+            master_permanence__isnull=True,
+        ).order_by(
+            "-permanence_date", "id"
+        )
         for permanence in qs:
             if first_pass and separator_needed:
                 submenu_id = self.append_separator(nodes, parent_node, submenu_id)
@@ -56,9 +49,6 @@ class PermanenceMenu(Menu):
             submenu_id = self.append_permanence(
                 nodes, parent_node, submenu_id, is_anonymous, permanence
             )
-        # if len(nodes) > 1:
-        #     return nodes
-        # return []
         return nodes
 
     def append_permanence_board(self, nodes, parent_node, submenu_id):
