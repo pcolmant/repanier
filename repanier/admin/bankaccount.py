@@ -190,7 +190,6 @@ class ProducerAutocomplete(autocomplete.Select2QuerySetView):
     search_fields = [
         "short_profile_name",
         "long_profile_name",
-        "user__email",
         "bank_account",
     ]
 
