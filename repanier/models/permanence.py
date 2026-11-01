@@ -1589,7 +1589,7 @@ class Permanence(models.Model):
             return mark_safe("<ul>{}</ul>".format(EMPTY_STRING.join(result)))
         return EMPTY_STRING
 
-    def get_html_status_display(self, force_refresh=True):
+    def get_html_status_display(self, force_refresh=False):
         need_to_refresh_status = force_refresh or self.status in refresh_status
         if self.with_delivery_point and self.status < SaleStatus.INVOICED:
             status_list = []
@@ -1618,39 +1618,47 @@ class Permanence(models.Model):
             message = "<br>".join(status_list)
         else:
             message = "{}".format(self.get_status_display())
+        # "◴◷◶◵" "▛▜▟▙"
         if need_to_refresh_status:
             url = reverse("repanier:display_status", args=(self.id,))
             if force_refresh:
-                # force self.gauge to 3 so that next call the guage will be set to 0
                 self.gauge = 3
                 progress = EMPTY_STRING
                 delay = 1000
             else:
-                progress = "{} ".format("◤◥◢◣"[self.gauge])  # "◴◷◶◵" "▛▜▟▙"
+                progress = "{} ".format("◤◥◢◣"[self.gauge])
                 self.gauge = (self.gauge + 1) % 4
                 delay = 500
             self.save(update_fields=["gauge"])
-            msg_html = """
-                    <div class="wrap-text" id="id_get_status_{}">
-                    <script type="text/javascript">
-                        window.setTimeout(function(){{
-                            django.jQuery.ajax({{
-                                url: '{}',
-                                cache: false,
-                                async: true,
-                                success: function (result) {{
-                                    django.jQuery("#id_get_status_{}").html(result);
-                                }}
-                            }});
-                        }}, {});
-                    </script>
-                    {}{}</div>
-                """.format(
-                self.id, url, self.id, delay, progress, message
-            )
 
+            # Plus de sessionStorage ici pour éviter la boucle !
+            msg_html = f"""
+                <div class="wrap-text" id="id_get_status_{self.id}">
+                <script type="text/javascript">
+                    window.setTimeout(function(){{
+                        django.jQuery.ajax({{
+                            url: '{url}',
+                            cache: false,
+                            async: true,
+                            success: function (result) {{
+                                django.jQuery("#id_get_status_{self.id}").html(result);
+                            }}
+                        }});
+                    }}, {delay});
+                </script>
+                {progress}{message}</div>
+            """
         else:
-            msg_html = '<div class="wrap-text">{}</div>'.format(message)
+            # Le statut est stable (tâche terminée) : on vérifie si l'utilisateur avait lancé l'action
+            msg_html = f"""
+                <div class="wrap-text">{message}</div>
+                <script type="text/javascript">
+                    if (sessionStorage.getItem('repanier_trigger_reload_{self.id}') === 'true') {{
+                        sessionStorage.removeItem('repanier_trigger_reload_{self.id}');
+                        window.location.reload();
+                    }}
+                </script>
+            """
         return mark_safe(msg_html)
 
     get_html_status_display.short_description = _("Status")
@@ -1745,6 +1753,7 @@ class PermanenceInPreparation(Permanence):
         proxy = True
         verbose_name = _("Offer in preparation")
         verbose_name_plural = _("Offers in preparation")
+
 
 
 class PermanenceDone(Permanence):

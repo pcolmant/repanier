@@ -40,7 +40,7 @@ from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
 from repanier.task.task_order import open_order, close_order
-from repanier.tools import get_recurrence_dates, get_repanier_template_name
+from repanier.tools import get_recurrence_dates, get_repanier_template_name, get_repanier_static_name
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
@@ -650,3 +650,9 @@ class PermanenceInPreparationAdmin(SaleAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(status__lte=SaleStatus.SEND.value)
+
+    class Media:
+        js = (
+            "admin/js/jquery.init.js",
+            get_repanier_static_name("js/admin/reload_after_task.js"),
+        )

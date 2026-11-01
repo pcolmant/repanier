@@ -158,6 +158,7 @@ a.repanier-a-tooltip:after {
     transition: all 50ms ease-in-out;
 }
 
+/* L'ajout de pointer-events: none; sur a.repanier-a-tooltip:after et a.repanier-a-tooltip:before va résoudre instantanément le conflit de survol et supprimer le clignotement des boutons. */
 a.repanier-a-tooltip:before {
     position: absolute;
     visibility: hidden;
@@ -173,16 +174,42 @@ a.repanier-a-tooltip:before {
     transition: all 50ms ease-in-out;
 }
 
-a.repanier-a-tooltip:hover:after {
-    visibility: visible;
-    opacity: 1;
-    bottom: 35px;
+a.repanier-a-tooltip:after {
+    display: block;
+    visibility: hidden;
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    opacity: 0;
+    content: attr(data-repanier-tooltip);
+    height: auto;
+    padding: 5px 8px;
+    z-index: 999;
+    color: var(--cms-white-color);
+    text-decoration: none;
+    text-align: center;
+    background-color: var(--cms-blue-color);
+    -webkit-border-radius: var(--border-radius);
+    -moz-border-radius: var(--border-radius);
+    border-radius: var(--border-radius);
+    transition: all 50ms ease-in-out;
+    pointer-events: none; /* <-- AJOUTÉ : Empêche l'infobulle de capter les événements de la souris */
 }
 
-a.repanier-a-tooltip:hover:before {
-    visibility: visible;
-    opacity: 1;
-    bottom: calc(35px - 6px);
+a.repanier-a-tooltip:before {
+    position: absolute;
+    visibility: hidden;
+    width: 0;
+    height: 0;
+    left: 50%;
+    bottom: 0;
+    opacity: 0;
+    content: "";
+    border-style: solid;
+    border-width: 6px 6px 0 6px;
+    border-color: var(--cms-blue-color) transparent transparent transparent;
+    transition: all 50ms ease-in-out;
+    pointer-events: none; /* <-- AJOUTÉ : Empêche aussi la flèche de capter la souris */
 }
 
 input[type="submit"].repanier-submit-info,
