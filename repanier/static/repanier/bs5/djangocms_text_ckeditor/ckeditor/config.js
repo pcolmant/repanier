@@ -11,5 +11,5 @@ CKEDITOR.editorConfig = function (config) {
 
 // Remove default styles set
 // CKEDITOR.stylesSet.add('default', []);
-// IMPORTANT PCO : Allow epmty span tag needed for bootstrap glyficons
+// IMPORTANT PCO : Allow empty span tag needed for bootstrap glyphicons
 CKEDITOR.dtd.$removeEmpty.span = 0;
