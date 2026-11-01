@@ -1697,16 +1697,12 @@ class Permanence(models.Model):
         else:
             if self.status == SaleStatus.OPENED:
                 return mark_safe(
-                    '<span class="fa fa-unlock" style="{}color:#cdff60"></span> {}'.format(
-                        align, self.get_permanence_display()
+                    '{}&nbsp;&nbsp;<i class="bi bi-shop" style="{}color:#51a351"></i>'.format(
+                        self.get_permanence_display(), align
                     )
                 )
             else:
-                return mark_safe(
-                    '<span class="fa fa-lock" style="{}color:Tomato"></span> {}'.format(
-                        align, self.get_permanence_display()
-                    )
-                )
+                return self.get_permanence_display()
 
     def get_html_permanence_card_display(self):
         if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
