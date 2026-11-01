@@ -499,3 +499,14 @@ a.skip_link {
         padding-right: 5px;
     }
 }
+
+/* =================================================================
+   15. Ajustez la valeur selon la hauteur de votre navbar (ex: 50px ou 60px)
+   Pour éviter que le haut de la modale ne soit caché par la barre de navigation fixe
+   (la navbar de Django CMS), il faut ajouter un espacement vertical
+   (une marge supérieure ou un décalage margin-top / padding-top) au conteneur de la modale.
+   =================================================================== */
+
+.modal-dialog {
+    margin-top: 100px !important;
+}
