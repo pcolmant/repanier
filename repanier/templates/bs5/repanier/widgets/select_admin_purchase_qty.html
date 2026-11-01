@@ -7,24 +7,31 @@
   </optgroup>{% endif %}{% endfor %}
 </select>
 <script>
-    django.jQuery(document).ready(function() { {{ name }}_select("{{ widget.value|first }}");});
+    document.addEventListener("DOMContentLoaded", function() {
+        {{ name }}_select("{{ widget.value|first }}");
+    });
+
     function {{ name }}_select(value) {
-        (function($){
-            switch (value) {
-                {{ case_show_show }}
-                    $("div.form-row.field-quantity_ordered").show();
-                    $("div.form-row.field-quantity_invoiced").show();
-                    break;
-                {{ case_show_hide }}
-                    $("div.form-row.field-quantity_ordered").show();
-                    $("div.form-row.field-quantity_invoiced").hide();
-                    break;
-                {{ case_hide_show }}
-                    $("div.form-row.field-quantity_ordered").hide();
-                    $("div.form-row.field-quantity_invoiced").show();
-                    break;
-            }
-        }(django.jQuery))
+        const setDisplay = (selector, show) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.display = show ? '' : 'none';
+            });
+        };
+
+        switch (value) {
+            {{ case_show_show }}
+                setDisplay("div.form-row.field-quantity_ordered", true);
+                setDisplay("div.form-row.field-quantity_invoiced", true);
+                break;
+            {{ case_show_hide }}
+                setDisplay("div.form-row.field-quantity_ordered", true);
+                setDisplay("div.form-row.field-quantity_invoiced", false);
+                break;
+            {{ case_hide_show }}
+                setDisplay("div.form-row.field-quantity_ordered", false);
+                setDisplay("div.form-row.field-quantity_invoiced", true);
+                break;
+        }
     }
 </script>
 {% endwith %}

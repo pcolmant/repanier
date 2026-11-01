@@ -19,8 +19,14 @@
     <script>
         {{ name }}_select('{{ repanier_selected_value }}', '{{ repanier_selected_label }}');
         function {{ name }}_select(value, label) {
-            $('input[id={{ id }}]').val(value);
-            $('button[id={{ id }}_button_label]').html(label);
+            const inputEl = document.getElementById('{{ id }}');
+            if (inputEl) {
+                inputEl.value = value;
+            }
+            const labelEl = document.getElementById('{{ id }}_button_label');
+            if (labelEl) {
+                labelEl.innerHTML = label;
+            }
         }
     </script>
 </div>

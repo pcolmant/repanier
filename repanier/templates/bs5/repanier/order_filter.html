@@ -15,7 +15,7 @@
 
         <!-- 2. Le formulaire de recherche et les filtres n'apparaissent QUE si une permanence est présente -->
         {% if permanence %}
-            <!-- Formulaire de recherche -->
+            <!-- Formulaire de recherche avec htmx ou GET standard -->
             {% if may_order %}
                 <form action="{{ permanence.get_order_url }}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
                     {% csrf_token %}
@@ -88,22 +88,28 @@
         {% endif %}
     </div>
 
-    <!-- Chargement direct et inconditionnel de l'AJAX du panier -->
+    <!-- Chargement direct du panier en JavaScript natif (vanilla JS API Fetch) -->
     {% if may_order and permanence_id and permanence_id != 0 and permanence_id != "0" %}
         <script>
-            $(document).ready(function () {
-                var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    dataType: 'json',
-                    success: function (result) {
-                        $.each(result, function (key, val) {
-                            $(key).html(val);
+            document.addEventListener('DOMContentLoaded', function () {
+                const url = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
+
+                fetch(url, { credentials: 'same-origin' })
+                    .then(response => response.json())
+                    .then(data => {
+                        Object.entries(data).forEach(([key, val]) => {
+                            // Equivalent de $(key).html(val) en JS Vanilla (supporte les sélecteurs ID/class)
+                            const elements = document.querySelectorAll(key);
+                            elements.forEach(el => el.innerHTML = val);
                         });
-                    }
-                });
-                $("#li_my_basket").show();
+                    })
+                    .catch(error => console.error('Error fetching cart data:', error));
+
+                // Equivalent de $("#li_my_basket").show();
+                const myBasket = document.getElementById('li_my_basket');
+                if (myBasket) {
+                    myBasket.style.display = 'block';
+                }
             });
         </script>
     {% endif %}

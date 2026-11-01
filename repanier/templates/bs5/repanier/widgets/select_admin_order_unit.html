@@ -6,115 +6,130 @@
   </optgroup>{% endif %}{% endfor %}
 </select>
 <script>
-    django.jQuery(document).ready(function() { {{ widget.name }}_select("{{ widget.value|first }}");});
+    document.addEventListener("DOMContentLoaded", function() {
+        {{ widget.name }}_select("{{ widget.value|first }}");
+    });
+
     function {{ widget.name }}_select(value) {
-        (function($){
-            switch (value) {
-                case "100":
-                    $("div.fieldBox.field-unit_deposit").show();
-                    $("div.fieldBox.field-order_average_weight").hide();
-                    $("div.fieldBox.field-customer_minimum_order_quantity").show();
-                    $("div.fieldBox.field-customer_increment_order_quantity").hide();
-                    $("div.form-row.field-customer_minimum_order_quantity").hide();
-                    $("div.form-row.field-customer_increment_order_quantity").hide();
-                    $("div.fieldBox.field-customer_unit_price").show();
-                    $("div.form-row.field-wrapped").hide();
-                    break;
-                case "105":
-                case "110":
-                case "115":
-                    $("div.fieldBox.field-unit_deposit").show();
-                    $("div.fieldBox.field-order_average_weight").show();
-                    $("div.fieldBox.field-customer_minimum_order_quantity").show();
-                    $("div.fieldBox.field-customer_increment_order_quantity").hide();
-                    $("div.form-row.field-customer_minimum_order_quantity").show();
-                    $("div.form-row.field-customer_increment_order_quantity").hide();
-                    $("div.fieldBox.field-customer_unit_price").show();
-                    $("div.form-row.field-wrapped").hide();
-                    break;
-                case "140":
-                    $("div.fieldBox.field-unit_deposit").hide();
-                    $("div.fieldBox.field-order_average_weight").show();
-                    $("div.fieldBox.field-customer_minimum_order_quantity").show();
-                    $("div.fieldBox.field-customer_increment_order_quantity").show();
-                    $("div.form-row.field-customer_minimum_order_quantity").show();
-                    $("div.form-row.field-customer_increment_order_quantity").show();
-                    $("div.fieldBox.field-customer_unit_price").show();
-                    $("div.form-row.field-wrapped").show();
-                    break;
-                case "120":
-                case "150":
-                    $("div.fieldBox.field-unit_deposit").hide();
-                    $("div.fieldBox.field-order_average_weight").hide();
-                    $("div.fieldBox.field-customer_minimum_order_quantity").show();
-                    $("div.fieldBox.field-customer_increment_order_quantity").show();
-                    $("div.form-row.field-customer_minimum_order_quantity").show();
-                    $("div.form-row.field-customer_increment_order_quantity").show();
-                    $("div.fieldBox.field-customer_unit_price").show();
-                    $("div.form-row.field-wrapped").show();
-                    break;
-                case "300":
-                case "400":
-                    $("div.fieldBox.field-unit_deposit").hide();
-                    $("div.fieldBox.field-order_average_weight").hide();
-                    $("div.fieldBox.field-customer_minimum_order_quantity").hide();
-                    $("div.fieldBox.field-customer_increment_order_quantity").hide();
-                    $("div.form-row.field-customer_minimum_order_quantity").hide();
-                    $("div.form-row.field-customer_increment_order_quantity").hide();
-                    $("div.fieldBox.field-customer_unit_price").hide();
-                    $("div.form-row.field-wrapped").hide();
-                    break;
-            }
-            switch (value) {
-                case "105":
-                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Piece weight in kg" %}");
-                    break;
-                case "110":
-                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Piece content in l" %}");
-                    break;
-                case "115":
-                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Number of pieces in a pack" %}");
-                    break;
-                case "140":
-                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Average weight in kg of a piece" %}");
-                    break;
-            }
-            switch (value) {
-                case "100":
-                case "105":
-                case "110":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one piece" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one piece" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed as number of pieces" %}");
-                    break;
-                case "115":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one pack" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one pack" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed in number of pack(s)" %}");
-                    break;
-                case "120":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one kg" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one kg" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity in kg (0.05 = 50 grams)" %}");
-                    break;
-                case "140":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one kg" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one kg" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed as number of pieces" %}");
-                    break;
-                case "150":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one l" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one l" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed in ℓ (0.75 = 75 cℓ)" %}");
-                    break;
-                case "300":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one deposit" %}");
-                    break;
-                case "400":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one subscription" %}");
-                    break;
-            }
-        }(django.jQuery))
+        const setDisplay = (selector, show) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.display = show ? '' : 'none';
+            });
+        };
+
+        const setHtml = (selector, html) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.innerHTML = html;
+            });
+        };
+
+        switch (value) {
+            case "100":
+                setDisplay("div.fieldBox.field-unit_deposit", true);
+                setDisplay("div.fieldBox.field-order_average_weight", false);
+                setDisplay("div.fieldBox.field-customer_minimum_order_quantity", true);
+                setDisplay("div.fieldBox.field-customer_increment_order_quantity", false);
+                setDisplay("div.form-row.field-customer_minimum_order_quantity", false);
+                setDisplay("div.form-row.field-customer_increment_order_quantity", false);
+                setDisplay("div.fieldBox.field-customer_unit_price", true);
+                setDisplay("div.form-row.field-wrapped", false);
+                break;
+            case "105":
+            case "110":
+            case "115":
+                setDisplay("div.fieldBox.field-unit_deposit", true);
+                setDisplay("div.fieldBox.field-order_average_weight", true);
+                setDisplay("div.fieldBox.field-customer_minimum_order_quantity", true);
+                setDisplay("div.fieldBox.field-customer_increment_order_quantity", false);
+                setDisplay("div.form-row.field-customer_minimum_order_quantity", true);
+                setDisplay("div.form-row.field-customer_increment_order_quantity", false);
+                setDisplay("div.fieldBox.field-customer_unit_price", true);
+                setDisplay("div.form-row.field-wrapped", false);
+                break;
+            case "140":
+                setDisplay("div.fieldBox.field-unit_deposit", false);
+                setDisplay("div.fieldBox.field-order_average_weight", true);
+                setDisplay("div.fieldBox.field-customer_minimum_order_quantity", true);
+                setDisplay("div.fieldBox.field-customer_increment_order_quantity", true);
+                setDisplay("div.form-row.field-customer_minimum_order_quantity", true);
+                setDisplay("div.form-row.field-customer_increment_order_quantity", true);
+                setDisplay("div.fieldBox.field-customer_unit_price", true);
+                setDisplay("div.form-row.field-wrapped", true);
+                break;
+            case "120":
+            case "150":
+                setDisplay("div.fieldBox.field-unit_deposit", false);
+                setDisplay("div.fieldBox.field-order_average_weight", false);
+                setDisplay("div.fieldBox.field-customer_minimum_order_quantity", true);
+                setDisplay("div.fieldBox.field-customer_increment_order_quantity", true);
+                setDisplay("div.form-row.field-customer_minimum_order_quantity", true);
+                setDisplay("div.form-row.field-customer_increment_order_quantity", true);
+                setDisplay("div.fieldBox.field-customer_unit_price", true);
+                setDisplay("div.form-row.field-wrapped", true);
+                break;
+            case "300":
+            case "400":
+                setDisplay("div.fieldBox.field-unit_deposit", false);
+                setDisplay("div.fieldBox.field-order_average_weight", false);
+                setDisplay("div.fieldBox.field-customer_minimum_order_quantity", false);
+                setDisplay("div.fieldBox.field-customer_increment_order_quantity", false);
+                setDisplay("div.form-row.field-customer_minimum_order_quantity", false);
+                setDisplay("div.form-row.field-customer_increment_order_quantity", false);
+                setDisplay("div.fieldBox.field-customer_unit_price", false);
+                setDisplay("div.form-row.field-wrapped", false);
+                break;
+        }
+
+        switch (value) {
+            case "105":
+                setHtml("div.fieldBox.field-order_average_weight label", "{% translate 'Piece weight in kg' %}");
+                break;
+            case "110":
+                setHtml("div.fieldBox.field-order_average_weight label", "{% translate 'Piece content in l' %}");
+                break;
+            case "115":
+                setHtml("div.fieldBox.field-order_average_weight label", "{% translate 'Number of pieces in a pack' %}");
+                break;
+            case "140":
+                setHtml("div.fieldBox.field-order_average_weight label", "{% translate 'Average weight in kg of a piece' %}");
+                break;
+        }
+
+        switch (value) {
+            case "100":
+            case "105":
+            case "110":
+                setHtml("div.fieldBox.field-producer_unit_price label", "{% translate 'Producer price for one piece' %}");
+                setHtml("div.fieldBox.field-customer_unit_price label", "{% translate 'Customer price for one piece' %}");
+                setHtml("div.fieldBox.field-customer_minimum_order_quantity label", "{% translate 'Minimum order quantity expressed as number of pieces' %}");
+                break;
+            case "115":
+                setHtml("div.fieldBox.field-producer_unit_price label", "{% translate 'Producer price for one pack' %}");
+                setHtml("div.fieldBox.field-customer_unit_price label", "{% translate 'Customer price for one pack' %}");
+                setHtml("div.fieldBox.field-customer_minimum_order_quantity label", "{% translate 'Minimum order quantity expressed in number of pack(s)' %}");
+                break;
+            case "120":
+                setHtml("div.fieldBox.field-producer_unit_price label", "{% translate 'Producer price for one kg' %}");
+                setHtml("div.fieldBox.field-customer_unit_price label", "{% translate 'Customer price for one kg' %}");
+                setHtml("div.fieldBox.field-customer_minimum_order_quantity label", "{% translate 'Minimum order quantity in kg (0.05 = 50 grams)' %}");
+                break;
+            case "140":
+                setHtml("div.fieldBox.field-producer_unit_price label", "{% translate 'Producer price for one kg' %}");
+                setHtml("div.fieldBox.field-customer_unit_price label", "{% translate 'Customer price for one kg' %}");
+                setHtml("div.fieldBox.field-customer_minimum_order_quantity label", "{% translate 'Minimum order quantity expressed as number of pieces' %}");
+                break;
+            case "150":
+                setHtml("div.fieldBox.field-producer_unit_price label", "{% translate 'Producer price for one l' %}");
+                setHtml("div.fieldBox.field-customer_unit_price label", "{% translate 'Customer price for one l' %}");
+                setHtml("div.fieldBox.field-customer_minimum_order_quantity label", "{% translate 'Minimum order quantity expressed in ℓ (0.75 = 75 cℓ)' %}");
+                break;
+            case "300":
+                setHtml("div.fieldBox.field-producer_unit_price label", "{% translate 'Producer price for one deposit' %}");
+                break;
+            case "400":
+                setHtml("div.fieldBox.field-producer_unit_price label", "{% translate 'Producer price for one subscription' %}");
+                break;
+        }
     }
 </script>
 {% endspaceless %}

@@ -236,7 +236,7 @@ def repanier_user_bs5(context, *args, **kwargs):
 def history_label(request) -> str:
     user = request.user
     if not user.is_authenticated or not user.customer_id:
-        return "{}".format(_("My balance"))
+        return "{}".format(_("History"))
 
     last_customer_invoice = (
         CustomerInvoice.objects.filter(
@@ -268,7 +268,7 @@ def history_label(request) -> str:
                 ),
             }
     else:
-        my_balance = "{}".format(_("My balance"))
+        my_balance = "{}".format(_("History"))
     return my_balance
 
 

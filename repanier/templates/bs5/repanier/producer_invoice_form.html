@@ -1,4 +1,4 @@
-{% extends 'bs5/base_wo_cms_toolbar.html' %}
+{% extends 'bs5/base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block base_content %}
     <div class="container-repanier">
@@ -153,18 +153,16 @@
 
     {% addtoblock "lastjs" %}
         <script>
-            $(document).ready(function () {
-                var lien = '{% url 'repanier:order_name' %}';
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    async: false,
-                    success: function (result) {
-                        $.each(result, function (key, val) {
-                            $(key).html(val);
+            document.addEventListener('DOMContentLoaded', function () {
+                const url = '{% url 'repanier:order_name' %}';
+                fetch(url, { credentials: 'same-origin' })
+                    .then(response => response.json())
+                    .then(data => {
+                        Object.entries(data).forEach(([key, val]) => {
+                            document.querySelectorAll(key).forEach(el => el.innerHTML = val);
                         });
-                    }
-                });
+                    })
+                    .catch(error => console.error('Error fetching order name data:', error));
             });
         </script>
     {% endaddtoblock %}

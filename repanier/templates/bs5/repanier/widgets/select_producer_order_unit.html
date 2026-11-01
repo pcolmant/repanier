@@ -19,49 +19,66 @@
     <script>
     {{ name }}_select('{{ repanier_selected_value }}', '{{ repanier_selected_label }}');
     function {{ name }}_select(value, label) {
-         $('input[id={{ id }}]').val(value);
-         $('button[id={{ id }}_button_label]').html(label);
-         switch($('input[id={{ id }}]').val()) {
-         case '115':
-    {#         OrderUnit.PC_PRICE_PC#}
-             $('span[id=customer_increment_order_quantity_label]').html("{% translate "Conditioned by" %}");
-             $('span[id=customer_increment_order_quantity_addon]').html("{% translate "pc(s)" %}");
-             $('span[id=stock_label]').html("{% translate "Stock" %}");
-             $('span[id=stock_addon]').html("{% translate "pc(s)" %}");
-             $('span[id=producer_unit_price_addon]').html("{% translate "/ pc" %}");
-             $('div[id=div_id_order_average_weight]').hide();
-             $('div[id=div_id_unit_deposit]').show();
-             break;
-         case '105':
-    {#         OrderUnit.PC_PRICE_KG#}
-             $('span[id=customer_increment_order_quantity_label]').html("{% translate "Conditioned by" %}");
-             $('span[id=customer_increment_order_quantity_addon]').html("{% translate "kg(s)" %}");
-             $('span[id=stock_label]').html("{% translate "Stock" %}");
-             $('span[id=stock_addon]').html("{% translate "kg(s)" %}");
-             $('span[id=producer_unit_price_addon]').html("{% translate "/ kg" %}");
-             $('div[id=div_id_order_average_weight]').hide();
-             $('div[id=div_id_unit_deposit]').show();
-             break;
-         case '110':
-    {#         OrderUnit.PC_PRICE_LT#}
-             $('span[id=customer_increment_order_quantity_label]').html("{% translate "Conditioned by" %}");
-             $('span[id=customer_increment_order_quantity_addon]').html("{% translate "l(s)" %}");
-             $('span[id=stock_label]').html("{% translate "Stock" %}");
-             $('span[id=stock_addon]').html("{% translate "l(s)" %}");
-             $('span[id=producer_unit_price_addon]').html("{% translate "/ l" %}");
-             $('div[id=div_id_order_average_weight]').hide();
-             $('div[id=div_id_unit_deposit]').show();
-             break;
-         case '140':
-    {#         OrderUnit.PC_KG#}
-             $('span[id=customer_increment_order_quantity_label]').html("{% translate "Conditioned by" %}");
-             $('span[id=customer_increment_order_quantity_addon]').html("{% translate "pc(s)" %}");
-             $('span[id=stock_label]').html("{% translate "Stock" %}");
-             $('span[id=stock_addon]').html("{% translate "pc(s)" %}");
-             $('span[id=producer_unit_price_addon]').html("{% translate "/ kg" %}");
-             $('div[id=div_id_order_average_weight]').show();
-             $('div[id=div_id_unit_deposit]').hide();
-             break;
+         const inputEl = document.getElementById('{{ id }}');
+         if (inputEl) {
+             inputEl.value = value;
+         }
+         const labelEl = document.getElementById('{{ id }}_button_label');
+         if (labelEl) {
+             labelEl.innerHTML = label;
+         }
+
+         const setHtml = (selector, html) => {
+             document.querySelectorAll(selector).forEach(el => el.innerHTML = html);
+         };
+
+         const setDisplay = (selector, show) => {
+             document.querySelectorAll(selector).forEach(el => {
+                 el.style.display = show ? '' : 'none';
+             });
+         };
+
+         switch(value) {
+             case '115':
+                 // OrderUnit.PC_PRICE_PC
+                 setHtml('span[id=customer_increment_order_quantity_label]', "{% translate 'Conditioned by' %}");
+                 setHtml('span[id=customer_increment_order_quantity_addon]', "{% translate 'pc(s)' %}");
+                 setHtml('span[id=stock_label]', "{% translate 'Stock' %}");
+                 setHtml('span[id=stock_addon]', "{% translate 'pc(s)' %}");
+                 setHtml('span[id=producer_unit_price_addon]', "{% translate '/ pc' %}");
+                 setDisplay('div[id=div_id_order_average_weight]', false);
+                 setDisplay('div[id=div_id_unit_deposit]', true);
+                 break;
+             case '105':
+                 // OrderUnit.PC_PRICE_KG
+                 setHtml('span[id=customer_increment_order_quantity_label]', "{% translate 'Conditioned by' %}");
+                 setHtml('span[id=customer_increment_order_quantity_addon]', "{% translate 'kg(s)' %}");
+                 setHtml('span[id=stock_label]', "{% translate 'Stock' %}");
+                 setHtml('span[id=stock_addon]', "{% translate 'kg(s)' %}");
+                 setHtml('span[id=producer_unit_price_addon]', "{% translate '/ kg' %}");
+                 setDisplay('div[id=div_id_order_average_weight]', false);
+                 setDisplay('div[id=div_id_unit_deposit]', true);
+                 break;
+             case '110':
+                 // OrderUnit.PC_PRICE_LT
+                 setHtml('span[id=customer_increment_order_quantity_label]', "{% translate 'Conditioned by' %}");
+                 setHtml('span[id=customer_increment_order_quantity_addon]', "{% translate 'l(s)' %}");
+                 setHtml('span[id=stock_label]', "{% translate 'Stock' %}");
+                 setHtml('span[id=stock_addon]', "{% translate 'l(s)' %}");
+                 setHtml('span[id=producer_unit_price_addon]', "{% translate '/ l' %}");
+                 setDisplay('div[id=div_id_order_average_weight]', false);
+                 setDisplay('div[id=div_id_unit_deposit]', true);
+                 break;
+             case '140':
+                 // OrderUnit.PC_KG
+                 setHtml('span[id=customer_increment_order_quantity_label]', "{% translate 'Conditioned by' %}");
+                 setHtml('span[id=customer_increment_order_quantity_addon]', "{% translate 'pc(s)' %}");
+                 setHtml('span[id=stock_label]', "{% translate 'Stock' %}");
+                 setHtml('span[id=stock_addon]', "{% translate 'pc(s)' %}");
+                 setHtml('span[id=producer_unit_price_addon]', "{% translate '/ kg' %}");
+                 setDisplay('div[id=div_id_order_average_weight]', true);
+                 setDisplay('div[id=div_id_unit_deposit]', false);
+                 break;
         }
     }
     </script>

@@ -6,7 +6,7 @@
             <a id="{{ id }}_file_select" style="display:{{ repanier_display_picture }}" target="_blank" href="{{ repanier_file_url }}">
                 <img id="{{ id }}_file_img" src="{{ repanier_file_url }}" class="img-fluid img-thumbnail m-1" style="min-height:32px; min-width:32px; max-height:225px; max-width:225px;">
             </a>
-            <p id="{{ id }}_file_remove" style="display:{{ repanier_display_picture }}"><a id="{{ id }}_file_remove" class="btn btn-danger" href="#remove">{% translate "Remove" %}</a></p>
+            <p id="{{ id }}_file_remove_container" style="display:{{ repanier_display_picture }}"><a id="{{ id }}_file_remove" class="btn btn-danger" href="#remove">{% translate "Remove" %}</a></p>
             <input id="{{ id }}_file_elem" type="file" style="display:none" accept="image/*"/>
             <a href="#" id="{{ id }}_file_elem_select" class="btn btn-success" style="display:{{ repanier_display_upload }}"><span class="bi bi-camera" aria-hidden="true"></span></a>
         {% else %}
@@ -20,200 +20,188 @@
         <input id="{{ id }}" type="hidden" value="{{ repanier_file_path }}" name="{{ name }}" />
     </div>
     <script>
-        var {{ id }}_jQuery;
-        if( typeof django === 'undefined'){
-            if( typeof CMS === 'undefined'){
-                {{ id }}_jQuery = $
-            } else {
-                {{ id }}_jQuery = CMS.$
-            }
-        } else {
-            {{ id }}_jQuery = django.jQuery
-        }
-        (function($){
-            var {{ id }}_file_select = $("#{{ id }}_file_select"),
-                {{ id }}_file_elem = $("#{{ id }}_file_elem"),
-                {{ id }}_file_elem_select = $("#{{ id }}_file_elem_select"),
-                {{ id }}_file_img = $("#{{ id }}_file_img"),
-                {{ id }}_file_dropbox = $("#{{ id }}_file_dropbox"),
-                {{ id }}_file_remove = $("#{{ id }}_file_remove"),
-                {{ id }}_file_path = $("#{{ id }}");
+        document.addEventListener("DOMContentLoaded", function() {
+            const fileSelect = document.getElementById("{{ id }}_file_select");
+            const fileElem = document.getElementById("{{ id }}_file_elem");
+            const fileElemSelect = document.getElementById("{{ id }}_file_elem_select");
+            const fileImg = document.getElementById("{{ id }}_file_img");
+            const fileDropbox = document.getElementById("{{ id }}_file_dropbox");
+            const fileRemove = document.getElementById("{{ id }}_file_remove");
+            const fileRemoveContainer = document.getElementById("{{ id }}_file_remove_container");
+            const filePath = document.getElementById("{{ id }}");
+
             function getCsrftoken() {
-                var csrftoken = null;
+                let csrftoken = null;
                 if (document.cookie && document.cookie !== '') {
-                    var cookies = document.cookie.split(';');
-                    for (var i = 0; i < cookies.length; i++) {
-                        var cookie = $.trim(cookies[i]);
-                        // Does this cookie string begin with the name we want?
-                        if (cookie.substring(0, 'csrftoken'.length + 1) === ('csrftoken=')) {
-                            csrftoken = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, 10) === ('csrftoken=')) {
+                            csrftoken = decodeURIComponent(cookie.substring(10));
                             break;
                         }
                     }
                 }
                 return csrftoken;
             }
-            function addEventHandler(obj, evt, handler) {
-                if(obj.addEventListener) {
-                    // W3C method
-                    obj.addEventListener(evt, handler, false);
-                } else if(obj.attachEvent) {
-                    // IE method.
-                    obj.attachEvent('on'+evt, handler);
-                } else {
-                    // Old school method.
-                    obj['on'+evt] = handler;
-                }
-            }
+
             function cancel(e) {
                 e.stopPropagation();
                 if (e.preventDefault) { e.preventDefault(); }
                 return false;
             }
+
             function handleFiles(files) {
-                var file = files[0];
-                var imageType = /^image\//;
-                var file_type = file.type;
-                var img = document.createElement("img");
-                var reader = new FileReader();
-                if (!imageType.test(file_type)) {
+                if (!files || files.length === 0) return;
+                const file = files[0];
+                const imageType = /^image\//;
+                if (!imageType.test(file.type)) {
                     alert('{% translate "File is not an image" %}');
                     return;
                 }
-                reader.onloadend  = function() {
-                    var do_not_wait_forever, do_not_do_it_twice, wait_until_img_loaded;
-                    img.src = reader.result;
-                    function img_loaded() {
-                        var canvas = document.createElement('canvas');
-                        var context = canvas.getContext("2d");
-                        var MAX_WIDTH = {{ repanier_width }};
-                        var MAX_HEIGHT = {{ repanier_height }};
-                        var byteString, mimeString, length, ia, i, file_resized, form_data, csrftoken, width, height;
-                        width = img.width;
-                        height = img.height;
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        canvas.style.visibility = "hidden";
 
-                        context.drawImage(img, 0, 0, width, height);
-                        var dataURL = null;
-                        if(file_type === 'image/png') {
-                            dataURL = canvas.toDataURL("image/png");
-                        } else {
-                            dataURL = canvas.toDataURL("image/jpeg", 0.9);
-                        }
-                        if (dataURL.split(',')[0].indexOf('base64') >= 0)
-                            byteString = atob(dataURL.split(',')[1]);
-                        else
-                            byteString = unescape(dataURL.split(',')[1]);
-                        mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-                        length = byteString.length;
-                        ia = new Uint8Array(length);
-                        for (i = 0; i < length; i++) {
-                            ia[i] = byteString.charCodeAt(i);
-                        }
-                        file_resized = new Blob([ia], {type:mimeString});
-                        form_data = new FormData();
-                        form_data.append('file', file_resized, file.name);
-                        csrftoken = getCsrftoken();
-                        $.ajaxSetup({
-                            beforeSend: function(xhr, settings) {
-                                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const img = new Image();
+                    img.src = reader.result;
+
+                    let doNotWaitForever = setTimeout(function(){
+                        clearInterval(waitUntilImgLoaded);
+                        alert('{% translate "Processing this image take too much time" %}');
+                    }, 10000);
+
+                    let doNotDoItTwice = 0;
+                    let waitUntilImgLoaded = setInterval(function () {
+                        if (img.complete && ++doNotDoItTwice === 1) {
+                            clearTimeout(doNotWaitForever);
+                            clearInterval(waitUntilImgLoaded);
+
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext("2d");
+                            const MAX_WIDTH = {{ repanier_width }};
+                            const MAX_HEIGHT = {{ repanier_height }};
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
                             }
-                        });
-                        $.ajax({
-                            url : "{{ upload_url }}",
-                            type : "POST",
-                            cache: false,
-                            async: true,
-                            data: form_data,
-                            processData: false,
-                            contentType: false,
-                            success: function (result) {
-                                var msg = "";
-                                $.each(result, function (key, val) {
-                                    if(key === 'url') {
-                                        {{ id }}_file_select.attr("href", val);
-                                        {{ id }}_file_img.attr("src", val);
-                                    } else if(key === 'filename') {
-                                        {{ id }}_file_path.val(val);
+                            canvas.width = width;
+                            canvas.height = height;
+                            canvas.style.visibility = "hidden";
+
+                            context.drawImage(img, 0, 0, width, height);
+
+                            let dataURL = (file.type === 'image/png') ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg", 0.9);
+
+                            let byteString = (dataURL.split(',')[0].indexOf('base64') >= 0) ? atob(dataURL.split(',')[1]) : unescape(dataURL.split(',')[1]);
+                            let mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+                            let length = byteString.length;
+                            let ia = new Uint8Array(length);
+                            for (let i = 0; i < length; i++) {
+                                ia[i] = byteString.charCodeAt(i);
+                            }
+
+                            const fileResized = new Blob([ia], {type: mimeString});
+                            const formData = new FormData();
+                            formData.append('file', fileResized, file.name);
+
+                            const csrftoken = getCsrftoken();
+
+                            fetch("{{ upload_url }}", {
+                                method: "POST",
+                                headers: {
+                                    "X-CSRFToken": csrftoken
+                                },
+                                body: formData,
+                                credentials: 'same-origin'
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    if (response.status === 403) {
+                                        return response.json().then(errData => { throw new Error(errData.error); });
+                                    }
+                                    throw new Error(response.statusText);
+                                }
+                                return response.json();
+                            })
+                            .then(result => {
+                                let msg = "";
+                                Object.entries(result).forEach(([key, val]) => {
+                                    if (key === 'url') {
+                                        if (fileSelect) fileSelect.href = val;
+                                        if (fileImg) fileImg.src = val;
+                                    } else if (key === 'filename') {
+                                        if (filePath) filePath.value = val;
                                     } else {
                                         msg = val;
                                     }
                                 });
-                                {{ id }}_file_elem.val("");
-                                {{ id }}_file_select.css('display', 'inline');
-                                {{ id }}_file_remove.css('display', 'inline');
-                                {{ id }}_file_elem.hide();
-                                {{ id }}_file_elem_select.hide();
-                                if(msg !== "") {
+
+                                if (fileElem) fileElem.value = "";
+                                if (fileSelect) fileSelect.style.display = 'inline';
+                                if (fileRemove) fileRemove.style.display = 'inline';
+                                if (fileRemoveContainer) fileRemoveContainer.style.display = 'inline';
+                                if (fileElem) fileElem.style.display = 'none';
+                                if (fileElemSelect) fileElemSelect.style.display = 'none';
+
+                                if (msg !== "") {
                                     alert(msg);
-                                    cancel()
                                 }
-                            },
-                            error : function(result, errcode, errmsg) {
-                                var obj;
-                                if(result.status === 403) {
-                                    obj = JSON.parse(result.responseText);
-                                    alert(obj.error)
-                                } else {
-                                    alert(errcode + ": " + errmsg)
-                                }
-                            }
-                        });
-                    }
-                    do_not_wait_forever = setTimeout(function(){
-                        clearInterval(wait_until_img_loaded);
-                        alert('{% translate "Processing this image take too much time" %}')
-                    },10000);
-                    do_not_do_it_twice = 0;
-                    wait_until_img_loaded = setInterval(function () {
-                        if(img.complete && ++do_not_do_it_twice===1) {
-                            clearTimeout(do_not_wait_forever);
-                            clearInterval(wait_until_img_loaded);
-                            img_loaded()
+                            })
+                            .catch(error => {
+                                alert(error.message || error);
+                            });
                         }
-                    },100);
+                    }, 100);
                 };
                 reader.readAsDataURL(file);
             }
-            function drop(e) {
-                var dt, files;
-                cancel(e);
-                dt = e.dataTransfer;
-                files = dt.files;
-                handleFiles(files);
+
+            if (fileRemove) {
+                fileRemove.addEventListener('click', function(e) {
+                    cancel(e);
+                    if (fileSelect) fileSelect.style.display = 'none';
+                    if (fileRemove) fileRemove.style.display = 'none';
+                    if (fileRemoveContainer) fileRemoveContainer.style.display = 'none';
+                    if (fileElemSelect) fileElemSelect.style.display = 'inline';
+                    if (filePath) filePath.value = "";
+                });
             }
-            {{ id }}_file_remove.on('click', function(e){
-                cancel(e);
-                {{ id }}_file_select.hide();
-                {{ id }}_file_remove.hide();
-                {{ id }}_file_elem_select.css('display', 'inline');
-                {{ id }}_file_path.val("");
-            });
-            {{ id }}_file_elem.on('change', function(e){
-                cancel(e);
-                handleFiles(this.files);
-            });
-            {{ id }}_file_elem_select.on('click', function(e){
-                {{ id }}_file_elem.click();
-                cancel(e);
-            });
-            addEventHandler({{ id }}_file_dropbox, "dragenter", cancel);
-            addEventHandler({{ id }}_file_dropbox, "dragover", cancel);
-            addEventHandler({{ id }}_file_dropbox, "drop", drop);
-        }({{ id }}_jQuery))
+
+            if (fileElem) {
+                fileElem.addEventListener('change', function(e) {
+                    cancel(e);
+                    handleFiles(this.files);
+                });
+            }
+
+            if (fileElemSelect) {
+                fileElemSelect.addEventListener('click', function(e) {
+                    cancel(e);
+                    if (fileElem) fileElem.click();
+                });
+            }
+
+            if (fileDropbox) {
+                fileDropbox.addEventListener('dragenter', cancel);
+                fileDropbox.addEventListener('dragover', cancel);
+                fileDropbox.addEventListener('drop', function(e) {
+                    cancel(e);
+                    if (e.dataTransfer && e.dataTransfer.files) {
+                        handleFiles(e.dataTransfer.files);
+                    }
+                });
+            }
+        });
     </script>
 {% endwith %}
 {% endspaceless %}

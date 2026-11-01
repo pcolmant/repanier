@@ -5,59 +5,54 @@
            onclick="{{ id }}_test_mail_config();return false;">{% translate "Send a test email" %}</a>
 
         <script>
-            var {{ id }}_jQuery;
-            if (typeof django === 'undefined') {
-                if (typeof CMS === 'undefined') {
-                    {{ id }}_jQuery = $
-                } else {
-                    {{ id }}_jQuery = CMS.$
+            function getCsrftoken_{{ id }}() {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, 10) === ('csrftoken=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(10));
+                            break;
+                        }
+                    }
                 }
-            } else {
-                {{ id }}_jQuery = django.jQuery
+                return cookieValue;
             }
 
             function {{ id }}_test_mail_config() {
-                (function ($) {
-                    function getCsrftoken() {
-                        var csrftoken = null;
-                        if (document.cookie && document.cookie !== '') {
-                            var cookies = document.cookie.split(';');
-                            for (var i = 0; i < cookies.length; i++) {
-                                var cookie = $.trim(cookies[i]);
-                                // Does this cookie string begin with the name we want?
-                                if (cookie.substring(0, 'csrftoken'.length + 1) === ('csrftoken=')) {
-                                    csrftoken = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
-                                    break;
-                                }
-                            }
-                        }
-                        return csrftoken;
-                    }
+                const btn = document.getElementById('{{ id }}');
+                if (btn) {
+                    btn.innerHTML = '{% translate "Please wait..." %}';
+                }
 
-                    $('#{{ id }}').html('{% translate "Please wait..." %}');
-                    var id_email = $("#id_email").val();
-                    var lien = '{% url 'repanier:test_mail_config_ajax' %}';
-                    var csrftoken = getCsrftoken();
-                    $.ajaxSetup({
-                        beforeSend: function (xhr, settings) {
-                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                        }
+                const emailInput = document.getElementById("id_email");
+                const id_email = emailInput ? emailInput.value : '';
+                const lien = '{% url 'repanier:test_mail_config_ajax' %}';
+                const csrftoken = getCsrftoken_{{ id }}();
+
+                fetch(lien, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: new URLSearchParams({
+                        'id': '{{ id }}',
+                        'id_email': id_email
+                    }),
+                    cache: 'no-store',
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    Object.entries(result).forEach(([key, val]) => {
+                        document.querySelectorAll(key).forEach(el => {
+                            el.innerHTML = val;
+                        });
                     });
-                    $.ajax({
-                        type: "POST",
-                        url: lien,
-                        data: {
-                            'id': '{{ id }}',
-                            'id_email': id_email
-                        },
-                        cache: false,
-                        success: function (result) {
-                            $.each(result, function (key, val) {
-                                $(key).html(val);
-                            });
-                        }
-                    });
-                }({{ id }}_jQuery))
+                })
+                .catch(error => console.error('Error testing mail config:', error));
             }
         </script>
     {% endwith %}
