@@ -2,7 +2,7 @@ import re
 import threading
 from urllib.parse import parse_qsl
 
-from django.http import HttpResponseRedirect, QueryDict
+from django.http import HttpResponseBadRequest, QueryDict
 from django.utils.http import urlencode
 
 threading_local = threading.local()
@@ -100,7 +100,7 @@ def admin_filter_middleware(get_response):
         if "go_repanier" in request.path:
             query_string = request.META.get("QUERY_STRING", "")
             if REDIRECT_LOOP_PATTERN.search(query_string):
-                return HttpResponseRedirect("/")
+                return HttpResponseBadRequest("Malformed redirect loop detected.")
 
         _set_request(request)
         user = getattr(request, "user", None)
