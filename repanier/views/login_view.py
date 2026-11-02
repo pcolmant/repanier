@@ -16,6 +16,29 @@ from repanier.models.staff import Staff
 from repanier.tools import sint, get_repanier_template_name
 
 
+def _get_redirect_response(redirect_to, request):
+    """
+    Construit la réponse de redirection en gérant l'activation de la barre d'outils CMS (v3 ou v4).
+    """
+    # Empêche toute boucle de redirection ou autoréférence anormale
+    if not redirect_to or "go_repanier" in redirect_to or redirect_to.count("next=") > 1:
+        redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
+
+    if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts={request.get_host()}):
+        redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
+
+    if request.user.is_superuser:
+        toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
+    else:
+        # Essai de repli pour CMS version 4 ou standard
+        try:
+            toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
+        except Exception:
+            toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__ENABLE")
+
+    return HttpResponseRedirect(f"{redirect_to}?{toolbar_param}")
+
+
 @sensitive_post_parameters()
 @csrf_protect
 @never_cache
@@ -32,8 +55,12 @@ def login_view(
     redirect_to = request.POST.get(
         redirect_field_name, request.GET.get(redirect_field_name, EMPTY_STRING)
     )
-    # Ensure the user-originating redirection url is safe.
-    if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts=request.get_host()):
+
+    # Validation initiale et sécurisation de l'URL cible
+    if not redirect_to or "go_repanier" in redirect_to or redirect_to.count("next=") > 1:
+        redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
+
+    if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts={request.get_host()}):
         redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
 
     staff_responsibilities = None
@@ -43,23 +70,16 @@ def login_view(
         form = authentication_form(request, data=request.POST)
 
         if form.is_valid():
-            # Okay, security check complete. Log the user in.
             auth_login(request, form.get_user())
-
-            # Now the logged in user is set in request.user
             user = request.user
 
             if user.is_authenticated:
-
                 staff_qs = Staff.objects.filter(
                     customer_responsible_id=user.customer_id, is_active=True
                 )
-                may_become_a_staff_user = staff_qs.exists()
-
-                if not may_become_a_staff_user:
+                if not staff_qs.exists():
                     return HttpResponseRedirect(redirect_to)
 
-                # Ask the user to log in as a customer or as a staff member
                 staff_responsibilities = staff_qs.all()
 
     else:
@@ -68,22 +88,8 @@ def login_view(
 
             if as_staff_id == 0:
                 if user.is_superuser:
-                    try:
-                        return HttpResponseRedirect(
-                            "{}?{}".format(
-                                redirect_to, get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
-                            )
-                        )
-                    except:
-                        # CMS version 4
-                        return HttpResponseRedirect(
-                            "{}?{}".format(
-                                redirect_to, get_cms_setting("CMS_TOOLBAR_URL__ENABLE")
-                            )
-                        )
-                else:
-                    # The user want to be logged in as a customer
-                    return HttpResponseRedirect(redirect_to)
+                    return _get_redirect_response(redirect_to, request)
+                return HttpResponseRedirect(redirect_to)
 
             as_staff = Staff.objects.filter(
                 id=as_staff_id,
@@ -92,26 +98,12 @@ def login_view(
             ).first()
 
             if as_staff is None:
-                # This should not occurs
-                # But if ... then log the user as a customer
                 return HttpResponseRedirect(redirect_to)
 
             RepanierAuthBackend.set_staff_right(
                 request=request, user=user, as_staff=as_staff
             )
-            try:
-                return HttpResponseRedirect(
-                    "{}?{}".format(
-                        redirect_to, get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
-                    )
-                )
-            except:
-                # CMS version 4
-                return HttpResponseRedirect(
-                    "{}?{}".format(
-                        redirect_to, get_cms_setting("CMS_TOOLBAR_URL__ENABLE")
-                    )
-                )
+            return _get_redirect_response(redirect_to, request)
 
     form = authentication_form(request)
 
@@ -130,4 +122,5 @@ def login_view(
     }
     if extra_context is not None:
         context.update(extra_context)
+
     return TemplateResponse(request, template_name, context)
