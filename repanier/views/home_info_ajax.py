@@ -12,9 +12,9 @@ from repanier.models.permanence import Permanence
 @never_cache
 @require_GET
 def home_info_ajax(request):
-    if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
+    if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
         return home_info_bs3_ajax(request)
-    elif settings.REPANIER_SETTINGS_TEMPLATE == "bs5":
+    else:
         return home_info_bs5_ajax(request)
 
 def home_info_bs3_ajax(request):

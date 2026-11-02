@@ -111,9 +111,6 @@ DJANGO_SETTINGS_SESSION = config.get(
     "DJANGO_SETTINGS", "DJANGO_SETTINGS_SESSION", fallback="/var/tmp/django-session"
 )
 
-REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_BOOTSTRAP_CSS", fallback="bootstrap.css"
-)
 REPANIER_SETTINGS_COORDINATOR_EMAIL = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_COORDINATOR_EMAIL", fallback=ADMIN_EMAIL
 )
@@ -149,8 +146,11 @@ REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean(
 REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_SMS_GATEWAY_MAIL", fallback=EMPTY_STRING
 )
-REPANIER_SETTINGS_TEMPLATE = config.get(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_TEMPLATE", fallback="bs3"
+REPANIER_SETTINGS_BOOTSTRAP_VERSION = config.get(
+    "REPANIER_SETTINGS", "REPANIER_SETTINGS_BOOTSTRAP_VERSION", fallback="bs3"
+)
+REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get(
+    "REPANIER_SETTINGS", "REPANIER_SETTINGS_BOOTSTRAP_CSS", fallback="bootstrap.css"
 )
 
 REPANIER_SETTINGS_VERSION = config.get(
@@ -200,17 +200,68 @@ STATIC_URL = "/static/"
 
 def get_repanier_css_name(template_name):
     return os.path.join(
-        REPANIER_SETTINGS_VERSION, REPANIER_SETTINGS_TEMPLATE, template_name
+        REPANIER_SETTINGS_VERSION, REPANIER_SETTINGS_BOOTSTRAP_VERSION, template_name
     )
 
 
-REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
-    os.path.join("bootstrap", "css", REPANIER_SETTINGS_BOOTSTRAP_CSS)
-)
-
-REPANIER_SETTINGS_CUSTOM_CSS_PATH = get_repanier_css_name(
-    os.path.join("css", "custom.css")
-)
+if REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
+    CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap3"
+    CRISPY_TEMPLATE_PACK = "bootstrap3"
+    REPANIER_SETTINGS_BOOTSTRAP_FONT_PATH = EMPTY_STRING
+    REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
+        os.path.join("bootstrap", "css", REPANIER_SETTINGS_BOOTSTRAP_CSS)
+    )
+    REPANIER_SETTINGS_BOOTSTRAP_ICON_PATH = EMPTY_STRING
+    REPANIER_SETTINGS_CUSTOM_CSS_PATH = get_repanier_css_name(
+        os.path.join("css", "custom.css")
+    )
+    REPANIER_SETTINGS_BOOTSTRAP_JS_PATH = get_repanier_css_name(
+        os.path.join("bootstrap", "js", "jquery.js")
+    )
+    REPANIER_SETTINGS_HTMX_PATH = EMPTY_STRING
+elif REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs5":
+    CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+    CRISPY_TEMPLATE_PACK = "bootstrap5"
+    if REPANIER_SETTINGS_BOOTSTRAP_CSS == "pulse-nunito":
+        # https://fonts.google.com/specimen/Nunito
+        REPANIER_SETTINGS_BOOTSTRAP_FONT_PATH = get_repanier_css_name(
+            os.path.join("bootstrap", "fonts", "nunito.css")
+        )
+        # https://bootswatch.com/pulse/
+        # https://bootstrap.build/app/project/iIFADbwMUkHo
+        REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
+            os.path.join("bootstrap", "css", "bootstrap.pulse.min.css")
+        )
+    elif REPANIER_SETTINGS_BOOTSTRAP_CSS == "pulse-comfortaa":
+        # https://fonts.google.com/specimen/Nunito
+        REPANIER_SETTINGS_BOOTSTRAP_FONT_PATH = get_repanier_css_name(
+            os.path.join("bootstrap", "fonts", "comfortaa.css")
+        )
+        # https://bootswatch.com/pulse/
+        # https://bootstrap.build/app/project/iIFADbwMUkHo
+        REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
+            os.path.join("bootstrap", "css", "bootstrap.pulse.min.css")
+        )
+    else:
+        REPANIER_SETTINGS_BOOTSTRAP_FONT_PATH = EMPTY_STRING
+        # https://getbootstrap.com/docs/versions/
+        REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
+            os.path.join("bootstrap", "css", REPANIER_SETTINGS_BOOTSTRAP_CSS)
+        )
+    # https://github.com/twbs/icons/releases/download/v1.11.3/bootstrap-icons-1.11.3.zip
+    # Move the fonts woff and woff2 to bootstrap/icons/fonts and update the path in bootstrap-icons.min.css
+    REPANIER_SETTINGS_BOOTSTRAP_ICON_PATH = get_repanier_css_name(
+        os.path.join("bootstrap", "icons", "bootstrap-icons.min.css")
+    )
+    REPANIER_SETTINGS_CUSTOM_CSS_PATH = get_repanier_css_name(
+        os.path.join("css", "custom.css")
+    )
+    REPANIER_SETTINGS_BOOTSTRAP_JS_PATH = get_repanier_css_name(
+        os.path.join("bootstrap", "js", "bootstrap.bundle.min.js")
+    )
+    REPANIER_SETTINGS_HTMX_PATH = get_repanier_css_name(
+        os.path.join("htmx", "js", "htmx.min.js")
+    )
 
 print(
     "---- common_settings.py - bootstrap css path : {}".format(
@@ -424,7 +475,7 @@ if DEBUG:
                     PROJECT_PATH,
                     REPANIER_SETTINGS_VERSION,
                     "templates",  # required to run django CMS
-                    REPANIER_SETTINGS_TEMPLATE,
+                    REPANIER_SETTINGS_BOOTSTRAP_VERSION,
                 )
             ],
             # "APP_DIRS": True,
@@ -447,7 +498,7 @@ else:
                     PROJECT_PATH,
                     REPANIER_SETTINGS_VERSION,
                     "templates",
-                    REPANIER_SETTINGS_TEMPLATE,
+                    REPANIER_SETTINGS_BOOTSTRAP_VERSION,
                 )
             ],
             # 'APP_DIRS': True,
@@ -467,12 +518,6 @@ else:
         }
     ]
 
-if REPANIER_SETTINGS_TEMPLATE == "bs3":
-    CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap3"
-    CRISPY_TEMPLATE_PACK = "bootstrap3"
-elif REPANIER_SETTINGS_TEMPLATE == "bs5":
-    CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-    CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 CMS_PERMISSION = False
 CMS_PUBLIC_FOR = "all"

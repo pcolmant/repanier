@@ -63,16 +63,16 @@ else:
 
 def get_admin_template_name(template_name):
     return os.path.join(
-        settings.REPANIER_SETTINGS_TEMPLATE, "admin", "repanier", template_name
+        settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION, "admin", "repanier", template_name
     )
 
 
 def get_repanier_template_name(template_name):
-    return os.path.join(settings.REPANIER_SETTINGS_TEMPLATE, "repanier", template_name)
+    return os.path.join(settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION, "repanier", template_name)
 
 
 def get_repanier_static_name(template_name):
-    return os.path.join("repanier", settings.REPANIER_SETTINGS_TEMPLATE, template_name)
+    return os.path.join("repanier", settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION, template_name)
 
 
 def next_row(query_iterator):
@@ -420,7 +420,7 @@ def create_or_update_one_cart_item(
 
 
 def my_basket(is_order_confirm_send, order_amount):
-    if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
+    if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
         if (
             settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
             and not is_order_confirm_send

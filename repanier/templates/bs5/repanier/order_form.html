@@ -8,11 +8,6 @@
 
 {% block product_list %}{% spaceless %}
     {% if may_order or display_anonymous_order_form %}
-        <!-- Chargement d'htmx pour remplacer Waypoints -->
-        {% addtoblock "jshead" %}
-            <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-        {% endaddtoblock %}
-
         {% if offeritem_list %}
             <!-- Utilisation de container-fluid avec un padding pour occuper toute la largeur de l'écran -->
             <div class="container-fluid px-lg-4">

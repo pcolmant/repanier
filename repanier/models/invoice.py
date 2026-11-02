@@ -269,7 +269,7 @@ class CustomerInvoice(Invoice):
             # then permanence.with_delivery_point is also True
             msg_html = EMPTY_STRING
         else:
-            if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
+            if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
                 msg_unconfirmed_order_will_be_cancelled = EMPTY_STRING
                 msg_goto_basket = EMPTY_STRING
                 msg_confirm_basket = EMPTY_STRING

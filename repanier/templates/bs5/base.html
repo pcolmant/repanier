@@ -1,20 +1,13 @@
 {% load cms_tags menu_tags djangocms_alias_tags sekizai_tags i18n l10n static repanier_tags %}
 {% addtoblock "css" %}
-    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
-{#    https://bootswatch.com/pulse/ #}
-{#    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.8/dist/pulse/bootstrap.min.css"> #}
+    {% if REPANIER_BOOTSTRAP_FONT %}<link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_FONT %}">{% endif %}
+    {% if REPANIER_BOOTSTRAP_CSS %}<link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endif %}
+    {% if REPANIER_BOOTSTRAP_ICON %}<link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_ICON %}">{% endif %}
+    {% if REPANIER_CUSTOM_CSS %}<link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">{% endif %}
 {% endaddtoblock %}
-{% addtoblock "css" %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-{% endaddtoblock %}
-{% addtoblock "css" %}
-    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
-{% endaddtoblock %}
-{#{% addtoblock "jshead" %}#}
-{#    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>#}
-{#{% endaddtoblock %}#}
 {% addtoblock "jshead" %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% if REPANIER_BOOTSTRAP_JS %}<script src={% static REPANIER_BOOTSTRAP_JS %}></script>{% endif %}
+    {% if REPANIER_HTMX_JS %}<script src={% static REPANIER_HTMX_JS %}></script>{% endif %}
 {% endaddtoblock %}
 {% addtoblock "css" %}{% spaceless %}
     {% if request.toolbar %}
@@ -56,7 +49,7 @@
 {% spaceless %}
     <header>
         <!-- Navbar principale (Bureau & Mobile) -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top navbar-custom" role="navigation">
+        <nav class="navbar navbar-expand-lg bg-primary fixed-top navbar-custom" data-bs-theme="dark" role="navigation">
             <div class="container-fluid">
                 <!-- Bouton Menu et éléments de droite pour mobile uniquement -->
                 <button class="btn btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">

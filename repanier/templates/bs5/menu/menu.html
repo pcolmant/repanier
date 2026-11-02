@@ -5,23 +5,27 @@
         <li><hr class="dropdown-divider"></li>
     {% elif child.children %}
         <!-- Version Bureau : Dropdown classique -->
-        <li class="nav-item dropdown d-none d-lg-block {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}" data-page-id="{{ child.id }}">
+        <li class="nav-item dropdown d-none d-lg-block ..." data-page-id="{{ child.id }}">
             <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}"
-               class="nav-link dropdown-toggle text-dark"
+               class="nav-link dropdown-toggle"
                role="button"
                data-bs-toggle="dropdown"
                aria-expanded="false">
                 {{ child.get_menu_title |safe }}
             </a>
-            <ul class="dropdown-menu">
+            <!-- Ajout de data-bs-theme="light" ici pour forcer le fond blanc du sous-menu -->
+            <ul class="dropdown-menu" data-bs-theme="light">
                 {% for sub in child.children %}
                     {% if sub.get_menu_title == '------' %}
                         <li><hr class="dropdown-divider"></li>
                     {% else %}
                         <li>
-                            <a class="dropdown-item {% if sub.selected %}active{% endif %}"
+                            <a class="dropdown-item d-flex justify-content-between align-items-center {% if sub.selected %}active{% endif %}"
                                href="{{ sub.attr.redirect_url|default:sub.get_absolute_url }}">
-                                {{ sub.get_menu_title |safe }}
+                                <span>{{ sub.get_menu_title |safe }}</span>
+                                {% if sub.attr.is_open %}
+                                    <i class="bi bi-shop ms-2"></i>
+                                {% endif %}
                             </a>
                         </li>
                     {% endif %}
@@ -36,14 +40,14 @@
                 {% for sub in child.children %}
                     {% if forloop.first %}
                         <a href="{{ sub.attr.redirect_url|default:sub.get_absolute_url }}"
-                           class="nav-link text-dark {% if child.selected %}fw-bold text-success{% endif %}">
+                           class="nav-link {% if child.selected %}fw-bold text-success{% endif %}">
                             {{ child.get_menu_title |safe }}
                         </a>
                     {% endif %}
                 {% endfor %}
             {% else %}
                 <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}"
-                   class="nav-link text-dark {% if child.selected %}fw-bold text-success{% endif %}">
+                   class="nav-link {% if child.selected %}fw-bold text-success{% endif %}">
                     {{ child.get_menu_title |safe }}
                 </a>
             {% endif %}
@@ -56,8 +60,11 @@
                         {% else %}
                             <li class="nav-item">
                                 <a href="{{ subchild.attr.redirect_url|default:subchild.get_absolute_url }}"
-                                   class="nav-link fw-normal {% if subchild.selected %}bs-docs-sidebar-active fw-bold text-success{% else %}text-dark{% endif %}">
-                                    {{ subchild.get_menu_title |safe }}
+                                   class="nav-link fw-normal d-flex justify-content-between align-items-center {% if subchild.selected %}bs-docs-sidebar-active fw-bold text-success{% endif %}">
+                                    <span>{{ subchild.get_menu_title |safe }}</span>
+                                    {% if subchild.attr.is_open %}
+                                        <i class="bi bi-shop ms-2"></i>
+                                    {% endif %}
                                 </a>
 
                                 <!-- Affichage direct des sous-sous-pages en texte normal -->
@@ -70,8 +77,11 @@
                                                 {% else %}
                                                     <li class="nav-item">
                                                         <a href="{{ subsubchild.attr.redirect_url|default:subsubchild.get_absolute_url }}"
-                                                           class="nav-link fw-normal {% if subsubchild.selected %}bs-docs-sidebar-active fw-bold text-success{% else %}text-dark{% endif %}">
-                                                            {{ subsubchild.get_menu_title |safe }}
+                                                           class="nav-link fw-normal d-flex justify-content-between align-items-center {% if subsubchild.selected %}bs-docs-sidebar-active fw-bold text-success{% endif %}">
+                                                            <span>{{ subsubchild.get_menu_title |safe }}</span>
+                                                            {% if subsubchild.attr.is_open %}
+                                                                <i class="bi bi-shop ms-2"></i>
+                                                            {% endif %}
                                                         </a>
                                                     </li>
                                                 {% endif %}
@@ -89,7 +99,7 @@
         <!-- Éléments sans enfants -->
         <li class="nav-item {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
             <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}"
-               class="nav-link text-dark {% if child.selected %}fw-bold text-success{% endif %}">
+               class="nav-link {% if child.selected %}fw-bold{% endif %}">
                 {{ child.get_menu_title |safe }}
             </a>
         </li>

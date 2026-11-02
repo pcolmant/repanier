@@ -1685,7 +1685,7 @@ class Permanence(models.Model):
         return self.get_html_permanence_display(align="vertical-align: bottom; ")
 
     def get_html_permanence_display(self, align=EMPTY_STRING):
-        if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
+        if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
             if self.status == SaleStatus.OPENED:
                 return "{} - {}".format(
                     self.get_permanence_display(), self.get_status_display()
@@ -1705,7 +1705,7 @@ class Permanence(models.Model):
                 return self.get_permanence_display()
 
     def get_html_permanence_card_display(self):
-        if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
+        if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
             offer_description = Truncator(self.offer_description_v2)
             return mark_safe(
                 """

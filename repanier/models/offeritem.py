@@ -132,7 +132,7 @@ class OfferItem(Item):
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     def get_html_like(self, user_id):
-        if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
+        if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
             return mark_safe(
                 '<span class="glyphicon glyphicon-heart{}" onclick="like_ajax({});return false;"></span>'.format(
                     EMPTY_STRING
