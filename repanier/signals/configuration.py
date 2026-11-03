@@ -84,7 +84,9 @@ def configuration_post_save(sender, **kwargs):
             apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
 
         apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = currency_display
-        currency_display_xlsx = currency_display.replace(".", "\.")
+        # SyntaxWarning: invalid escape sequence '\.'
+        # Utilisation d'une chaîne brute (recommandé)
+        currency_display_xlsx = currency_display.replace(".", r"\.")
         if apps.REPANIER_SETTINGS_AFTER_AMOUNT:
             apps.REPANIER_SETTINGS_CURRENCY_XLSX = f'_ #,##0.00 {currency_display_xlsx} _ ;_ -#,##0.00 {currency_display_xlsx} _ ;_ "-"?? {currency_display_xlsx} _ ;_ @_ '
         else:
