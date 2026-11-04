@@ -314,6 +314,9 @@
                     var offer_item = document.getElementById("offer_item" + offer_item_id);
                     if (!offer_item) return;
 
+                    // CORRECTION MOBILE : Relâcher immédiatement le focus sur le select
+                    offer_item.blur();
+
                     var selectedOption = offer_item.options[offer_item.selectedIndex];
                     var offer_item_val = selectedOption ? selectedOption.value : '';
 

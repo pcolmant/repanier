@@ -433,7 +433,13 @@ def select_offer_item(offer_item, result, user):
         )
     if is_open:
         result.append(
-            '<select name="offer_item{id}" id="offer_item{id}" onchange="order_ajax({id})" onmouseover="show_select_order_list_ajax({id})" onmouseout="clear_select_order_list_ajax()" class="form-control">{option}</select>'.format(
+            '<select name="offer_item{id}" id="offer_item{id}" '
+            'onchange="order_ajax({id})" '
+            'ontouchstart="show_select_order_list_ajax({id})" '
+            'onfocus="show_select_order_list_ajax({id})" '
+            'onmouseover="show_select_order_list_ajax({id})" '
+            'onmouseout="clear_select_order_list_ajax()" '
+            'class="form-control">{option}</select>'.format(
                 id=offer_item.id, option=html
             )
         )
