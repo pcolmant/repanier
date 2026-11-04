@@ -1,3 +1,10 @@
-sitemap: sitemap.xml
+Sitemap: /sitemap.xml
+
+User-agent: SemrushBot
+Disallow: /fr/repanier/go_repanier/
+Disallow: /nl/repanier/go_repanier/
+
 User-agent: *
 Crawl-delay: 10
+Disallow: /fr/repanier/go_repanier/
+Disallow: /nl/repanier/go_repanier/
