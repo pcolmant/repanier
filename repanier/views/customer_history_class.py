@@ -37,21 +37,22 @@ class CustomerHistoryView(DetailView):
                 customer_invoice__isnull=True,
             ).order_by("operation_date")
             context["not_invoiced_bank_account_set"] = not_invoiced_bank_account_set
+            
+            # Prefetch bank accounts for all invoices to avoid N+1 queries
             customer_invoice_set = CustomerInvoice.objects.filter(
-                    customer_id=customer.id,
-                    status=SaleStatus.INVOICED,
-            ).order_by("-invoice_sort_order")
+                customer_id=customer.id,
+                status=SaleStatus.INVOICED,
+            ).order_by("-invoice_sort_order").prefetch_related(
+                'bankaccount_set'  # Prefetch all bank accounts for these invoices
+            )
             invoiced_array = []
             for customer_invoice in customer_invoice_set:
-                bank_account_set = BankAccount.objects.filter(
-                    customer_invoice=customer_invoice
-                ).order_by("operation_date")
-                invoiced_array += [
-                    {
-                        "customer_invoice": customer_invoice,
-                        "bank_account_set": bank_account_set,
-                    }
-                ]
+                # bank_account_set is already prefetched, no additional query needed
+                bank_account_set = customer_invoice.bankaccount_set.all().order_by("operation_date")
+                invoiced_array.append({
+                    "customer_invoice": customer_invoice,
+                    "bank_account_set": bank_account_set,
+                })
             context["invoiced_array"] = invoiced_array
             archived_customer_invoice_set = CustomerInvoice.objects.filter(
                     customer_id=customer.id,

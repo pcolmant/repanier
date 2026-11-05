@@ -101,6 +101,8 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
     # Orders send to our producers
     producer_set = Producer.objects.filter(
         permanence=permanence,
+    ).prefetch_related(
+        'producerinvoice_set'  # Prefetch producer invoices to avoid N+1 queries
     )
     for producer in producer_set:
         long_profile_name = (
@@ -134,9 +136,12 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
         )
         html_body = template.render(context)
 
-        producer_invoice = ProducerInvoice.objects.filter(
-            producer_id=producer.id, permanence_id=permanence.id
-        ).first()
+        # Use prefetched invoices to avoid N+1 query
+        producer_invoice = next(
+            (inv for inv in producer.producerinvoice_set.all() 
+             if inv.permanence_id == permanence.id),
+            None
+        )
 
         to_email = []
         send_email = False
@@ -187,6 +192,14 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
             represent_this_buyinggroup=False,
             customerinvoice__is_order_confirm_send=False,
             customerinvoice__permanence_id=permanence.id,
+        ).select_related(
+            'user'  # Prefetch user to avoid N+1 when accessing customer.user
+        ).prefetch_related(
+            'customerinvoice_set',  # Prefetch invoices
+            'customerinvoice_set__delivery',  # Prefetch delivery for invoices
+            'customerinvoice_set__delivery__delivery_point',  # Prefetch delivery_point
+            'customerinvoice_set__delivery__delivery_point__group',  # Prefetch group
+            'customerinvoice_set__delivery__delivery_point__group__user',  # Prefetch group user
         )
         if len(deliveries_id) > 0:
             customer_set = customer_set.filter(
@@ -204,6 +217,11 @@ def export_order_2_1_group(
     delivery_board = (
         DeliveryBoard.objects.filter(id=delivery_id)
         .exclude(delivery_point__group=None)
+        .select_related(
+            'delivery_point',
+            'delivery_point__group',
+            'delivery_point__group__user',
+        )
         .first()
     )
     if delivery_board is None:
@@ -289,9 +307,12 @@ def export_order_2_1_customer(
     )
 
     config = REPANIER_SETTINGS_CONFIG
-    customer_invoice = CustomerInvoice.objects.filter(
-        permanence_id=permanence.id, customer_id=customer.id
-    ).first()
+    # Use prefetched invoices from customer_set to avoid N+1 query
+    customer_invoice = next(
+        (inv for inv in customer.customerinvoice_set.all()
+         if inv.permanence_id == permanence.id),
+        None
+    )
     if customer_invoice is not None:
         if order_responsible is None:
             order_responsible = Staff.get_or_create_order_responsible()
@@ -299,16 +320,16 @@ def export_order_2_1_customer(
             permanence=permanence, customer_invoice=customer_invoice
         )[0]
         if wb is not None:
-            to_email = [customer.user.email]
+            to_email = [customer.user.email]  # user is prefetched via select_related
             if customer_invoice.delivery is not None:
-                delivery_point = customer_invoice.delivery
+                delivery_point = customer_invoice.delivery  # delivery is prefetched
                 if (
                     delivery_point.delivery_point.inform_customer_responsible
                     and delivery_point.delivery_point.group is not None
                 ):
-                    group = delivery_point.delivery_point.group
+                    group = delivery_point.delivery_point.group  # group is prefetched
                     if group.id != customer.id:
-                        to_email.append(group.user.email)
+                        to_email.append(group.user.email)  # group.user is prefetched
             else:
                 delivery_point = EMPTY_STRING
 

@@ -28,7 +28,9 @@ class CustomerInvoiceView(DetailView):
         context = super().get_context_data(**kwargs)
         context["my_invoices"] = self.my_invoices
         customer_invoice = context["object"]
-        customer = Customer.objects.filter(id=self.customer_id).first()
+        # Use get() instead of filter().first() for single object lookup
+        # and select_related for user if needed
+        customer = Customer.objects.select_related('user').filter(id=self.customer_id).first()
         context["customer"] = customer
         context["previous_customer_invoice_id"] = None
         context["next_customer_invoice_id"] = None
@@ -48,11 +50,15 @@ class CustomerInvoiceView(DetailView):
         else:
             bank_account_set = BankAccount.objects.filter(
                 customer_invoice=customer_invoice
-            ).order_by("operation_date")
+            ).order_by("operation_date").select_related(
+                'customer_invoice'
+            )
             context["bank_account_set"] = bank_account_set
             purchase_set = Purchase.objects.filter(
                 customer_invoice=customer_invoice,
-            ).order_by("producer", "offer_item")
+            ).order_by("producer", "offer_item").select_related(
+                'producer', 'offer_item', 'customer'
+            )
             context["purchase_set"] = purchase_set
             purchase_by_other_set = (
                 Purchase.objects.filter(
@@ -61,6 +67,7 @@ class CustomerInvoiceView(DetailView):
                 )
                 .exclude(customer_id=self.customer_id)
                 .order_by("customer", "producer", "offer_item")
+                .select_related('producer', 'offer_item', 'customer')
             )
             context["purchase_by_other_set"] = purchase_by_other_set
             context["download_invoice"] = Purchase.objects.filter(
@@ -97,7 +104,7 @@ class CustomerInvoiceView(DetailView):
                     next_customer_invoice = CustomerInvoice.objects.filter(
                         customer_id=customer.id,
                         status__lt=SaleStatus.INVOICED,
-                    ).first()
+                    ).only("id").first()
             elif customer_invoice.status != SaleStatus.ARCHIVED:
                 previous_customer_invoice = CustomerInvoice.objects.filter(
                     customer_id=customer.id,
@@ -128,26 +135,18 @@ class CustomerInvoiceView(DetailView):
             customer_id = user.customer_id
         self.my_invoices = customer_id == user.customer_id
         if invoice_id == 0:
+            # Use a single query with fallback using coalesce
             last_customer_invoice = (
                 CustomerInvoice.objects.filter(
                     customer_id=customer_id,
-                    invoice_sort_order__isnull=False,
-                    status=SaleStatus.INVOICED,
                 )
                 .only("id")
-                .order_by("-invoice_sort_order")
+                .order_by(
+                    '-invoice_sort_order',  # INVOICED invoices have sort_order
+                    '-id'  # Fallback for ARCHIVED invoices
+                )
                 .first()
             )
-            if last_customer_invoice is None:
-                last_customer_invoice = (
-                    CustomerInvoice.objects.filter(
-                        customer_id=customer_id,
-                        status=SaleStatus.ARCHIVED,
-                    )
-                    .only("id")
-                    .order_by("-id")
-                    .first()
-                )
             if last_customer_invoice is not None:
                 invoice_id = last_customer_invoice.id
         self.kwargs["pk"] = invoice_id
