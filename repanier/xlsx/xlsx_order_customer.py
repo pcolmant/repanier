@@ -333,9 +333,9 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 else:
                     total_price_with_tax = invoice.get_total_price_with_tax()
                     if total_price_with_tax < producer.minimum_order_value:
-                        minimum_order_amount_reached = _(
+                        minimum_order_amount_reached = "{}".format(_(
                             "Minimum order amount not reached"
-                        )
+                        ))
                 row = [
                     producer.short_profile_name,
                     producer.long_profile_name,
@@ -619,7 +619,7 @@ def export_preparation_for_a_delivery(
                                 current_col += 1
                                 c = ws.cell(row=current_row, column=current_col)
                                 c.value = "{}".format(producer_save.short_profile_name)
-                                current_col = 5
+                                current_col = 6
                                 c = ws.cell(row=current_row, column=current_col)
                                 if (
                                     department_for_customer_save__short_name
@@ -813,7 +813,7 @@ def export_preparation_for_a_delivery(
                                         c.value = "{}".format(
                                             producer_save.short_profile_name
                                         )
-                                    current_col = 5
+                                    current_col = 6
                                     c = ws.cell(row=current_row, column=current_col)
                                     if (
                                         department_for_customer_save__short_name
