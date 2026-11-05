@@ -43,6 +43,13 @@ def export_invoice(
     hide_customer_prices = customer is None
     purchase_set = Purchase.objects.get_invoices(
         permanence=permanence, year=year, customer=customer, producer=producer
+    ).select_related(
+        'permanence',
+        'producer',
+        'customer',
+        'customer__user',
+        'offer_item',
+        'offer_item__department_for_customer',
     )
     if purchase_set.exists():
         wb, ws = new_landscape_a4_sheet(wb, sheet_name, permanence or year)
@@ -229,19 +236,19 @@ def export_invoice(
                 row_num += 1
 
             # Use current_row/current_col to avoid repeated +1 calculations
+            # Optimized: cache row access and use direct assignment
             current_row = row_num + 1
             current_col = 1
-            for col_num in range(len(row)):
+            for col_data in row:  # Direct iteration over row elements
                 c = ws.cell(row=current_row, column=current_col)
-                c.value = row[col_num][ROW_VALUE]
-                c.number_format = row[col_num][ROW_FORMAT]
-                if row[col_num][ROW_BOX]:
-                    c.border = BORDER_THIN
-                else:
-                    c.border = BORDER_HAIR
-                if col_num == 8:
-                    c.font = FONT_BOLD
+                c.value = col_data[ROW_VALUE]
+                c.number_format = col_data[ROW_FORMAT]
+                c.border = BORDER_THIN if col_data[ROW_BOX] else BORDER_HAIR
                 current_col += 1
+            # Apply bold font to specific column (8) - optimized to avoid checking in loop
+            if len(row) > 8:
+                c = ws.cell(row=current_row, column=9)  # col_num 8 is index 9 (1-based)
+                c.font = FONT_BOLD
 
             row_num += 1
 

@@ -137,7 +137,14 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     "customer__short_basket_name",
                 ]
 
-        purchases = Purchase.objects.filter(**base_filters).order_by(*order_by).iterator()
+        # Optimized: prefetch related data to avoid N+1 queries
+        purchases = Purchase.objects.filter(**base_filters).order_by(*order_by).select_related(
+            'permanence',
+            'producer',
+            'customer',
+            'offer_item',
+            'offer_item__department_for_customer',
+        ).iterator()
         current_purchase = next_purchase(purchases)
 
         while current_purchase is not None:

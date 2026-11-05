@@ -45,6 +45,11 @@ def export_producer_by_product(permanence, producer, wb=None):
     hide_column_short_basket_name = True
     hide_column_unit_deposit = True
     formula_main_total = []
+    # Prefetch producer invoice to avoid N+1 query
+    producer_invoice = ProducerInvoice.objects.filter(
+        permanence_id=permanence.id, producer_id=producer.id
+    ).only("status").first()
+    
     offer_items = (
         OfferItemReadOnly.objects.filter(
             permanence_id=permanence.id,
@@ -64,14 +69,7 @@ def export_producer_by_product(permanence, producer, wb=None):
         )
         row_num = 1
         producer_purchases_price = DECIMAL_ZERO
-        status = (
-            ProducerInvoice.objects.filter(
-                permanence_id=permanence.id, producer_id=producer.id
-            )
-            .only("status")
-            .first()
-            .status
-        )
+        status = producer_invoice.status if producer_invoice else None
         while offer_item is not None:
             department_for_customer_save = offer_item.department_for_customer
             current_row = row_num + 1
@@ -97,11 +95,15 @@ def export_producer_by_product(permanence, producer, wb=None):
                 if offer_item.wrapped:
                     hide_column_short_basket_name = False
                     first_purchase = True
+                    # Prefetch related data to avoid N+1 queries
                     purchase_set = Purchase.objects.filter(
                         offer_item_id=offer_item.id,
                     ).order_by(
                         "offer_item__producer_sort_order_v2",
                         "customer__short_basket_name",
+                    ).select_related(
+                        'customer',
+                        'offer_item',
                     )
                     for purchase in purchase_set:
                         if offer_item.stock > DECIMAL_ZERO:
