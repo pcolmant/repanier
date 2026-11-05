@@ -1,6 +1,9 @@
 import logging
 
 from django.db import transaction
+from typing import Any
+
+from repanier.models import Permanence
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +113,29 @@ def automatically_closed():
     return something_to_close
 
 
+@transaction.atomic
+def resend(permanence_id):
+    something_to_resend = False
+    permanence = Permanence.objects.filter(
+        permanence_id=permanence_id,
+        status=SaleStatus.WAIT_FOR_SEND
+    ).first()
+    if permanence:
+        if permanence.with_delivery_point:
+            deliveries_id = list(
+                DeliveryBoard.objects.filter(
+                    permanence_id=permanence.id, status=SaleStatus.WAIT_FOR_SEND
+                ).values_list("id", flat=True)
+            )
+        else:
+            deliveries_id = ()
+        send_order(
+            permanence, everything=True, deliveries_id=deliveries_id, send_mail=True
+        )
+        something_to_resend = True
+    return something_to_resend
+
+
 # Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_html_status_display()**
 # won't works on the admin screen. The clock is based on the permanence.status state.
 @debug_parameters
@@ -147,6 +173,10 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
         everything=everything,
         deliveries_id=deliveries_id,
     )
+    send_order(permanence, everything, deliveries_id, send_mail)
+
+
+def send_order(permanence: Permanence, everything: bool, deliveries_id: Any, send_mail: bool):
     permanence.send_to_producer()
     permanence.calculate_order_amount()
     reorder_purchases(permanence.id)
