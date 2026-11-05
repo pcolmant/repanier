@@ -148,7 +148,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 c.value = "{}".format(reference)
                             c.number_format = FORMAT_TEXT
                             c.border = BORDER_BOTTOM_THIN
-                            c = ws.cell(row=row_num, column=5)
+                            c = ws.cell(row=current_row, column=5)
                             c.value = offer_item.get_long_name_with_producer_price()
                             c.number_format = FORMAT_TEXT
                             c.alignment = ALIGN_LEFT_WRAP
