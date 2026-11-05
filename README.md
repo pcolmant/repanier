@@ -23,9 +23,9 @@ Built with **Django 5.2**, **Django CMS 5.1**, **Bootstrap 5.3**, and **Python 3
 
 ---
 
-# How to Set Up `Repanier` on Debian 12
+# How to Set Up `Repanier` on Debian 13
 
-This guide provides step-by-step instructions for deploying `Repanier` on a Debian 12 server using `Nginx`, `uWSGI`, and `PostgreSQL`.
+This guide provides step-by-step instructions for deploying `Repanier` on a Debian 13 server using `Nginx`, `uWSGI`, and `PostgreSQL`.
 
 ---
 
