@@ -2,6 +2,7 @@ from io import BytesIO
 
 from django.template import Template, Context as TemplateContext
 from django.utils.translation import gettext_lazy as _
+from openpyxl.styles import Font
 
 from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
@@ -16,6 +17,40 @@ from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
 logger = logging.getLogger(__name__)
+
+
+def copy_worksheet(target_wb, source_ws, index=0):
+    # Titre (31 chars max)
+    sheet_title = source_ws.title[:31]
+    new_sheet = target_wb.create_sheet(title=sheet_title, index=index)
+
+    # Copie des cellules + styles + commentaires
+    for row in source_ws.iter_rows():
+        for cell in row:
+            new_cell = new_sheet[cell.coordinate]
+            new_cell.value = cell.value
+            if cell.has_style:
+                new_cell.font = cell.font.copy() if cell.font else None
+                new_cell.border = cell.border.copy() if cell.border else None
+                new_cell.fill = cell.fill.copy() if cell.fill else None
+                new_cell.number_format = cell.number_format
+                new_cell.alignment = cell.alignment.copy() if cell.alignment else None
+            if cell.comment:
+                new_cell.comment = cell.comment
+            if cell.hyperlink:
+                new_cell.hyperlink = cell.hyperlink.copy()
+
+    # Dimensions
+    for col, dim in source_ws.column_dimensions.items():
+        if dim.width:
+            new_sheet.column_dimensions[col].width = dim.width
+    for row_idx, dim in source_ws.row_dimensions.items():
+        if dim.height:
+            new_sheet.row_dimensions[row_idx].height = dim.height
+
+    # Cellules fusionnées
+    for merged_range in source_ws.merged_cells.ranges:
+        new_sheet.merge_cells(str(merged_range))
 
 
 # @debug_parameters
@@ -166,9 +201,8 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
                 to=to_email,
             )
             if wb is not None:
-                if producer.represent_this_buyinggroup:
-                    if abstract_ws is not None:
-                        wb.add_sheet(abstract_ws, index=0)
+                if producer.represent_this_buyinggroup and abstract_ws is not None:
+                    copy_worksheet(wb, abstract_ws)
                 buffer = BytesIO()
                 wb.save(buffer)
                 buffer.seek(0)
@@ -372,11 +406,11 @@ def export_order_2_1_customer(
                 send_even_if_unsubscribed=True,
             )
             if (
-                not cancel_order
-                and REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER
+                    not cancel_order
+                    and REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER
+                    and abstract_ws is not None
             ):
-                if abstract_ws is not None:
-                    wb.add_sheet(abstract_ws, index=0)
+                copy_worksheet(wb, abstract_ws)
             buffer = BytesIO()
             wb.save(buffer)
             buffer.seek(0)
