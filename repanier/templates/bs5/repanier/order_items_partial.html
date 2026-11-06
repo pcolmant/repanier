@@ -3,7 +3,7 @@
     <div class="col-12 col-md-6 col-xl-4 col-xxl-3">
         <div class="card h-100 shadow-sm p-3">
             <div class="row g-0 align-items-center h-100">
-                <!-- Partie gauche : Nom, Producteur, Rayon, Modes de production (Cliquable sans le toggle auto Bootstrap) -->
+                <!-- Partie gauche : Nom, Producteur, Rayon, Modes de production -->
                 <div class="col-6" data-bs-target="#orderModal" data-id="{{ offer.id|unlocalize }}" role="button" style="cursor: pointer;">
                     <b class="text-dark">{{ offer.get_order_name }}</b>
                     {% if offer.product.offer_description_v2|length > 0 %}&nbsp;<span class="bi bi-info-circle text-muted"></span>{% endif %}
@@ -22,26 +22,30 @@
                     {% endfor %}
                 </div>
 
-                <!-- Partie droite : Boutons ± (remplace le select pour iOS), Prix, Consigne, Image miniature (Cliquable) et Cœur -->
+                <!-- Partie droite : Boutons ±, Prix, Consigne, Image miniature et Cœur -->
                 <div class="col-6 d-flex flex-column justify-content-between h-100">
                     <div>
                         {% if may_order %}
                         <div class="input-group quantity-buttons">
+                            <!-- Bouton Diminuer (-) -->
                             <button class="btn btn-sm btn-outline-secondary"
                                     hx-post="{% url 'repanier:order_ajax' %}"
                                     hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "decrease", csrfmiddlewaretoken: "{{ csrf_token }}"}'
-                                    hx-target="#qty-{{ offer.id }}"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    hx-target="#qty-{{ offer.id|unlocalize }}"
                                     hx-swap="innerHTML"
                                     title="{% translate 'Decrease' %}">
                                 <i class="bi bi-dash"></i>
                             </button>
-                            <span id="qty-{{ offer.id }}" class="form-control text-center">
+                            <span id="qty-{{ offer.id|unlocalize }}" class="form-control text-center">
                                 {% get_current_quantity offer_item=offer %}
                             </span>
+                            <!-- Bouton Augmenter (+) -->
                             <button class="btn btn-sm btn-outline-secondary"
                                     hx-post="{% url 'repanier:order_ajax' %}"
                                     hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "increase", csrfmiddlewaretoken: "{{ csrf_token }}"}'
-                                    hx-target="#qty-{{ offer.id }}"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    hx-target="#qty-{{ offer.id|unlocalize }}"
                                     hx-swap="innerHTML"
                                     title="{% translate 'Increase' %}">
                                 <i class="bi bi-plus"></i>
@@ -86,38 +90,3 @@
         <span class="text-muted" style="display:none;">{% translate "Loading..." %}</span>
     </div>
 {% endif %}
-
-<!-- S'il y a une page suivante, on renvoie un nouveau déclencheur htmx qui remplace l'ancien -->
-{#{% if page_obj.has_next %}#}
-{#    <div class="loading my-4 text-center col-12" #}
-{#         hx-get="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"#}
-{#         hx-trigger="revealed"#}
-{#         hx-target="this"#}
-{#         hx-swap="outerHTML">#}
-{#        <span class="spinner-border spinner-border-sm me-1 text-success" role="status" aria-hidden="true"></span>#}
-{#        <span class="text-muted">{% translate "Loading..." %}</span>#}
-{#    </div>#}
-{#{% endif %}#}
-
-{#{% if page_obj.has_next %}#}
-{#    <div class="loading my-4 text-center col-12"#}
-{#         hx-get="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"#}
-{#         hx-trigger="intersect rootMargin:5000px once"#}
-{#         hx-target="this"#}
-{#         hx-swap="outerHTML">#}
-{#        <span class="spinner-border spinner-border-sm me-1 text-success" role="status" aria-hidden="true"></span>#}
-{#        <span class="text-muted">{% translate "Loading..." %}</span>#}
-{#    </div>#}
-{#{% endif %}#}
-
-{#{% if page_obj.has_next %}#}
-{#    <div class="loading my-4 text-center col-12"#}
-{#         hx-get="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"#}
-{#         Dès que la page actuelle est affichée, htmx attend 300 millisecondes (le temps que l'œil humain perçoive l'affichage initial) et lance silencieusement le chargement de la page suivante en arrière-plan.#}
-{#         hx-trigger="load delay:300ms"#}
-{#         hx-target="this"#}
-{#         hx-swap="outerHTML">#}
-{#        <span class="spinner-border spinner-border-sm me-1 text-success" role="status" aria-hidden="true" style="display:none;"></span>#}
-{#        <span class="text-muted" style="display:none;">{% translate "Loading..." %}</span>#}
-{#    </div>#}
-{#{% endif %}#}
