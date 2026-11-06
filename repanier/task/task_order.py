@@ -116,10 +116,13 @@ def automatically_closed():
 @transaction.atomic
 def resend(permanence_id):
     something_to_resend = False
-    permanence = Permanence.objects.filter(
-        permanence_id=permanence_id,
-        status=SaleStatus.WAIT_FOR_SEND
-    ).first()
+    if permanence_id is not None:
+        permanence = Permanence.objects.filter(
+            id=permanence_id,
+            status=SaleStatus.WAIT_FOR_SEND
+        ).first()
+    else:
+        permanence = None
     if permanence:
         if permanence.with_delivery_point:
             deliveries_id = list(
