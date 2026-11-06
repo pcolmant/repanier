@@ -12,3 +12,14 @@ cache
 /mysite/_b_dev_site.ini
 /requirements/requirement-4.2.old.txt
 /repanier/migrations/
+
+# IDE PyCharm / JetBrains
+.idea/
+.vscode/
+
+# Fichiers de localisation compilés Django
+*.mo
+
+# Dossier média local et de configuration
+/mysite/media/
+/setup/

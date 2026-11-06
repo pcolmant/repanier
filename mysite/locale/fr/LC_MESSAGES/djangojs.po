@@ -1,0 +1,1194 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#: _a_dev_site/collect-static/filer/js/libs/jquery-ui.min.1e2047978946.js:6
+#: _a_dev_site/collect-static/filer/js/libs/jquery-ui.min.js:6
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-30 12:05+0100\n"
+"PO-Revision-Date: 2026-10-30 12:07+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.10\n"
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:38
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:45
+#, javascript-format
+msgid "Available %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:44
+#, javascript-format
+msgid ""
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:60
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:61
+#, javascript-format
+msgid "Type into this box to filter down the list of available %s."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:65
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:110
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:66
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:126
+msgid "Filter"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:69
+msgid "Choose all"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:69
+#, javascript-format
+msgid "Click to choose all %s at once."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:75
+msgid "Choose"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:77
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1786
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1786
+msgid "Remove"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:83
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:105
+#, javascript-format
+msgid "Chosen %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:89
+#, javascript-format
+msgid ""
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:105
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:121
+#, javascript-format
+msgid "Type into this box to filter down the list of selected %s."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:120
+msgid "Remove all"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:120
+#, javascript-format
+msgid "Click to remove all chosen %s at once."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.bdb8d0cc579e.js:211
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:240
+#, javascript-format
+msgid "%s selected option not visible"
+msgid_plural "%s selected options not visible"
+msgstr[0] ""
+msgstr[1] ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:49
+#, javascript-format
+msgid ""
+"Choose %s by selecting them and then select the \"Choose\" arrow button."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:73
+#, javascript-format
+msgid "Choose all %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:85
+#, javascript-format
+msgid "Choose selected %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:93
+#, javascript-format
+msgid "Remove selected %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:109
+#, javascript-format
+msgid ""
+"Remove %s by selecting them and then select the \"Remove\" arrow button."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:142
+msgid "(click to clear)"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/SelectFilter2.js:146
+#, javascript-format
+msgid "Remove all %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/actions.eac7e3441574.js:67
+#: _a_dev_site/collect-static/admin/js/actions.js:67
+msgid "%(sel)s of %(cnt)s selected"
+msgid_plural "%(sel)s of %(cnt)s selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#: _a_dev_site/collect-static/admin/js/actions.eac7e3441574.js:161
+#: _a_dev_site/collect-static/admin/js/actions.js:161
+msgid ""
+"You have unsaved changes on individual editable fields. If you run an "
+"action, your unsaved changes will be lost."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/actions.eac7e3441574.js:174
+#: _a_dev_site/collect-static/admin/js/actions.js:174
+msgid ""
+"You have selected an action, but you haven’t saved your changes to "
+"individual fields yet. Please click OK to save. You’ll need to re-run the "
+"action."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/actions.eac7e3441574.js:175
+#: _a_dev_site/collect-static/admin/js/actions.js:175
+msgid ""
+"You have selected an action, and you haven’t made any changes on individual "
+"fields. You’re probably looking for the Go button rather than the Save "
+"button."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:13
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:110
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:13
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:110
+msgid "Now"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:14
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:14
+msgid "Midnight"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:15
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:15
+msgid "6 a.m."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:16
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:16
+msgid "Noon"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:17
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:17
+msgid "6 p.m."
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:78
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:78
+#, javascript-format
+msgid "Note: You are %s hour ahead of server time."
+msgid_plural "Note: You are %s hours ahead of server time."
+msgstr[0] ""
+msgstr[1] ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:86
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:86
+#, javascript-format
+msgid "Note: You are %s hour behind server time."
+msgid_plural "Note: You are %s hours behind server time."
+msgstr[0] ""
+msgstr[1] ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:128
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:128
+msgid "Choose a Time"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:158
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:158
+msgid "Choose a time"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:175
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:333
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:175
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:333
+msgid "Cancel"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:238
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:318
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:238
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:318
+msgid "Today"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:255
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:255
+msgid "Choose a Date"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:312
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:312
+msgid "Yesterday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.9f6e209cebca.js:324
+#: _a_dev_site/collect-static/admin/js/admin/DateTimeShortcuts.js:324
+msgid "Tomorrow"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:11
+#: _a_dev_site/collect-static/admin/js/calendar.js:11
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1077
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1077
+msgid "January"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:12
+#: _a_dev_site/collect-static/admin/js/calendar.js:12
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1077
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1077
+msgid "February"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:13
+#: _a_dev_site/collect-static/admin/js/calendar.js:13
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1077
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1089
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1077
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1089
+msgid "March"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:14
+#: _a_dev_site/collect-static/admin/js/calendar.js:14
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1078
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1090
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1078
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1090
+msgid "April"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:15
+#: _a_dev_site/collect-static/admin/js/calendar.js:15
+msgid "May"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:16
+#: _a_dev_site/collect-static/admin/js/calendar.js:16
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1078
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1090
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1078
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1090
+msgid "June"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:17
+#: _a_dev_site/collect-static/admin/js/calendar.js:17
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1079
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1091
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1079
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1091
+msgid "July"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:18
+#: _a_dev_site/collect-static/admin/js/calendar.js:18
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1079
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1079
+msgid "August"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:19
+#: _a_dev_site/collect-static/admin/js/calendar.js:19
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1079
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1079
+msgid "September"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:20
+#: _a_dev_site/collect-static/admin/js/calendar.js:20
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1080
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1080
+msgid "October"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:21
+#: _a_dev_site/collect-static/admin/js/calendar.js:21
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1080
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1080
+msgid "November"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:22
+#: _a_dev_site/collect-static/admin/js/calendar.js:22
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1080
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1080
+msgid "December"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:25
+#: _a_dev_site/collect-static/admin/js/calendar.js:25
+msgctxt "abbrev. month January"
+msgid "Jan"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:26
+#: _a_dev_site/collect-static/admin/js/calendar.js:26
+msgctxt "abbrev. month February"
+msgid "Feb"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:27
+#: _a_dev_site/collect-static/admin/js/calendar.js:27
+msgctxt "abbrev. month March"
+msgid "Mar"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:28
+#: _a_dev_site/collect-static/admin/js/calendar.js:28
+msgctxt "abbrev. month April"
+msgid "Apr"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:29
+#: _a_dev_site/collect-static/admin/js/calendar.js:29
+msgctxt "abbrev. month May"
+msgid "May"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:30
+#: _a_dev_site/collect-static/admin/js/calendar.js:30
+msgctxt "abbrev. month June"
+msgid "Jun"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:31
+#: _a_dev_site/collect-static/admin/js/calendar.js:31
+msgctxt "abbrev. month July"
+msgid "Jul"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:32
+#: _a_dev_site/collect-static/admin/js/calendar.js:32
+msgctxt "abbrev. month August"
+msgid "Aug"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:33
+#: _a_dev_site/collect-static/admin/js/calendar.js:33
+msgctxt "abbrev. month September"
+msgid "Sep"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:34
+#: _a_dev_site/collect-static/admin/js/calendar.js:34
+msgctxt "abbrev. month October"
+msgid "Oct"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:35
+#: _a_dev_site/collect-static/admin/js/calendar.js:35
+msgctxt "abbrev. month November"
+msgid "Nov"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:36
+#: _a_dev_site/collect-static/admin/js/calendar.js:36
+msgctxt "abbrev. month December"
+msgid "Dec"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:39
+#: _a_dev_site/collect-static/admin/js/calendar.js:57
+msgctxt "one letter Sunday"
+msgid "S"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:40
+#: _a_dev_site/collect-static/admin/js/calendar.js:58
+msgctxt "one letter Monday"
+msgid "M"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:41
+#: _a_dev_site/collect-static/admin/js/calendar.js:59
+msgctxt "one letter Tuesday"
+msgid "T"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:42
+#: _a_dev_site/collect-static/admin/js/calendar.js:60
+msgctxt "one letter Wednesday"
+msgid "W"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:43
+#: _a_dev_site/collect-static/admin/js/calendar.js:61
+msgctxt "one letter Thursday"
+msgid "T"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:44
+#: _a_dev_site/collect-static/admin/js/calendar.js:62
+msgctxt "one letter Friday"
+msgid "F"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.f8a5d055eb33.js:45
+#: _a_dev_site/collect-static/admin/js/calendar.js:63
+msgctxt "one letter Saturday"
+msgid "S"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:39
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1031
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1031
+msgid "Sunday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:40
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1030
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1030
+msgid "Monday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:41
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1030
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1030
+msgid "Tuesday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:42
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1030
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1030
+msgid "Wednesday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:43
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1030
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1030
+msgid "Thursday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:44
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1031
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1031
+msgid "Friday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:45
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1031
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1031
+msgid "Saturday"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:48
+msgctxt "abbrev. day Sunday"
+msgid "Sun"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:49
+msgctxt "abbrev. day Monday"
+msgid "Mon"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:50
+msgctxt "abbrev. day Tuesday"
+msgid "Tue"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:51
+msgctxt "abbrev. day Wednesday"
+msgid "Wed"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:52
+msgctxt "abbrev. day Thursday"
+msgid "Thur"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:53
+msgctxt "abbrev. day Friday"
+msgid "Fri"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/calendar.js:54
+msgctxt "abbrev. day Saturday"
+msgid "Sat"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/collapse.f84e7410290f.js:16
+#: _a_dev_site/collect-static/admin/js/collapse.f84e7410290f.js:34
+#: _a_dev_site/collect-static/admin/js/collapse.js:16
+#: _a_dev_site/collect-static/admin/js/collapse.js:34
+msgid "Show"
+msgstr ""
+
+#: _a_dev_site/collect-static/admin/js/collapse.f84e7410290f.js:30
+#: _a_dev_site/collect-static/admin/js/collapse.js:30
+msgid "Hide"
+msgstr ""
+
+#: _a_dev_site/collect-static/cms/js/dist/4.1.3/bundle.admin.changeform.min.2d357faf6e09.js:1
+#: _a_dev_site/collect-static/cms/js/dist/4.1.3/bundle.admin.changeform.min.js:1
+#: _a_dev_site/collect-static/cms/js/dist/5.0.6/bundle.admin.changeform.min.js:1
+#: _a_dev_site/collect-static/cms/js/dist/5.1.3/bundle.admin.changeform.min.js:1
+#: _a_dev_site/collect-static/cms/js/modules/cms.changeform.28ab0268300c.js:38
+#: _a_dev_site/collect-static/cms/js/modules/cms.changeform.js:55
+msgid "Are you sure you want to change tabs without saving the page first?"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.095203eef0a0.js:2
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.089b862314e2.js:409
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4362
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+msgid "edit"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.095203eef0a0.js:2
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.089b862314e2.js:409
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4362
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+msgid "view"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.095203eef0a0.js:2
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.089b862314e2.js:410
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4381
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+msgid "add"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.095203eef0a0.js:2
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.089b862314e2.js:463
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4460
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+msgid "Error while loading the data from the server"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.095203eef0a0.js:2
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.089b862314e2.js:451
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4429
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+msgid "move failed"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4363
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+#, javascript-format
+msgid "Edit %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4363
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+#, javascript-format
+msgid "View %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4383
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+#, javascript-format
+msgid "Add child to %s"
+msgstr ""
+
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.debug.js:4491
+#: _a_dev_site/collect-static/django_mptt_admin/django_mptt_admin.js:2
+msgid "Loading"
+msgstr ""
+
+#: _a_dev_site/collect-static/filer/js/libs/jquery-ui.min.1e2047978946.js:6
+#: _a_dev_site/collect-static/filer/js/libs/jquery-ui.min.js:6
+msgid "'"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1603
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1603
+msgctxt "date"
+msgid "%l, %F %j, %Y"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1768
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1768
+msgid "including"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1768
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1768
+msgid "excluding"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1772
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1772
+msgid "Frequency"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1773
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1773
+msgid "On the"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1774
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1774
+msgid "Each"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1775
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1775
+msgid "Every"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1776
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1776
+msgid "Until"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1777
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1777
+msgid "Occurs %(number)s time"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1778
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1778
+msgid "Occurs %(number)s times"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1779
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1779
+msgid "Date"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1780
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1780
+msgid "Time"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1781
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1781
+msgid "Repeat until"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1782
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1782
+msgid "Exclude these occurences"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1783
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1783
+msgid "Exclude this date"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1784
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1784
+msgid "Add rule"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1785
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1785
+msgid "Add date"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.e844a81fdecb.js:1787
+#: _a_dev_site/collect-static/recurrence/js/recurrence-widget.js:1787
+msgid "Calendar"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:218
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:218
+msgctxt "Until date format"
+msgid "%Y-%m-%d"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1007
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1007
+msgid "midnight"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1008
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1008
+msgid "noon"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1009
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1009
+msgid "on the %(items)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1010
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1010
+msgid "every %(number)s %(freq)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1011
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1011
+msgid "each %(items)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1012
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1012
+msgid "occuring %(number)s time"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1013
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1013
+msgid "occuring %(number)s times"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1014
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1014
+msgid "until %(date)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1018
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1018
+msgid "year"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1018
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1018
+msgid "month"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1018
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1018
+msgid "week"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1018
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1018
+msgid "day"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1019
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1019
+msgid "hour"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1019
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1019
+msgid "minute"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1019
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1019
+msgid "second"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1022
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1022
+msgid "years"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1022
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1022
+msgid "months"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1022
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1022
+msgid "weeks"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1022
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1022
+msgid "days"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1023
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1023
+msgid "hours"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1023
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1023
+msgid "minutes"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1023
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1023
+msgid "seconds"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1026
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1026
+msgid "annually"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1026
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1026
+msgid "monthly"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1026
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1026
+msgid "weekly"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1026
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1026
+msgid "daily"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1027
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1027
+msgid "hourly"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1027
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1027
+msgid "minutely"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1027
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1027
+msgid "secondly"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1034
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1034
+msgid "Mon"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1034
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1034
+msgid "Tue"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1034
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1034
+msgid "Wed"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1034
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1034
+msgid "Thu"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1035
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1035
+msgid "Fri"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1035
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1035
+msgid "Sat"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1035
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1035
+msgid "Sun"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1038
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1038
+msgctxt "Monday first letter"
+msgid "M"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1039
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1039
+msgctxt "Tuesday first letter"
+msgid "T"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1040
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1040
+msgctxt "Wednesday first letter"
+msgid "W"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1041
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1041
+msgctxt "Thursday first letter"
+msgid "T"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1042
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1042
+msgctxt "Friday first letter"
+msgid "F"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1043
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1043
+msgctxt "Saturday first letter"
+msgid "S"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1044
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1044
+msgctxt "Sunday first letter"
+msgid "S"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1047
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1047
+msgid "first %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1048
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1048
+msgid "second %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1049
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1049
+msgid "third %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1050
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1050
+msgid "fourth %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1051
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1060
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1051
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1060
+msgid "last %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1052
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1052
+msgid "second last %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1053
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1053
+msgid "third last %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1056
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1056
+msgid "1st %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1057
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1057
+msgid "2nd %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1058
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1058
+msgid "3rd %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1059
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1059
+msgid "4th %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1061
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1061
+msgid "2nd last %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1062
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1062
+msgid "3rd last %(weekday)s"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1065
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1071
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1065
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1071
+msgid "last"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1066
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1066
+msgid "second last"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1067
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1067
+msgid "third last"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1068
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1068
+msgid "fourth last"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1072
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1072
+msgid "2nd last"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1073
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1073
+msgid "3rd last"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1074
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1074
+msgid "4th last"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1078
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1084
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1090
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1078
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1084
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1090
+msgctxt "month name"
+msgid "May"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1083
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1083
+msgid "Jan"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1083
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1083
+msgid "Feb"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1083
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1083
+msgid "Mar"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1084
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1084
+msgid "Apr"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1084
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1084
+msgid "Jun"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1085
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1085
+msgid "Jul"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1085
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1085
+msgid "Aug"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1085
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1085
+msgid "Sep"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1086
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1086
+msgid "Oct"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1086
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1086
+msgid "Nov"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1086
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1086
+msgid "Dec"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1089
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1089
+msgid "Jan."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1089
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1089
+msgid "Feb."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1091
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1091
+msgid "Aug."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1091
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1091
+msgid "Sept."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1092
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1092
+msgid "Oct."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1092
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1092
+msgid "Nov."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1092
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1092
+msgid "Dec."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1095
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1095
+msgid "a.m."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1095
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1095
+msgid "p.m."
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1096
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1096
+msgid "AM"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1096
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1096
+msgid "PM"
+msgstr ""
+
+#: _a_dev_site/collect-static/recurrence/js/recurrence.15729a7c5c1b.js:1098
+#: _a_dev_site/collect-static/recurrence/js/recurrence.js:1098
+msgctxt "Day of month"
+msgid "%j%S"
+msgstr ""
+
+#: _a_dev_site/collect-static/repanier/bs3/js/admin/confirm_exit.db5bd7614eb0.js:12
+#: _a_dev_site/collect-static/repanier/bs3/js/admin/confirm_exit.js:12
+#: _a_dev_site/collect-static/repanier/bs5/js/admin/confirm_exit.5e27cc5d08a8.js:12
+#: _a_dev_site/collect-static/repanier/bs5/js/admin/confirm_exit.js:12
+msgid "New information not saved. Do you wish to leave the page?"
+msgstr ""
+
+#: _a_dev_site/collect-static/repanier/bs3/js/admin/confirm_purchase.75982489d0c5.js:5
+#: _a_dev_site/collect-static/repanier/bs3/js/admin/confirm_purchase.js:5
+#: _a_dev_site/collect-static/repanier/bs5/js/admin/confirm_purchase.09b8b95da20e.js:5
+#: _a_dev_site/collect-static/repanier/bs5/js/admin/confirm_purchase.js:5
+msgid "✓🔐"
+msgstr ""
+
+#: _a_dev_site/collect-static/treebeard/treebeard-admin.5bfc2f0ef3b7.js:158
+#: _a_dev_site/collect-static/treebeard/treebeard-admin.js:177
+msgid "Abort"
+msgstr ""
+
+#: _a_dev_site/collect-static/treebeard/treebeard-admin.5bfc2f0ef3b7.js:180
+#: _a_dev_site/collect-static/treebeard/treebeard-admin.js:199
+msgid "As Sibling"
+msgstr ""
+
+#: _a_dev_site/collect-static/treebeard/treebeard-admin.5bfc2f0ef3b7.js:198
+#: _a_dev_site/collect-static/treebeard/treebeard-admin.js:217
+msgid "As child"
+msgstr ""

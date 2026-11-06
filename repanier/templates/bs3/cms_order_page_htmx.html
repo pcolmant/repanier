@@ -1,0 +1,265 @@
+{% extends 'bs3/cms_page.html' %}
+{% load cms_tags sekizai_tags i18n l10n %}
+
+{% block sub_content %}
+    {% block notification %}
+        {% if notification %}
+        <div id="containerInfo" class="hidden-xs">
+            <div class="row">
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="col-md-12">
+                                {{ notification }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endblock notification %}
+
+    {% block may_order %}{% spaceless %}
+        {% if user.is_authenticated and not may_order %}
+            <div class="row">
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    {% translate "The ordering functionality is not activated in your account. <br> If you wish to order, please contact the managers of your group." %}
+                </div>
+            </div>
+            </div>
+        {% endif %}
+    {% endspaceless %}{% endblock may_order %}
+
+    {% block permanence_description %}{% spaceless %}
+        {% if may_order or display_anonymous_order_form %}
+            <div class="row">
+            <div class="panel panel-default">
+                {% if permanence.offer_description_v2 and permanence.offer_description_v2.strip %}
+                <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse-offer-description">
+                    <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
+                </div>
+                <div id="collapse-offer-description" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div class="col-xs-12">
+                            {% if permanence.picture %}<img class="img-responsive img-rounded" style="float: left; margin: 5px;" alt="{{ permanence.get_permanence_display }}" title="{{ permanence.get_permanence_customer_display }}" src="{{ MEDIA_URL }}{{ permanence.picture }}"/><div class="clearfix visible-xs-block visible-sm-block"></div>{%  endif %}
+                            {{ permanence.offer_description_v2 | safe }}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="panel-heading">
+                     <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
+                </div>
+                {% endif %}
+            </div>
+            </div>
+        {% endif %}
+    {% endspaceless %}{% endblock permanence_description %}
+
+    {% block confirm_basket %}{% spaceless %}
+        {% if may_order %}
+            {% if offeritem_list %}
+                <span id="span_btn_confirm_order"></span>
+            {% endif %}
+        {% endif %}
+    {% endspaceless %}{% endblock confirm_basket %}
+
+    {% spaceless %}
+    {% if may_order or display_anonymous_order_form %}
+        <!-- Conteneur initialisé automatiquement par HTMX au chargement de la page -->
+        <div id="order-main-container" 
+             hx-get="{% url 'repanier:order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}" 
+             hx-trigger="load">
+            
+            <div class="row">
+                <div class="col-xs-11 col-sm-5 col-md-3 bs-docs-sidebar">
+                    <div class="fixed">
+                        {% if may_order %}
+                            <form action="{{ permanence.get_order_url }}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    {% if q %}
+                                        <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
+                                    {% else %}
+                                        <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}" name="q">
+                                    {% endif %}
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="producer" value="{{ producer_id }}">
+                                <input type="hidden" name="department" value="{{ department_id }}">
+                                <input type="hidden" name="is_like" value="{{ is_like }}">
+                                <input type="hidden" name="is_basket" value="{{ is_basket }}">
+                            </form>
+                            <br>
+                        {% endif %}
+
+                        {% block product_filter %}{% spaceless %}
+                            <ul class="nav nav-stacked" id="sidebar">
+                                {% if may_order %}
+                                <li>
+                                    <a href="{{ permanence.get_order_url }}" {% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All products" %}</a>
+                                </li>
+                                <li>
+                                    <a href="{{ permanence.get_order_url }}?is_basket=yes" {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My cart" %}</a>
+                                </li>
+                                <li>
+                                    <a href="{{ permanence.get_order_url }}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My" %} <span class="glyphicon glyphicon-heart"></span></a>
+                                </li>
+                                {% endif %}
+                                {% if producer_set.count > 1 %}
+                                    <li>
+                                        <a href="{{ permanence.get_order_url }}?department={{ department_id }}" {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All producers" %}</a>
+                                        <ul class="nav nav-stacked">
+                                    {% for producer in producer_set.all %}
+                                        <li><a href="{{ permanence.get_order_url }}?producer={{ producer.id|unlocalize }}&department={{ department_id }}" {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span></a>
+                                        </li>
+                                    {% endfor %}
+                                        </ul>
+                                    </li>
+                                {% endif %}
+                                {% if department_set.count > 1 %}
+                                    <li>
+                                        <a href="{{ permanence.get_order_url }}?producer={{ producer_id }}" {% if department_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All departments" %}</a>
+                                        <ul class="nav nav-stacked">
+                                            {% for department in department_set.all %}
+                                                {% if department.level > 0 %}
+                                                    {% ifchanged department.parent_id %}
+                                                    {% if department.parent.level == 0 %}</ul>{% endif %}
+                                                    <li><a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.parent_id|unlocalize }}" {% if department.parent_id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.parent.short_name_v2 }}</a>
+                                                    </li>
+                                                    {% if department.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
+                                                    {% endifchanged %}
+                                                    <li>
+                                                        <a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.id|unlocalize }}" {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name_v2 }}</a>
+                                                    </li>
+                                                {% else %}
+                                                        </ul><li>
+                                                        <a href="{{ permanence.get_order_url }}?producer={{ producer_id }}&department={{ department.id|unlocalize }}" {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name_v2 }}</a>
+                                                        </li><ul class="nav nav-stacked">
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        {% endspaceless %}{% endblock product_filter %}
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-7 col-md-9">
+                    {% block product_list %}{% endblock product_list %}
+                </div>
+            </div>
+        </div>
+
+        {% block order_modal %}{% spaceless %}
+            {# Communication Modal #}
+            <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="communicationModalLabel" aria-hidden="true">
+            </div>
+
+            {# Order Modal #}
+            <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
+            </div>
+
+            {# Other qty Modal #}
+            <div id="otherQtyModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="otherQtyModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                            <h4 class="modal-title" id="otherQtyModalLabel"></h4>
+                        </div>
+                        <div class="modal-body">
+                            <span id="otherQtyDetails">
+                              {% translate "To order a bigger quantity, please contact your " %}{{ staff_order.signature }}<br>
+                            </span>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endspaceless %}{% endblock order_modal %}
+    {% endif %} 
+    {% endspaceless %}
+
+    {% block my_cart_amount_js %}
+        {% if may_order %}
+            {% addtoblock "lastjs" %}
+                <script>
+                // Chargement initial du montant du panier via HTMX ou un simple fetch léger
+                document.addEventListener("DOMContentLoaded", function () {
+                    var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
+                    fetch(lien)
+                        .then(response => response.json())
+                        .then(result => {
+                            Object.entries(result).forEach(([key, val]) => {
+                                document.querySelectorAll(key).forEach(el => el.innerHTML = val);
+                            });
+                        });
+                    var liCart = document.getElementById("li_my_basket");
+                    if (liCart) liCart.style.display = "block";
+                });
+                </script>
+            {% endaddtoblock %}
+        {% endif %}
+    {% endblock my_cart_amount_js %}
+
+    {% block my_order_js %}
+        {% if may_order %}
+            {% addtoblock "lastjs" %}
+                <script>
+                // Logique native pour intercepter l'option "other_qty" et déclencher la modale Bootstrap 3
+                document.addEventListener("change", function(event) {
+                    if (event.target && event.target.matches("select[id^='offer_item']")) {
+                        if (event.target.value === 'other_qty') {
+                            var wrapper = event.target.closest('[data-product]');
+                            var productName = wrapper ? wrapper.getAttribute('data-product') : '';
+                            document.getElementById('otherQtyModalLabel').innerHTML = productName;
+                            $('#otherQtyModal').modal('show');
+                        }
+                    }
+                });
+
+                // Gestion du bouton de confirmation de commande par email
+                function btn_receive_order_email() {
+                    var receiveEmailBtn = document.getElementById("btn_confirm_order");
+                    if (receiveEmailBtn) {
+                        receiveEmailBtn.setAttribute("disabled", "true");
+                        receiveEmailBtn.innerHTML = '<span class="glyphicon glyphicon-refresh gly-spin"></span> ' + '{% translate "Your order is being processed..." %}';
+                    }
+                    
+                    var lien = '{% url 'repanier:btn_confirm_order_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
+                    fetch(lien)
+                        .then(response => response.json()) // ou texte selon le retour de votre vue
+                        .then(result => {
+                            // Si votre vue renvoie un dictionnaire JSON de fragments
+                            if (typeof result === 'object') {
+                                Object.entries(result).forEach(([key, val]) => {
+                                    document.querySelectorAll(key).forEach(el => el.innerHTML = val);
+                                });
+                            }
+                        });
+                }
+                </script>
+            {% endaddtoblock %}
+        {% endif %}
+    {% endblock my_order_js %}
+
+    {% block link_to_filter_js %}
+        {% addtoblock "lastjs" %}
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var filterViewNode = document.getElementById("link_to_order_or_filter_view");
+                if (filterViewNode) {
+                    filterViewNode.innerHTML = '<a href="{{ permanence.get_order_filter_url }}?producer={{ producer_id }}&department={{ department_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></a>';
+                }
+            });
+            </script>
+        {% endaddtoblock %}
+    {% endblock link_to_filter_js %}
+{% endblock sub_content %}
