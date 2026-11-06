@@ -461,6 +461,28 @@ def repanier_btn_like(context, *args, **kwargs):
     return mark_safe(result)
 
 
+@register.simple_tag(takes_context=True)
+def get_current_quantity(context, offer_item):
+    """
+    Returns the current quantity for an offer item for the logged-in user.
+    Used for HTMX quantity buttons.
+    """
+    request = context["request"]
+    user = request.user
+    
+    if not user.is_authenticated:
+        return "0"
+    
+    purchase = PurchaseWoReceiver.objects.filter(
+        customer_id=user.customer_id,
+        offer_item_id=offer_item.id,
+    ).only("quantity_ordered").first()
+    
+    if purchase:
+        return str(purchase.quantity_ordered)
+    return "0"
+
+
 @register.inclusion_tag('menu/permanence_sidebar.html', takes_context=True)
 def show_permanence_menu(context, permanence_id=0):
     request = context['request']

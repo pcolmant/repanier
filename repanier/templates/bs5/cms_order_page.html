@@ -165,11 +165,9 @@
         {% block order_modal %}{% spaceless %}
             <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="communicationModalLabel" aria-hidden="true"></div>
 
-            <!-- Modale structurée fixe pour Bootstrap 5 -->
             <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <!-- Le contenu AJAX s'injecte proprement ici -->
                     </div>
                 </div>
             </div>
@@ -201,19 +199,23 @@
             {% addtoblock "lastjs" %}
                 <script>
                 document.addEventListener("DOMContentLoaded", function () {
-                    var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
-                    fetch(lien, { cache: 'no-store' })
-                        .then(response => response.json())
-                        .then(result => {
-                            for (var key in result) {
-                                if (result.hasOwnProperty(key)) {
-                                    document.querySelectorAll(key).forEach(el => {
-                                        el.innerHTML = result[key];
-                                    });
+                    function fetchCartAmount() {
+                        var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
+                        fetch(lien, { cache: 'no-store' })
+                            .then(response => response.json())
+                            .then(result => {
+                                for (var key in result) {
+                                    if (result.hasOwnProperty(key)) {
+                                        document.querySelectorAll(key).forEach(el => {
+                                            el.innerHTML = result[key];
+                                        });
+                                    }
                                 }
-                            }
-                        })
-                        .catch(error => console.error('Erreur cart amount:', error));
+                            })
+                            .catch(error => console.error('Erreur cart amount:', error));
+                    }
+
+                    fetchCartAmount();
 
                     var liMyBasket = document.getElementById("li_my_basket");
                     if (liMyBasket) liMyBasket.style.display = "block";
@@ -230,8 +232,45 @@
                 var saved_offer_item_id = -1;
                 var saved_delivery_id = -1;
 
+                // Interception HTMX pour propager les dictionnaires JSON reçus aux différents éléments ciblés (#qty-..., #my_basket, etc.)
+                document.addEventListener("htmx:afterRequest", function(evt) {
+                    if (evt.detail.successful && (evt.detail.xhr.responseType === "" || evt.detail.xhr.responseType === "text")) {
+                        try {
+                            var data = JSON.parse(evt.detail.xhr.responseText);
+                            for (var selector in data) {
+                                if (data.hasOwnProperty(selector)) {
+                                    document.querySelectorAll(selector).forEach(el => {
+                                        el.innerHTML = data[selector];
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            // Ce n'est pas du JSON, laisser HTMX gérer le comportement standard
+                        }
+                    }
+                });
+
                 document.addEventListener("DOMContentLoaded", function () {
-                    // Gestionnaire global par délégation d'événements (compatible éléments dynamiques htmx)
+                    function updateCartTotal() {
+                        var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
+                        fetch(lien, { cache: 'no-store' })
+                            .then(response => response.json())
+                            .then(result => {
+                                for (var key in result) {
+                                    if (result.hasOwnProperty(key)) {
+                                        document.querySelectorAll(key).forEach(el => {
+                                            el.innerHTML = result[key];
+                                        });
+                                    }
+                                }
+                            })
+                            .catch(error => console.error('Erreur mise à jour panier:', error));
+                    }
+
+                    document.body.addEventListener("basketChanged", function() {
+                        updateCartTotal();
+                    });
+
                     document.addEventListener('click', function(event) {
                         var trigger = event.target.closest('[data-bs-target="#orderModal"]');
                         if (!trigger) return;
@@ -247,17 +286,11 @@
                         var lien = '{% url "repanier:order_product_description_ajax" %}?offer_item=' + offerItemid;
                         fetch(lien, { cache: 'no-store' })
                             .then(response => {
-                                // Si la requête échoue (403, 404, etc.), on stoppe tout et on ne fait rien
-                                if (!response.ok) {
-                                    return null;
-                                }
+                                if (!response.ok) return null;
                                 return response.json();
                             })
                             .then(result => {
-                                // Si le résultat est vide ou invalide, on s'arrête net (pas d'ouverture de modale)
-                                if (!result || Object.keys(result).length === 0) {
-                                    return;
-                                }
+                                if (!result || Object.keys(result).length === 0) return;
 
                                 for (var key in result) {
                                     if (result.hasOwnProperty(key)) {
@@ -267,7 +300,6 @@
                                     }
                                 }
 
-                                // DOUBLE SÉCURITÉ : On vérifie que le contenu de la modale n'est pas vide avant de l'afficher
                                 var modalContent = document.querySelector('#orderModal .modal-content');
                                 if (modalContent && modalContent.innerHTML.trim() !== "") {
                                     var modalEl = document.getElementById('orderModal');
@@ -275,7 +307,7 @@
                                     modalObj.show();
                                 }
                             })
-                            .catch(error => console.error('Erreur chargement description produit:', error));
+                            .catch(error => console.error('Erreur description produit:', error));
                     });
 
                     var lien = '{% url 'repanier:order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
@@ -313,9 +345,6 @@
                     saved_offer_item_id = -1;
                     var offer_item = document.getElementById("offer_item" + offer_item_id);
                     if (!offer_item) return;
-
-                    // CORRECTION MOBILE : Relâcher immédiatement le focus sur le select
-                    {#offer_item.blur();#}
 
                     var selectedOption = offer_item.options[offer_item.selectedIndex];
                     var offer_item_val = selectedOption ? selectedOption.value : '';
