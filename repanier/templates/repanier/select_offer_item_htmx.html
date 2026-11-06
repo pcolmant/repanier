@@ -1,0 +1,37 @@
+{% load i18n l10n %}
+{% comment %}
+HTMX-enhanced select that replaces itself on change to fix iOS focus issue.
+When a value is selected, HTMX sends a POST request and replaces the entire select
+with the updated version, which resolves the iOS focus problem.
+
+Variables available:
+- offer_item: The offer item object
+- html_options: Pre-rendered option tags
+- is_open: Boolean indicating if ordering is open
+- may_order: Boolean indicating if user can order
+- request: The request object (for csrf_token)
+{% endcomment %}
+
+{% if may_order %}
+    {% if is_open %}
+        <select name="offer_item{{ offer_item.id }}"
+                id="offer_item{{ offer_item.id }}"
+                hx-post="{% url 'repanier:order_ajax' %}"
+                hx-trigger="change"
+                hx-vals='js:{offer_item: {{ offer_item.id|unlocalize }}, value: this.value, csrfmiddlewaretoken: "{{ csrf_token }}"}'
+                hx-target="#offer_item{{ offer_item.id }}"
+                hx-swap="outerHTML"
+                onmouseover="show_select_order_list_ajax({{ offer_item.id }})"
+                onmouseout="clear_select_order_list_ajax()"
+                class="form-control">
+            {{ html_options|safe }}
+        </select>
+    {% else %}
+        <select name="offer_item{{ offer_item.id }}"
+                id="offer_item{{ offer_item.id }}"
+                disabled
+                class="form-control">
+            {{ html_options|safe }}
+        </select>
+    {% endif %}
+{% endif %}

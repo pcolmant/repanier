@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
 
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING, RoundUpTo, SaleStatus
 from repanier.models.customer import Customer
@@ -23,17 +23,106 @@ from repanier.tools import (
 
 
 @never_cache
-@require_GET
+@require_http_methods(["GET", "POST"])
 @login_required
 def order_ajax(request):
     """
     Add a selected offer item to a customer order (i.e. update the customer's invoice and the producer's invoice)
+    Supports both GET (legacy) and POST (HTMX) requests.
+    For HTMX POST requests with offer_item and value, returns HTML to replace the select element.
     """
-    # print("####### order_ajax")
     user = request.user
     customer = Customer.can_place_an_order.filter(user_id=user.id).first()
     if customer is None:
         raise Http404
+    
+    # Handle HTMX POST requests for select replacement (iOS fix)
+    if request.method == "POST" and request.headers.get("HX-Request"):
+        offer_item_id = sint(request.POST.get("offer_item", 0))
+        value_id = sint(request.POST.get("value", 0))
+        
+        if offer_item_id > 0:
+            # Process the order
+            qs = CustomerInvoice.objects.filter(
+                permanence__offeritem=offer_item_id,
+                customer_id=customer.id,
+                status=SaleStatus.OPENED,
+            )
+            if qs.exists():
+                qs = ProducerInvoice.objects.filter(
+                    permanence__offeritem=offer_item_id,
+                    producer__offeritem=offer_item_id,
+                    status=SaleStatus.OPENED,
+                )
+                if qs.exists():
+                    purchase, updated = create_or_update_one_cart_item(
+                        customer=customer,
+                        offer_item_id=offer_item_id,
+                        value_id=value_id,
+                        batch_job=False,
+                        comment=EMPTY_STRING,
+                    )
+                    
+                    if purchase is not None:
+                        offer_item = purchase.offer_item
+                        if purchase.customer_invoice:
+                            price_list_multiplier = offer_item.get_price_list_multiplier(
+                                purchase.customer_invoice
+                            )
+                            customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
+                            unit_deposit = offer_item.get_unit_deposit()
+                            unit_price_amount = (customer_unit_price + unit_deposit).quantize(
+                                RoundUpTo.TWO_DECIMALS
+                            )
+                        else:
+                            unit_price_amount = DECIMAL_ZERO
+                        
+                        # Return HTML for HTMX to replace the select
+                        html_options = get_html_selected_value(
+                            offer_item,
+                            purchase.quantity_ordered,
+                            unit_price_amount=unit_price_amount,
+                            is_open=True,
+                        )
+                        
+                        # Also trigger the same updates as the GET version
+                        producer_invoice = (
+                            ProducerInvoice.objects.filter(
+                                producer_id=offer_item.producer_id,
+                                permanence_id=offer_item.permanence_id,
+                            )
+                            .only("total_price_with_tax")
+                            .first()
+                        )
+                        if producer_invoice:
+                            producer_invoice.calculate_order_amount()
+                            producer_invoice.save()
+                        
+                        customer_invoice = CustomerInvoice.objects.filter(
+                            permanence_id=offer_item.permanence_id, customer_id=customer.id
+                        ).first()
+                        if customer_invoice:
+                            customer_invoice.calculate_order_amount()
+                            invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
+                            customer_invoice.save()
+                        
+                        # Return the select HTML with HTMX attributes for future replacements
+                        return render_to_string(
+                            "repanier/select_offer_item_htmx.html",
+                            {
+                                "offer_item": offer_item,
+                                "current_qty": purchase.quantity_ordered,
+                                "unit_price_amount": unit_price_amount,
+                                "is_open": True,
+                                "may_order": True,
+                                "html_options": html_options,
+                                "request": request,
+                            }
+                        )
+        # If we can't process, fall through to return empty
+        return HttpResponse("")
+    
+    # Legacy GET handling
     offer_item_id = sint(request.GET.get("offer_item", 0))
     value_id = sint(request.GET.get("value", 0))
     qs = CustomerInvoice.objects.filter(
