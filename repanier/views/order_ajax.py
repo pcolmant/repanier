@@ -1,16 +1,19 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
 
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING, RoundUpTo, SaleStatus
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
+from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
     create_or_update_one_cart_item,
     sint,
@@ -23,19 +26,70 @@ from repanier.tools import (
 
 
 @never_cache
-@require_GET
+@require_http_methods(["GET", "POST"])
 @login_required
 def order_ajax(request):
     """
     Add a selected offer item to a customer order (i.e. update the customer's invoice and the producer's invoice)
+    Supports both GET (legacy select) and POST (HTMX buttons) requests.
     """
-    # print("####### order_ajax")
     user = request.user
     customer = Customer.can_place_an_order.filter(user_id=user.id).first()
     if customer is None:
         raise Http404
-    offer_item_id = sint(request.GET.get("offer_item", 0))
-    value_id = sint(request.GET.get("value", 0))
+    
+    # Handle both GET (legacy) and POST (HTMX) requests
+    if request.method == "POST":
+        offer_item_id = sint(request.POST.get("offer_item_id", 0))
+        action = request.POST.get("action", "")  # "increase" or "decrease"
+        
+        if action in ("increase", "decrease"):
+            # Get current purchase
+            purchase = PurchaseWoReceiver.objects.filter(
+                customer_id=customer.id,
+                offer_item_id=offer_item_id,
+            ).first()
+            
+            if purchase:
+                current_qty = float(purchase.quantity_ordered)
+                if action == "increase":
+                    new_qty = current_qty + 1
+                else:  # decrease
+                    new_qty = max(0, current_qty - 1)
+                
+                # Update quantity
+                purchase.quantity_ordered = Decimal(str(new_qty))
+                purchase.save()
+                
+                # Return just the new quantity for HTMX
+                return JsonResponse({"quantity": str(new_qty)})
+            
+            # If no purchase exists, create one with quantity 1 (for increase) or 0 (for decrease)
+            offer_item = OfferItemReadOnly.objects.filter(id=offer_item_id).first()
+            if offer_item:
+                new_qty = 1 if action == "increase" else 0
+                purchase, created = PurchaseWoReceiver.objects.get_or_create(
+                    customer_id=customer.id,
+                    offer_item_id=offer_item_id,
+                    defaults={
+                        "quantity_ordered": Decimal(str(new_qty)),
+                        "quantity_invoiced": DECIMAL_ZERO,
+                        "status": SaleStatus.OPENED,
+                        "comment": EMPTY_STRING,
+                    }
+                )
+                if not created:
+                    purchase.quantity_ordered = Decimal(str(new_qty))
+                    purchase.save()
+                
+                return JsonResponse({"quantity": str(new_qty)})
+        
+        # Fallback to GET behavior for POST without action
+        offer_item_id = sint(request.POST.get("offer_item", 0))
+        value_id = sint(request.POST.get("value", 0))
+    else:
+        offer_item_id = sint(request.GET.get("offer_item", 0))
+        value_id = sint(request.GET.get("value", 0))
     qs = CustomerInvoice.objects.filter(
         permanence__offeritem=offer_item_id,
         customer_id=customer.id,

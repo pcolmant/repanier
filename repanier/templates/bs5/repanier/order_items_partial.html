@@ -22,10 +22,34 @@
                     {% endfor %}
                 </div>
 
-                <!-- Partie droite : Sélecteur, Prix, Consigne, Image miniature (Cliquable) et Cœur -->
+                <!-- Partie droite : Boutons ± (remplace le select pour iOS), Prix, Consigne, Image miniature (Cliquable) et Cœur -->
                 <div class="col-6 d-flex flex-column justify-content-between h-100">
                     <div>
-                        {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
+                        {% if may_order %}
+                        <div class="input-group quantity-buttons">
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    hx-post="{% url 'repanier:order_ajax' %}"
+                                    hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "decrease"}'
+                                    hx-target="#qty-{{ offer.id }}"
+                                    hx-swap="innerHTML"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    title="{% translate 'Decrease' %}">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <span id="qty-{{ offer.id }}" class="form-control text-center">
+                                {% get_current_quantity offer_item=offer %}
+                            </span>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    hx-post="{% url 'repanier:order_ajax' %}"
+                                    hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "increase"}'
+                                    hx-target="#qty-{{ offer.id }}"
+                                    hx-swap="innerHTML"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    title="{% translate 'Increase' %}">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                        {% endif %}
                         <div class="mt-2">
                             {% if offer.order_unit == "105" or offer.order_unit == "110" or offer.order_unit == "115" %}
                                 <h5><small><i><b>{{ offer.get_reference_price }}</b></i></small></h5>
