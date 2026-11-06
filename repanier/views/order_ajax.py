@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
@@ -61,8 +61,8 @@ def order_ajax(request):
                 purchase.quantity_ordered = Decimal(str(new_qty))
                 purchase.save()
                 
-                # Return just the new quantity for HTMX
-                return JsonResponse({"quantity": str(new_qty)})
+                # Return just the new quantity as plain text for HTMX innerHTML swap
+                return HttpResponse(str(new_qty))
             
             # If no purchase exists, create one with quantity 1 (for increase) or 0 (for decrease)
             offer_item = OfferItemReadOnly.objects.filter(id=offer_item_id).first()
@@ -82,7 +82,8 @@ def order_ajax(request):
                     purchase.quantity_ordered = Decimal(str(new_qty))
                     purchase.save()
                 
-                return JsonResponse({"quantity": str(new_qty)})
+                # Return just the new quantity as plain text for HTMX innerHTML swap
+                return HttpResponse(str(new_qty))
         
         # Fallback to GET behavior for POST without action
         offer_item_id = sint(request.POST.get("offer_item", 0))

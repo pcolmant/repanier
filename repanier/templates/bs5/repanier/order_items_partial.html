@@ -29,10 +29,9 @@
                         <div class="input-group quantity-buttons">
                             <button class="btn btn-sm btn-outline-secondary"
                                     hx-post="{% url 'repanier:order_ajax' %}"
-                                    hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "decrease"}'
+                                    hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "decrease", csrfmiddlewaretoken: "{{ csrf_token }}"}'
                                     hx-target="#qty-{{ offer.id }}"
                                     hx-swap="innerHTML"
-                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                     title="{% translate 'Decrease' %}">
                                 <i class="bi bi-dash"></i>
                             </button>
@@ -41,10 +40,9 @@
                             </span>
                             <button class="btn btn-sm btn-outline-secondary"
                                     hx-post="{% url 'repanier:order_ajax' %}"
-                                    hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "increase"}'
+                                    hx-vals='js:{offer_item_id: "{{ offer.id|unlocalize }}", action: "increase", csrfmiddlewaretoken: "{{ csrf_token }}"}'
                                     hx-target="#qty-{{ offer.id }}"
                                     hx-swap="innerHTML"
-                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                     title="{% translate 'Increase' %}">
                                 <i class="bi bi-plus"></i>
                             </button>
