@@ -40,8 +40,11 @@ class RepanierEmail(EmailMultiAlternatives):
         # for chunk in chunks:
         # Remove duplicates
         send_email_to = list(set(self.to + self.cc + self.bcc))
-        for email_to in send_email_to:
+        # Si DEBUG est actif, on ne garde que le premier élément de la liste
+        recipients = send_email_to[:1] if settings.DEBUG else send_email_to
+        for email_to in recipients:
             self._send_email_with_unsubscribe(email_to=email_to.strip())
+
 
     # @debug_parameters
     def _send_email_with_unsubscribe(self, email_to=None):
