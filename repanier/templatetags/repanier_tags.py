@@ -385,15 +385,63 @@ def repanier_select_task(context, *args, **kwargs):
     return mark_safe(result)
 
 
-@register.simple_tag(takes_context=True)
-def repanier_select_offer_item(context, *args, **kwargs):
+@register.inclusion_tag('repanier/select_offer_item_htmx.html', takes_context=True)
+def repanier_select_offer_item(context, offer_item):
+    """
+    HTMX-enhanced select tag that replaces itself on change to fix iOS focus issue.
+    """
     request = context["request"]
     user = request.user
-    offer_item = kwargs.get("offer_item")
-    result = []
+    
+    # Determine if ordering is open and get current quantity
+    is_open = False
+    current_qty = DECIMAL_ZERO
+    unit_price_amount = DECIMAL_ZERO
+    html_options = EMPTY_STRING
+    
     if offer_item.may_order:
-        select_offer_item(offer_item, result, user)
-    return mark_safe(EMPTY_STRING.join(result))
+        purchase = PurchaseWoReceiver.objects.filter(
+            customer_id=user.customer_id,
+            offer_item_id=offer_item.id,
+        ).only("quantity_ordered", "status").first()
+        
+        if purchase is not None:
+            current_qty = purchase.quantity_ordered
+            is_open = purchase.status == SaleStatus.OPENED
+            offer_item = purchase.offer_item
+            price_list_multiplier = offer_item.get_price_list_multiplier(
+                purchase.customer_invoice
+            )
+            customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
+            unit_deposit = offer_item.get_unit_deposit()
+            unit_price_amount = (customer_unit_price + unit_deposit).quantize(
+                RoundUpTo.TWO_DECIMALS
+            )
+            html_options = get_html_selected_value(
+                offer_item,
+                current_qty,
+                unit_price_amount=unit_price_amount,
+                is_open=is_open,
+            )
+        else:
+            is_open = ProducerInvoice.objects.filter(
+                permanence__offeritem=offer_item.id,
+                producer__offeritem=offer_item.id,
+                status=SaleStatus.OPENED,
+            ).exists()
+            html_options = get_html_selected_value(
+                offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=is_open
+            )
+    
+    return {
+        'offer_item': offer_item,
+        'current_qty': current_qty,
+        'unit_price_amount': unit_price_amount,
+        'is_open': is_open,
+        'may_order': offer_item.may_order,
+        'html_options': html_options,
+        'request': context.get('request'),
+    }
 
 
 def select_offer_item(offer_item, result, user):
