@@ -461,6 +461,41 @@ def repanier_btn_like(context, *args, **kwargs):
     return mark_safe(result)
 
 
+@register.inclusion_tag('repanier/bootstrap5_quantity_dropdown.html', takes_context=True)
+def repanier_custom_quantity_dropdown(context, offer_item):
+    """
+    Bootstrap 5 custom dropdown for quantity selection.
+    Replaces native select to fix iOS compatibility issues.
+    Uses a dropdown menu with quantity options that triggers order_ajax on selection.
+    """
+    request = context["request"]
+    user = request.user
+    
+    # Get current quantity
+    current_qty = 0
+    if user.is_authenticated:
+        purchase = PurchaseWoReceiver.objects.filter(
+            customer_id=user.customer_id,
+            offer_item_id=offer_item.id,
+        ).only("quantity_ordered").first()
+        if purchase:
+            current_qty = float(purchase.quantity_ordered)
+    
+    # Check if ordering is open
+    is_open = ProducerInvoice.objects.filter(
+        permanence__offeritem=offer_item.id,
+        producer__offeritem=offer_item.id,
+        status=SaleStatus.OPENED,
+    ).exists()
+    
+    return {
+        'offer_item': offer_item,
+        'current_qty': int(current_qty),
+        'is_open': is_open,
+        'request': context.get('request'),
+    }
+
+
 @register.inclusion_tag('menu/permanence_sidebar.html', takes_context=True)
 def show_permanence_menu(context, permanence_id=0):
     request = context['request']

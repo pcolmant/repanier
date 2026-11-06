@@ -506,3 +506,41 @@ a.skip_link {
     color: #ffffff !important;
     background-color: var(--bs-primary) !important;
 }
+/* =================================================================
+   4. Custom Bootstrap 5 Quantity Dropdown (iOS compatible)
+   =================================================================
+*/
+.quantity-dropdown {
+    display: inline-block;
+}
+
+.quantity-dropdown .dropdown-toggle {
+    width: 100%;
+    min-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+.quantity-dropdown .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 80px;
+}
+
+.quantity-dropdown .quantity-option {
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+}
+
+.quantity-dropdown .quantity-option:hover,
+.quantity-dropdown .quantity-option:focus {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.quantity-dropdown .quantity-option.active {
+    background-color: var(--bs-primary);
+    color: #ffffff;
+}
