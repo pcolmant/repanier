@@ -6,16 +6,16 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
 {% endcomment %}
 
 {% if is_open %}
-<div class="dropdown quantity-dropdown" id="quantity-dropdown-{{ offer_item.id }}">
+<div class="dropdown quantity-dropdown" id="quantity-dropdown-{{ offer_item.id|unlocalize }}">
     <!-- Bouton principal affichant la quantite actuelle -->
     <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
             type="button"
-            id="quantityBtn-{{ offer_item.id }}"
+            id="quantityBtn-{{ offer_item.id|unlocalize }}"
             data-bs-toggle="dropdown"
             aria-expanded="false"
             hx-get="{% url 'repanier:order_select_ajax' %}?offer_item={{ offer_item.id|unlocalize }}"
             hx-trigger="click"
-            hx-target="#dropdown-menu-{{ offer_item.id }}"
+            hx-target="#dropdown-menu-{{ offer_item.id|unlocalize }}"
             hx-swap="innerHTML"
             style="width: 100%; min-width: 80px;">
         <span class="quantity-display">{{ current_qty }}</span>
@@ -23,14 +23,14 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
     
     <!-- Menu deroulant qui sera rempli dynamiquement par HTMX -->
     <ul class="dropdown-menu dropdown-menu-end"
-        id="dropdown-menu-{{ offer_item.id }}"
-        aria-labelledby="quantityBtn-{{ offer_item.id }}">
+        id="dropdown-menu-{{ offer_item.id|unlocalize }}"
+        aria-labelledby="quantityBtn-{{ offer_item.id|unlocalize }}">
         <!-- Chargement initial : option par defaut -->
         <li><a class="dropdown-item" href="#">{% translate "Loading..." %}</a></li>
     </ul>
     
     <!-- Champ cache pour compatibilite avec la fonction order_ajax existante -->
-    <select id="offer_item{{ offer_item.id }}" style="display: none;">
+    <select id="offer_item{{ offer_item.id|unlocalize }}" style="display: none;">
         <option value="{{ current_qty }}" selected>{{ current_qty }}</option>
     </select>
 </div>
@@ -102,7 +102,7 @@ function selectQuantity(offerItemId, quantity, element) {
 </style>
 {% else %}
 <!-- Si la commande n'est pas ouverte, afficher un select desactive -->
-<select name="offer_item{{ offer_item.id }}" id="offer_item{{ offer_item.id }}" class="form-control" disabled>
+<select name="offer_item{{ offer_item.id|unlocalize }}" id="offer_item{{ offer_item.id|unlocalize }}" class="form-control" disabled>
     <option value="0" selected>{{ current_qty }}</option>
 </select>
 {% endif %}
