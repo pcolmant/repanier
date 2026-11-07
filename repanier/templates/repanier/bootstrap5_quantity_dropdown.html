@@ -1,0 +1,111 @@
+{% load i18n l10n %}
+{% comment %}
+Bootstrap 5 custom dropdown for quantity selection.
+Replaces native select to fix iOS compatibility issues.
+Options are loaded dynamically from server via HTMX when dropdown is opened.
+{% endcomment %}
+
+{% if is_open %}
+<div class="dropdown quantity-dropdown" id="quantity-dropdown-{{ offer_item.id|unlocalize }}">
+    <!-- Bouton principal affichant la quantite actuelle -->
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+            type="button"
+            id="quantityBtn-{{ offer_item.id|unlocalize }}"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            hx-get="{% url 'repanier:order_select_ajax' %}?offer_item={{ offer_item.id|unlocalize }}"
+            hx-trigger="click"
+            hx-target="#dropdown-menu-{{ offer_item.id|unlocalize }}"
+            hx-swap="innerHTML"
+            style="width: 100%; min-width: 80px;">
+        <span class="quantity-display">{{ current_qty }}</span>
+    </button>
+    
+    <!-- Menu deroulant qui sera rempli dynamiquement par HTMX -->
+    <ul class="dropdown-menu dropdown-menu-end"
+        id="dropdown-menu-{{ offer_item.id|unlocalize }}"
+        aria-labelledby="quantityBtn-{{ offer_item.id|unlocalize }}">
+        <!-- Chargement initial : option par defaut -->
+        <li><a class="dropdown-item" href="#">{% translate "Loading..." %}</a></li>
+    </ul>
+    
+    <!-- Champ cache pour compatibilite -->
+    <select id="offer_item{{ offer_item.id|unlocalize }}" style="display: none;">
+        <option value="{{ current_qty }}" selected>{{ current_qty }}</option>
+    </select>
+</div>
+
+<script>
+// URL de l'endpoint order_ajax (generée par Django avec le bon prefixe de langue)
+const orderAjaxUrl = "{% url 'repanier:order_ajax' %}";
+
+// Fonction pour selectionner une quantite et mettre a jour le panier
+function selectQuantity(offerItemId, quantity, element) {
+    // Fermer le dropdown
+    const dropdown = element.closest('.dropdown');
+    const bootstrapDropdown = bootstrap.Dropdown.getInstance(dropdown);
+    if (bootstrapDropdown) {
+        bootstrapDropdown.hide();
+    }
+    
+    // Mettre a jour l'affichage
+    const display = dropdown.querySelector('.quantity-display');
+    display.textContent = quantity;
+    
+    // Mettre a jour le select cache pour compatibilite
+    const hiddenSelect = document.getElementById('offer_item' + offerItemId);
+    if (hiddenSelect) {
+        hiddenSelect.value = quantity;
+    }
+    
+    // Appeler order_ajax avec l'URL correcte (inclut /fr/ ou autre prefixe de langue)
+    const url = orderAjaxUrl + '?offer_item=' + offerItemId + '&value=' + quantity;
+    fetch(url, { cache: 'no-store' })
+        .then(response => response.json())
+        .then(result => {
+            // Mettre a jour les elements du DOM avec les resultats
+            for (const key in result) {
+                if (result.hasOwnProperty(key)) {
+                    const elements = document.querySelectorAll(key);
+                    elements.forEach(el => {
+                        el.innerHTML = result[key];
+                        if (key === "#communicationModal") {
+                            const modal = bootstrap.Modal.getOrCreateInstance(el);
+                            modal.show();
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => console.error('Erreur:', error));
+}
+</script>
+
+<style>
+/* Style pour le dropdown de quantite */
+.quantity-dropdown .dropdown-toggle {
+    white-space: nowrap;
+    text-align: left;
+}
+.quantity-dropdown .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 120px;
+}
+.quantity-dropdown .quantity-option {
+    padding: 0.25rem 0.5rem;
+    text-align: left;
+    cursor: pointer;
+}
+.quantity-dropdown .quantity-option:hover,
+.quantity-dropdown .quantity-option:focus {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+</style>
+{% else %}
+<!-- Si la commande n'est pas ouverte, afficher un select desactive -->
+<select name="offer_item{{ offer_item.id|unlocalize }}" id="offer_item{{ offer_item.id|unlocalize }}" class="form-control" disabled>
+    <option value="0" selected>{{ current_qty }}</option>
+</select>
+{% endif %}

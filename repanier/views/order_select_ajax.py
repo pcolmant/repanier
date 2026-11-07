@@ -1,5 +1,7 @@
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
+import re
+
 from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
@@ -151,4 +153,40 @@ def order_select_ajax(request):
         else:
             html = '<option value="0" selected>{}</option>'.format(_("Closed"))
 
+    # For HTMX requests (Bootstrap 5 dropdown), return dropdown items
+    if request.headers.get("HX-Request"):
+        # Convert option tags to Bootstrap 5 dropdown items
+        dropdown_html = EMPTY_STRING
+        if html:
+            # Parse the HTML options and convert to dropdown items
+            from django.utils.html import escape
+            # Simple parsing - this is a basic approach
+            # The html contains <option value="X" selected>Label</option> tags
+            # We need to convert them to <li><a class="dropdown-item" onclick="...">Label</a></li>
+            
+            # For now, we'll use a simple string replacement approach
+            # This assumes the html is well-formed
+            import re
+            
+            # Pattern to match option tags - handles various formats:
+            # <option value="X">Label</option>
+            # <option value="X" >Label</option>
+            # <option value="X" selected>Label</option>
+            # <option value="X" selected >Label</option>
+            # Key: handle optional spaces and selected attribute before >
+            option_pattern = r'<option value="([^"]*)"(?:\s+(?:selected\s*)?)?\s*>([^<]*)</option>'
+            
+            for match in re.finditer(option_pattern, html):
+                value = match.group(1)
+                label = match.group(2).strip()
+                if value == "other_qty":
+                    # Skip "Other qty" option for now as it needs special handling
+                    continue
+                if not label:  # Skip empty labels
+                    continue
+                dropdown_html += '<li><a class="dropdown-item quantity-option" href="#" data-offer-item-id="{}" data-quantity="{}" onclick="event.preventDefault(); selectQuantity({}, {}, this);">{}</a></li>'.format(
+                    offer_item.id, value, offer_item.id, value, label
+                )
+        return HttpResponse(mark_safe(dropdown_html))
+    
     return JsonResponse({"#offer_item{}".format(offer_item.id): mark_safe(html)})
