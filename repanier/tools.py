@@ -274,6 +274,38 @@ def get_html_selected_value(
     return mark_safe(html)
 
 
+def get_str_selected_value(
+    offer_item, quantity_ordered, unit_price_amount, is_open=True
+):
+    if offer_item is not None:
+        product = offer_item.product
+        if quantity_ordered <= const.DECIMAL_ZERO:
+            if is_open:
+                q_min = product.customer_minimum_order_quantity
+                q_alert = offer_item.get_q_alert()
+                if q_min <= q_alert:
+                    label = "---"
+                else:
+                    label = _("Sold out")
+            else:
+                label = _("Closed")
+            str = '{}'.format(label)
+
+        else:
+            # unit_price_amount = (
+            #     product.customer_unit_price.amount + product.unit_deposit.amount
+            # )
+            display = product.get_display(
+                qty=quantity_ordered,
+                order_unit=offer_item.order_unit,
+                unit_price_amount=unit_price_amount,
+            )
+            str = '{}'.format(display)
+    else:
+        str = const.EMPTY_STRING
+    return str
+
+
 def create_or_update_one_purchase(
     customer_id,
     offer_item,

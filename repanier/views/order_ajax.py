@@ -18,7 +18,7 @@ from repanier.tools import (
     my_basket,
     get_html_selected_value,
     get_html_basket_message,
-    get_repanier_template_name,
+    get_repanier_template_name, get_str_selected_value,
 )
 
 
@@ -71,7 +71,7 @@ def order_ajax(request):
                 )
                 json_dict[
                     "#offer_item{}".format(offer_item.id)
-                ] = get_html_selected_value(
+                ] = get_str_selected_value(
                     offer_item,
                     purchase.quantity_ordered,
                     unit_price_amount=unit_price_amount,
@@ -80,7 +80,7 @@ def order_ajax(request):
             else:
                 json_dict[
                     "#offer_item{}".format(offer_item.id)
-                ] = get_html_selected_value(
+                ] = get_str_selected_value(
                     offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=True
                 )
 

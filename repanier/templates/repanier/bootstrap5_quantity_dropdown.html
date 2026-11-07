@@ -18,7 +18,7 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
             hx-target="#dropdown-menu-{{ offer_item.id|unlocalize }}"
             hx-swap="innerHTML"
             style="width: 100%; min-width: 80px;">
-        <span class="quantity-display">{{ current_qty }}</span>
+        <span id="offer_item{{ offer_item.id|unlocalize }}" class="quantity-display">{{ current_qty }}</span>
     </button>
     
     <!-- Menu deroulant qui sera rempli dynamiquement par HTMX -->
@@ -63,13 +63,28 @@ function selectQuantity(offerItemId, quantity, element) {
     fetch(url, { cache: 'no-store' })
         .then(response => response.json())
         .then(result => {
+            // Trace globale pour voir l'objet JSON reçu du serveur
+            console.log("Données reçues de l'API :", result);
+
             // Mettre a jour les elements du DOM avec les resultats
             for (const key in result) {
                 if (result.hasOwnProperty(key)) {
+                    // Trace pour identifier la clé (le sélecteur CSS) et la valeur associée
+                    console.log(`Traitement de la clé [${key}] avec la valeur :`, result[key]);
+
                     const elements = document.querySelectorAll(key);
-                    elements.forEach(el => {
+
+                    // Trace pour savoir combien d'éléments du DOM correspondent à ce sélecteur
+                    console.log(`-> Nombre d'éléments trouvés pour "${key}" :`, elements.length);
+
+                    elements.forEach((el, index) => {
+                        // Trace pour chaque élément individuel mis à jour
+                        console.log(`--> Mise à jour de l'élément #${index} pour ${key}`);
+
                         el.innerHTML = result[key];
+
                         if (key === "#communicationModal") {
+                            console.log("--> Ouverture de la modale Bootstrap #communicationModal");
                             const modal = bootstrap.Modal.getOrCreateInstance(el);
                             modal.show();
                         }

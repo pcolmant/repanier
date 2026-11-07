@@ -20,7 +20,7 @@ from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
     sint,
-    get_html_selected_value,
+    get_html_selected_value, get_str_selected_value,
 )
 
 register = template.Library()
@@ -461,6 +461,45 @@ def repanier_btn_like(context, *args, **kwargs):
     return mark_safe(result)
 
 
+def bootstrap_offer_item(offer_item, user):
+    purchase = (
+        PurchaseWoReceiver.objects.filter(
+            customer_id=user.customer_id,
+            offer_item_id=offer_item.id,
+        )
+        .only("quantity_ordered")
+        .first()
+    )
+    if purchase is not None:
+        is_open = purchase.status == SaleStatus.OPENED
+        offer_item = purchase.offer_item
+        price_list_multiplier = offer_item.get_price_list_multiplier(
+            purchase.customer_invoice
+        )
+        customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
+        unit_deposit = offer_item.get_unit_deposit()
+        unit_price_amount = (customer_unit_price + unit_deposit).quantize(
+            RoundUpTo.TWO_DECIMALS
+        )
+        str = get_str_selected_value(
+            offer_item,
+            purchase.quantity_ordered,
+            unit_price_amount=unit_price_amount,
+            is_open=is_open,
+        )
+    else:
+        is_open = ProducerInvoice.objects.filter(
+            permanence__offeritem=offer_item.id,
+            producer__offeritem=offer_item.id,
+            status=SaleStatus.OPENED,
+        ).exists()
+        str = get_str_selected_value(
+            offer_item, DECIMAL_ZERO, DECIMAL_ZERO, is_open=is_open
+        )
+    return str, is_open
+
+
+
 @register.inclusion_tag('repanier/bootstrap5_quantity_dropdown.html', takes_context=True)
 def repanier_custom_quantity_dropdown(context, offer_item):
     """
@@ -471,26 +510,11 @@ def repanier_custom_quantity_dropdown(context, offer_item):
     request = context["request"]
     user = request.user
     
-    # Get current quantity
-    current_qty = 0
-    if user.is_authenticated:
-        purchase = PurchaseWoReceiver.objects.filter(
-            customer_id=user.customer_id,
-            offer_item_id=offer_item.id,
-        ).only("quantity_ordered").first()
-        if purchase:
-            current_qty = float(purchase.quantity_ordered)
-    
-    # Check if ordering is open
-    is_open = ProducerInvoice.objects.filter(
-        permanence__offeritem=offer_item.id,
-        producer__offeritem=offer_item.id,
-        status=SaleStatus.OPENED,
-    ).exists()
+    str, is_open = bootstrap_offer_item(offer_item, user)
     
     return {
         'offer_item': offer_item,
-        'current_qty': int(current_qty),
+        'current_qty': str,
         'is_open': is_open,
         'request': context.get('request'),
     }
