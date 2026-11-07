@@ -36,6 +36,9 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
 </div>
 
 <script>
+// URL de l'endpoint order_ajax (generée par Django avec le bon prefixe de langue)
+const orderAjaxUrl = "{% url 'repanier:order_ajax' %}";
+
 // Fonction pour selectionner une quantite et mettre a jour le panier
 function selectQuantity(offerItemId, quantity, element) {
     // Fermer le dropdown
@@ -55,12 +58,8 @@ function selectQuantity(offerItemId, quantity, element) {
         hiddenSelect.value = quantity;
     }
     
-    // Utiliser l'URL absolue avec le bon chemin (langue, etc.)
-    // On construit l'URL à partir de l'URL actuelle
-    const currentUrl = window.location.href;
-    const baseUrl = currentUrl.substring(0, currentUrl.indexOf('/repanier/') + 9);
-    const url = baseUrl + 'ajax/order-ajax/?offer_item=' + offerItemId + '&value=' + quantity;
-    
+    // Appeler order_ajax avec l'URL correcte (inclut /fr/ ou autre prefixe de langue)
+    const url = orderAjaxUrl + '?offer_item=' + offerItemId + '&value=' + quantity;
     fetch(url, { cache: 'no-store' })
         .then(response => response.json())
         .then(result => {
