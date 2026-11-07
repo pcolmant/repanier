@@ -17,9 +17,7 @@ cache
 .idea/
 .vscode/
 
-# Fichiers de localisation compilés Django
-*.mo
-
 # Dossier média local et de configuration
 /mysite/media/
 /setup/
+/repanier/static/repanier/bs5/bootstrap/icons/bootstrap-icons-1.11.3/
