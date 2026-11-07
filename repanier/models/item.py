@@ -155,9 +155,9 @@ class Item(models.Model):
 
     def get_unit_price(self, customer_price=True):
         if customer_price:
-            unit_price = self.customer_unit_price
+            unit_price = self.customer_unit_price if self.customer_unit_price.amount != DECIMAL_ZERO else EMPTY_STRING
         else:
-            unit_price = self.producer_unit_price
+            unit_price = self.producer_unit_price if self.producer_unit_price.amount != DECIMAL_ZERO else EMPTY_STRING
         if self.order_unit in [OrderUnit.KG, OrderUnit.PC_KG]:
             return "{} {}".format(unit_price, _("/ kg"))
         elif self.order_unit == OrderUnit.LT:
@@ -336,13 +336,17 @@ class Item(models.Model):
                 return "{}; {} + ♻ {}".format(
                     qty_display, unit_price, self.unit_deposit
                 )
-            else:
+            elif len(unit_price) > 0:
                 return "{}; {}".format(qty_display, unit_price)
+            else:
+                return "{}".format(qty_display)
         else:
             if self.unit_deposit.amount > DECIMAL_ZERO:
                 return "; {} + ♻ {}".format(unit_price, self.unit_deposit)
-            else:
+            elif len(unit_price) > 0:
                 return "; {}".format(unit_price)
+            else:
+                return EMPTY_STRING
 
     def get_long_name(self, customer_price=False, producer_price=False):
         if customer_price or producer_price:

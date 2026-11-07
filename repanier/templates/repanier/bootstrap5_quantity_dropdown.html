@@ -6,43 +6,46 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
 {% endcomment %}
 
 {% if is_open %}
-<div class="dropdown quantity-dropdown" id="quantity-dropdown-{{ offer_item.id|unlocalize }}">
+<div class="dropdown quantity-dropdown" id="quantity-dropdown-{{ offer_item_id }}" data-order-url="{% url 'repanier:order_ajax' %}">
     <!-- Bouton principal affichant la quantite actuelle -->
     <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
             type="button"
-            id="quantityBtn-{{ offer_item.id|unlocalize }}"
+            id="quantityBtn-{{ offer_item_id }}"
             data-bs-toggle="dropdown"
             aria-expanded="false"
-            hx-get="{% url 'repanier:order_select_ajax' %}?offer_item={{ offer_item.id|unlocalize }}"
+            hx-get="{% url 'repanier:order_select_ajax' %}?offer_item={{ offer_item_id }}"
             hx-trigger="click"
-            hx-target="#dropdown-menu-{{ offer_item.id|unlocalize }}"
+            hx-target="#dropdown-menu-{{ offer_item_id }}"
             hx-swap="innerHTML"
             style="width: 100%; min-width: 80px;">
-        <span id="offer_item{{ offer_item.id|unlocalize }}" class="quantity-display">{{ current_qty }}</span>
+        <span id="offer_item{{ offer_item_id }}" class="quantity-display">{{ current_qty }}</span>
     </button>
     
     <!-- Menu deroulant qui sera rempli dynamiquement par HTMX -->
     <ul class="dropdown-menu dropdown-menu-end"
-        id="dropdown-menu-{{ offer_item.id|unlocalize }}"
-        aria-labelledby="quantityBtn-{{ offer_item.id|unlocalize }}">
+        id="dropdown-menu-{{ offer_item_id }}"
+        aria-labelledby="quantityBtn-{{ offer_item_id }}">
         <!-- Chargement initial : option par defaut -->
         <li><a class="dropdown-item" href="#">{% translate "Loading..." %}</a></li>
     </ul>
     
     <!-- Champ cache pour compatibilite -->
-    <select id="offer_item{{ offer_item.id|unlocalize }}" style="display: none;">
-        <option value="{{ current_qty }}" selected>{{ current_qty }}</option>
-    </select>
+{#    <select id="offer_item{{ offer_item_id }}" style="display: none;">#}
+{#        <option value="{{ current_qty }}" selected>{{ current_qty }}</option>#}
+{#    </select>#}
 </div>
 
 <script>
 // URL de l'endpoint order_ajax (generée par Django avec le bon prefixe de langue)
-const orderAjaxUrl = "{% url 'repanier:order_ajax' %}";
+{#const orderAjaxUrl = "{% url 'repanier:order_ajax' %}";#}
 
 // Fonction pour selectionner une quantite et mettre a jour le panier
 function selectQuantity(offerItemId, quantity, element) {
-    // Fermer le dropdown
+    // Récupérer l'URL stockée dans le conteneur parent
     const dropdown = element.closest('.dropdown');
+    const orderAjaxUrl = dropdown.dataset.orderUrl;
+
+    // Fermer le dropdown
     const bootstrapDropdown = bootstrap.Dropdown.getInstance(dropdown);
     if (bootstrapDropdown) {
         bootstrapDropdown.hide();
@@ -94,33 +97,63 @@ function selectQuantity(offerItemId, quantity, element) {
         })
         .catch(error => console.error('Erreur:', error));
 }
+
+
+// Fonction pour afficher la modale "Autre quantité"
+function showOtherQtyModal(offerItemId, element) {
+    // Fermer le dropdown
+    const dropdown = element.closest('.dropdown');
+    const bootstrapDropdown = bootstrap.Dropdown.getInstance(dropdown);
+    if (bootstrapDropdown) {
+        bootstrapDropdown.hide();
+    }
+
+    // Récupérer le nom du produit depuis le data-attribute
+    const productName = element.getAttribute('data-product-name') || '';
+
+    // Mettre à jour le titre de la modale
+    const labelEl = document.getElementById('otherQtyModalLabel');
+    if (labelEl) {
+        labelEl.textContent = productName;
+    }
+
+    // Afficher la modale
+    const otherQtyModalEl = document.getElementById('otherQtyModal');
+    if (otherQtyModalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(otherQtyModalEl);
+        modal.show();
+    }
+}
 </script>
 
 <style>
-/* Style pour le dropdown de quantite */
-.quantity-dropdown .dropdown-toggle {
-    white-space: nowrap;
-    text-align: left;
-}
-.quantity-dropdown .dropdown-menu {
-    max-height: 300px;
-    overflow-y: auto;
-    min-width: 120px;
-}
-.quantity-dropdown .quantity-option {
-    padding: 0.25rem 0.5rem;
-    text-align: left;
-    cursor: pointer;
-}
-.quantity-dropdown .quantity-option:hover,
-.quantity-dropdown .quantity-option:focus {
-    background-color: #f8f9fa;
-    color: #212529;
-}
+    /* Style pour le dropdown de quantité aligné à droite */
+    .quantity-dropdown .dropdown-toggle {
+        white-space: nowrap;
+        text-align: right; /* Aligne le texte du bouton à droite */
+    }
+
+    .quantity-dropdown .dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+        min-width: 120px;
+    }
+
+    .quantity-dropdown .quantity-option {
+        padding: 0.25rem 0.5rem;
+        text-align: right; /* Aligne le texte des options à droite */
+        cursor: pointer;
+    }
+
+    .quantity-dropdown .quantity-option:hover,
+    .quantity-dropdown .quantity-option:focus {
+        background-color: #f8f9fa;
+        color: #212529;
+    }
 </style>
 {% else %}
 <!-- Si la commande n'est pas ouverte, afficher un select desactive -->
-<select name="offer_item{{ offer_item.id|unlocalize }}" id="offer_item{{ offer_item.id|unlocalize }}" class="form-control" disabled>
+<select name="offer_item{{ offer_item_id }}" id="offer_item{{ offer_item_id }}" class="form-control" disabled>
     <option value="0" selected>{{ current_qty }}</option>
 </select>
 {% endif %}

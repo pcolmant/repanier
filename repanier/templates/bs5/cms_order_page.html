@@ -352,29 +352,6 @@
                     }
                 }
 
-                function clear_select_order_list_ajax() {
-                    saved_offer_item_id = -1;
-                }
-
-                function show_select_order_list_ajax(offer_item_id) {
-                    if(saved_offer_item_id !== offer_item_id) {
-                        saved_offer_item_id = offer_item_id;
-                        var lien1 = '{% url 'repanier:order_select_ajax' %}?offer_item=' + offer_item_id;
-                        fetch(lien1, { cache: 'no-store' })
-                            .then(response => response.json())
-                            .then(result => {
-                                for (var key in result) {
-                                    if (result.hasOwnProperty(key)) {
-                                        document.querySelectorAll(key).forEach(el => {
-                                            el.innerHTML = result[key];
-                                        });
-                                    }
-                                }
-                            })
-                            .catch(error => console.error('Erreur select order list:', error));
-                    }
-                }
-
                 function delivery_ajax() {
                     var delivery = document.getElementById("delivery");
                     if (!delivery) return;

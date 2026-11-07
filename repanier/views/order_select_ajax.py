@@ -1,7 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse, JsonResponse
-import re
-
+from django.http import Http404, HttpResponse
 from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
@@ -18,29 +16,31 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import sint, get_html_selected_value
-
+from repanier.tools import sint
 
 @never_cache
 @require_GET
 @login_required
 def order_select_ajax(request):
-    # print("####### order_select_ajax")
+    """Génère les options de quantité sous forme de <li><a> pour le dropdown Bootstrap 5."""
     user = request.user
     customer = Customer.can_place_an_order.filter(user_id=user.id).first()
     if customer is None:
         raise Http404
+
     translation.activate(customer.language)
+
     offer_item_id = sint(request.GET.get("offer_item", 0))
     offer_item = OfferItemReadOnly.objects.filter(id=offer_item_id).first()
     if offer_item is None:
         raise Http404
+
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=offer_item.permanence_id, customer_id=customer.id
     ).first()
     if customer_invoice is None:
         raise Http404
-    # Select one purchase
+
     purchase = (
         PurchaseWoReceiver.objects.filter(
             customer_id=customer.id, offer_item_id=offer_item_id
@@ -48,145 +48,92 @@ def order_select_ajax(request):
         .only("quantity_ordered")
         .first()
     )
+
     status = customer_invoice.status
+    html = EMPTY_STRING
+
     if offer_item.may_order and status == SaleStatus.OPENED:
         product = offer_item.product
         price_list_multiplier = offer_item.get_price_list_multiplier(customer_invoice)
         customer_unit_price = offer_item.get_customer_unit_price(price_list_multiplier)
         unit_deposit = offer_item.get_unit_deposit()
         unit_price_amount = (customer_unit_price + unit_deposit).quantize(RoundUpTo.TWO_DECIMALS)
+
         q_min = product.customer_minimum_order_quantity
         if purchase is not None:
             q_previous_order = purchase.quantity_ordered
         else:
             q_previous_order = DECIMAL_ZERO
+
         if status == SaleStatus.OPENED and product.stock > DECIMAL_ZERO:
             q_alert = offer_item.get_q_alert() + q_previous_order
         else:
             q_alert = offer_item.get_q_alert()
+
         q_step = product.customer_increment_order_quantity
         q_order_is_displayed = False
         q_select_id = 0
-        selected = EMPTY_STRING
+
         if q_previous_order <= 0:
             q_order_is_displayed = True
-            selected = "selected"
 
         q_valid = q_min
-        html = EMPTY_STRING
         if q_valid <= q_alert:
-            if status == SaleStatus.OPENED or (
-                status <= SaleStatus.SEND and selected == "selected"
-            ):
-                html = '<option value="0" {}>---</option>'.format(selected)
+            # Option "---" ou "Sold out"
+            display_text = "---" if q_valid <= q_alert else _("Sold out")
+            html += '<li><a class="dropdown-item quantity-option" href="#" data-offer-item-id="{}" data-quantity="0" onclick="event.preventDefault(); selectQuantity({}, 0, this);">{}</a></li>'.format(
+                offer_item.id, offer_item.id, display_text
+            )
         else:
-            if status == SaleStatus.OPENED or (
-                status <= SaleStatus.SEND and selected == "selected"
-            ):
-                html = '<option value="0" {}>{}</option>'.format(
-                    selected, _("Sold out")
-                )
-        q_counter = 0  # Limit to avoid too long selection list
+            html += '<li><a class="dropdown-item quantity-option" href="#" data-offer-item-id="{}" data-quantity="0" onclick="event.preventDefault(); selectQuantity({}, 0, this);">{}</a></li>'.format(
+                offer_item.id, offer_item.id, _("Sold out")
+            )
+
+        q_counter = 0
         while q_valid <= q_alert and q_counter <= LIMIT_ORDER_QTY_ITEM:
             q_select_id += 1
             q_counter += 1
-            selected = EMPTY_STRING
             if not q_order_is_displayed:
                 if q_previous_order <= q_valid:
                     q_order_is_displayed = True
-                    selected = "selected"
-            if status == SaleStatus.OPENED or (
-                status <= SaleStatus.SEND and selected == "selected"
-            ):
-                display = product.get_display(
-                    qty=q_valid,
-                    order_unit=product.order_unit,
-                    unit_price_amount=unit_price_amount,
-                )
-                html += '<option value="{}" {}>{}</option>'.format(
-                    q_select_id, selected, display
-                )
+
+            display = product.get_display(
+                qty=q_valid,
+                order_unit=product.order_unit,
+                unit_price_amount=unit_price_amount,
+            )
+            html += '<li><a class="dropdown-item quantity-option" href="#" data-offer-item-id="{}" data-quantity="{}" onclick="event.preventDefault(); selectQuantity({}, {}, this);">{}</a></li>'.format(
+                offer_item.id, q_select_id, offer_item.id, q_select_id, display
+            )
+
             if q_valid < q_step:
-                # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
-                # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
                 q_valid = q_step
             else:
-                # 1; 2; 3; 4 ... q_min = 1; q_step = 1
-                # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
                 q_valid = q_valid + q_step
 
         if not q_order_is_displayed:
-            # An custom order_qty > q_alert
             q_select_id += 1
             display = product.get_display(
                 qty=q_previous_order,
                 order_unit=product.order_unit,
                 unit_price_amount=unit_price_amount,
             )
-            html = '<option value="{}" selected>{}</option>'.format(
-                q_select_id, display
+            html += '<li><a class="dropdown-item quantity-option" href="#" data-offer-item-id="{}" data-quantity="{}" onclick="event.preventDefault(); selectQuantity({}, {}, this);">{}</a></li>'.format(
+                offer_item.id, q_select_id, offer_item.id, q_select_id, display
             )
+
         if status == SaleStatus.OPENED:
-            html += '<option value="other_qty">{}</option>'.format(_("Other qty"))
-        else:
-            html = '<option value="0" selected>---</option>'
+            # Option "Autre qté" avec gestion spéciale
+            html += '<li><a class="dropdown-item quantity-option other-qty-option" href="#" data-offer-item-id="{}" data-quantity="other_qty" data-product-name="{}" onclick="event.preventDefault(); showOtherQtyModal({}, this);">{}</a></li>'.format(
+                offer_item.id, offer_item.get_long_name_with_customer_price(), offer_item.id, _("Other qty")
+            )
 
     else:
+        # Commande fermée
         if purchase is not None and purchase.quantity_ordered != DECIMAL_ZERO:
-            offer_item = purchase.offer_item
-            price_list_multiplier = offer_item.get_price_list_multiplier(
-                purchase.customer_invoice
-            )
-            customer_unit_price = offer_item.get_customer_unit_price(
-                price_list_multiplier
-            )
-            unit_deposit = offer_item.get_unit_deposit()
-            unit_price_amount = (customer_unit_price + unit_deposit).quantize(
-                RoundUpTo.TWO_DECIMALS
-            )
-            html = get_html_selected_value(
-                offer_item,
-                purchase.quantity_ordered,
-                unit_price_amount=unit_price_amount,
-                is_open=True,
-            )
+            display = _("Closed")
         else:
-            html = '<option value="0" selected>{}</option>'.format(_("Closed"))
+            display = "---"
+        html += '<li><a class="dropdown-item" href="#" disabled>{}</a></li>'.format(display)
 
-    # For HTMX requests (Bootstrap 5 dropdown), return dropdown items
-    if request.headers.get("HX-Request"):
-        # Convert option tags to Bootstrap 5 dropdown items
-        dropdown_html = EMPTY_STRING
-        if html:
-            # Parse the HTML options and convert to dropdown items
-            from django.utils.html import escape
-            # Simple parsing - this is a basic approach
-            # The html contains <option value="X" selected>Label</option> tags
-            # We need to convert them to <li><a class="dropdown-item" onclick="...">Label</a></li>
-            
-            # For now, we'll use a simple string replacement approach
-            # This assumes the html is well-formed
-            import re
-            
-            # Pattern to match option tags - handles various formats:
-            # <option value="X">Label</option>
-            # <option value="X" >Label</option>
-            # <option value="X" selected>Label</option>
-            # <option value="X" selected >Label</option>
-            # Key: handle optional spaces and selected attribute before >
-            option_pattern = r'<option value="([^"]*)"(?:\s+(?:selected\s*)?)?\s*>([^<]*)</option>'
-            
-            for match in re.finditer(option_pattern, html):
-                value = match.group(1)
-                label = match.group(2).strip()
-                if value == "other_qty":
-                    # Skip "Other qty" option for now as it needs special handling
-                    continue
-                if not label:  # Skip empty labels
-                    continue
-                dropdown_html += '<li><a class="dropdown-item quantity-option" href="#" data-offer-item-id="{}" data-quantity="{}" onclick="event.preventDefault(); selectQuantity({}, {}, this);">{}</a></li>'.format(
-                    offer_item.id, value, offer_item.id, value, label
-                )
-        return HttpResponse(mark_safe(dropdown_html))
-    
-    return JsonResponse({"#offer_item{}".format(offer_item.id): mark_safe(html)})
+    return HttpResponse(mark_safe(html))
