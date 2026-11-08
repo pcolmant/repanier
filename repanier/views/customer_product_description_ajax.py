@@ -16,7 +16,6 @@ template_order_product_description = get_repanier_template_name(
 )
 
 
-@login_required()
 @csrf_protect
 @require_GET
 def order_product_description_ajax(request):
