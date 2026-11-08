@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -14,7 +13,6 @@ from repanier.tools import permanence_ok_or_404, sint, get_repanier_template_nam
 template_order_product_description = get_repanier_template_name(
     "order_product_description.html"
 )
-
 
 @csrf_protect
 @require_GET
