@@ -1,9 +1,9 @@
-from django.conf import settings
 from django.http import Http404
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView
+
 from repanier.const import SaleStatus
 from repanier.models import Customer
-
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.purchase import Purchase
@@ -101,10 +101,13 @@ class CustomerInvoiceView(DetailView):
                 )
                 if next_customer_invoice is None:
                     context["fast_forward"] = False
-                    next_customer_invoice = CustomerInvoice.objects.filter(
-                        customer_id=customer.id,
-                        status__lt=SaleStatus.INVOICED,
-                    ).only("id").first()
+                    if customer is not None:
+                        next_customer_invoice = CustomerInvoice.objects.filter(
+                            customer_id=customer.id,
+                            status__lt=SaleStatus.INVOICED,
+                        ).only("id").first()
+                    else:
+                        next_customer_invoice = None
             elif customer_invoice.status != SaleStatus.ARCHIVED:
                 previous_customer_invoice = CustomerInvoice.objects.filter(
                     customer_id=customer.id,
@@ -125,14 +128,15 @@ class CustomerInvoiceView(DetailView):
             if invoice_id == 0:
                 customer_id = self.kwargs.get("customer_id", user.customer_id)
             else:
-                customer_id = (
-                    CustomerInvoice.objects.filter(id=invoice_id)
-                    .only("customer_id")
-                    .first()
-                    .customer_id
-                )
+                invoice_obj = CustomerInvoice.objects.filter(id=invoice_id).only("customer_id").first()
+                customer_id = invoice_obj.customer_id if invoice_obj else user.customer_id
         else:
             customer_id = user.customer_id
+
+        # Protection indispensable si customer_id est None ou introuvable :
+        if not customer_id:
+            raise Http404("{}".format(_("No customer associated with this invoice.")))
+
         self.my_invoices = customer_id == user.customer_id
         if invoice_id == 0:
             # Use a single query with fallback using coalesce
