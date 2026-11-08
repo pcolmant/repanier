@@ -121,12 +121,7 @@ class OrderView(ListView):
             REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM,
             REPANIER_SETTINGS_NOTIFICATION,
         )
-        from repanier.cms_menus import PermanenceMenu
-
         context = super().get_context_data(**kwargs)
-
-        # On instancie le menu en passant renderer=None pour contourner l'attribut requis
-        context["nodes"] = PermanenceMenu(renderer=None).get_nodes(self.request)
 
         context["first_page"] = self.first_page
         context["permanence"] = self.permanence

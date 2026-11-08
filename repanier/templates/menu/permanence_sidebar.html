@@ -1,24 +1,22 @@
 {% load i18n %}
 <ul class="nav flex-column">
-    {% for node in nodes %}
-        {% if node.parent_id == 0 %}
-            {% if node.get_menu_title == '------' or node.title == '------' %}
-                <li class="my-2"><hr class="dropdown-divider"></li>
-            {% else %}
-                <li class="nav-item">
-                    <a href="{{ node.get_absolute_url }}"
-                       class="nav-link {% if node.selected or permanence_id and permanence_id|stringformat:'s' in node.get_absolute_url %}bs-docs-sidebar-active text-success fw-bold{% else %}text-dark fw-normal{% endif %}">
-                        {{ node.get_menu_title|default:node.title |safe }}
-                    </a>
-                </li>
-            {% endif %}
+    {% for item in items %}
+        {% if item.is_separator %}
+            <li class="my-2"><hr class="dropdown-divider"></li>
+        {% else %}
+            <li class="nav-item">
+                <a href="{{ item.url }}"
+                   class="nav-link {% if item.selected %}bs-docs-sidebar-active text-success fw-bold{% else %}text-dark fw-normal{% endif %}">
+                    {{ item.title |safe }}
+                </a>
+            </li>
         {% endif %}
     {% endfor %}
 
     {% if request.user.is_authenticated and request.user.customer_id %}
         <li class="my-2"><hr class="dropdown-divider"></li>
         <li class="nav-item">
-            <a href="{% url 'repanier:customer_history_view' request.user.customer_id %}"
+            <a href="{% url 'repanier:customer_invoice_view' 0 request.user.customer_id %}"
                class="nav-link text-dark fw-normal">
                 {{ my_balance|safe }}
             </a>

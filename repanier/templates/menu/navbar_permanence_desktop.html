@@ -1,0 +1,22 @@
+{% load i18n %}
+{% if items %}
+<li class="nav-item dropdown d-none d-lg-block">
+  <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    {{ permanences_name }}
+  </a>
+  <ul class="dropdown-menu" data-bs-theme="light">
+    {% for item in items %}
+      {% if item.is_separator %}
+        <li><hr class="dropdown-divider"></li>
+      {% else %}
+        <li>
+          <a class="dropdown-item d-flex justify-content-between align-items-center {% if item.url in request.path %}active{% endif %}"
+             href="{{ item.url }}">
+            <span>{{ item.title|safe }}</span>
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</li>
+{% endif %}

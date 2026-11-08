@@ -91,6 +91,7 @@
                                 <li><a class="dropdown-item" href="https://projet.repanier.be/" target="_blank">Projet Repanier</a></li>
                             </ul>
                         </li>
+                        {% show_navbar_permanence_menu_desktop %}
                         <!-- Profondeur augmentée à 3 pour charger les sous-pages -->
                         {% show_menu 0 3 1 1 %}
                     </ul>
@@ -142,6 +143,7 @@
                 <!-- Menu CMS Principal (Profondeur augmentée à 3) -->
                 <div class="mb-3 pb-3 border-bottom">
                     <ul class="nav flex-column">
+                        {% show_navbar_permanence_menu_mobile %}
                         {% show_menu 0 3 1 1 "menu/menu.html" %}
                     </ul>
                 </div>

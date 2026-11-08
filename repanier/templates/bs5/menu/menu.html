@@ -1,4 +1,18 @@
 {% load menu_tags %}
+{#<!-- DEBUG LOGS MENU -->#}
+{#<div style="background: #000; color: #0ff; padding: 15px; margin: 10px; font-family: monospace; z-index: 9999; position: relative; font-size: 12px;">#}
+{#  <strong>[DEBUG menu.html]</strong><br>#}
+{#  - request.path : {{ request.path }}<br>#}
+{#  - Nombre d'éléments (children) : {{ children|length }}<br>#}
+{#  <ul>#}
+{#    {% for child in children %}#}
+{#      <li>#}
+{#        Titre : "{{ child.get_menu_title }}" | URL : "{{ child.get_absolute_url }}" | Enfants : {{ child.children|length }} | Sélectionné : {{ child.selected }}#}
+{#      </li>#}
+{#    {% endfor %}#}
+{#  </ul>#}
+{#</div>#}
+{#<!-- FIN DEBUG -->#}
 {% for child in children %}
     {% if child.get_menu_title == '------' %}
         <!-- Diviseur propre Bootstrap 5 pour le bureau et le mobile -->

@@ -4,9 +4,7 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from menus.menu_pool import menu_pool
 
-from repanier.cms_menus import PermanenceMenu
 from repanier.const import (
     EMPTY_STRING,
     DECIMAL_ZERO,
@@ -445,9 +443,9 @@ def repanier_custom_quantity_dropdown(context, offer_item):
     """
     request = context["request"]
     user = request.user
-    
+
     str_current_qty, is_open = bootstrap_offer_item(offer_item, user)
-    
+
     return {
         'offer_item_id': str(offer_item.id),
         'current_qty': str_current_qty,
@@ -456,44 +454,100 @@ def repanier_custom_quantity_dropdown(context, offer_item):
     }
 
 
+def _get_permanence_items(request):
+    from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
+    is_anonymous = request.user.is_anonymous
+    items = []
+
+    permanence_board_set = PermanenceBoard.objects.filter(
+        permanence__status__lte=SaleStatus.WAIT_FOR_INVOICED
+    ).only("id")
+
+    if permanence_board_set.exists():
+        items.append({
+            'title': _("Registration for tasks"),
+            'url': reverse("repanier:permanence_view"),
+            'is_separator': False,
+        })
+
+    qs = Permanence.objects.filter(
+        status__in=[SaleStatus.OPENED, SaleStatus.CLOSED, SaleStatus.SEND],
+        master_permanence__isnull=True,
+    ).order_by("-permanence_date", "id")
+
+    if qs.exists() and permanence_board_set.exists():
+        items.append({'is_separator': True})
+
+    for permanence in qs:
+        path = permanence.get_order_url()
+        if not is_anonymous and permanence.status > SaleStatus.OPENED:
+            path = path + "?is_basket=yes"
+
+        items.append({
+            'title': permanence.get_html_permanence_display(),
+            'url': path,
+            'is_separator': False,
+        })
+
+    return items, REPANIER_SETTINGS_PERMANENCES_NAME
+
+
+@register.inclusion_tag('menu/navbar_permanence_desktop.html', takes_context=True)
+def show_navbar_permanence_menu_desktop(context):
+    request = context['request']
+    items, permanences_name = _get_permanence_items(request)
+    return {
+        'items': items,
+        'request': request,
+        'permanences_name': permanences_name,
+    }
+
+
+@register.inclusion_tag('menu/navbar_permanence_mobile.html', takes_context=True)
+def show_navbar_permanence_menu_mobile(context):
+    return show_navbar_permanence_menu_desktop(context)
+
+
 @register.inclusion_tag('menu/permanence_sidebar.html', takes_context=True)
 def show_permanence_menu(context, permanence_id=0):
     request = context['request']
-    renderer = menu_pool.get_renderer(request)
-    menu = PermanenceMenu(renderer)
-    nodes = menu.get_nodes(request)
-
     p_id = str(permanence_id)
-    current_path = request.path
+    items, _ = _get_permanence_items(request)
 
     explicit_selection = False
+    permanence_board_exists = any("permanence_view" in item['url'] for item in items if not item.get('is_separator'))
 
-    for node in nodes:
-        node.selected = False
-        if node.url:
-            # Si on cible une permanence spécifique par son ID
-            if p_id != "0" and f"/order/{p_id}/" in node.url:
-                node.selected = True
-                explicit_selection = True
-            # Si l'URL correspond exactement au chemin actuel de la requête
-            elif node.url == request.get_full_path() or node.url == current_path:
-                node.selected = True
-                explicit_selection = True
+    # Marquer l'élément sélectionné
+    for item in items:
+        if item.get('is_separator'):
+            continue
 
-    # Si aucun ID spécifique n'est passé (permanence_id == 0)
-    if not explicit_selection:
-        # 1. Tenter de sélectionner par défaut l'inscription aux tâches si elle existe
-        task_node = next((node for node in nodes if node.url and "permanence" in node.url), None)
-        if task_node:
-            task_node.selected = True
-        else:
-            # 2. Sinon (pas de tâches / nouveau groupe), basculer sur la permanence la plus récente
-            first_permanence_node = next((node for node in nodes if node.parent_id == 0 and node.url and node.url != "/"), None)
-            if first_permanence_node:
-                first_permanence_node.selected = True
+        is_selected = False
+        if p_id != "0" and f"/order/{p_id}/" in item['url']:
+            is_selected = True
+            explicit_selection = True
+        elif p_id == "0" and (item['url'] == request.get_full_path() or item['url'] == request.path):
+            is_selected = True
+            explicit_selection = True
+        elif p_id == "0" and "permanence_view" in item['url'] and "permanence" in request.path:
+            is_selected = True
+            explicit_selection = True
+
+        item['selected'] = is_selected
+
+    # Sélection par défaut si rien n'est explicitement sélectionné
+    if not explicit_selection and items:
+        non_sep_items = [i for i in items if not i.get('is_separator')]
+        if non_sep_items:
+            if not permanence_board_exists:
+                non_sep_items[0]['selected'] = True
+            elif p_id != "0":
+                for item in non_sep_items:
+                    if f"/order/{p_id}/" in item['url']:
+                        item['selected'] = True
 
     return {
-        'nodes': nodes,
+        'items': items,
         'request': request,
         'my_balance': mark_safe(history_label(request))
     }

@@ -1,0 +1,25 @@
+{% load i18n %}
+{% if items %}
+<li class="nav-item d-lg-none my-2">
+  <!-- Titre de la section (non cliquable, ou simple label) -->
+  <span class="nav-link px-0 text-dark" style="font-weight: 500;">
+    {{ permanences_name }}
+  </span>
+
+  <!-- Liste directement visible, indentée avec un léger décalage (ms-3) -->
+  <ul class="nav flex-column ms-3">
+    {% for item in items %}
+      {% if item.is_separator %}
+        <li class="nav-item"><hr class="dropdown-divider my-1"></li>
+      {% else %}
+        <li class="nav-item">
+          <a class="nav-link py-1 d-flex justify-content-between align-items-center {% if item.url in request.path %}fw-bold text-success{% else %}text-secondary{% endif %}"
+             href="{{ item.url }}">
+            <span>{{ item.title|safe }}</span>
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</li>
+{% endif %}
