@@ -466,7 +466,12 @@ def _get_permanence_items(request):
     if permanence_board_set.exists():
         items.append({
             'title': _("Registration for tasks"),
-            'url': reverse("repanier:permanence_view"),
+            'url': reverse("repanier:task_view"),
+            'is_separator': False,
+        })
+        items.append({
+            'title': _("History of tasks"),
+            'url': reverse("repanier:task_history_view"),
             'is_separator': False,
         })
 
@@ -515,7 +520,7 @@ def show_permanence_menu(context, permanence_id=0):
     items, _ = _get_permanence_items(request)
 
     explicit_selection = False
-    permanence_board_exists = any("permanence_view" in item['url'] for item in items if not item.get('is_separator'))
+    permanence_board_exists = any("task_view" in item['url'] for item in items if not item.get('is_separator'))
 
     # Marquer l'élément sélectionné
     for item in items:
@@ -529,7 +534,7 @@ def show_permanence_menu(context, permanence_id=0):
         elif p_id == "0" and (item['url'] == request.get_full_path() or item['url'] == request.path):
             is_selected = True
             explicit_selection = True
-        elif p_id == "0" and "permanence_view" in item['url'] and "permanence" in request.path:
+        elif p_id == "0" and "task_view" in item['url'] and "task-view" in request.path:
             is_selected = True
             explicit_selection = True
 

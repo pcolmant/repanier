@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-29 10:21+0200\n"
-"PO-Revision-Date: 2019-12-11 13:48+0100\n"
+"POT-Creation-Date: 2026-11-08 21:59+0100\n"
+"PO-Revision-Date: 2026-11-08 22:06+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -16,18 +16,33 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 2.2.4\n"
+"X-Generator: Poedit 3.10\n"
 
 #: static/repanier/bs3/js/admin/confirm_exit.js:12
 #: static/repanier/bs5/js/admin/confirm_exit.js:12
 msgid "New information not saved. Do you wish to leave the page?"
-msgstr ""
-"Les modifications ne sont pas sauvegardées. Voulez-vous quitter la page ?"
+msgstr "Les modifications ne sont pas sauvegardées. Voulez-vous quitter la page ?"
 
 #: static/repanier/bs3/js/admin/confirm_purchase.js:5
 #: static/repanier/bs5/js/admin/confirm_purchase.js:5
 msgid "✓🔐"
-msgstr "🔑 - confirmer et vérrouiller"
+msgstr "🔑 - confirmer et verrouiller"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "loading"
+msgstr "chargement"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "no_results"
+msgstr "pas de résultat"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "not_loading"
+msgstr "en attente"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "option_create"
+msgstr "option création"
 
 #~ msgid "Expenses to be apportioned"
 #~ msgstr "Frais à répartir"

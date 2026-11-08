@@ -6,7 +6,7 @@ from repanier.models.permanenceboard import PermanenceBoard
 from repanier.tools import get_repanier_template_name
 
 
-class PermanenceView(ListView):
+class TaskView(ListView):
     template_name = get_repanier_template_name("task_form.html")
     success_url = "/"
     paginate_by = 50

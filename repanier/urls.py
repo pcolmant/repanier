@@ -5,17 +5,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
 from repanier.picture.views import ajax_picture
-# from repanier.rest.lut import (
-#     departments_for_customers_rest,
-#     department_for_customer_rest,
-# )
-# from repanier.rest.permanence import (
-#     permanences_rest,
-#     permanence_producer_product_rest,
-#     permanence_producer_rest,
-# )
-# from repanier.rest.producer import producers_list, producer_detail
-# from repanier.rest.product import products_rest, product_rest
 from repanier.rest.version import version_rest
 from repanier.tools import get_repanier_template_name
 from repanier.views.btn_confirm_order_ajax import btn_confirm_order_ajax
@@ -43,14 +32,14 @@ from repanier.views.my_cart_amount_ajax import my_cart_amount_ajax
 from repanier.views.my_profile_view import my_profile_view
 from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
-# from repanier.views.order_description_view import order_description_view
 from repanier.views.order_filter_view import order_filter_view
 from repanier.views.order_init_ajax import order_init_ajax
 from repanier.views.order_select_ajax import order_select_ajax
 from repanier.views.producer_invoice_class import ProducerInvoiceView
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
-from repanier.views.task_class import PermanenceView
+from repanier.views.task_class import TaskView
 from repanier.views.task_form_ajax import task_form_ajax
+from repanier.views.task_history_class import TaskHistoryView
 from repanier.views.test_mail_config_ajax import test_mail_config_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
 from repanier.views.who_is_who_view import who_is_who_view
@@ -165,7 +154,7 @@ urlpatterns = [
     path("ajax/like/", login_required(never_cache(like_ajax)), name="like_ajax"),
     path("ajax/is-into-offer/<int:product_id>/", is_into_offer, name="is_into_offer"),
     path("ajax/test-mail-config/", test_mail_config_ajax, name="test_mail_config_ajax"),
-    path("permanence/", never_cache(PermanenceView.as_view()), name="permanence_view"),
+    path("task-view/", never_cache(TaskView.as_view()), name="task_view"),
     path(
         "customer-invoice/<int:invoice_id>/<int:customer_id>/",
         login_required(CustomerInvoiceView.as_view()),
@@ -233,5 +222,10 @@ urlpatterns = [
         "unsubscribe/<str:customer_id>/<token>/",
         unsubscribe_view,
         name="unsubscribe_view",
+    ),
+    path(
+        "task-history/",
+        never_cache(TaskHistoryView.as_view()),
+        name="task_history_view",
     ),
 ]
