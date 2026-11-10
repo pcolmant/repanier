@@ -198,7 +198,7 @@ class OrderUnitWidget(IntegerWidget):
         val = str(super().clean(value))
         return val if val in self.lut_dict else self.default_value
 
-    def render(self, value, obj=None):
+    def render(self, value, obj=None, **kwargs):
         return int(value) or int(self.default_value)
 
 
