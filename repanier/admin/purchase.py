@@ -567,7 +567,6 @@ class PurchaseAdmin(admin.ModelAdmin):
         return view
 
     def update_extra_context(self, view, purchase):
-        purchase_saved = get_threading_local("purchase_saved")
         if purchase is None:
             delivery_point = None
             permanence = None

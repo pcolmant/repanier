@@ -93,7 +93,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
 
     while current_producer is not None:
         producer_price = DECIMAL_ZERO
-        producer_start_row = current_row
 
         if year is None:
             base_filters = {
@@ -155,7 +154,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
             while current_purchase is not None and current_permanence.id == current_purchase.permanence_id:
                 if current_producer.invoice_by_basket:
                     current_customer = current_purchase.customer
-                    count_customer_purchase = 0
                     customer_start_row = current_row
                     customer_total_price = DECIMAL_ZERO
 

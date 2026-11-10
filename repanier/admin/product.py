@@ -430,7 +430,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         producer_field = form.base_fields["producer"]
 
         picture_field = form.base_fields["picture2"]
-        order_unit_field = form.base_fields["order_unit"]
         vat_level_field = form.base_fields["vat_level"]
         department_field = form.base_fields["department_for_customer"]
 

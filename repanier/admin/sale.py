@@ -147,7 +147,6 @@ class SaleForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        permanence = self.instance
 
         if "producers" in self.fields:
             producer_field = self.fields["producers"]
