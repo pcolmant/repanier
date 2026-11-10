@@ -8,7 +8,11 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 
-from repanier.const import *
+from django.conf import settings
+from django.db import models
+from repanier.const import (
+    AuthGroup, Currency, DECIMAL_ZERO, EMPTY_STRING, PermanenceName
+)
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 
 logger = logging.getLogger(__name__)

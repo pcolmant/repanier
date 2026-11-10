@@ -1,5 +1,4 @@
 
-from repanier.const import *
 
 # class Box(Product):
 #     # def get_calculated_stock(self):
