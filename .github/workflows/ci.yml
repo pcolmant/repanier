@@ -72,9 +72,7 @@ jobs:
         run: |
           sed -n '2p' .github/workflows/ci.yml >/dev/null
       - name: System checks
-        run: |
-          python manage.py check 2>&1 | tee check.log || true
-          python manage.py test repanier.tests 2>&1 | tee test.log || true
+        run: python manage.py check
       - name: Publish debug log to PR
         if: always()
         env:
@@ -95,4 +93,16 @@ jobs:
       - name: Generate per-site migrations
         run: python manage.py makemigrations repanier
       - name: Run test suite
-        run: python manage.py test repanier.tests
+        run: |
+          set -o pipefail
+          python manage.py test repanier.tests 2>&1 | tee test.log
+      - name: Publish debug log to PR
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -n "$PR_URL" ] && [ -f test.log ]; then
+            { echo 'Test run log (tail):'; echo '~~~'; tail -60 test.log; echo '~~~'; } > debug.md
+            gh pr comment "$PR_URL" --body-file debug.md || true
+          fi
