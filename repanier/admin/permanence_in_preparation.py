@@ -28,7 +28,8 @@ from repanier.admin.tools import (
     check_cancel_in_post,
     check_permanence,
 )
-from repanier.const import *
+from django.conf import settings
+from repanier.const import EMPTY_STRING, OrderUnit, SaleStatus
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.middleware import add_filter
