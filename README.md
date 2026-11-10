@@ -3,7 +3,7 @@ Repanier
 
 `Repanier` is an open-source web application designed for short-circuit food supply chains and local producer groups (GASAP, AMAP, food co-ops). 
 
-Built with **Django 5.2**, **Django CMS 5.1**, **Bootstrap 5.3**, and **Python 3.11**.
+Built with **Django 5.2**, **Django CMS 5.1**, **Bootstrap 5.3**, and **Python 3.13**.
 
 - **Documentation & Info**: https://projet.repanier.be/
 - **License**: GPL v3
