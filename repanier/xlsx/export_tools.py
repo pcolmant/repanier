@@ -3,7 +3,7 @@ import re
 from django.contrib.sites.models import Site
 from django.utils.translation import gettext_lazy as _
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side, Fill
+from openpyxl.styles import Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 from repanier.models.staff import Staff

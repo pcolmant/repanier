@@ -1,15 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.shortcuts import render
-from django.utils import translation
-from django.views.decorators.cache import never_cache
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_GET
 
-from repanier.const import EMPTY_STRING
-from repanier.models import Customer
-from repanier.models import Permanence
-from repanier.tools import permanence_ok_or_404, get_repanier_template_name
 
 
 # @never_cache
