@@ -15,7 +15,13 @@ from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
-from repanier.const import *
+from django.conf import settings
+from django.db import models
+from repanier.fields.RepanierMoneyField import RepanierMoney
+from repanier.const import (
+    BankMovement, DECIMAL_ZERO, EMPTY_STRING, OrderUnit, REPANIER_MONEY_ZERO,
+    RoundUpTo, SaleStatus
+)
 from repanier.middleware import add_filter
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -1749,7 +1755,6 @@ class PermanenceInPreparation(Permanence):
         proxy = True
         verbose_name = _("Offer in preparation")
         verbose_name_plural = _("Offers in preparation")
-
 
 
 class PermanenceDone(Permanence):

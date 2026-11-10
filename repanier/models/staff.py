@@ -7,7 +7,8 @@ from djangocms_text_ckeditor.fields import HTMLField
 from mptt.fields import TreeForeignKey
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel
-from repanier.const import *
+from django.conf import settings
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING
 
 
 class StaffQuerySet(QuerySet):

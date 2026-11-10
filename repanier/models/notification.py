@@ -3,7 +3,8 @@ from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
-from repanier.const import *
+from django.conf import settings
+from repanier.const import EMPTY_STRING
 from repanier.tools import cap
 
 
