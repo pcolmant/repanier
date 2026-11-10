@@ -467,7 +467,7 @@ a.button {
     }
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 992px) {
     .navbar-custom .container-fluid {
         display: flex;
         justify-content: flex-start !important;
@@ -532,7 +532,7 @@ a.button {
 }
 
 /* Mobile adjustments for quantity dropdowns */
-@media (max-width: 767.98px) {
+@media (max-width: 768px) {
     .quantity-dropdown .dropdown-menu {
         position: fixed !important;
         top: 50% !important;
@@ -547,13 +547,13 @@ a.button {
 /* Desktop adjustments for larger quantity dropdowns */
 @media (min-width: 768px) {
     .quantity-dropdown .dropdown-menu {
-        min-width: 200x !important;
+        min-width: 200px !important;
         max-height: 450px !important;
     }
 }
 
 /* Mobile adjustments for modal footers */
-@media (max-width: 767.98px) {
+@media (max-width: 768px) {
     .modal-footer {
         display: flex;
         align-items: center;
