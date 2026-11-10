@@ -1,7 +1,8 @@
 /* =================================================================
-   1. Sticky footer styles (Compatible Bootstrap 5 flexbox approach)
+   1. Global Layout & Sticky Footer
    =================================================================== */
-html, body {
+html,
+body {
     height: 100%;
 }
 
@@ -15,56 +16,131 @@ main {
     flex: 1 0 auto;
 }
 
-@media screen and (min-width: 768px) and (max-width: 979px) {
-    body {
-        padding-top: 60px;
-    }
+body > .container {
+    padding: 0 15px 0;
 }
 
-@media (min-width: 1200px) {
-    .container-repanier,
-    .container {
-        max-width: 95% !important; /* Uses 95% of screen width instead of a fixed width */
-    }
+.container .text-muted {
+    margin: 20px 0;
 }
 
 .footer {
-    flex-shrink: 0;
     position: relative !important;
+    flex-shrink: 0;
     width: 100%;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
     text-align: center;
-    border-top: 1px solid #dee2e6; /* Subtle full-width separator line */
-    padding-top: 15px; /* Spacing above text */
-    margin-top: 15px;  /* Space to detach footer from main content */
 }
+
+.footer > .container {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+code {
+    font-size: 80%;
+}
+
+.display_none {
+    display: none !important;
+}
+
+.white,
+.white a {
+    color: #fff;
+}
+
 
 /* =================================================================
-   2. Sidebar (.bs-docs-sidebar)
+   2. Typography & Icons
    =================================================================== */
-.bs-docs-sidebar {
-    padding: 0 0 1px 20px;
-    margin-top: 1px;
-    margin-bottom: 1px;
+.bi-heart,
+.bi-heart-fill {
+    vertical-align: -0.125em;
+    font-size: 1.2rem;
 }
 
-/* First-level items bold with default transparent left border */
+/* Spin animation for loading states */
+.gly-spin {
+    animation: spin 2s infinite linear;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(359deg);
+    }
+}
+
+
+/* =================================================================
+   3. Navigation, Navbar & Sidenav
+   =================================================================== */
+.navbar-header {
+    width: 100%;
+}
+
+.navbar-group-name {
+    margin-left: 10px;
+    color: #fff;
+}
+
+.navbar-custom .dropdown-menu {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.navbar-custom .dropdown-menu .dropdown-item {
+    color: var(--bs-primary) !important;
+}
+
+.navbar-custom .dropdown-menu .dropdown-item:hover,
+.navbar-custom .dropdown-menu .dropdown-item:focus {
+    color: #eee9f6 !important;
+    background-color: var(--bs-primary) !important;
+}
+
+.navbar-custom .dropdown-menu .dropdown-item.active {
+    color: #ffffff !important;
+    background-color: var(--bs-primary) !important;
+}
+
+a.skip_link {
+    position: absolute;
+    top: -1000px;
+    left: -1000px;
+}
+
+
+/* =================================================================
+   4. Sidebar (.bs-docs-sidebar)
+   =================================================================== */
+.bs-docs-sidebar {
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding: 0 0 1px 20px;
+}
+
 .bs-docs-sidebar .nav > li > .nav-link {
+    font-weight: bold;
     color: #3c3c3c !important;
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
-    font-weight: bold;
     border-left: 2px solid transparent;
 }
 
-/* Sub-menus normal weight and indented */
 .bs-docs-sidebar .nav .nav > li > .nav-link {
-    padding-left: 30px;
     font-weight: normal;
     color: #3c3c3c !important;
+    padding-left: 30px;
     border-left: 2px solid transparent;
 }
 
-/* Green color on hover and focus (without vertical bar) */
 .bs-docs-sidebar .nav > li > .nav-link:hover,
 .bs-docs-sidebar .nav > li > .nav-link:focus,
 .bs-docs-sidebar .nav .nav > li > .nav-link:hover,
@@ -74,31 +150,47 @@ main {
     text-decoration: none;
 }
 
-/* Green color and left vertical bar for the active page */
 .bs-docs-sidebar .nav > li > .nav-link.bs-docs-sidebar-active,
 .bs-docs-sidebar .nav .nav > li > .nav-link.bs-docs-sidebar-active {
     color: #51a351 !important;
     background-color: transparent !important;
-    text-decoration: none;
     border-left: 2px solid #51a351 !important;
+    text-decoration: none;
 }
 
+
 /* =================================================================
-   3. Utilities and Components (Panels / Accordions)
+   5. Components (Buttons, Accordions, Panels, Modals, Forms)
    =================================================================== */
-.display_none {
-    display: none !important;
+.btn {
+    white-space: normal !important;
+    word-wrap: break-word;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.not-active {
+    pointer-events: none;
+    cursor: default;
+}
+
+.button,
+input[type=submit],
+input[type=button],
+.submit-row input,
+a.button {
+    cursor: pointer !important;
 }
 
 .accordion-button:not(.collapsed):after,
 .panel-heading.accordion-toggle:after {
-    font-family: 'bootstrap-icons', serif;
-    content: "\e114";
-    float: right;
     position: relative;
     bottom: 23px;
+    float: right;
+    font-family: 'bootstrap-icons', serif;
     font-size: 15pt;
     color: grey;
+    content: "\e114";
 }
 
 .accordion-button.collapsed:after,
@@ -114,252 +206,20 @@ main {
     text-decoration: underline;
 }
 
+.card-header[aria-expanded="true"] .chevron-icon,
+.card-header .chevron-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-header[aria-expanded="true"] .chevron-icon {
+    transform: rotate(90deg);
+}
+
 .offer-description {
     position: relative;
     height: 200px;
     margin-top: 20px;
     overflow: auto;
-}
-
-body > .container {
-    padding: 0 15px 0;
-}
-
-.container .text-muted {
-    margin: 20px 0;
-}
-
-.footer > .container {
-    padding-right: 15px;
-    padding-left: 15px;
-}
-
-code {
-    font-size: 80%;
-}
-
-/* =================================================================
-   4. Navigation / Dropdowns & Mobile Menu (Native BS5 Offcanvas)
-   =================================================================== */
-@media only screen and (min-width: 768px) {
-    .navbar-nav li.dropdown:hover > .dropdown-menu {
-        display: block;
-    }
-}
-
-@media only screen and (max-width: 767px) {
-    .sidenav {
-        display: none;
-        height: 100%;
-        max-height: 100% !important;
-        width: 90%;
-        position: fixed;
-        z-index: 1100;
-        top: 0;
-        left: 0;
-        background-color: #4d4d4f;
-        overflow-x: hidden;
-        transition: transform 0.5s ease;
-        padding-top: 15px;
-    }
-
-    .sidenav a {
-        padding: 8px 8px 8px 32px;
-        text-decoration: none;
-        color: #818181;
-        display: block;
-        transition: 0.3s;
-        white-space: normal !important;
-        font-size: 18px;
-    }
-
-    .sidenav a:hover, .offcanvas a:focus {
-        color: #f1f1f1;
-    }
-
-    .sidenav .closebtn {
-        position: absolute;
-        top: 0;
-        right: 20px;
-    }
-}
-
-a.skip_link {
-    position: absolute;
-    left: -1000px;
-    top: -1000px;
-}
-
-.white, .white a {
-    color: #fff;
-}
-
-/* =================================================================
-   5. Specific Containers (3 states to prevent navbar overlapping)
-   =================================================================== */
-
-/* Small screens / Mobiles (< 768px) */
-@media only screen and (max-width: 767px) {
-    .container-bootstrap,
-    .container-repanier {
-        margin-top: 90px;
-    }
-    .container-repanier {
-        margin-bottom: 0;
-    }
-    .container-info {
-        margin: 90px 0 -90px 0;
-    }
-}
-
-/* Intermediate state / Tablets (768px to 976px) */
-@media only screen and (min-width: 768px) and (max-width: 976px) {
-    .container-bootstrap,
-    .container-repanier {
-        margin-top: 35px;
-    }
-    .container-repanier {
-        margin-bottom: 0;
-    }
-    .container-info {
-        margin: 35px 0 -35px 0;
-    }
-    .container-menu {
-        padding: 0 15px 0;
-    }
-}
-
-/* Large screens (>= 977px) */
-@media only screen and (min-width: 977px) {
-    .container-bootstrap,
-    .container-repanier {
-        margin-top: 85px;
-    }
-    .container-repanier {
-        margin-bottom: 0;
-    }
-    .container-info {
-        margin: 85px 0 -85px 0;
-    }
-    .container-menu {
-        padding: 0 15px 0;
-    }
-}
-
-/* =================================================================
-   6. Pure CSS Cart Icon
-   =================================================================== */
-.icon-cart {
-    width: 48px;
-    height: 48px;
-    position: relative;
-    overflow: hidden;
-    margin-top: -10px;
-}
-
-.icon-cart .cart-line-1 {
-    width: 15%;
-    height: 7%;
-    position: absolute;
-    left: 8%;
-    top: 25%;
-    transform: rotate(5deg);
-    border-bottom-left-radius: 35%;
-}
-
-.icon-cart .cart-line-2 {
-    width: 35%;
-    height: 7%;
-    position: absolute;
-    left: 6%;
-    top: 40%;
-    transform: rotate(80deg);
-}
-
-.icon-cart .cart-line-2:before {
-    content: "";
-    width: 120%;
-    height: 100%;
-    position: absolute;
-    left: 45%;
-    top: -280%;
-    transform: rotate(-80deg);
-    background-color: inherit;
-}
-
-.icon-cart .cart-line-2:after {
-    content: "";
-    width: 70%;
-    height: 100%;
-    position: absolute;
-    left: 59%;
-    top: -670%;
-    background-color: inherit;
-    transform: rotate(40deg);
-    border-top-left-radius: 50%;
-    border-bottom-left-radius: 25%;
-}
-
-.icon-cart .cart-line-3 {
-    width: 30%;
-    height: 7%;
-    position: absolute;
-    left: 33%;
-    top: 45%;
-}
-
-.icon-cart .cart-line-3:after {
-    content: "";
-    width: 124%;
-    height: 100%;
-    position: absolute;
-    top: -150%;
-    left: -5%;
-    background-color: inherit;
-}
-
-.icon-cart .cart-wheel {
-    width: 12%;
-    height: 12%;
-    border-radius: 100%;
-    position: absolute;
-    left: 28%;
-    bottom: 20%;
-}
-
-.icon-cart .cart-wheel:after {
-    content: "";
-    width: 100%;
-    height: 100%;
-    background-color: inherit;
-    border-radius: 100%;
-    position: absolute;
-    left: 200%;
-    bottom: 0;
-}
-
-/* =================================================================
-   7. Navbar and Miscellaneous Buttons
-   =================================================================== */
-.navbar-header {
-    width: 100%;
-}
-
-.navbar-group-name {
-    margin-left: 10px;
-    color: #fff;
-}
-
-.btn {
-    white-space: normal !important;
-    word-wrap: break-word;
-    word-break: normal;
-    overflow-wrap: break-word;
-}
-
-.not-active {
-    pointer-events: none;
-    cursor: default;
 }
 
 .form-sticky-update-button {
@@ -368,32 +228,13 @@ a.skip_link {
 }
 
 .back-to-top-sticky-button {
-    display: none;
     position: fixed;
-    bottom: 20px;
     right: 30px;
+    bottom: 20px;
     z-index: 2000;
+    display: none;
 }
 
-/* =================================================================
-   8. Animations (Spinners)
-   =================================================================== */
-.gly-spin {
-    animation: spin 2s infinite linear;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(359deg);
-    }
-}
-
-/* =================================================================
-   9. Custom Forms and Checkboxes
-   =================================================================== */
 .form-group input[type="checkbox"] {
     display: none;
 }
@@ -418,98 +259,14 @@ a.skip_link {
     display: none;
 }
 
-.button, input[type=submit], input[type=button], .submit-row input, a.button {
-    color: initial !important;
-    cursor: initial !important;
-}
-
-/* =================================================================
-   10. Bootstrap Hearts Alignment & Sizing
-   =================================================================== */
-.bi-heart, .bi-heart-fill {
-    font-size: 1.2rem;
-    vertical-align: -0.125em;
-}
-
-/* =================================================================
-   11. Chevron Icon Rotation on Expand
-   =================================================================== */
-.card-header[aria-expanded="true"] .chevron-icon,
-.card-header .chevron-icon {
-    transition: transform 0.2s ease-in-out;
-}
-
-.card-header[aria-expanded="true"] .chevron-icon {
-    transform: rotate(90deg);
-}
-
-/* =================================================================
-   12. Keep mobile navbar elements grouped on the left
-   =================================================================== */
-@media (max-width: 991.98px) {
-    .navbar-custom .container-fluid {
-        display: flex;
-        justify-content: flex-start !important;
-        flex-wrap: nowrap;
-    }
-}
-
-/* =================================================================
-   13. Sticky Sidebar with Internal Scroll
-   =================================================================== */
-@media (min-width: 992px) {
-    .bs-docs-sidebar .fixed-sidebar-container {
-        position: sticky;
-        top: 5rem;
-        max-height: calc(100vh - 6rem);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .bs-docs-sidebar .sidebar-scrollable-area {
-        overflow-y: auto;
-        flex-grow: 1;
-        padding-right: 5px;
-    }
-}
-
-/* =================================================================
-   14. Modal Dialog Top Offset (Prevents fixed navbar overlap)
-   =================================================================== */
 .modal-dialog {
     margin-top: 100px !important;
 }
 
+
 /* =================================================================
-   15. Navbar Customization & Dropdown Styles
+   6. Custom Quantity Dropdown Component
    =================================================================== */
-.navbar-custom .dropdown-menu {
-    background-color: #ffffff !important;
-    border: 1px solid rgba(0, 0, 0, 0.15) !important;
-    box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Dark text for dropdown items */
-.navbar-custom .dropdown-menu .dropdown-item {
-    color: var(--bs-primary) !important;
-}
-
-/* Hover and focus states for dropdown items */
-.navbar-custom .dropdown-menu .dropdown-item:hover,
-.navbar-custom .dropdown-menu .dropdown-item:focus {
-    color: #eee9f6 !important;
-    background-color: var(--bs-primary) !important;
-}
-
-/* Active/selected state in the dropdown */
-.navbar-custom .dropdown-menu .dropdown-item.active {
-    color: #ffffff !important;
-    background-color: var(--bs-primary) !important;
-}
-/* =================================================================
-   4. Custom Bootstrap 5 Quantity Dropdown (iOS compatible)
-   =================================================================
-*/
 .quantity-dropdown {
     display: inline-block;
 }
@@ -517,16 +274,16 @@ a.skip_link {
 .quantity-dropdown .dropdown-toggle {
     width: 100%;
     min-width: 80px;
-    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     text-align: left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .quantity-dropdown .dropdown-menu {
     max-height: 300px;
-    overflow-y: auto;
     min-width: 80px;
+    overflow-y: auto;
 }
 
 .quantity-dropdown .quantity-option {
@@ -536,11 +293,277 @@ a.skip_link {
 
 .quantity-dropdown .quantity-option:hover,
 .quantity-dropdown .quantity-option:focus {
-    background-color: #f8f9fa;
     color: #212529;
+    background-color: #f8f9fa;
 }
 
 .quantity-dropdown .quantity-option.active {
-    background-color: var(--bs-primary);
     color: #ffffff;
+    background-color: var(--bs-primary);
+}
+
+
+/* =================================================================
+   7. Pure CSS Cart Icon Component
+   =================================================================== */
+.icon-cart {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    margin-top: -10px;
+    overflow: hidden;
+}
+
+.icon-cart .cart-line-1 {
+    position: absolute;
+    top: 25%;
+    left: 8%;
+    width: 15%;
+    height: 7%;
+    transform: rotate(5deg);
+    border-bottom-left-radius: 35%;
+}
+
+.icon-cart .cart-line-2 {
+    position: absolute;
+    top: 40%;
+    left: 6%;
+    width: 35%;
+    height: 7%;
+    transform: rotate(80deg);
+}
+
+.icon-cart .cart-line-2:before {
+    content: "";
+    position: absolute;
+    top: -280%;
+    left: 45%;
+    width: 120%;
+    height: 100%;
+    background-color: inherit;
+    transform: rotate(-80deg);
+}
+
+.icon-cart .cart-line-2:after {
+    content: "";
+    position: absolute;
+    top: -670%;
+    left: 59%;
+    width: 70%;
+    height: 100%;
+    background-color: inherit;
+    transform: rotate(40deg);
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 25%;
+}
+
+.icon-cart .cart-line-3 {
+    position: absolute;
+    top: 45%;
+    left: 33%;
+    width: 30%;
+    height: 7%;
+}
+
+.icon-cart .cart-line-3:after {
+    content: "";
+    position: absolute;
+    top: -150%;
+    left: -5%;
+    width: 124%;
+    height: 100%;
+    background-color: inherit;
+}
+
+.icon-cart .cart-wheel {
+    position: absolute;
+    bottom: 20%;
+    left: 28%;
+    width: 12%;
+    height: 12%;
+    border-radius: 100%;
+}
+
+.icon-cart .cart-wheel:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 200%;
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+    border-radius: 100%;
+}
+
+
+/* =================================================================
+   8. Responsive Design & Media Queries Grouped by Component
+   =================================================================== */
+
+/* Container width overrides for large viewports */
+@media (min-width: 1200px) {
+    .container-repanier,
+    .container {
+        max-width: 95% !important;
+    }
+}
+
+/* Specific container states to prevent navbar overlap across screen sizes */
+@media only screen and (max-width: 767px) {
+    .container-bootstrap,
+    .container-repanier {
+        margin-top: 90px;
+    }
+    .container-repanier {
+        margin-bottom: 0;
+    }
+    .container-info {
+        margin: 90px 0 -90px 0;
+    }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 976px) {
+    .container-bootstrap,
+    .container-repanier {
+        margin-top: 35px;
+    }
+    .container-repanier {
+        margin-bottom: 0;
+    }
+    .container-info {
+        margin: 35px 0 -35px 0;
+    }
+    .container-menu {
+        padding: 0 15px 0;
+    }
+}
+
+@media only screen and (min-width: 977px) {
+    .container-bootstrap,
+    .container-repanier {
+        margin-top: 85px;
+    }
+    .container-repanier {
+        margin-bottom: 0;
+    }
+    .container-info {
+        margin: 85px 0 -85px 0;
+    }
+    .container-menu {
+        padding: 0 15px 0;
+    }
+}
+
+/* Navbar breakpoint adjustments */
+@media screen and (min-width: 768px) and (max-width: 979px) {
+    body {
+        padding-top: 60px;
+    }
+}
+
+@media only screen and (min-width: 768px) {
+    .navbar-nav li.dropdown:hover > .dropdown-menu {
+        display: block;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .navbar-custom .container-fluid {
+        display: flex;
+        justify-content: flex-start !important;
+        flex-wrap: nowrap;
+    }
+}
+
+/* Mobile Sidenav / Offcanvas behavior */
+@media only screen and (max-width: 767px) {
+    .sidenav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1100;
+        display: none;
+        width: 90%;
+        height: 100%;
+        max-height: 100% !important;
+        padding-top: 15px;
+        overflow-x: hidden;
+        background-color: #4d4d4f;
+        transition: transform 0.5s ease;
+    }
+
+    .sidenav a {
+        display: block;
+        padding: 8px 8px 8px 32px;
+        font-size: 18px;
+        color: #818181;
+        text-decoration: none;
+        white-space: normal !important;
+        transition: 0.3s;
+    }
+
+    .sidenav a:hover,
+    .offcanvas a:focus {
+        color: #f1f1f1;
+    }
+
+    .sidenav .closebtn {
+        position: absolute;
+        top: 0;
+        right: 20px;
+    }
+}
+
+/* Sticky sidebar with internal scroll for desktop */
+@media (min-width: 992px) {
+    .bs-docs-sidebar .fixed-sidebar-container {
+        position: sticky;
+        top: 5rem;
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 6rem);
+    }
+
+    .bs-docs-sidebar .sidebar-scrollable-area {
+        flex-grow: 1;
+        padding-right: 5px;
+        overflow-y: auto;
+    }
+}
+
+/* Mobile adjustments for quantity dropdowns */
+@media (max-width: 767.98px) {
+    .quantity-dropdown .dropdown-menu {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        width: 70vw !important;
+        max-height: 80vh !important;
+        transform: translate(-50%, -50%) !important;
+        font-size: 1.2rem;
+    }
+}
+
+/* Desktop adjustments for larger quantity dropdowns */
+@media (min-width: 768px) {
+    .quantity-dropdown .dropdown-menu {
+        min-width: 200x !important;
+        max-height: 450px !important;
+    }
+}
+
+/* Mobile adjustments for modal footers */
+@media (max-width: 767.98px) {
+    .modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .modal-footer .btn {
+        margin-bottom: 0 !important;
+    }
 }
