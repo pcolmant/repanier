@@ -14,7 +14,6 @@ from django.db.models import F
 from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
-from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -539,7 +538,6 @@ def reorder_offer_items(permanence_id):
     from repanier.models.offeritem import OfferItemReadOnly
 
     # calculate the sort order of the order display screen
-    cur_language = translation.get_language()
     offer_item_qs = OfferItemReadOnly.objects.filter(permanence_id=permanence_id)
 
     i = 0
@@ -580,7 +578,7 @@ def update_offer_item(product=None, producer_id=None):
     ):
         if product is not None:
             # Create the offer item if needed and clean it
-            offer_item = product.get_or_create_offer_item(permanence)
+            product.get_or_create_offer_item(permanence)
         else:
             offer_item_qs = OfferItem.objects.filter(
                 permanence_id=permanence.id,
@@ -597,7 +595,7 @@ def update_offer_item(product=None, producer_id=None):
             if product is not None:
                 if product.is_into_offer:
                     # Create the offer item if needed and clean it
-                    offer_item = product.get_or_create_offer_item(permanence)
+                    product.get_or_create_offer_item(permanence)
                     permanence.calculate_order_amount()
             else:
                 offer_item_qs = OfferItem.objects.filter(

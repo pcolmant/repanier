@@ -1292,7 +1292,7 @@ class Permanence(models.Model):
 
     def duplicate_delivery_board(self, new_permanence, cur_language):
         for delivery_board in DeliveryBoard.objects.filter(permanence=self):
-            new_delivery_board = DeliveryBoard.objects.create(
+            DeliveryBoard.objects.create(
                 permanence=new_permanence,
                 delivery_point=delivery_board.delivery_point,
                 delivery_comment_v2=delivery_board.delivery_comment_v2,
