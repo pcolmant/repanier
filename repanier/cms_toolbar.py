@@ -19,7 +19,7 @@ from cms.toolbar_pool import toolbar_pool
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from repanier.const import *
+from django.conf import settings
 
 REPANIER_MENU_IDENTIFIER = "repanier-menu"
 

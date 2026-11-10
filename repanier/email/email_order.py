@@ -11,7 +11,11 @@ from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
-from repanier.tools import *
+from django.conf import settings
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+import logging
+from repanier.tools import payment_message
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 from repanier.xlsx.export_tools import copy_worksheet
 

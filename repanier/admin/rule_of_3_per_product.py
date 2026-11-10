@@ -14,7 +14,9 @@ from repanier.models import OfferItemSend
 from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
 )
-from repanier.const import *
+from repanier.const import (
+    DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING, OrderUnit, REPANIER_MONEY_ZERO, RoundUpTo
+)
 from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
 from repanier.models import Producer
