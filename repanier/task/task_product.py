@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 
-from repanier.const import *
+from repanier.const import EMPTY_STRING
 from repanier.models import Product
 from repanier.tools import cap
 

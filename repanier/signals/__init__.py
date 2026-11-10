@@ -1,11 +1,4 @@
-from .configuration import *
-from .customer import *
-from .group import *
-from .lut import *
-from .notification import *
-from .offeritem import *
-from .permanenceboard import *
-from .producer import *
-from .product import *
-from .purchase import *
-from .staff import *
+# Signal handlers. Imported for their side effects (post_save/post_delete
+# receivers) when repanier.apps.RepanierConfig.ready() imports this package.
+
+from . import configuration, customer, group, lut, notification, offeritem, permanenceboard, producer, product, purchase, staff

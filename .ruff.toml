@@ -17,3 +17,6 @@ select = ["E9", "F63", "F7", "F82"]
 
 [lint.per-file-ignores]
 "**/__init__.py" = ["F401"]
+# Deployment settings idiom: mysite/common_settings.py does `from .settings
+# import *` because settings.py is generated per site (see README deploy flow).
+"mysite/common_settings.py" = ["F403", "F405"]
