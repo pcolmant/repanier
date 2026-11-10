@@ -73,3 +73,9 @@ jobs:
       # that the model layer is coherent and that Django can build the migration state.
       - name: Model consistency (makemigrations dry-run)
         run: python manage.py makemigrations --dry-run --verbosity 2
+      # repanier migrations are generated per site (see comment above): build
+      # them once for this run so the test runner can migrate the test database.
+      - name: Generate per-site migrations
+        run: python manage.py makemigrations repanier
+      - name: Run test suite
+        run: python manage.py test repanier.tests
