@@ -1,4 +1,4 @@
-successfully downloaded text file (SHA: 7b80676c64dbc087408fe2323868c42bc880598b)"""
+"""
 Excel export utilities for Repanier offers.
 Handles export of product offers for permanences in PLANNED or OPENED status.
 """
