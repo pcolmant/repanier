@@ -16,12 +16,11 @@ from repanier.const import DECIMAL_ZERO, LIMIT_ORDER_QTY_ITEM, SaleStatus, EMPTY
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer
 from repanier.models.product import Product
+from repanier.xlsx.const import ROW_FORMAT, ROW_VALUE
 from repanier.xlsx.export_tools import (
     new_landscape_a4_sheet,
     worksheet_set_header,
     get_column_letter,
-    ROW_VALUE,
-    ROW_FORMAT,
 )
 
 if TYPE_CHECKING:

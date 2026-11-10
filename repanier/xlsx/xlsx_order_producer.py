@@ -11,7 +11,8 @@ from openpyxl.styles.numbers import FORMAT_TEXT
 from openpyxl.utils import get_column_letter
 
 import repanier.apps
-from repanier.const import *
+from django.conf import settings
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING, OrderUnit, RoundUpTo
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.purchase import Purchase
