@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.http import Http404, JsonResponse
-from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache

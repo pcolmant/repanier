@@ -16,7 +16,6 @@ from repanier.tools import (
     sint,
     sboolean,
     my_basket,
-    get_html_selected_value,
     get_html_basket_message,
     get_repanier_template_name, get_str_selected_value,
 )

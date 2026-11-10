@@ -6,13 +6,13 @@ from decimal import Decimal
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
-from repanier.const import DECIMAL_ZERO, EMPTY_STRING, RoundUpTo, SaleStatus, DECIMAL_ONE
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING, RoundUpTo, DECIMAL_ONE
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.purchase import Purchase
 from repanier.tools import cap
 from repanier.xlsx.export_tools import format_worksheet_title
 from repanier.xlsx.import_tools import get_header, get_row, get_customer_2_id_dict, get_producer_2_id_dict
-from repanier.xlsx.import_handlers import process_uploaded_excel, validate_purchase_upload, get_permanence_sheet
+from repanier.xlsx.import_handlers import process_uploaded_excel, validate_purchase_upload
 
 
 @transaction.atomic

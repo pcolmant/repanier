@@ -1,6 +1,5 @@
-import repanier.apps
 from django.forms import NumberInput
-from repanier.tools import get_repanier_template_name, get_repanier_static_name
+from repanier.tools import get_repanier_template_name
 
 
 class StockWidget(NumberInput):

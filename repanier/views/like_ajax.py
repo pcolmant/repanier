@@ -1,7 +1,6 @@
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_GET
 
-from repanier.models import Customer
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.tools import sint
 

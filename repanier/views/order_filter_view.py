@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import render
@@ -10,7 +9,6 @@ from repanier.const import EMPTY_STRING
 from repanier.models import Customer
 from repanier.models import Permanence
 from repanier.models.lut import LUT_DepartmentForCustomer
-from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.producer import Producer
 from repanier.tools import permanence_ok_or_404, get_repanier_template_name
 
