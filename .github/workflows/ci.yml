@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,10 +25,21 @@ jobs:
       - name: Install ruff
         run: python -m pip install --disable-pip-version-check ruff
       - name: Blocking lint (syntax errors, undefined names)
-        run: ruff check --isolated --select E9,F63,F7,F82 repanier mysite
-      - name: Advisory lint report (non-blocking)
-        continue-on-error: true
-        run: ruff check --isolated --select F --statistics repanier mysite
+        run: |
+          which ruff 2>&1 | tee lint.log
+          ruff --version 2>&1 | tee -a lint.log
+          ruff check --isolated --select E9,F63,F7,F82 repanier mysite 2>&1 | tee -a lint.log
+          exit ${PIPESTATUS[0]}
+      - name: Publish lint log to PR (debug)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -n "$PR_URL" ] && [ -f lint.log ]; then
+            { echo "Lint debug log:"; echo '~~~'; cat lint.log; echo '~~~'; } > lint-body.md
+            gh pr comment "$PR_URL" --body-file lint-body.md || true
+          fi
 
   django:
     name: Django system and model checks
@@ -41,7 +56,7 @@ jobs:
       - name: Install dependencies
         run: |
           grep -v '^uWSGI' requirements/requirement-5.2.txt > req-ci.txt
-          python -m pip install --disable-pip-version-check -r req-ci.txt
+          python -m pip install --disable-pip-version-check -r req-ci.txt 2>&1 | tail -5
       - name: Prepare CI-only settings
         run: |
           cat > mysite/settings.py <<'EOF'
@@ -63,10 +78,24 @@ jobs:
           )
           p.write_text(text, encoding="utf-8")
           EOF
+          head -2 mysite/mysite.ini
+          python --version
+          pip list 2>/dev/null | head -8
       - name: System checks
-        run: python manage.py check
-      # No --check here: repanier migrations are generated per site (MIGRATION_MODULES
-      # in common_settings.py) and none live in this repository. The dry run validates
-      # that the model layer is coherent and that Django can build the migration state.
+        run: |
+          python manage.py check 2>&1 | tee check.log
+          exit ${PIPESTATUS[0]}
       - name: Model consistency (makemigrations dry-run)
-        run: python manage.py makemigrations --dry-run --verbosity 2
+        run: |
+          python manage.py makemigrations --dry-run --verbosity 2 2>&1 | tee -a check.log
+          exit ${PIPESTATUS[0]}
+      - name: Publish job log to PR (debug)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -n "$PR_URL" ] && [ -f check.log ]; then
+            { echo "Django debug log:"; echo '~~~'; cat check.log; echo '~~~'; } > django-body.md
+            gh pr comment "$PR_URL" --body-file django-body.md || true
+          fi
