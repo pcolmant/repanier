@@ -25,7 +25,7 @@ class DecimalBooleanWidget(BooleanWidget):
             return
         return True if value in self.TRUE_VALUES else False
 
-    def render(self, value, obj=None):
+    def render(self, value, obj=None, **kwargs):
         if value is None:
             return EMPTY_STRING
         return value
@@ -45,7 +45,7 @@ class DecimalsWidget(DecimalWidget):
             # This occurs when text is present in a decimal field
             return DECIMAL_ZERO
 
-    def render_quantize(self, value, decimals):
+    def render_quantize(self, value, decimals, **kwargs):
         value = self.clean_quantize(value, decimals)
         return float(Decimal(value).quantize(decimals))
 
@@ -59,8 +59,8 @@ class ZeroDecimalsWidget(DecimalsWidget):
     def clean(self, value, row=None, *args, **kwargs):
         return super().clean_quantize(value, RoundUpTo.ZERO_DECIMAL)
 
-    def render(self, value, obj=None):
-        return super().render_quantize(value, RoundUpTo.ZERO_DECIMAL)
+    def render(self, value, obj=None, **kwargs):
+        return super().render_quantize(value, RoundUpTo.ZERO_DECIMAL, **kwargs)
 
 
 class TwoDecimalsWidget(DecimalsWidget):
@@ -71,8 +71,8 @@ class TwoDecimalsWidget(DecimalsWidget):
     def clean(self, value, row=None, *args, **kwargs):
         return super().clean_quantize(value, RoundUpTo.TWO_DECIMALS)
 
-    def render(self, value, obj=None):
-        return super().render_quantize(value, RoundUpTo.TWO_DECIMALS)
+    def render(self, value, obj=None, **kwargs):
+        return super().render_quantize(value, RoundUpTo.TWO_DECIMALS, **kwargs)
 
 
 class ThreeDecimalsWidget(DecimalsWidget):
@@ -83,8 +83,8 @@ class ThreeDecimalsWidget(DecimalsWidget):
     def clean(self, value, row=None, *args, **kwargs):
         return super().clean_quantize(value, RoundUpTo.THREE_DECIMALS)
 
-    def render(self, value, obj=None):
-        return super().render_quantize(value, RoundUpTo.THREE_DECIMALS)
+    def render(self, value, obj=None, **kwargs):
+        return super().render_quantize(value, RoundUpTo.THREE_DECIMALS, **kwargs)
 
 
 class FourDecimalsWidget(DecimalsWidget):
@@ -95,8 +95,8 @@ class FourDecimalsWidget(DecimalsWidget):
     def clean(self, value, row=None, *args, **kwargs):
         return super().clean_quantize(value, RoundUpTo.FOUR_DECIMALS)
 
-    def render(self, value, obj=None):
-        return super().render_quantize(value, RoundUpTo.FOUR_DECIMALS)
+    def render(self, value, obj=None, **kwargs):
+        return super().render_quantize(value, RoundUpTo.FOUR_DECIMALS, **kwargs)
 
 
 class IdWidget(ZeroDecimalsWidget):
@@ -116,7 +116,7 @@ class MoneysWidget(DecimalWidget):
             return
         return Decimal(value).quantize(decimals)
 
-    def render_quantize(self, value, decimals):
+    def render_quantize(self, value, decimals, **kwargs):
         return float(Decimal(value.amount).quantize(decimals))
 
 
@@ -128,8 +128,8 @@ class TwoMoneysWidget(MoneysWidget):
     def clean(self, value, row=None, *args, **kwargs):
         return super().clean_quantize(value, RoundUpTo.TWO_DECIMALS)
 
-    def render(self, value, obj=None):
-        return super().render_quantize(value, RoundUpTo.TWO_DECIMALS)
+    def render(self, value, obj=None, **kwargs):
+        return super().render_quantize(value, RoundUpTo.TWO_DECIMALS, **kwargs)
 
 
 class ProducerNameWidget(ForeignKeyWidget):
@@ -144,6 +144,9 @@ class ProducerNameWidget(ForeignKeyWidget):
             return target
         else:
             return
+
+    # def render(self, value, obj=None, **kwargs):
+    #     return super().render(value, obj=obj, **kwargs)
 
 
 class CustomerNameWidget(ForeignKeyWidget):
@@ -162,6 +165,9 @@ class CustomerNameWidget(ForeignKeyWidget):
             return target
         else:
             return
+
+    # def render(self, value, obj=None, **kwargs):
+    #     return super().render(value, obj=obj, **kwargs)
 
 
 class TaxLevelWidget(DecimalWidget):
@@ -182,7 +188,7 @@ class TaxLevelWidget(DecimalWidget):
         val = super().clean(value)
         return self.lut_reverse[val] if val else self.lut_reverse[DECIMAL_ZERO]
 
-    def render(self, value, obj=None):
+    def render(self, value, obj=None, **kwargs):
         if value:
             return self.lut_dict[value]
         return DECIMAL_ZERO
@@ -238,7 +244,7 @@ class OneToOneWidget(ForeignKeyWidget):
             r = self.model(**{self.field: value})
         return r
 
-    def render(self, value, obj=None):
+    def render(self, value, obj=None, **kwargs):
         if value is None:
             return EMPTY_STRING
         return getattr(value, self.field)
@@ -279,7 +285,7 @@ class DateWidgetExcel(Widget):
                 continue
         raise ValueError("Enter a valid date.")
 
-    def render(self, value, obj=None):
+    def render(self, value, obj=None, **kwargs):
         if not value:
             return EMPTY_STRING
         if isinstance(value, str):
@@ -301,7 +307,7 @@ class HTMLWidget(CharWidget):
         else:
             return EMPTY_STRING
 
-    def render(self, value, obj=None):
+    def render(self, value, obj=None, **kwargs):
         # generate exported value
         if value is None:
             return EMPTY_STRING
