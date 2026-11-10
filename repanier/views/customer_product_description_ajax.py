@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -14,6 +15,8 @@ template_order_product_description = get_repanier_template_name(
     "order_product_description.html"
 )
 
+
+@login_required()
 @csrf_protect
 @require_GET
 def order_product_description_ajax(request):
