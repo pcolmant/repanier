@@ -694,12 +694,13 @@ class Permanence(models.Model):
     @transaction.atomic
     def back_to_scheduled(self):
         self.producers.clear()
-        for offer_item in (
+        producer_ids = list(
             OfferItemReadOnly.objects.filter(permanence_id=self.id, may_order=True)
-            .order_by("producer_id")
-            .distinct("producer_id")
-        ):
-            self.producers.add(offer_item.producer_id)
+            .values_list("producer_id", flat=True)
+            .distinct()
+        )
+        for producer_id in producer_ids:
+            self.producers.add(producer_id)
         OfferItemReadOnly.objects.filter(permanence_id=self.id).update(may_order=False)
 
     @transaction.atomic
