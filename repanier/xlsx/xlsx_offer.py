@@ -4,7 +4,7 @@ Handles export of product offers for permanences in PLANNED or OPENED status.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from django.utils.translation import gettext_lazy as _
 from openpyxl.styles.numbers import FORMAT_TEXT
@@ -23,6 +23,9 @@ from repanier.xlsx.export_tools import (
     ROW_VALUE,
     ROW_FORMAT,
 )
+
+if TYPE_CHECKING:
+    from repanier.models.permanence import Permanence
 
 # Constants for Excel formatting in offer exports
 OFFER_SEPARATOR_COLUMN_WIDTH = 2.3

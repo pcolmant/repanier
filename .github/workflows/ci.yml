@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install ruff
+        run: python -m pip install --disable-pip-version-check ruff
+      - name: Blocking lint (syntax errors, undefined names)
+        run: ruff check --isolated --select E9,F63,F7,F82 repanier mysite
+      - name: Advisory lint report (non-blocking)
+        continue-on-error: true
+        run: ruff check --isolated --select F --statistics repanier mysite
+
+  django:
+    name: Django system and model checks
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: mysite.common_settings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements/requirement-5.2.txt
+      - name: Install dependencies
+        run: |
+          grep -v '^uWSGI' requirements/requirement-5.2.txt > req-ci.txt
+          python -m pip install --disable-pip-version-check -r req-ci.txt
+      - name: Prepare CI-only settings
+        run: |
+          cat > mysite/settings.py <<'EOF'
+          # CI-only settings module (gitignored). Read first by mysite/common_settings.py,
+          # which derives everything else from mysite/mysite.ini.
+          from pathlib import Path
+
+          SECRET_KEY = "ci-only-insecure-secret-key"
+          EOF
+          python - <<'EOF'
+          from pathlib import Path
+
+          p = Path("mysite/mysite.ini")
+          text = p.read_text(encoding="utf-8")
+          text = text.replace(
+              "[DJANGO_SETTINGS]",
+              "[DJANGO_SETTINGS]\nDJANGO_SETTINGS_DATABASE_ENGINE=django.db.backends.sqlite3",
+              1,
+          )
+          p.write_text(text, encoding="utf-8")
+          EOF
+      - name: System checks
+        run: python manage.py check
+      # No --check here: repanier migrations are generated per site (MIGRATION_MODULES
+      # in common_settings.py) and none live in this repository. The dry run validates
+      # that the model layer is coherent and that Django can build the migration state.
+      - name: Model consistency (makemigrations dry-run)
+        run: python manage.py makemigrations --dry-run --verbosity 2
