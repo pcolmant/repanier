@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+from decimal import ROUND_HALF_UP
 from functools import wraps
 from urllib.parse import urljoin
 from urllib.request import urlopen
@@ -719,7 +720,7 @@ def round_gov_be(number):
     If the total amount to be paid ends with 8 or 9 cents, it is rounded up to 0.10 euro.
     """
     return (number / const.DECIMAL_0_05).quantize(
-        const.DECIMAL_ONE, rounding=const.ROUND_HALF_UP
+        const.DECIMAL_ONE, rounding=ROUND_HALF_UP
     ) * const.DECIMAL_0_05
 
 
