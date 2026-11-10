@@ -61,12 +61,13 @@ def open_order(permanence_id, send_mail=True):
 
     # 3 - Keep only producer with offer items which can be ordered
     permanence.producers.clear()
-    for offer_item in (
+    producer_ids = list(
         OfferItemReadOnly.objects.filter(permanence_id=permanence.id, may_order=True)
-        .order_by("producer_id")
-        .distinct("producer_id")
-    ):
-        permanence.producers.add(offer_item.producer_id)
+        .values_list("producer_id", flat=True)
+        .distinct()
+    )
+    for producer_id in producer_ids:
+        permanence.producers.add(producer_id)
 
     for producer in permanence.producers.all():
         producer_invoice = ProducerInvoice.objects.filter(
