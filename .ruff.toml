@@ -1,0 +1,19 @@
+# Lint policy used by CI (see .github/workflows/ci.yml) and by editors.
+#
+# Blocking rules (CI fails on these): syntax errors and undefined names.
+#   E9   invalid syntax
+#   F63  comparison contradictions
+#   F7   syntax errors defined by future reserved words
+#   F82  undefined names
+# The advisory step in CI additionally reports the pyflakes "F" family.
+#
+# F401 in __init__.py files is ignored on purpose: repanier/admin/__init__.py
+# and repanier/models/__init__.py re-export Admin classes and models that the
+# rest of the code base imports from the package (e.g. `from repanier.models
+# import Permanence`). Removing them would break imports and admin discovery.
+
+[lint]
+select = ["E9", "F63", "F7", "F82"]
+
+[lint.per-file-ignores]
+"**/__init__.py" = ["F401"]

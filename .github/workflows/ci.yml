@@ -24,10 +24,10 @@ jobs:
       - name: Install ruff
         run: python -m pip install --disable-pip-version-check ruff
       - name: Blocking lint (syntax errors, undefined names)
-        run: ruff check --isolated --select E9,F63,F7,F82 repanier mysite
+        run: ruff check repanier mysite
       - name: Advisory lint report (non-blocking)
         continue-on-error: true
-        run: ruff check --isolated --select F --statistics repanier mysite
+        run: ruff check --select F --statistics repanier mysite
 
   django:
     name: Django system and model checks
