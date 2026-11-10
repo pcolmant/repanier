@@ -538,7 +538,7 @@ a.button {
         top: 50% !important;
         left: 50% !important;
         width: 70vw !important;
-        max-height: 80vh !important;
+        max-height: 65vh !important;
         transform: translate(-50%, -50%) !important;
         font-size: 1.2rem;
     }
