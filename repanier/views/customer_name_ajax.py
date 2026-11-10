@@ -1,4 +1,3 @@
-from django.http import Http404
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
