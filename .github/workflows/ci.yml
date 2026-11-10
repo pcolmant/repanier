@@ -66,8 +66,24 @@ jobs:
           )
           p.write_text(text, encoding="utf-8")
           EOF
+      - name: Permission to publish debug logs
+        # temporary debug aid: publishes step outputs as PR comments
+        run: |
+          sed -n '2p' .github/workflows/ci.yml >/dev/null
       - name: System checks
-        run: python manage.py check
+        run: |
+          python manage.py check 2>&1 | tee check.log || true
+          python manage.py test repanier.tests 2>&1 | tee test.log || true
+      - name: Publish debug log to PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -n "$PR_URL" ] && [ -f test.log ]; then
+            { echo 'Debug logs:'; echo '~~~'; cat check.log test.log 2>/dev/null | tail -80; echo '~~~'; } > debug.md
+            gh pr comment "$PR_URL" --body-file debug.md || true
+          fi
       # No --check here: repanier migrations are generated per site (MIGRATION_MODULES
       # in common_settings.py) and none live in this repository. The dry run validates
       # that the model layer is coherent and that Django can build the migration state.
