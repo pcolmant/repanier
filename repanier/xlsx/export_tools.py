@@ -7,7 +7,7 @@ from openpyxl.styles import Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 from repanier.models.staff import Staff
-from repanier.xlsx.const import *
+from repanier.xlsx.const import ROW_TITLE, ROW_WIDTH
 
 INVALID_WORKSHEET_TITLE_CHARS = re.compile(r"[\\/*?:\[\]]")
 

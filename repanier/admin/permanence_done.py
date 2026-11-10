@@ -24,7 +24,8 @@ from repanier.admin.tools import (
     check_cancel_in_post,
     check_done_in_post,
 )
-from repanier.const import *
+from django.conf import settings
+from repanier.const import BankMovement, DECIMAL_ZERO, EMPTY_STRING, SaleStatus
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.middleware import add_filter
 from repanier.models.bankaccount import BankAccount

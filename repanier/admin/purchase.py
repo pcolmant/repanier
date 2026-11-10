@@ -14,7 +14,8 @@ from django.urls import reverse, path
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from repanier.const import *
+from django.conf import settings
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING, SaleStatus
 from repanier.middleware import (
     get_request_params,
     set_threading_local,

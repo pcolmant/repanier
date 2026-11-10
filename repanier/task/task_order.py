@@ -7,13 +7,12 @@ from repanier.models import Permanence
 
 logger = logging.getLogger(__name__)
 
-from repanier.const import *
+from repanier.const import SaleStatus
 from repanier.email import email_offer
 from repanier.email import email_order
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.tools import reorder_offer_items, debug_parameters

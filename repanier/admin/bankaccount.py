@@ -7,7 +7,9 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 from repanier.admin.admin_filter import AdminFilterBankAccountStatus
-from repanier.const import *
+from repanier.const import (
+    BankMovement, DECIMAL_ZERO, EMPTY_STRING, REPANIER_MONEY_ZERO, SaleStatus
+)
 from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer

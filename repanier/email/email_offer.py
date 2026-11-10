@@ -8,7 +8,8 @@ from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.models.permanence import Permanence
 from repanier.models.staff import Staff
-from repanier.tools import *
+from django.conf import settings
+from django.utils.safestring import mark_safe
 
 
 # AttributeError: 'Context' object has no attribute 'render_context'

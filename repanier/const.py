@@ -1,4 +1,4 @@
-from decimal import *
+from decimal import Decimal
 from enum import Enum
 
 from django.conf import settings
