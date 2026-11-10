@@ -1,6 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
 
-from django.forms.widgets import TextInput
 
 import repanier.apps
 from django.conf import settings

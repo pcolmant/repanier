@@ -2,14 +2,12 @@ from io import BytesIO
 
 from django.template import Template, Context as TemplateContext
 from django.utils.translation import gettext_lazy as _
-from openpyxl.styles import Font
 
 from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
 from repanier.models import Producer
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
-from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff

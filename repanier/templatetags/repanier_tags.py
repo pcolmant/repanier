@@ -18,7 +18,7 @@ from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
     sint,
-    get_html_selected_value, get_str_selected_value,
+    get_str_selected_value,
 )
 
 register = template.Library()
