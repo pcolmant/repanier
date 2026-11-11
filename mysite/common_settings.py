@@ -174,9 +174,18 @@ DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
-STATICFILES_STORAGE = "{}.big_blind_static.BigBlindManifestStaticFilesStorage".format(
-    REPANIER_SETTINGS_VERSION
-)
+# Since Django 5.1 STATICFILES_STORAGE has been removed in favor of the
+# STORAGES dict below. The staticfiles storage produces checksummed
+# urls (cache busting) through the repanier backend, tolerant to names
+# missing from the manifest (fresh checkout, tests without collectstatic).
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "repanier.big_blind_static.BigBlindManifestStaticFilesStorage",
+    },
+}
 
 # Directory where working files, such as media and databases are kept
 MEDIA_DIR = PROJECT_DIR / "media"
