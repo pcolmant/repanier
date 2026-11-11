@@ -96,7 +96,7 @@
                         {% show_menu 0 3 1 1 %}
                     </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                        {% repanier_user_bs5 permanence_id=permanence_id %}
+                        {% repanier_user permanence_id=permanence_id %}
                         {% if REPANIER_DISPLAY_LANGUAGE %}
                             {% language_chooser %}
                         {% endif %}
@@ -151,7 +151,7 @@
                 <!-- Utilisateur et Sélecteur de langue -->
                 <div class="mt-auto pt-2">
                     <ul class="nav flex-column">
-                        {% repanier_user_bs5 permanence_id=permanence_id %}
+                        {% repanier_user permanence_id=permanence_id %}
                         {% if REPANIER_DISPLAY_LANGUAGE %}
                             <li class="nav-item mt-2">
                                 {% language_chooser %}

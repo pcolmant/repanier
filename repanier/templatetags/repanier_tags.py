@@ -92,7 +92,7 @@ def repanier_permanences(*args, **kwargs):
 
 
 @register.simple_tag(takes_context=True)
-def repanier_user_bs5(context, *args, **kwargs):
+def repanier_user(context, *args, **kwargs):
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
     request = context["request"]
