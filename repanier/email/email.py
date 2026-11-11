@@ -215,7 +215,6 @@ class RepanierEmail(EmailMultiAlternatives):
                         REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO : {REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO}
                         REPANIER_SETTINGS_ROUND_INVOICES : {REPANIER_SETTINGS_ROUND_INVOICES}
                         REPANIER_SETTINGS_SMS_GATEWAY_MAIL : {REPANIER_SETTINGS_SMS_GATEWAY_MAIL}
-                        REPANIER_SETTINGS_BOOTSTRAP_VERSION : {REPANIER_SETTINGS_BOOTSTRAP_VERSION}
                         """ "".format(
                 REPANIER_SETTINGS_GROUP_NAME=settings.REPANIER_SETTINGS_GROUP_NAME,
                 ALLOWED_HOSTS=settings.ALLOWED_HOSTS[0],
@@ -229,7 +228,6 @@ class RepanierEmail(EmailMultiAlternatives):
                 REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO=settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO,
                 REPANIER_SETTINGS_ROUND_INVOICES=settings.REPANIER_SETTINGS_ROUND_INVOICES,
                 REPANIER_SETTINGS_SMS_GATEWAY_MAIL=settings.REPANIER_SETTINGS_SMS_GATEWAY_MAIL,
-                REPANIER_SETTINGS_BOOTSTRAP_VERSION=settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION,
             )
             RepanierEmail.send_test_email(
                 settings.ADMIN_EMAIL, subject=subject, html_body=body

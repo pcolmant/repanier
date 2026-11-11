@@ -1,7 +1,6 @@
 from django import template
 from django.conf import settings
 from django.urls import reverse
-from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -90,76 +89,6 @@ def repanier_permanences(*args, **kwargs):
             html='<div class="dropdown-divider"></div>'.join(permanences_cards),
         )
     )
-
-
-@register.simple_tag(takes_context=True)
-def repanier_user_bs3(context, *args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
-
-    request = context["request"]
-    user = request.user
-    nodes = []
-    if user.is_authenticated:
-        p_permanence_id = sint(kwargs.get("permanence_id", 0))
-        if p_permanence_id > 0:
-            nodes.append(
-                '<li id="li_my_basket" style="display:none;" class="dropdown">'
-            )
-            nodes.append(
-                '<a href="{}?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>'.format(
-                    reverse("repanier:order_view", args=(p_permanence_id,))
-                )
-            )
-            nodes.append("</li>")
-        nodes.append(
-            """
-            <li id="li_my_name" class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}<b class="caret"></b></a>
-            <ul class="dropdown-menu">
-            """.format(
-                # _('Welkom'),
-                user.username
-                or '<span id = "my_name"></ span>'
-            )
-        )
-        nodes.append(
-            '<li><a href="{}">{}</a></li>'.format(
-                reverse("repanier:send_mail_to_coordinators_view"), _("Inform")
-            )
-        )
-        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-            nodes.append(
-                '<li><a href="{}">{}</a></li>'.format(
-                    reverse("repanier:who_is_who_view"), _("Who's who")
-                )
-            )
-        if user.customer_id is not None:
-            nodes.append(
-                '<li><a href="{}">{}</a></li>'.format(
-                    reverse("repanier:my_profile_view"), _("My profile")
-                )
-            )
-            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-                nodes.append(
-                    '<li><a href="{}">{}</a></li>'.format(
-                        reverse("repanier:customer_history_view", args=(user.customer_id,)),
-                        _("History"),
-                    )
-                )
-            nodes.append('<li class="divider"></li>')
-        nodes.append(
-            '<li><a href="{}">{}</a></li>'.format(
-                reverse("repanier:logout"), _("Logout")
-            )
-        )
-        nodes.append("</ul></li>")
-    else:
-        nodes = [
-            '<li class="dropdown"><a href="{}?{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
-                reverse("repanier:login_form"), urlencode({'next': request.get_full_path()}), _("Sign in")
-            )
-        ]
-    return mark_safe("".join(nodes))
 
 
 @register.simple_tag(takes_context=True)
