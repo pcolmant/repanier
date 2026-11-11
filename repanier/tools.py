@@ -700,6 +700,68 @@ def rule_of_3_reload_purchase(
     return purchase
 
 
+def distribute_rule_of_3(
+    quantities, line_totals, unit_prices, target, ratio_rounding=None
+):
+    """Rule of 3, a signature of Repanier.
+
+    Distribute a target invoiced amount over a set of purchases, at pro
+    rata of their current invoiced amounts, so that the total actually
+    invoiced to the customers matches what the producer billed to the
+    group. The LAST element absorbs the rounding residue.
+
+    quantities:      current invoiced quantity of each purchase.
+    line_totals:     current invoiced amount of each line (2 decimals).
+    unit_prices:     amount applied to one unit of quantity; used to
+                     convert the residue into the last quantity and to
+                     accumulate the adjusted amounts.
+    target:          total amount to reach, or None.
+    ratio_rounding:  optional quantization of the pro rata ratio.
+
+    Returns the list of new quantities, or None when nothing has to
+    change (empty set, no target, target already reached or a ratio of
+    one that would leave the quantities unchanged).
+    """
+    purchase_counter = len(quantities)
+    if purchase_counter == 0:
+        return None
+    rule_of_3_source = sum(line_totals, const.DECIMAL_ZERO)
+    if target is None or target == rule_of_3_source:
+        return None
+    if rule_of_3_source == const.DECIMAL_ZERO:
+        # The source is zero but the target is not: keep the quantities
+        # untouched instead of dividing by zero.
+        return None
+    ratio = target / rule_of_3_source
+    if ratio_rounding is not None:
+        ratio = ratio.quantize(ratio_rounding)
+    if ratio == const.DECIMAL_ONE:
+        return None
+    # Rule of 3
+    new_quantities = []
+    adjusted_invoice = const.DECIMAL_ZERO
+    last_index = purchase_counter - 1
+    for index in range(purchase_counter):
+        if index == last_index:
+            # The last purchase absorbs the rounding residue
+            if unit_prices[index] == const.DECIMAL_ZERO:
+                quantity_invoiced = const.DECIMAL_ZERO
+            else:
+                delta = target - adjusted_invoice
+                quantity_invoiced = (delta / unit_prices[index]).quantize(
+                    const.RoundUpTo.FOUR_DECIMALS
+                )
+        else:
+            quantity_invoiced = (quantities[index] * ratio).quantize(
+                const.RoundUpTo.FOUR_DECIMALS
+            )
+            adjusted_invoice += (quantity_invoiced * unit_prices[index]).quantize(
+                const.RoundUpTo.TWO_DECIMALS
+            )
+        new_quantities.append(quantity_invoiced)
+    return new_quantities
+
+
 def get_recurrence_dates(first_date, recurrences):
     dates = []
     # d_start = first_date
