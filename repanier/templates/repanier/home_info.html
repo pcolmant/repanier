@@ -1,0 +1,21 @@
+{% load i18n %}{# Opened permanences box on the home page: AJAX fragment injected into #containerInfo. #}
+<div class="container">
+    <div class="row">
+        <div class="card border-default mb-3">
+            {% for permanence in permanences %}
+                <div class="card-header"><h4 class="mb-0"><a href="{{ permanence.order_url }}" class="text-decoration-none">{{ permanence.display }}</a></h4></div>
+                {% if permanence.offer_description_v2 %}
+                    <div class="card-body">
+                        <div class="col-12">
+                            {% if permanence.picture %}
+                                <img class="img-fluid rounded float-start me-3 mb-2" alt="{{ permanence.display }}" title="{{ permanence.display }}" src="{{ media_url }}{{ permanence.picture }}"/>
+                                <div class="clearfix d-block d-md-none"></div>
+                            {% endif %}
+                            {{ permanence.offer_description_v2 }}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
