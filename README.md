@@ -204,6 +204,26 @@ server {
 
     location /static/ {
         alias /home/repanier/prd1/_0_prd_example/_0_prd_example/collect-static/;
+
+        # Anti hotlinking: third party sites may not embed our assets.
+        #   none    = no referer at all (direct access, bookmark, privacy
+        #             extensions, first navigation): ALLOWED, never block
+        #             our own users.
+        #   blocked = sanitized or proxied referers: ALLOWED.
+        #   server_names = the domains of this server block.
+        valid_referers none blocked server_names;
+        if ($invalid_referer) {
+            return 403;
+        }
+
+        # Modern browsers refuse to load a resource across origins:
+        # even a referer spoofing cannot bypass this one.
+        # Warning: an add_header in a location replaces the inherited
+        # ones: repeat here any header set at the server level.
+        add_header Cross-Origin-Resource-Policy same-origin always;
+
+        expires 30d;
+        access_log off;
     }
 
     location /favicon.ico {
@@ -226,6 +246,25 @@ server {
 Enable site configuration:
 ```bash
 sudo ln -s /etc/nginx/sites-available/_0_prd_example /etc/nginx/sites-enabled/_0_prd_example
+```
+
+**Hotlink protection on `/static/`** (already included in the configuration
+above): the referer filter answers `403` when the assets are requested
+from a page hosted on a third party site, and the
+`Cross-Origin-Resource-Policy: same-origin` response header makes modern
+browsers refuse to load a cross origin resource even when the referer is
+missing or spoofed.
+
+Its purpose is to keep Repanier sites from being used as a free CDN on
+someone else's bandwidth budget. Requests without a referer stay allowed
+(`valid_referers ... none blocked`) so bookmarks, privacy extensions and
+first navigations of our own visitors are never blocked. A server side
+download (curl, wget) stays technically possible: this protection is about
+bandwidth, not about copying (the Repanier source code is GPLv3 anyway).
+
+Check and reload after any nginx change:
+```bash
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ### uWSGI Configuration (`/etc/uwsgi/apps-available/_0_prd_example.ini`)
