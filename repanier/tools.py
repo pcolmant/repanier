@@ -452,69 +452,30 @@ def create_or_update_one_cart_item(
 
 
 def my_basket(is_order_confirm_send, order_amount):
-    if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
-        if (
+    if (
             settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
             and not is_order_confirm_send
-        ):
-            if order_amount.amount <= const.DECIMAL_ZERO:
-                msg_confirm = const.EMPTY_STRING
-            else:
-                msg_confirm = '<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span>'
-            msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
-                order_amount=order_amount, msg_confirm=msg_confirm
-            )
+    ):
+        if order_amount.amount <= const.DECIMAL_ZERO:
+            msg_confirm = const.EMPTY_STRING
         else:
-            if order_amount.amount <= const.DECIMAL_ZERO:
-                msg_confirm = cart_content = const.EMPTY_STRING
-            else:
-                msg_confirm = '<span class="glyphicon glyphicon-ok"></span>'
-                cart_content = (
-                    '<div class="cart-line-3" style="background-color: #E5E9EA"></div>'
-                )
-            msg_html = """
-            <div class="icon-cart" style="float: left">
-                <div class="cart-line-1" style="background-color: #fff"></div>
-                <div class="cart-line-2" style="background-color: #fff"></div>
-                {cart_content}
-                <div class="cart-wheel" style="background-color: #fff"></div>
-            </div> {order_amount}&nbsp;&nbsp;&nbsp;
-            {msg_confirm}
-                """.format(
-                cart_content=cart_content,
-                order_amount=order_amount,
-                msg_confirm=msg_confirm,
-            )
-        json_dict = {"#my_basket": msg_html}
-        msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
-            order_amount=order_amount, msg_confirm=msg_confirm
-        )
-        json_dict["#prepared_amount_visible_xs"] = msg_html
-    else:
-        if (
-                settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
-                and not is_order_confirm_send
-        ):
-            if order_amount.amount <= const.DECIMAL_ZERO:
-                msg_confirm = const.EMPTY_STRING
-            else:
-                msg_confirm = '<span class="bi bi-exclamation-circle"></span>&nbsp;<span class="bi bi-floppy"></span>'
-            msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
-                order_amount=order_amount, msg_confirm=msg_confirm
-            )
-        else:
-            if order_amount.amount <= const.DECIMAL_ZERO:
-                msg_confirm = const.EMPTY_STRING
-            else:
-                msg_confirm = '<span class="bi bi-check-lg"></span>'
-            msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
-                order_amount=order_amount, msg_confirm=msg_confirm
-            )
-        json_dict = {"#my_basket": msg_html}
+            msg_confirm = '<span class="bi bi-exclamation-circle"></span>&nbsp;<span class="bi bi-floppy"></span>'
         msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
             order_amount=order_amount, msg_confirm=msg_confirm
         )
-        json_dict["#prepared_amount_visible_xs"] = msg_html
+    else:
+        if order_amount.amount <= const.DECIMAL_ZERO:
+            msg_confirm = const.EMPTY_STRING
+        else:
+            msg_confirm = '<span class="bi bi-check-lg"></span>'
+        msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
+            order_amount=order_amount, msg_confirm=msg_confirm
+        )
+    json_dict = {"#my_basket": msg_html}
+    msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
+        order_amount=order_amount, msg_confirm=msg_confirm
+    )
+    json_dict["#prepared_amount_visible_xs"] = msg_html
     return json_dict
 
 

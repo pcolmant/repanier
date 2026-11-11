@@ -11,7 +11,6 @@ from django.utils import timezone, translation
 from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
@@ -1692,40 +1691,16 @@ class Permanence(models.Model):
         return self.get_html_permanence_display(align="vertical-align: bottom; ")
 
     def get_html_permanence_display(self, align=EMPTY_STRING):
-        if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
-            if self.status == SaleStatus.OPENED:
-                return "{} - {}".format(
-                    self.get_permanence_display(), self.get_status_display()
-                )
-            else:
-                return "{} - {}".format(
-                    self.get_permanence_display(), _("Orders closed")
-                )
-        else:
-            if self.status == SaleStatus.OPENED:
-                return mark_safe(
-                    '{}&nbsp;&nbsp;<i class="bi bi-shop" style="{}color:#51a351"></i>'.format(
-                        self.get_permanence_display(), align
-                    )
-                )
-            else:
-                return self.get_permanence_display()
-
-    def get_html_permanence_card_display(self):
-        if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
-            offer_description = Truncator(self.offer_description_v2)
+        if self.status == SaleStatus.OPENED:
             return mark_safe(
-                """
-            <a href="{href}" class="card-body offer">
-                <h4>{title}</h4>
-                <div class="excerpt">{offer_description}</div>
-            </a>
-            """.format(
-                    href=self.get_order_url(),
-                    title=self.get_html_permanence_display(),
-                    offer_description=offer_description.words(30, html=True),
+                '{}&nbsp;&nbsp;<i class="bi bi-shop" style="{}color:#51a351"></i>'.format(
+                    self.get_permanence_display(), align
                 )
             )
+        else:
+            return self.get_permanence_display()
+
+    def get_html_permanence_card_display(self):
         return EMPTY_STRING
 
     def get_html_board_composition(self):

@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 from django.db.models import Sum, DecimalField
 from django.utils.formats import number_format
@@ -132,26 +131,16 @@ class OfferItem(Item):
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     def get_html_like(self, user_id):
-        if settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION == "bs3":
-            return mark_safe(
-                '<span class="glyphicon glyphicon-heart{}" onclick="like_ajax({});return false;"></span>'.format(
-                    EMPTY_STRING
-                    if self.product.likes.filter(id=user_id).only("id").exists()
-                    else "-empty",
-                    self.id,
-                )
-            )
-        else:
-            # Si le produit est liké (exists() == True), on met "-fill" (noir), sinon chaîne vide (transparent)
-            is_liked = self.product.likes.filter(id=user_id).only("id").exists()
-            heart_class = "bi bi-heart-fill" if is_liked else "bi bi-heart"
+        # Si le produit est liké (exists() == True), on met "-fill" (noir), sinon chaîne vide (transparent)
+        is_liked = self.product.likes.filter(id=user_id).only("id").exists()
+        heart_class = "bi bi-heart-fill" if is_liked else "bi bi-heart"
 
-            return mark_safe(
-                '<span class="{}" onclick="like_ajax({});return false;" style="cursor: pointer;"></span>'.format(
-                    heart_class,
-                    self.id,
-                )
+        return mark_safe(
+            '<span class="{}" onclick="like_ajax({});return false;" style="cursor: pointer;"></span>'.format(
+                heart_class,
+                self.id,
             )
+        )
 
     def get_order_name(self):
         qty_display = self.get_qty_display()
