@@ -1,0 +1,28 @@
+{% load i18n %}{# Order confirmation box: AJAX fragment injected into #span_btn_confirm_order. #}
+<div class="row">
+    <div class="card">
+        <div class="card-header">
+            {{ delivery_message }}
+            {{ basket_message }}
+            {% if basket_message %}<br>{% endif %}
+            {% if is_order_confirm_send %}
+                <p><span class="text-success">{{ email_sent_to }}</span></p>
+            {% endif %}
+            {% if warning_unconfirmed_orders %}
+                <span class="text-danger">{% translate "⚠ Unconfirmed orders will be canceled." %}</span><br>
+            {% endif %}
+            {% if goto_basket %}
+                <a href="{{ order_url }}?is_basket=yes" class="btn btn-info{% if confirm_disabled %} disabled{% endif %}">{% translate "➜ Go to the confirmation step of my order." %}</a>
+            {% endif %}
+            {% if confirm_basket %}
+                <button id="btn_confirm_order" class="btn btn-info{% if confirm_disabled %} disabled{% endif %}" onclick="btn_receive_order_email();">
+                    <span class="bi bi-floppy" aria-hidden="true"></span>&nbsp;&nbsp;{{ confirm_button_label }}
+                </button>
+            {% endif %}
+            {% if show_history %}
+                <a href="{% url 'repanier:customer_history_view' customer_id %}" class="btn btn-info" target="_blank">{% translate "History" %}</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="mb-3">
