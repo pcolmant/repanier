@@ -108,16 +108,15 @@ class OrderAjaxTest(AjaxFixtureMixin, TestCase):
             currency="100",  # Currency.EUR
         )
         cls.build_fixture()
-        # open_order() creates the producer invoices when a permanence is
-        # opened (it cannot run on sqlite because of a PostgreSQL-only
-        # .distinct("producer_id")): mimic the post-open state instead.
-        from repanier.models.invoice import ProducerInvoice
+        # run the real opening flow: it creates the orderable offer items
+        # and the producer invoices, exactly as on a production site
+        from repanier.task import task_order
 
-        ProducerInvoice.get_or_create_invoice(
-            permanence_id=cls.permanence.id,
-            producer_id=cls.producer.id,
-            status=SaleStatus.OPENED,
+        cls.permanence.set_status(
+            old_status=SaleStatus.OPENED, new_status=SaleStatus.PLANNED
         )
+        task_order.open_order(cls.permanence.id, send_mail=False)
+        cls.offer_item = cls.product.offeritem_set.get(permanence=cls.permanence)
 
     def _order(self, value):
         self.client.login(username="client@example.com", password="x")
