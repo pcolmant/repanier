@@ -6,6 +6,7 @@ from django.utils.translation import get_language_info
 from .settings import *
 
 EMPTY_STRING = ""
+REPANIER_SETTINGS_VERSION = "repanier"
 # LOGGING is ignored in Django settings.py :
 # https://stackoverflow.com/questions/53014435/why-is-logging-in-my-django-settings-py-ignored
 
@@ -35,7 +36,7 @@ def get_group_name(site_name):
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
 PROJECT_DIR = Path(__file__).parent
-REPANIER_DIR = PROJECT_DIR.parent / "repanier"
+REPANIER_DIR = PROJECT_DIR.parent / REPANIER_SETTINGS_VERSION
 PROJECT_PATH = Path(".")
 DJANGO_SETTINGS_SITE_NAME = PROJECT_DIR.name
 # PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -146,18 +147,8 @@ REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean(
 REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_SMS_GATEWAY_MAIL", fallback=EMPTY_STRING
 )
-# Bootstrap 3 templates and static files have been decommissioned:
-# Repanier is 100% Bootstrap 5. The setting is kept (paths below and
-# tools.py build template/static directories from it) but it is no
-# longer read from mysite.ini; a leftover REPANIER_SETTINGS_BOOTSTRAP_VERSION
-# entry in an existing ini file is simply ignored.
-REPANIER_SETTINGS_BOOTSTRAP_VERSION = "bs5"
 REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_BOOTSTRAP_CSS", fallback="bootstrap.css"
-)
-
-REPANIER_SETTINGS_VERSION = config.get(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_VERSION", fallback="repanier"
 )
 
 ALLOWED_HOSTS = []
@@ -203,7 +194,7 @@ STATIC_URL = "/static/"
 
 def get_repanier_css_name(template_name):
     return os.path.join(
-        REPANIER_SETTINGS_VERSION, REPANIER_SETTINGS_BOOTSTRAP_VERSION, template_name
+        REPANIER_SETTINGS_VERSION, template_name
     )
 
 
@@ -463,7 +454,6 @@ if DEBUG:
                     PROJECT_PATH,
                     REPANIER_SETTINGS_VERSION,
                     "templates",  # required to run django CMS
-                    REPANIER_SETTINGS_BOOTSTRAP_VERSION,
                 )
             ],
             # "APP_DIRS": True,
@@ -486,7 +476,6 @@ else:
                     PROJECT_PATH,
                     REPANIER_SETTINGS_VERSION,
                     "templates",
-                    REPANIER_SETTINGS_BOOTSTRAP_VERSION,
                 )
             ],
             # 'APP_DIRS': True,
@@ -927,38 +916,38 @@ CMS_TEMPLATE_HOME_HERO = """
 """
 
 CMS_TEMPLATE_HOME_COL_1 = """
-<div class="panel panel-info">
-<div class="panel-heading"><h4>Lorem ipsum</h4></div>
-<div class="panel-body">
-<ul class="list-group">
-<li class="list-group-item">Lorem ipsum.</li>
-<li class="list-group-item">Lorem ipsum.</li>
-</ul>
-</div>
+<div class="card border-info mb-3">
+    <div class="card-header bg-info"><h4>Lorem ipsum</h4></div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Lorem ipsum.</li>
+            <li class="list-group-item">Lorem ipsum.</li>
+        </ul>
+    </div>
 </div>
 """
 
 CMS_TEMPLATE_HOME_COL_2 = """
-<div class="panel panel-danger">
-<div class="panel-heading"><h4>Lorem ipsum</h4></div>
-<div class="panel-body">
-<ul class="list-group">
-<li class="list-group-item">Lorem ipsum.</li>
-<li class="list-group-item">Lorem ipsum.</li>
-</ul>
-</div>
+<div class="card border-danger mb-3">
+    <div class="card-header bg-danger"><h4>Lorem ipsum</h4></div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Lorem ipsum.</li>
+            <li class="list-group-item">Lorem ipsum.</li>
+        </ul>
+    </div>
 </div>
 """
 
 CMS_TEMPLATE_HOME_COL_3 = """
-<div class="panel panel-warning">
-<div class="panel-heading"><h4>Lorem ipsum</h4></div>
-<div class="panel-body">
-<ul class="list-group">
-<li class="list-group-item">Lorem ipsum.</li>
-<li class="list-group-item">Lorem ipsum.</li>
-</ul>
-</div>
+<div class="card border-warning mb-3">
+    <div class="card-header bg-warning"><h4>Lorem ipsum</h4></div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Lorem ipsum.</li>
+            <li class="list-group-item">Lorem ipsum.</li>
+        </ul>
+    </div>
 </div>
 """
 

@@ -1,13 +1,13 @@
-{% extends "bs5/base.html" %}
+{% extends "base.html" %}
 {% load menu_tags cms_tags sekizai_tags %}
 
 {% block base_content %}
 <div class="container-repanier">
     <div class="container">
-        <!-- Structure principale : Sidebar visible uniquement sur grand écran (d-none d-lg-block) -->
+        <!-- Main structure: Sidebar visible only on large screens -->
         <div class="row">
             <div class="col-md-3 bs-docs-sidebar d-none d-lg-block">
-                <div class="fixed">
+                <div class="position-sticky" style="top: 2rem;">
                     <ul class="nav nav-pills flex-column" id="sidebar">
                         {% block search %}{% endblock %}
                         {% show_menu 1 4 0 4 "menu/menu_subpage.html" %}

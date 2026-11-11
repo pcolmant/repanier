@@ -62,17 +62,15 @@ else:
 
 
 def get_admin_template_name(template_name):
-    return os.path.join(
-        settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION, "admin", "repanier", template_name
-    )
+    return os.path.join("admin", settings.REPANIER_SETTINGS_VERSION, template_name)
 
 
 def get_repanier_template_name(template_name):
-    return os.path.join(settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION, "repanier", template_name)
+    return os.path.join(settings.REPANIER_SETTINGS_VERSION, template_name)
 
 
 def get_repanier_static_name(template_name):
-    return os.path.join("repanier", settings.REPANIER_SETTINGS_BOOTSTRAP_VERSION, template_name)
+    return os.path.join(settings.REPANIER_SETTINGS_VERSION, template_name)
 
 
 def next_row(query_iterator):

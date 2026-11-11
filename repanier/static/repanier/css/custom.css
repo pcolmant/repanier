@@ -80,10 +80,6 @@ code {
 /* =================================================================
    3. Navigation, Navbar & Sidenav
    =================================================================== */
-.navbar-header {
-    width: 100%;
-}
-
 .navbar-group-name {
     margin-left: 10px;
     color: #fff;
@@ -160,7 +156,7 @@ a.skip_link {
 
 
 /* =================================================================
-   5. Components (Buttons, Accordions, Panels, Modals, Forms)
+   5. Components (Buttons, Cards, Accordions, Modals, Forms)
    =================================================================== */
 .btn {
     white-space: normal !important;
@@ -182,8 +178,7 @@ a.button {
     cursor: pointer !important;
 }
 
-.accordion-button:not(.collapsed):after,
-.panel-heading.accordion-toggle:after {
+.accordion-button:not(.collapsed):after {
     position: relative;
     bottom: 23px;
     float: right;
@@ -193,16 +188,15 @@ a.button {
     content: "\e114";
 }
 
-.accordion-button.collapsed:after,
-.panel-heading.accordion-toggle.collapsed:after {
+.accordion-button.collapsed:after {
     content: "\e080";
 }
 
-.panel-heading:hover {
+.card-header:hover {
     cursor: pointer;
 }
 
-.panel-heading:hover h4 {
+.card-header:hover h4 {
     text-decoration: underline;
 }
 

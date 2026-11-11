@@ -18,7 +18,7 @@ def home_info_ajax(request):
     ):
         permanences.append(
             format_html(
-                '<div class="panel-heading"><h4 class="panel-title"><a href="{}">{}</a></h4></div>',
+                '<div class="card-header"><h4 class="mb-0"><a href="{}" class="text-decoration-none">{}</a></h4></div>',
                 permanence.get_order_url(),
                 permanence.get_permanence_display(),
             )
@@ -28,13 +28,13 @@ def home_info_ajax(request):
                 permanences.append(
                     format_html(
                         """
-                        <div class="panel-body">
-                            <div class="col-xs-12">
-                                <img class="img-responsive img-rounded" style="float: left; margin: 5px;" alt="{0}" title="{0}" src="{1}{2}"/>
-                                <div class="clearfix visible-xs-block visible-sm-block"></div>
+                        <div class="card-body">
+                            <div class="col-12">
+                                <img class="img-fluid rounded float-start me-3 mb-2" alt="{0}" title="{0}" src="{1}{2}"/>
+                                <div class="clearfix d-block d-md-none"></div>
                                 {3}
                             </div>
-                            </div>
+                        </div>
                         """,
                         permanence.get_permanence_display(),
                         settings.MEDIA_URL,
@@ -45,7 +45,7 @@ def home_info_ajax(request):
             else:
                 permanences.append(
                     format_html(
-                        '<div class="panel-body"><div class="col-xs-12">{}</div></div>',
+                        '<div class="card-body"><div class="col-12">{}</div></div>',
                         mark_safe(permanence.offer_description_v2),
                     )
                 )
@@ -53,10 +53,8 @@ def home_info_ajax(request):
         permanences_info_html = """
         <div class="container">
             <div class="row">
-                <div class="panel-group">
-                    <div class="panel panel-default">
-                        {permanences}
-                    </div>
+                <div class="card border-default mb-3">
+                    {permanences}
                 </div>
             </div>
         </div>

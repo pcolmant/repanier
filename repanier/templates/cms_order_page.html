@@ -1,10 +1,10 @@
-{% extends 'bs5/cms_page.html' %}
+{% extends 'cms_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n menu_tags repanier_tags %}
 
 {% block sub_content %}
     {% block notification %}
         {% if notification %}
-        <div id="containerInfo" class="hidden-xs">
+        <div id="containerInfo" class="d-none d-md-block">
             <div class="row">
                 <div class="card">
                     <div class="card-body">
@@ -313,9 +313,6 @@
                     saved_offer_item_id = -1;
                     var offer_item = document.getElementById("offer_item" + offer_item_id);
                     if (!offer_item) return;
-
-                    // CORRECTION MOBILE : Relâcher immédiatement le focus sur le select
-                    {#offer_item.blur();#}
 
                     var selectedOption = offer_item.options[offer_item.selectedIndex];
                     var offer_item_val = selectedOption ? selectedOption.value : '';

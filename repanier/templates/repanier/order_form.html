@@ -1,4 +1,4 @@
-{% extends 'bs5/cms_order_page.html' %}
+{% extends 'cms_order_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n thumbnail filer_image_tags repanier_tags %}
 {% block notification %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock notification %}
 {% block may_order %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock may_order %}
@@ -12,7 +12,7 @@
             <!-- Utilisation de container-fluid avec un padding pour occuper toute la largeur de l'écran -->
             <div class="container-fluid px-lg-4">
                 <div class="infinite-container row g-4">
-                    {% include 'bs5/repanier/order_items_partial.html' %}
+                    {% include 'repanier/order_items_partial.html' %}
                 </div>
             </div>
 
