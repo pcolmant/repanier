@@ -15,6 +15,7 @@ from django.db.models import F
 from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
+from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -450,31 +451,28 @@ def create_or_update_one_cart_item(
 
 
 def my_basket(is_order_confirm_send, order_amount):
-    if (
-            settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
-            and not is_order_confirm_send
-    ):
-        if order_amount.amount <= const.DECIMAL_ZERO:
-            msg_confirm = const.EMPTY_STRING
-        else:
-            msg_confirm = '<span class="bi bi-exclamation-circle"></span>&nbsp;<span class="bi bi-floppy"></span>'
-        msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
-            order_amount=order_amount, msg_confirm=msg_confirm
-        )
-    else:
-        if order_amount.amount <= const.DECIMAL_ZERO:
-            msg_confirm = const.EMPTY_STRING
-        else:
-            msg_confirm = '<span class="bi bi-check-lg"></span>'
-        msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
-            order_amount=order_amount, msg_confirm=msg_confirm
-        )
-    json_dict = {"#my_basket": msg_html}
-    msg_html = '<span class="bi bi-cart"></span>&nbsp;{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}'.format(
-        order_amount=order_amount, msg_confirm=msg_confirm
+    """Render the basket button content (repanier/my_basket.html).
+
+    The same fragment feeds the basket button (#my_basket) and its
+    summary on the prepared order page (#prepared_amount_visible_xs).
+    """
+    msg_html = render_to_string(
+        "repanier/my_basket.html",
+        {
+            "order_amount": order_amount,
+            # With the confirmation step forced and not confirmed yet:
+            # a pending confirmation state; otherwise a plain check.
+            "show_confirm": bool(
+                settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+                and not is_order_confirm_send
+            ),
+            "show_icon": order_amount.amount > const.DECIMAL_ZERO,
+        },
     )
-    json_dict["#prepared_amount_visible_xs"] = msg_html
-    return json_dict
+    return {
+        "#my_basket": msg_html,
+        "#prepared_amount_visible_xs": msg_html,
+    }
 
 
 def reorder_purchases(permanence_id):

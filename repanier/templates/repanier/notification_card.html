@@ -1,0 +1,24 @@
+{# Flash notification card, displayed once on the page where the notification is raised. #}
+<div class="container-repanier">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div class="card card-flash">
+                    <div class="card-body">{{ notification }}</div>
+                    <a href="#" class="card-close"><i class="far fa-times-circle"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+// Close card
+$(".card-close").click(function(){
+    $(this).parent().fadeOut(300);
+    $("a").click(function(){
+        // Stop displaying flash in next pages
+        $(this).attr('href',$(this).attr('href')+"?flash=0");
+        return true;
+    });
+});
+</script>
