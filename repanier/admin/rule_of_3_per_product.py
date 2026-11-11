@@ -15,7 +15,7 @@ from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
 )
 from repanier.const import (
-    DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING, OrderUnit, REPANIER_MONEY_ZERO, RoundUpTo
+    DECIMAL_ZERO, EMPTY_STRING, OrderUnit, REPANIER_MONEY_ZERO, RoundUpTo
 )
 from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
@@ -24,7 +24,7 @@ from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.purchase import Purchase
-from repanier.tools import rule_of_3_reload_purchase
+from repanier.tools import distribute_rule_of_3, rule_of_3_reload_purchase
 
 
 class CustomerAutocomplete(autocomplete.Select2QuerySetView):
@@ -511,52 +511,34 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 rule_of_3_target = form.cleaned_data[
                     "offer_purchase_price"
                 ].amount.quantize(RoundUpTo.TWO_DECIMALS)
-                rule_of_3_source = DECIMAL_ZERO
-                max_purchase_counter = 0
-                for purchase_form in formset:
-                    if purchase_form.repanier_is_valid:
-                        rule_of_3_source += purchase_form.instance.purchase_price.amount
-                        max_purchase_counter += 1
-                if (
-                    rule_of_3_target is not None
-                    and rule_of_3_target != rule_of_3_source
-                ):
-                    if rule_of_3_source != DECIMAL_ZERO:
-                        ratio = rule_of_3_target / rule_of_3_source
-                    else:
-                        if rule_of_3_target == DECIMAL_ZERO:
-                            ratio = DECIMAL_ZERO
-                        else:
-                            ratio = DECIMAL_ONE
-                    # Rule of 3
-                    if ratio != DECIMAL_ONE:
-                        adjusted_invoice = DECIMAL_ZERO
-                        i = 0
-                        for purchase_form in formset:
-                            if purchase_form.repanier_is_valid:
-                                i += 1
-                                purchase = purchase_form.instance
-                                if i == max_purchase_counter:
-                                    delta = rule_of_3_target - adjusted_invoice
-                                    if (
-                                        offer_item.producer_unit_price.amount
-                                        != DECIMAL_ZERO
-                                    ):
-                                        purchase.quantity_invoiced = (
-                                            delta
-                                            / offer_item.producer_unit_price.amount
-                                        ).quantize(RoundUpTo.FOUR_DECIMALS)
-                                    else:
-                                        purchase.quantity_invoiced = DECIMAL_ZERO
-                                else:
-                                    purchase.quantity_invoiced = (
-                                        purchase.quantity_invoiced * ratio
-                                    ).quantize(RoundUpTo.FOUR_DECIMALS)
-                                    adjusted_invoice += (
-                                        purchase.quantity_invoiced
-                                        * offer_item.producer_unit_price.amount
-                                    ).quantize(RoundUpTo.TWO_DECIMALS)
-                                purchase.save()
+                valid_purchase_forms = [
+                    purchase_form
+                    for purchase_form in formset
+                    if purchase_form.repanier_is_valid
+                ]
+                new_quantities = distribute_rule_of_3(
+                    quantities=[
+                        valid_purchase_form.instance.quantity_invoiced
+                        for valid_purchase_form in valid_purchase_forms
+                    ],
+                    line_totals=[
+                        valid_purchase_form.instance.purchase_price.amount
+                        for valid_purchase_form in valid_purchase_forms
+                    ],
+                    unit_prices=[
+                        offer_item.producer_unit_price.amount
+                        for valid_purchase_form in valid_purchase_forms
+                    ],
+                    target=rule_of_3_target,
+                )
+                if new_quantities is not None:
+                    for (
+                        valid_purchase_form,
+                        quantity_invoiced,
+                    ) in zip(valid_purchase_forms, new_quantities):
+                        purchase = valid_purchase_form.instance
+                        purchase.quantity_invoiced = quantity_invoiced
+                        purchase.save()
 
         for purchase_form in formset:
             if purchase_form.has_changed() and purchase_form.repanier_is_valid:
