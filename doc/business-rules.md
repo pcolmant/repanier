@@ -1,198 +1,262 @@
-# Règles de gestion Repanier (business rules)
+# Repanier business rules
 
-Ce document recense les règles de gestion identifiées dans le code et
-verrouillées (progressivement) par la suite de tests (`repanier/tests/`).
-Les références de code indiquent où chaque règle vit ; les références de
-tests indiquent où elle est vérifiée.
+> **English version.** This is the reference edition; the French
+> translation is [`règles-métier.md`](règles-métier.md). The two files
+> are updated in the same PR: in case of divergence, this one prevails.
+
+This document lists the business rules identified in the code and
+(progressively) locked by the test suite (`repanier/tests/`). Code
+references tell where each rule lives; test references tell where it is
+verified.
 
 ---
 
-## Partie 1 — Règles classiques
+## Part 1 - Classic business rules
 
-### Chaîne d'achat
+### The purchase chain
 
-Un achat (Purchase) relie **une facture client** (CustomerInvoice), **une
-facture producteur** (ProducerInvoice) et **une facture
-client-producteur** (CustomerProducerInvoice). Les trois sont créées
-automatiquement au premier achat de la paire (client, offre)
-(`Purchase.save`, signals/purchase.py).
+A purchase (Purchase) binds together **one customer invoice**
+(CustomerInvoice), **one producer invoice** (ProducerInvoice) and **one
+customer-producer invoice** (CustomerProducerInvoice). The three are
+created automatically on the first purchase of the (customer, offer)
+pair (`Purchase.save`, signals/purchase.py).
 
-Le signal `pre_save` de Purchase recalcule les prix à chaque
-enregistrement : `(prix unitaire client + consigne) x quantité` pour le
-client, `(prix unitaire producteur + consigne) x quantité` pour le
-producteur, TVA des deux côtés, incrément des factures par delta.
-Test : `test_purchase_flow.py`.
+The `pre_save` signal of Purchase recomputes the prices on every save:
+`(customer unit price + deposit) x quantity` for the customer,
+`(producer unit price + deposit) x quantity` for the producer, VAT on
+both sides, invoice totals updated by delta.
+Test: `test_purchase_flow.py`.
 
-### Prix et TVA
+### Prices and VAT
 
-- Le prix client est **toujours dérivé** du prix producteur :
-  `prix client = prix producteur x coefficient` (Producer.
-  price_list_multiplier, appliqué dans `Item.recalculate_prices`).
-  Le prix saisi sur le produit n'est jamais la référence.
-- Le producteur communique ses prix **HTVA ou TVAC**
-  (`Producer.producer_price_are_wo_vat`). Les formules asymétriques de
-  recalcul (viande TVA du prix HT vs extraction de la TVA du prix TTC)
-  sont dans `Item.recalculate_prices`.
-- TVA par paliers (`Vat` : 0 %, 2,5 %, 3,8 %, 6 %, 8 %, 12 %, 21 %),
-  quantifiée à 4 décimales ; les prix le sont à 2 décimales.
-- **Aucune TVA n'est appliquée sur les consignes** : la consigne est
-  additionnée au prix unitaire après calcul de la TVA.
-  Tests : `test_vat_matrix.py`.
+- The customer price is **always derived** from the producer price:
+  `customer price = producer price x multiplier` (Producer
+  price_list_multiplier, applied in `Item.recalculate_prices`). The
+  price typed on the product is never the reference.
+- The producer communicates prices **excluding or including VAT**
+  (`Producer.producer_price_are_wo_vat`). The asymmetric recalculation
+  formulas (adding VAT on the wo-VAT price vs extracting VAT from the
+  incl-VAT price) live in `Item.recalculate_prices`.
+- VAT by brackets (`Vat`: 0%, 2.5%, 3.8%, 6%, 8%, 12%, 21%),
+  quantized to 4 decimals; prices at 2 decimals.
+- **No VAT ever applies to deposits**: the deposit is added to the unit
+  price after the VAT computation.
+  Tests: `test_vat_matrix.py`.
 
-### Frais de livraison (transport)
+### Transport (delivery fee)
 
-Si la commande du client est inférieure au seuil de franchise
-(`min_transport`), des frais s'appliquent, plafonnés à la fois par le
-montant manquant pour atteindre le seuil et par le montant des frais
-(`CustomerInvoice.calculate_order_transport`). Pas de frais sur une
-commande vide ; pas de frais pour un membre de groupe (c'est le payeur
-du groupe qui les porte). Tests : `test_invoice_calculation.py`.
+When the customer order is below the rebate threshold
+(`min_transport`), a delivery fee applies, capped both by the amount
+missing to reach the threshold and by the fee amount
+(`CustomerInvoice.calculate_order_transport`). No fee on an empty
+order; no fee for a group member (the group payer carries them).
+Tests: `test_invoice_calculation.py`.
 
-### Arrondi espèces (Belgique)
+### Cash rounding (Belgium)
 
-Quand `REPANIER_SETTINGS_ROUND_INVOICES` est actif, le total final est
-arrondi au multiple de 0,05 € le plus proche (`tools.round_gov_be`,
-règle officielle) ; le delta est reporté sur `delta_price_with_tax`.
-Tests : `test_tools.py`, `test_invoice_calculation.py`.
+When `REPANIER_SETTINGS_ROUND_INVOICES` is active, the final total is
+rounded to the nearest multiple of 0.05 \u20ac (`tools.round_gov_be`,
+the official rule); the delta lands in `delta_price_with_tax`.
+Tests: `test_tools.py`, `test_invoice_calculation.py`.
 
 ### Stock
 
-Une commande ne peut pas dépasser le stock disponible moins ce qui est
-déjà réservé (offer_item.get_q_alert) ; les diminutions sous le stock
-déjà vendu sont refusées. Test : `test_purchase_flow.py`.
+An order cannot exceed the available stock minus what is already
+reserved (offer_item.get_q_alert); decreasing below the already-sold
+quantity is refused. Test: `test_purchase_flow.py`.
 
-### Cycle d'une permanence
+### The permanence life cycle
 
-`PLANNED → (WAIT_FOR_OPEN) → OPENED → (WAIT_FOR_CLOSED) → CLOSED
-→ (WAIT_FOR_SEND) → SEND → INVOICED → ARCHIVED`
+`PLANNED -> (WAIT_FOR_OPEN) -> OPENED -> (WAIT_FOR_CLOSED) -> CLOSED
+-> (WAIT_FOR_SEND) -> SEND -> INVOICED -> ARCHIVED`
 (`Permanence.set_status`, `task_order.open_order`, `close_order`).
-`highest_status` ne redescend jamais : il mémorise le plus haut état
-atteint. Toute transition incohérente lève `ValueError`.
-Tests : `test_status_flow.py`, `test_order_journey.py`.
+`highest_status` never goes down: it memorizes the highest state
+reached. Any inconsistent transition raises `ValueError`. Cancelling
+an invoicing (`cancel_invoice`) brings the permanence back from
+INVOICED to SEND (see "Cancellation" in part 2).
+Tests: `test_status_flow.py`, `test_order_journey.py`.
 
-### Clôture automatique
+### Automatic closure
 
-Une permanence marquée `automatically_closed` est fermée (et les
-commandes transmises) par le cron sans intervention.
-
----
-
-## Partie 2 — Règles signatures (le cœur de Repanier)
-
-### Le groupe et son point de livraison
-
-Un groupe est un client (`Customer.is_group`) **liée à un point de
-livraison** (`LUT_DeliveryPoint.group`). Les membres du groupe
-(`Customer.group`) reçoivent le board de livraison du groupe **par
-défaut** à la commande : ce point route à la fois la logistique ET la
-facturation (`CustomerInvoice.set_order_delivery`).
-
-Deux modèles de facturation :
-
-- **paiement individuel** : `customer_charged == customer` ;
-- **facturation au groupe** : les membres commandent individuellement,
-  mais chaque facture membre pointe vers le groupe
-  (`customer_charged == groupe`), et la facture du groupe **agrège**
-  les achats qui lui sont imputés. Après comptabilisation : le solde du
-  groupe est débité, **les soldes des membres ne bougent pas**.
-  Tests : `test_invoicing.py` (GroupInvoicingTest).
-
-### Clôture point par point
-
-Une permanence avec points de livraison peut être clôturée **pour un ou
-plusieurs points seulement** (`close_order(everything=False,
-deliveries_id=[...])`) : les clients du point clôturé sont bloqués, la
-permanence **reste ouverte** pour les autres points qui continuent
-d'accepter des commandes. La clôture complète (tous les points) fait
-passer la permanence à SEND.
-Test : `test_invoicing.py` (PartialDeliveryPointClosureTest).
-
-### La règle de 3
-
-Répartir un produit livré entre les consommateurs **au pro rata** pour
-que le total facturé aux consommateurs corresponde au centime au
-montant facturé par le producteur. Exemple : 10 kg commandés, le
-producteur livre 10,5 kg mais en facture 10 — chacun reçoit (et paie)
-sa part, le **dernier achat absorbe le résidu d'arrondi**.
-
-Implémentation : admin `rule_of_3_per_product.save_related` (ratio =
-montant producteur / somme actuelle, ajustement des
-`quantity_invoiced` de chaque achat, le dernier prenant le reste).
-Les écrans de correction par client (`rule_of_3_per_customer`)
-permettent l'ajustement symétrique.
-
-> À ce jour l'algorithme est embarqué dans le FormSet admin et n'est
-> pas couvert par un test : son extraction dans une fonction pure
-> (`tools.py`) est recommandée pour le rendre testable.
-
-### À la pièce, facturé au poids (PC_KG)
-
-Les produits vendus à la pièce mais facturés au poids (viande :
-saucisses, cordons bleus...) se commandent **à la pièce avec un prix
-au kg** : l'écran annonce une **estimation**
-(pièces x poids moyen x prix/kg, `order_average_weight`). À la clôture
-(`send_to_producer`), le poids estimé est copié dans
-`quantity_invoiced`. À la distribution, le trésorier remplace par le
-**poids réel** : la refacturation suit (pre_save recalcule le prix).
-Test : `test_adjustments.py` (PcKgWeightBillingTest).
-
-### La consigne (`OrderUnit.DEPOSIT`)
-
-Mécanisme complet de traçabilité des retours :
-
-- la consigne accompagne chaque achat du produit concerné
-  (`unit_deposit`, sans TVA) ;
-- à la clôture, **chaque client** de la permanence reçoit une ligne
-  d'achat pour chaque produit de type consigne de l'offre
-  (`close_order`, q=1 puis q=0 : prépare la liste des retours) ;
-- les retours réels sont ajustés sur les mêmes écrans de correction
-  que la règle de 3 (quantités facturées).
-
-### La cotisation (`OrderUnit.MEMBERSHIP_FEE`)
-
-Un produit que le groupe **force** à la vente auprès des membres qui
-passent commande sans être en règle de cotisation. À la clôture
-(`close_order`) : si `membership_fee > 0` et
-`membership_fee_duration > 0` (Configuration) et que
-`customer.membership_fee_valid_until < permanence_date`, le produit
-cotisation est ajouté automatiquement à la commande du membre et sa
-validité est prolongée de la durée configurée (minimum : aujourd'hui).
-Test : `test_adjustments.py` (MembershipFeeForcedAtCloseTest).
-
-### Les comptes du site (consommateur / producteur)
-
-Le site Repanier lui-même possède un compte consommateur et un compte
-producteur (auto-créés par `Customer.get_or_create_group` /
-`Producer.get_or_create_group`, flag `represent_this_buyinggroup`) :
-
-- le **compte consommateur** prend en charge casses, invendus et
-  ajustements pour la bonne entente du groupe ;
-- le **compte producteur** vend les cotisations et tout produit mis
-  gratuitement à disposition et revendu.
-
-### Comptabilisation (Permanence.invoice)
-
-- Exige une ancre bancaire `LATEST_TOTAL` ; à la facturation, l'ancienne
-  est rétrogradée, une nouvelle est créée et toutes les factures de la
-  permanence sont estampillées (`invoice_sort_order`).
-- `calculated_invoiced_balance` = montant dû au producteur **calculé
-  par Repanier** ; `to_be_invoiced_balance` = montant **réclamé** par
-  le producteur (saisi par le trésorier, avec le drapeau `to_be_paid`
-  « à booker »).
-- La différence entre le calculé et le réclamé — **remise du
-  producteur au site, casse, surplus livré** — produit une ligne de
-  correction PROFIT ou perte pour le groupe
-  (`generate_bank_account_movement`), et le paiement du producteur
-  est généré pour le montant réclamé.
-- Les paiements clients saisis avant la facturation sont rattachés à
-  la permanence et viennent créditer les soldes avant le débit.
-- Les producteurs peuvent être payés **l'un après l'autre** : ceux dont
-  la facture n'est pas marquée à payer sont déplacés dans une
-  permanence enfant (`invoice()`), jusqu'au paiement du dernier.
-  Tests : `test_invoicing.py` (IndividualInvoicingTest,
-  mouvements bancaires inclus).
+A permanence flagged `automatically_closed` is closed (and its orders
+sent) by the cron without any manual action.
 
 ---
 
-*Document entretenu en parallèle de la suite de tests `repanier/tests/` ;
-toute évolution du comportement devrait aller de pair avec un test.*
+## Part 2 - Signature business rules (the heart of Repanier)
+
+### The group and its delivery point
+
+A group is a customer (`Customer.is_group`) **bound to a delivery
+point** (`LUT_DeliveryPoint.group`). The members of the group
+(`Customer.group`) get the group's delivery board **by default** when
+ordering: that point routes both the logistics AND the billing
+(`CustomerInvoice.set_order_delivery`).
+
+Two charging models:
+
+- **individual payment**: `customer_charged == customer`;
+- **group billing**: members order individually, but every member
+  invoice points to the group (`customer_charged == group`), and the
+  group invoice **aggregates** the purchases imputed to it. After
+  invoicing: the group balance is debited, **the member balances do
+  not move**. Tests: `test_invoicing.py` (GroupInvoicingTest).
+
+### Closing a permanence delivery point by delivery point
+
+A permanence with delivery points can be closed **for one or several
+points only** (`close_order(everything=False, deliveries_id=[...])`):
+the customers of the closed point are blocked, the permanence **stays
+open** for the other points, which keep accepting orders. The full
+closure (every point) moves the permanence to SEND.
+Test: `test_invoicing.py` (PartialDeliveryPointClosureTest).
+
+### The rule of three
+
+Split a delivered product between the consumers **pro rata** so that
+the total billed to the consumers matches, to the cent, the amount
+billed by the producer. Example: 10 kg ordered, the producer delivers
+10.5 kg but bills 10 - everyone receives (and pays) his share, the
+**last purchase absorbs the rounding residual**.
+
+Implementation: the pure function `tools.distribute_rule_of_3` (ratio
+= the amount billed by the producer / the calculated sum, then
+adjusting the `quantity_invoiced` of each purchase, the last one
+taking the remainder). The admin screens `rule_of_3_per_product` and
+`rule_of_3_per_customer` build on it.
+Tests: `test_rule_of_3.py`, `test_rule_of_3_per_customer.py`.
+
+### Ordered by the piece, billed by weight (PC_KG)
+
+Products sold by the piece but billed by weight (meat: sausages, cordon
+bleu...) are **ordered by the piece at a per-kg price**: the screen
+shows an **estimate** (pieces x average weight x price/kg,
+`order_average_weight`). At closure (`send_to_producer`), the
+estimated weight is copied into `quantity_invoiced`. At distribution,
+the treasurer replaces it with the **real weight**: the rebilling
+follows (pre_save recomputes the price).
+Test: `test_adjustments.py` (PcKgWeightBillingTest).
+
+### The deposit (`OrderUnit.DEPOSIT`)
+
+A complete return-tracing mechanism:
+
+- the deposit rides along every purchase of the product
+  (`unit_deposit`, VAT-free);
+- at closure, **every customer** of the permanence gets one purchase
+  line per deposit-type product of the offer (`close_order`, q=1 then
+  q=0: prepares the return list);
+- the actual returns are adjusted on the same correction screens as
+  the rule of three (invoiced quantities).
+
+### The membership fee (`OrderUnit.MEMBERSHIP_FEE`)
+
+A product the group **forces** onto the members who order while their
+membership is out of order. At closure (`close_order`): when
+`membership_fee > 0` and `membership_fee_duration > 0`
+(Configuration) and `customer.membership_fee_valid_until <
+permanence_date`, the membership fee product is automatically added to
+the member's order and his validity is extended by the configured
+duration (minimum: today).
+Tests: `test_adjustments.py` (MembershipFeeForcedAtCloseTest),
+`test_accounting_chain.py` (the fee is invoiced on the site producer
+account).
+
+Within a split (see below), the fee **stays at the parent**: it is a
+debt to the group, and the site producer is never paid by the bank.
+Test: `test_producer_payment_chain.py`
+(MembershipFeeWithinTheSplitTest).
+
+### The site accounts (consumer / producer)
+
+The Repanier site itself owns a consumer account and a producer account
+(auto-created by `Customer.get_or_create_group` /
+`Producer.get_or_create_group`, flag `represent_this_buyinggroup`):
+
+- the **consumer account** absorbs breakage, unsold goods and
+  adjustments, for the good understanding of the group;
+- the **producer account** sells the membership fees and any product
+  provided for free and resold on the site.
+
+### Invoicing (`Permanence.invoice`)
+
+- Requires a `LATEST_TOTAL` bank anchor; at invoicing, the previous
+  one is demoted, a new one is created, and every invoice of the
+  permanence is stamped with it (`invoice_sort_order`).
+- `calculated_invoiced_balance` = the amount due to the producer
+  **as calculated by Repanier**; `to_be_invoiced_balance` = the
+  amount **claimed** by the producer (entered by the treasurer, with
+  the "to be booked" flag `to_be_paid`).
+- The difference between the calculated and the claimed amount -
+  **discount granted by the producer to the site, breakage, surplus
+  delivered** - books a PROFIT or loss correction for the group
+  (`generate_bank_account_movement`), and the producer payment is
+  generated for the claimed amount. The customer still pays the
+  calculated amount, and the PROFIT correction does not move the bank
+  anchor (it is not a real entry).
+- Customer payments recorded before the invoicing are attached to the
+  permanence and credit the balances before the debit.
+- End-to-end locked identities (producers paid square, individual and
+  group charging, chained anchor, singleton site accounts):
+  `test_accounting_chain.py`.
+
+### Paying the producers one after another (the split)
+
+When the treasurer books only a subset of the producers "to be paid",
+the invoicing splits the permanence: the unbooked producers (with
+their purchases and the customers involved) move into a **child
+permanence** (SEND status, same name, same date, permanence board and
+delivery points duplicated), invoiced later, until the last one is
+paid (`Permanence.invoice`, `create_child`). Locked rules
+(`test_producer_payment_chain.py`):
+
+- the split only happens for a **real subset** (at least one booked
+  and at least one not booked): every producer booked -> a single
+  invoicing round, no child;
+- the **site producer** (its producer invoice is created at every
+  permanence by `calculate_order_amount` and carries the group
+  deltas) is **excluded** from the split: never paid by the bank,
+  never moved, stamped at the current permanence;
+- the customer is **debited progressively**: at each round, only the
+  purchases of the producers paid in that round; the bank anchors
+  chain (each anchor is cumulative, a single live `LATEST_TOTAL`,
+  each book stamped with the anchor of its own round);
+- the **group invoice follows its members** into the child
+  (`is_group` and `customer_charged` preserved), and invoicing the
+  child debits the group, never the members;
+- between two rounds, the invoiced quantities of the producers still
+  in the child stay **adjustable** (breakage, rule of three): the
+  customer pays what he received, the producer is paid for what was
+  actually delivered;
+- a producer may **claim less than calculated** at any round
+  (including at the child): the difference books as a PROFIT of the
+  site consumer account, attached to the site invoice of that round's
+  permanence;
+- documented behavior: the split **copies** the customer invoices
+  rather than moving them - a fully moved customer leaves an inert
+  zero-total shell at the parent book (no purchase, no balance
+  effect, never debited).
+
+### Cancellation (`cancel_invoice`)
+
+- only the **latest invoiced book** can be cancelled: the admin
+  refuses the request when the live `LATEST_TOTAL` anchor does not
+  belong to the permanence ("you must first cancel the invoices of
+  ...");
+- a chain therefore unrolls in the **reverse order** of the rounds:
+  cancelling the child restores that round only (the parent stays
+  invoiced, the child can be safely invoiced again, everything back
+  square); cancelling child then parent reopens everything (no
+  payment left, no anchor row of the chain, the opening anchor live
+  again, each book keeping its `canceled_invoice_sort_order` trace);
+- cancelling the parent while the child is still at SEND leaves the
+  child **intact**: its cargo (producer invoice, purchases, customer
+  invoices) does not move back to the parent.
+  Tests: `test_producer_payment_chain.py` (CancelTheInvoicedChildTest,
+  CancelTheWholeChainFromTheNewestTest,
+  CancelTheParentWhileTheChildIsStillOpenTest).
+
+---
+
+*Maintained in parallel with the `repanier/tests/` suite: every
+behavior change should come with a test.*
