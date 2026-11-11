@@ -30,7 +30,9 @@ from repanier.const import BankMovement, OrderUnit, SaleStatus, Vat
 from repanier.models.bankaccount import BankAccount
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.lut import LUT_DeliveryPoint
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -428,6 +430,17 @@ class ProducerChainJourneyMixin:
     def child_of(cls, permanence):
         return Permanence.objects.get(master_permanence_id=permanence.id)
 
+    def cancel_last_invoice(self, permanence):
+        # The admin only cancels the latest book: the live bank anchor
+        # must belong to the permanence being cancelled (the guard of
+        # PermanenceDoneAdmin.cancel_invoice_or_archive_or_cancelled).
+        anchor = BankAccount.objects.get(
+            operation_status=BankMovement.LATEST_TOTAL
+        )
+        self.assertEqual(anchor.permanence_id, permanence.id)
+        permanence.cancel_invoice(anchor)
+        permanence.refresh_from_db()
+
     def latest_total(self, permanence_id):
         # After several invoicings, the previous anchors are demoted:
         # fetch the anchor of a permanence whatever its live status.
@@ -805,3 +818,447 @@ class MembershipFeeWithinTheSplitTest(ProducerChainJourneyMixin, TestCase):
         self.assertEqual(producer.balance.amount, D("0"))
         self.assertEqual(self.anchor_net(self.round_1.id), D("-6.00"))
         self.assertEqual(self.anchor_net(self.child.id), D("-12.00"))
+
+
+class SplitWithDeliveryPointsAndGroupTest(TestCase):
+    """A split in a permanence with delivery points, where the moved
+    producer is bought by members invoiced to their GROUP: the group
+    follows its members into the child, and invoicing the child charges
+    the group - never the members."""
+
+    # Alice, individual: 2 x 3.00 from A (paid at round 1)
+    # Members of the group: 3 x 2.00 + 1 x 2.00 from B (paid at round 2)
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        BankAccount.objects.create(
+            operation_status=BankMovement.LATEST_TOTAL,
+            operation_date=datetime.date.today(),
+            operation_comment="Account opening",
+        )
+        # A group is a customer bound to a delivery point
+        group_user = User.objects.create_user(
+            username="group@example.com", email="group@example.com", password="x"
+        )
+        cls.group = Customer.objects.create(
+            user=group_user, short_basket_name="MonGroupe", may_order=True, is_group=True
+        )
+        cls.group_point = LUT_DeliveryPoint.objects.create(
+            short_name_v2="PointGroupe", group=cls.group
+        )
+        cls.individual_point = LUT_DeliveryPoint.objects.create(
+            short_name_v2="PointCommun"
+        )
+        cls.producer_a = Producer.objects.create(short_profile_name="Abrigots")
+        cls.producer_b = Producer.objects.create(short_profile_name="Bananes")
+        cls.permanence = Permanence.objects.create(
+            permanence_date=datetime.date.today(),
+            status=SaleStatus.PLANNED,
+            with_delivery_point=True,
+        )
+        cls.permanence.producers.add(cls.producer_a, cls.producer_b)
+        cls.group_board = DeliveryBoard.objects.create(
+            permanence=cls.permanence, delivery_point=cls.group_point
+        )
+        cls.individual_board = DeliveryBoard.objects.create(
+            permanence=cls.permanence, delivery_point=cls.individual_point
+        )
+        cls.product_a = Product.objects.create(
+            producer=cls.producer_a,
+            long_name_v2="Abrigots",
+            order_unit="100",
+            producer_unit_price=D("3.00"),
+            vat_level=Vat.VAT_100,
+            stock=D("99"),
+        )
+        cls.product_b = Product.objects.create(
+            producer=cls.producer_b,
+            long_name_v2="Bananes",
+            order_unit="100",
+            producer_unit_price=D("2.00"),
+            vat_level=Vat.VAT_100,
+            stock=D("99"),
+        )
+        for product in (cls.product_a, cls.product_b):
+            product.is_into_offer = True
+            product.save()
+        task_order.open_order(cls.permanence.id, send_mail=False)
+        cls.offer_a = cls.product_a.offeritem_set.get(permanence=cls.permanence)
+        cls.offer_b = cls.product_b.offeritem_set.get(permanence=cls.permanence)
+
+        def new_customer(name, group_id=None):
+            user = User.objects.create_user(
+                username="%s@example.com" % name.lower(),
+                email="%s@example.com" % name.lower(),
+                password="x",
+            )
+            customer = Customer.objects.create(
+                user=user, short_basket_name=name, may_order=True, group_id=group_id
+            )
+            invoice = CustomerInvoice.get_or_create_invoice(
+                permanence_id=cls.permanence.id,
+                customer_id=customer.id,
+                status=SaleStatus.OPENED,
+            )
+            if group_id is None:
+                # Individual customers are attached to their delivery point
+                # (set_order_delivery does not save, exactly like the view
+                # delivery_ajax does it)
+                invoice.set_order_delivery(cls.individual_board)
+                invoice.save()
+            return customer
+
+        cls.alice = new_customer("Alice")
+        cls.member1 = new_customer("Membre1", group_id=cls.group.id)
+        cls.member2 = new_customer("Membre2", group_id=cls.group.id)
+
+        orders = [
+            (cls.alice, cls.offer_a, D("2")),
+            (cls.member1, cls.offer_b, D("3")),
+            (cls.member2, cls.offer_b, D("1")),
+        ]
+        for customer, offer_item, quantity in orders:
+            purchase, updated = create_or_update_one_cart_item(
+                customer=customer, offer_item_id=offer_item.id, q_order=quantity,
+                comment="",
+            )
+            assert updated and purchase is not None
+        task_order.close_order(
+            cls.permanence.id,
+            everything=True,
+            deliveries_id=(cls.group_board.id, cls.individual_board.id),
+            send_mail=False,
+        )
+        cls.permanence.refresh_from_db()
+        assert cls.permanence.status == SaleStatus.SEND
+
+        # Round 1: the treasurer pays A only
+        ProducerInvoice.objects.filter(
+            permanence_id=cls.permanence.id, producer_id=cls.producer_a.id
+        ).update(to_be_paid=True, to_be_invoiced_balance=D("6.00"))
+        cls.permanence.invoice(payment_date=PAYMENT_DATE)
+        cls.permanence.refresh_from_db()
+        assert cls.permanence.status == SaleStatus.INVOICED
+
+        # Round 2: the child carries B, the treasurer pays it
+        cls.child = Permanence.objects.get(master_permanence_id=cls.permanence.id)
+        ProducerInvoice.objects.filter(
+            permanence_id=cls.child.id, producer_id=cls.producer_b.id
+        ).update(to_be_paid=True, to_be_invoiced_balance=D("8.00"))
+        cls.child.invoice(payment_date=PAYMENT_DATE)
+        cls.child.refresh_from_db()
+        assert cls.child.status == SaleStatus.INVOICED
+
+    def latest_total(self, permanence_id):
+        return BankAccount.objects.get(
+            operation_status__in=[
+                BankMovement.LATEST_TOTAL,
+                BankMovement.NOT_LATEST_TOTAL,
+            ],
+            permanence_id=permanence_id,
+        )
+
+    def test_the_group_follows_its_members_into_the_child(self):
+        # The group members buy only from the moved producer: their
+        # invoices are charged to the group at the child, with the right
+        # amounts
+        for member, expected in (
+            (self.member1, D("6.00")),
+            (self.member2, D("2.00")),
+        ):
+            invoice = CustomerInvoice.objects.get(
+                customer_id=member.id, permanence_id=self.child.id
+            )
+            self.assertEqual(invoice.customer_charged_id, self.group.id)
+            self.assertEqual(invoice.get_total_price_with_tax().amount, expected)
+        # The split COPIES rather than moves: a fully moved customer
+        # leaves an inert zero-total shell at the parent book (no
+        # purchase, no balance effect, never charged) while his real
+        # invoice lives at the child
+        for member in (self.member1, self.member2):
+            parent_shell = CustomerInvoice.objects.get(
+                customer_id=member.id, permanence_id=self.permanence.id
+            )
+            self.assertEqual(
+                parent_shell.get_total_price_with_tax().amount, D("0")
+            )
+            self.assertEqual(parent_shell.balance.amount, D("0"))
+        parent_group_shell = CustomerInvoice.objects.get(
+            customer_id=self.group.id, permanence_id=self.permanence.id
+        )
+        self.assertEqual(
+            parent_group_shell.get_total_price_with_tax().amount, D("0")
+        )
+        # The group invoice itself follows its members into the child
+        group_invoice = CustomerInvoice.objects.get(
+            customer_id=self.group.id, permanence_id=self.child.id
+        )
+        self.assertTrue(group_invoice.is_group)
+        self.assertEqual(group_invoice.customer_charged_id, self.group.id)
+        # The individual customer stays at the parent
+        self.assertTrue(
+            CustomerInvoice.objects.filter(
+                customer_id=self.alice.id, permanence_id=self.permanence.id
+            ).exists()
+        )
+        # The delivery boards are duplicated into the child
+        child_points = set(
+            DeliveryBoard.objects.filter(permanence_id=self.child.id)
+            .values_list("delivery_point_id", flat=True)
+        )
+        self.assertEqual(
+            child_points,
+            {self.group_point.id, self.individual_point.id},
+        )
+
+    def test_the_child_charges_the_group_and_never_the_members(self):
+        # Members order, the group pays: round 2 charges the group only
+        for member in (self.member1, self.member2):
+            member.refresh_from_db()
+            self.assertEqual(member.balance.amount, D("0"))
+            invoice = CustomerInvoice.objects.get(
+                customer_id=member.id, permanence_id=self.child.id
+            )
+            self.assertEqual(invoice.balance.amount, D("0"))
+        # The group is charged for the whole moved purchases (8.00)
+        self.group.refresh_from_db()
+        self.assertEqual(self.group.balance.amount, D("-8.00"))
+        group_invoice = CustomerInvoice.objects.get(
+            customer_id=self.group.id, permanence_id=self.child.id
+        )
+        self.assertEqual(group_invoice.get_total_price_with_tax().amount, D("8.00"))
+        self.assertEqual(group_invoice.balance.amount, D("-8.00"))
+        # Alice is charged for her A purchases only, at the parent
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("-6.00"))
+        alice_invoice = CustomerInvoice.objects.get(
+            customer_id=self.alice.id, permanence_id=self.permanence.id
+        )
+        self.assertEqual(alice_invoice.get_total_price_with_tax().amount, D("6.00"))
+        # Both producers are paid square
+        for producer, expected, permanence in (
+            (self.producer_a, D("6.00"), self.permanence),
+            (self.producer_b, D("8.00"), self.child),
+        ):
+            producer.refresh_from_db()
+            self.assertEqual(producer.balance.amount, D("0"))
+            pay = BankAccount.objects.get(
+                operation_status=BankMovement.CALCULATED_INVOICE,
+                producer_id=producer.id,
+            )
+            self.assertEqual(pay.permanence_id, permanence.id)
+            self.assertEqual(pay.bank_amount_out.amount, expected)
+
+    def test_the_bank_anchor_chains_over_the_two_rounds(self):
+        anchor_1 = self.latest_total(self.permanence.id)
+        anchor_2 = self.latest_total(self.child.id)
+        self.assertEqual(
+            anchor_1.bank_amount_in.amount - anchor_1.bank_amount_out.amount,
+            D("-6.00"),
+        )
+        self.assertEqual(
+            anchor_2.bank_amount_in.amount - anchor_2.bank_amount_out.amount,
+            D("-14.00"),
+        )
+        self.assertEqual(
+            (anchor_2.bank_amount_in.amount - anchor_2.bank_amount_out.amount)
+            - (anchor_1.bank_amount_in.amount - anchor_1.bank_amount_out.amount),
+            D("-8.00"),
+        )
+        anchor_1.refresh_from_db()
+        self.assertEqual(anchor_1.operation_status, BankMovement.NOT_LATEST_TOTAL)
+        self.assertEqual(
+            BankAccount.objects.filter(
+                operation_status=BankMovement.LATEST_TOTAL
+            ).count(),
+            1,
+        )
+
+
+class CancelChainJourneyMixin(ProducerChainJourneyMixin):
+    """Two rounds invoiced: producer A paid at the parent, producer B paid
+    at the child. The cancellation scenarios play on top of that."""
+
+    purchases = [
+        ("Abrigots", D("3.00"), D("2")),  # 6.00, paid at round 1
+        ("Bananes", D("2.00"), D("3")),  # 6.00, paid at round 2
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.round_1 = cls.first_permanence
+        cls.pay_producers(cls.round_1, {"Abrigots": D("6.00")})
+        cls.child = cls.child_of(cls.round_1)
+        cls.pay_producers(cls.child, {"Bananes": D("6.00")})
+
+
+class CancelTheInvoicedChildTest(CancelChainJourneyMixin, TestCase):
+    """The treasurer cancels the child (the last book): only round 2 is
+    restored, and the child can be invoiced again afterwards."""
+
+    def test_cancelling_the_child_restores_the_second_round_only(self):
+        self.cancel_last_invoice(self.child)
+        # The child is back at SEND, the parent stays INVOICED
+        self.assertEqual(self.child.status, SaleStatus.SEND)
+        self.assertEqual(self.round_1.status, SaleStatus.INVOICED)
+        # Round 1 effects stay: A paid, Alice charged for A only
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("-6.00"))
+        pay_a = BankAccount.objects.get(
+            operation_status=BankMovement.CALCULATED_INVOICE,
+            producer_id=self.producers["Abrigots"].id,
+        )
+        self.assertEqual(pay_a.bank_amount_out.amount, D("6.00"))
+        # Round 2 effects are gone: no payment of B anymore
+        self.assertFalse(
+            BankAccount.objects.filter(
+                operation_status=BankMovement.CALCULATED_INVOICE,
+                producer_id=self.producers["Bananes"].id,
+            ).exists()
+        )
+        self.producers["Bananes"].refresh_from_db()
+        self.assertEqual(self.producers["Bananes"].balance.amount, D("0"))
+        invoice_b = ProducerInvoice.objects.get(
+            producer_id=self.producers["Bananes"].id
+        )
+        self.assertEqual(invoice_b.invoice_sort_order, None)
+        # The child customer invoice is unstamped
+        child_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.child.id, customer_id=self.alice.id
+        )
+        self.assertEqual(child_invoice.invoice_sort_order, None)
+        # The child's own anchor row is gone, the parent's is alive again
+        self.assertFalse(
+            BankAccount.objects.filter(permanence_id=self.child.id).exists()
+        )
+        latest = BankAccount.objects.get(
+            operation_status=BankMovement.LATEST_TOTAL
+        )
+        self.assertEqual(latest.permanence_id, self.round_1.id)
+
+    def test_the_child_can_be_re_invoiced_after_the_cancel(self):
+        self.cancel_last_invoice(self.child)
+        self.pay_producers(self.child, {"Bananes": D("6.00")})
+        # Back to square everything: B paid again, Alice charged again
+        producer = self.producers["Bananes"]
+        producer.refresh_from_db()
+        self.assertEqual(producer.balance.amount, D("0"))
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("-12.00"))
+        # And the anchors chain over the two rounds again
+        self.assertEqual(self.anchor_net(self.round_1.id), D("-6.00"))
+        self.assertEqual(self.anchor_net(self.child.id), D("-12.00"))
+
+    def test_the_parent_cannot_be_cancelled_before_the_child(self):
+        # The admin only cancels the latest book: after round 2, the live
+        # anchor belongs to the child, not to the parent
+        latest = BankAccount.objects.get(
+            operation_status=BankMovement.LATEST_TOTAL
+        )
+        self.assertEqual(latest.permanence_id, self.child.id)
+
+
+class CancelTheWholeChainFromTheNewestTest(CancelChainJourneyMixin, TestCase):
+    """Cancel the child then the parent: the whole chain is reopened, in
+    the reverse order of the invoicing rounds."""
+
+    def test_cancelling_child_then_parent_reopens_everything(self):
+        self.cancel_last_invoice(self.child)
+        self.cancel_last_invoice(self.round_1)
+        # Both permanences are back at SEND
+        self.round_1.refresh_from_db()
+        self.child.refresh_from_db()
+        self.assertEqual(self.round_1.status, SaleStatus.SEND)
+        self.assertEqual(self.child.status, SaleStatus.SEND)
+        # No producer payment survives the double cancellation
+        self.assertFalse(
+            BankAccount.objects.filter(
+                operation_status=BankMovement.CALCULATED_INVOICE
+            ).exists()
+        )
+        # Alice and both producers are back to their initial balances
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("0"))
+        for name in ("Abrigots", "Bananes"):
+            producer = self.producers[name]
+            producer.refresh_from_db()
+            self.assertEqual(producer.balance.amount, D("0"), name)
+            invoice = ProducerInvoice.objects.get(producer_id=producer.id)
+            self.assertEqual(invoice.invoice_sort_order, None, name)
+        # No anchor row survives: the opening one is the live one again
+        self.assertFalse(
+            BankAccount.objects.filter(
+                permanence_id__in=[self.round_1.id, self.child.id]
+            ).exists()
+        )
+        latest = BankAccount.objects.get(
+            operation_status=BankMovement.LATEST_TOTAL
+        )
+        self.assertIsNone(latest.permanence_id)
+        # The cancelled books leave a trace
+        self.assertIsNotNone(self.round_1.canceled_invoice_sort_order)
+        self.assertIsNotNone(self.child.canceled_invoice_sort_order)
+
+
+class CancelTheParentWhileTheChildIsStillOpenTest(ProducerChainJourneyMixin, TestCase):
+    """After round 1 only, the child still carries the unpaid producer at
+    SEND: cancelling the parent reopens the parent and leaves the child
+    untouched."""
+
+    purchases = [
+        ("Abrigots", D("3.00"), D("2")),  # 6.00, paid at round 1
+        ("Bananes", D("2.00"), D("3")),  # 6.00, unpaid, moved to the child
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.round_1 = cls.first_permanence
+        cls.pay_producers(cls.round_1, {"Abrigots": D("6.00")})
+        # The child is left at SEND: round 2 has not happened yet
+        cls.child = cls.child_of(cls.round_1)
+
+    def test_cancelling_the_parent_reopens_it_and_keeps_the_child(self):
+        self.cancel_last_invoice(self.round_1)
+        self.round_1.refresh_from_db()
+        self.child.refresh_from_db()
+        # The parent is back at SEND, the child untouched at SEND
+        self.assertEqual(self.round_1.status, SaleStatus.SEND)
+        self.assertEqual(self.child.status, SaleStatus.SEND)
+        # Round 1 effects are all restored
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("0"))
+        self.producers["Abrigots"].refresh_from_db()
+        self.assertEqual(self.producers["Abrigots"].balance.amount, D("0"))
+        self.assertFalse(
+            BankAccount.objects.filter(
+                operation_status=BankMovement.CALCULATED_INVOICE
+            ).exists()
+        )
+        # The child still carries B at SEND: invoice, purchases, customer
+        # invoice, nothing moved back to the parent
+        invoice_b = ProducerInvoice.objects.get(
+            producer_id=self.producers["Bananes"].id
+        )
+        self.assertEqual(invoice_b.permanence_id, self.child.id)
+        self.assertEqual(invoice_b.invoice_sort_order, None)
+        child_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.child.id, customer_id=self.alice.id
+        )
+        self.assertEqual(child_invoice.get_total_price_with_tax().amount, D("6.00"))
+        purchase_b = Purchase.objects.get(
+            permanence_id=self.child.id, producer_id=self.producers["Bananes"].id
+        )
+        self.assertEqual(purchase_b.quantity_invoiced, D("3.000"))
+        # The opening anchor is the live one again
+        latest = BankAccount.objects.get(
+            operation_status=BankMovement.LATEST_TOTAL
+        )
+        self.assertIsNone(latest.permanence_id)
