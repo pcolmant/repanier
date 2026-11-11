@@ -917,11 +917,11 @@ CMS_TEMPLATE_HOME_HERO = """
 
 CMS_TEMPLATE_HOME_COL_1 = """
 <div class="card border-info mb-3">
-    <div class="card-header bg-info"><h4>Lorem ipsum</h4></div>
-    <div class="card-body">
+    <div class="card-header bg-info text-dark"><h4>Lorem ipsum</h4></div>
+    <div class="card-body bg-white">
         <ul class="list-group list-group-flush">
-            <li class="list-group-item">Lorem ipsum.</li>
-            <li class="list-group-item">Lorem ipsum.</li>
+            <li class="list-group-item bg-white text-dark">Lorem ipsum.</li>
+            <li class="list-group-item bg-white text-dark">Lorem ipsum.</li>
         </ul>
     </div>
 </div>
@@ -929,11 +929,11 @@ CMS_TEMPLATE_HOME_COL_1 = """
 
 CMS_TEMPLATE_HOME_COL_2 = """
 <div class="card border-danger mb-3">
-    <div class="card-header bg-danger"><h4>Lorem ipsum</h4></div>
-    <div class="card-body">
+    <div class="card-header bg-danger text-white"><h4>Lorem ipsum</h4></div>
+    <div class="card-body bg-white">
         <ul class="list-group list-group-flush">
-            <li class="list-group-item">Lorem ipsum.</li>
-            <li class="list-group-item">Lorem ipsum.</li>
+            <li class="list-group-item bg-white text-dark">Lorem ipsum.</li>
+            <li class="list-group-item bg-white text-dark">Lorem ipsum.</li>
         </ul>
     </div>
 </div>
@@ -941,11 +941,11 @@ CMS_TEMPLATE_HOME_COL_2 = """
 
 CMS_TEMPLATE_HOME_COL_3 = """
 <div class="card border-warning mb-3">
-    <div class="card-header bg-warning"><h4>Lorem ipsum</h4></div>
-    <div class="card-body">
+    <div class="card-header bg-warning text-dark"><h4>Lorem ipsum</h4></div>
+    <div class="card-body bg-white">
         <ul class="list-group list-group-flush">
-            <li class="list-group-item">Lorem ipsum.</li>
-            <li class="list-group-item">Lorem ipsum.</li>
+            <li class="list-group-item bg-white text-dark">Lorem ipsum.</li>
+            <li class="list-group-item bg-white text-dark">Lorem ipsum.</li>
         </ul>
     </div>
 </div>
