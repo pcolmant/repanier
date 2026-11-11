@@ -71,3 +71,12 @@ class LoginRedirectSanitizationTest(TestCase):
         response = self._get("?flash=0")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], "/")
+
+
+class SslRedirectTest(TestCase):
+    def test_http_requests_are_upgraded_to_https(self):
+        # The next tests disable SECURE_SSL_REDIRECT only to observe what
+        # the view computes; the real site must stay https only.
+        response = self.client.get("/fr/repanier/go_repanier/", data={"next": "/x"})
+        self.assertEqual(response.status_code, 301)
+        self.assertTrue(response["Location"].startswith("https://"))
