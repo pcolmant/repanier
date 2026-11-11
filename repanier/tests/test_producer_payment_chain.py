@@ -26,7 +26,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from repanier.const import BankMovement, SaleStatus, Vat
+from repanier.const import BankMovement, OrderUnit, SaleStatus, Vat
 from repanier.models.bankaccount import BankAccount
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
@@ -334,6 +334,13 @@ class ProducerChainJourneyMixin:
     # [(short_profile_name, producer_unit_price, quantity), ...]
     purchases = []
 
+    # Extra Customer fields (e.g. an outdated membership for the fee test)
+    customer_kwargs = {}
+
+    # When set (e.g. D("10.00")), the group charges a membership fee at
+    # closure, valid for 12 months
+    membership_fee = None
+
     @classmethod
     def setUpTestData(cls):
         Configuration.objects.create(
@@ -342,6 +349,12 @@ class ProducerChainJourneyMixin:
             bank_account="BE99 9999 9999 9999",
             currency="100",
         )
+        if cls.membership_fee is not None:
+            # Re-trigger the post_save signal so the settings are refreshed
+            Configuration.objects.update(
+                membership_fee=cls.membership_fee, membership_fee_duration=D("12")
+            )
+            Configuration.objects.first().save()
         # The bank anchor required by Permanence.invoice()
         BankAccount.objects.create(
             operation_status=BankMovement.LATEST_TOTAL,
@@ -352,7 +365,7 @@ class ProducerChainJourneyMixin:
             username="alice@example.com", email="alice@example.com", password="x"
         )
         cls.alice = Customer.objects.create(
-            user=user, short_basket_name="Alice", may_order=True
+            user=user, short_basket_name="Alice", may_order=True, **cls.customer_kwargs
         )
         cls.producers = {}
         cls.products = {}
@@ -716,3 +729,79 @@ class BreakageAdjustedBetweenRoundsTest(ProducerChainJourneyMixin, TestCase):
         # The anchors chain: round 2 adds exactly 3.00 out
         self.assertEqual(self.anchor_net(self.round_1.id), D("-6.00"))
         self.assertEqual(self.anchor_net(self.child.id), D("-9.00"))
+
+
+class MembershipFeeWithinTheSplitTest(ProducerChainJourneyMixin, TestCase):
+    """The membership fee - a product of the site producer - is forced at
+    closure into the order of an outdated member. Within a split, it must
+    stay at the PARENT: the fee is owed to the group, the child only
+    carries the unpaid real producer."""
+
+    purchases = [
+        ("Abrigots", D("3.00"), D("2")),  # 6.00, paid at round 1
+        ("Bananes", D("2.00"), D("3")),  # 6.00, unpaid at round 1
+    ]
+    customer_kwargs = {"membership_fee_valid_until": datetime.date(2010, 1, 1)}
+    membership_fee = D("10.00")
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.round_1 = cls.first_permanence
+        cls.pay_producers(cls.round_1, {"Abrigots": D("6.00")})
+        cls.child = cls.child_of(cls.round_1)
+        cls.pay_producers(cls.child, {"Bananes": D("6.00")})
+
+    def test_the_fee_is_charged_and_stays_at_the_parent(self):
+        site_producer = Producer.get_or_create_group()
+        fee_purchase = Purchase.objects.get(
+            customer_id=self.alice.id,
+            offer_item__order_unit=OrderUnit.MEMBERSHIP_FEE,
+        )
+        self.assertEqual(fee_purchase.producer_id, site_producer.id)
+        self.assertEqual(fee_purchase.selling_price.amount, D("10.00"))
+        # The fee does not follow the split: it stays at the parent
+        self.assertEqual(fee_purchase.permanence_id, self.round_1.id)
+        # The parent invoice charges A + the fee, the child only B
+        parent_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.round_1.id, customer_id=self.alice.id
+        )
+        self.assertEqual(parent_invoice.get_total_price_with_tax().amount, D("16.00"))
+        child_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.child.id, customer_id=self.alice.id
+        )
+        self.assertEqual(child_invoice.get_total_price_with_tax().amount, D("6.00"))
+        # Alice: 6.00 for A + 10.00 fee + 6.00 for B
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("-22.00"))
+        # And her membership is valid again
+        self.assertGreaterEqual(
+            self.alice.membership_fee_valid_until, datetime.date.today()
+        )
+
+    def test_the_site_producer_is_never_paid_and_the_chain_stays_clean(self):
+        site_producer = Producer.get_or_create_group()
+        # The site "producer" is never paid by the bank
+        self.assertFalse(
+            BankAccount.objects.filter(
+                operation_status=BankMovement.CALCULATED_INVOICE,
+                producer_id=site_producer.id,
+            ).exists()
+        )
+        # Its producer invoice carries the fee at the parent, stamped with
+        # the anchor of the parent
+        producer_invoice = ProducerInvoice.objects.get(
+            permanence_id=self.round_1.id, producer_id=site_producer.id
+        )
+        self.assertEqual(producer_invoice.total_price_with_tax.amount, D("10.00"))
+        self.assertEqual(
+            producer_invoice.invoice_sort_order, self.latest_total(self.round_1.id).id
+        )
+        # The unpaid site producer did not generate an extra child
+        self.assertEqual(Permanence.objects.count(), 2)
+        # B ends square, and the anchors chain over the two rounds
+        producer = self.producers["Bananes"]
+        producer.refresh_from_db()
+        self.assertEqual(producer.balance.amount, D("0"))
+        self.assertEqual(self.anchor_net(self.round_1.id), D("-6.00"))
+        self.assertEqual(self.anchor_net(self.child.id), D("-12.00"))
