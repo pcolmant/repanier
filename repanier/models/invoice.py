@@ -602,7 +602,6 @@ class CustomerInvoice(Invoice):
                     min_transport=DECIMAL_ZERO,  # Do not invoice transport twice
                     is_group=old_customer_charged_invoice.is_group,
                     status=new_permanence.status,
-                    highest_status=new_permanence.status,
                 )
         return CustomerInvoice.objects.create(
             permanence_id=new_permanence.id,
@@ -615,7 +614,6 @@ class CustomerInvoice(Invoice):
             min_transport=DECIMAL_ZERO,  # Do not invoice transport twice
             is_group=self.is_group,
             status=new_permanence.status,
-            highest_status=new_permanence.status,
         )
 
     def cancel_if_unconfirmed(self, send_mail=True):

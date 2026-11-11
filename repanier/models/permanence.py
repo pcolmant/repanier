@@ -855,13 +855,32 @@ class Permanence(models.Model):
             status=self.status,
         )
 
+        # Pay the producers one after the other: when the treasurer
+        # selects only a subset of the producers to be paid, the other
+        # ones are moved into a child permanence (still at SEND) that
+        # will be invoiced later. The branch only splits a REAL subset:
+        # invoicing with every producer selected does not split, and the
+        # UI never calls this method without at least one selected.
+        # The ProducerInvoice of the buying group itself (created by
+        # calculate_order_amount, never selectable by the treasurer) is
+        # excluded from the counters: it carries the group deltas and
+        # must stay at this permanence.
+        producers_to_invoiced = ProducerInvoice.objects.filter(
+            permanence_id=self.id,
+            invoice_sort_order__isnull=True,
+            producer__represent_this_buyinggroup=False,
+        ).count()
+        producers_not_to_invoiced = ProducerInvoice.objects.filter(
+            permanence_id=self.id,
+            invoice_sort_order__isnull=True,
+            to_be_paid=False,
+            producer__represent_this_buyinggroup=False,
+        ).count()
+        # A real subset: at least one not selected and at least one selected
         permanence_partially_invoiced = (
-            ProducerInvoice.objects.filter(
-                permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=False
-            ).count()
-            - ProducerInvoice.objects.filter(permanence_id=self.id).count()
+            0 < producers_not_to_invoiced < producers_to_invoiced
         )
-        if permanence_partially_invoiced > 0:
+        if permanence_partially_invoiced:
             # Move the producers not invoiced into a new permanence
             producers_to_keep = list(
                 ProducerInvoice.objects.filter(
@@ -877,6 +896,7 @@ class Permanence(models.Model):
                     permanence_id=self.id,
                     invoice_sort_order__isnull=True,
                     to_be_paid=False,
+                    producer__represent_this_buyinggroup=False,
                 ).values_list("producer_id", flat=True)
             )
             customers_to_move = list(
