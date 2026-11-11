@@ -19,7 +19,21 @@ from repanier.models.offeritem import OfferItemSend, OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
-from repanier.tools import rule_of_3_reload_purchase
+from repanier.tools import distribute_rule_of_3, rule_of_3_reload_purchase
+
+
+def get_invoiced_unit_price(purchase, selling_price):
+    """Invoiced amount applied to one unit of invoiced quantity.
+
+    The invoiced line amounts are computed by Purchase.pre_save as
+    (unit price + unit deposit) x quantity: the deposit is part of the
+    amount invoiced to the customer, so the rule of 3 must weigh it in
+    the source, the accumulation and the residue conversion alike.
+    """
+    unit_deposit = purchase.offer_item.get_unit_deposit()
+    if selling_price:
+        return purchase.get_customer_unit_price() + unit_deposit
+    return purchase.get_producer_unit_price() + unit_deposit
 
 
 class OfferItemAutocomplete(autocomplete.Select2QuerySetView):
@@ -440,65 +454,54 @@ class CustomerSendAdmin(admin.ModelAdmin):
                 purchase.save()
         rule_of_3 = form.cleaned_data["rule_of_3"]
         if rule_of_3:
-            if customer_producer_invoice.producer.price_list_multiplier >= DECIMAL_ONE:
-                rule_of_3_target = form.cleaned_data[
-                    "offer_purchase_price"
-                ].amount.quantize(RoundUpTo.TWO_DECIMALS)
-                selling_price = False
-            else:
+            # The per customer screen scales the selling amounts when the
+            # group applies a price list reduction, the producer amounts
+            # otherwise.
+            selling_price = (
+                customer_producer_invoice.producer.price_list_multiplier < DECIMAL_ONE
+            )
+            if selling_price:
                 rule_of_3_target = form.cleaned_data[
                     "offer_selling_price"
                 ].amount.quantize(RoundUpTo.TWO_DECIMALS)
-                selling_price = True
-            rule_of_3_source = DECIMAL_ZERO
-            max_purchase_counter = 0
-            for purchase_form in formset:
-                if purchase_form.repanier_is_valid:
-                    if selling_price:
-                        rule_of_3_source += purchase_form.instance.selling_price.amount
-                    else:
-                        rule_of_3_source += purchase_form.instance.purchase_price.amount
-                    max_purchase_counter += 1
-            if rule_of_3_target is not None and rule_of_3_target != rule_of_3_source:
-                if rule_of_3_source != DECIMAL_ZERO:
-                    ratio = (rule_of_3_target / rule_of_3_source).quantize(
-                        RoundUpTo.FOUR_DECIMALS
+            else:
+                rule_of_3_target = form.cleaned_data[
+                    "offer_purchase_price"
+                ].amount.quantize(RoundUpTo.TWO_DECIMALS)
+            valid_purchase_forms = [
+                purchase_form
+                for purchase_form in formset
+                if purchase_form.repanier_is_valid
+            ]
+            new_quantities = distribute_rule_of_3(
+                quantities=[
+                    purchase_form.instance.quantity_invoiced
+                    for purchase_form in valid_purchase_forms
+                ],
+                line_totals=[
+                    (
+                        purchase_form.instance.selling_price.amount
+                        if selling_price
+                        else purchase_form.instance.purchase_price.amount
                     )
-                else:
-                    if rule_of_3_target == DECIMAL_ZERO:
-                        ratio = DECIMAL_ZERO
-                    else:
-                        ratio = DECIMAL_ONE
-                if ratio != DECIMAL_ONE:
-                    adjusted_invoice = DECIMAL_ZERO
-                    i = 0
-                    for purchase_form in formset:
-                        if purchase_form.repanier_is_valid:
-                            i += 1
-                            purchase = purchase_form.instance
-                            if i == max_purchase_counter:
-                                if purchase.get_producer_unit_price() != DECIMAL_ZERO:
-                                    delta = rule_of_3_target - adjusted_invoice
-                                    if selling_price:
-                                        purchase.quantity_invoiced = (
-                                            delta / purchase.get_customer_unit_price()
-                                        ).quantize(RoundUpTo.FOUR_DECIMALS)
-                                    else:
-                                        purchase.quantity_invoiced = (
-                                            delta / purchase.get_producer_unit_price()
-                                        ).quantize(RoundUpTo.FOUR_DECIMALS)
-                                else:
-                                    purchase.quantity_invoiced = DECIMAL_ZERO
-                            else:
-                                purchase.quantity_invoiced = (
-                                    purchase.quantity_invoiced * ratio
-                                ).quantize(RoundUpTo.FOUR_DECIMALS)
-
-                            purchase.save()
-                            if selling_price:
-                                adjusted_invoice += purchase.selling_price.amount
-                            else:
-                                adjusted_invoice += purchase.purchase_price.amount
+                    for purchase_form in valid_purchase_forms
+                ],
+                unit_prices=[
+                    get_invoiced_unit_price(purchase_form.instance, selling_price)
+                    for purchase_form in valid_purchase_forms
+                ],
+                target=rule_of_3_target,
+                # Same rounding of the ratio as before the extraction.
+                ratio_rounding=RoundUpTo.FOUR_DECIMALS,
+            )
+            if new_quantities is not None:
+                for (
+                    purchase_form,
+                    quantity_invoiced,
+                ) in zip(valid_purchase_forms, new_quantities):
+                    purchase = purchase_form.instance
+                    purchase.quantity_invoiced = quantity_invoiced
+                    purchase.save()
         for purchase_form in formset:
             if purchase_form.has_changed() and purchase_form.repanier_is_valid:
                 purchase_form.instance.save()
