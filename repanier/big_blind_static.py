@@ -24,7 +24,23 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
 
     Since Django 5.1 the storage is activated through the STORAGES setting
     (see mysite/common_settings.py), not STATICFILES_STORAGE.
+
+    The source map rewriting patterns are dropped: the vendored minified
+    libraries (bootstrap, tom-select) reference their source maps
+    (sourceMappingURL=...) but the .map files are not shipped in the
+    repository, so they must not be hashed (collectstatic would try to
+    hash them on every run and produce a warning per reference).
     """
+
+    patterns = tuple(
+        (
+            extension,
+            # A pattern entry is either a bare regex string or a
+            # (regex, template) tuple: filter on the regex only.
+            tuple(entry for entry in file_patterns if "sourceMappingURL" not in (entry if isinstance(entry, str) else entry[0])),
+        )
+        for extension, file_patterns in ManifestStaticFilesStorage.patterns
+    )
 
     def url(self, name, force=True):
         try:

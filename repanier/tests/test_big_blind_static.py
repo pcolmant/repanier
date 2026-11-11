@@ -36,3 +36,23 @@ class BigBlindStorageFallbackTest(SimpleTestCase):
         self.assertTrue(
             self.storage.url("cms/does/not/exist.css").endswith("/cms/does/not/exist.css")
         )
+
+    def test_source_map_rewriting_patterns_are_dropped(self):
+        # The vendored minified libraries reference their source maps,
+        # which are not shipped: collectstatic must not try to hash them
+        # (a warning was emitted per reference at every run).
+        # In Django 5.2 a pattern entry is either a bare regex string or
+        # a (regex, template) tuple.
+        for extension, file_patterns in BigBlindManifestStaticFilesStorage.patterns:
+            for entry in file_patterns:
+                regex = entry if isinstance(entry, str) else entry[0]
+                self.assertNotIn("sourceMappingURL", regex)
+        # The css and js rewriting patterns (url(), @import) stay intact.
+        regexes = [
+            entry if isinstance(entry, str) else entry[0]
+            for extension, file_patterns in BigBlindManifestStaticFilesStorage.patterns
+            for entry in file_patterns
+        ]
+        joined = " ".join(regexes)
+        self.assertIn("url\(", joined)
+        self.assertIn("@import", joined)
