@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit, urlunsplit
+
 from cms.utils.conf import get_cms_setting
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login
@@ -16,16 +18,38 @@ from repanier.models.staff import Staff
 from repanier.tools import sint, get_repanier_template_name
 
 
+def _sanitize_redirect_url(redirect_to, request):
+    """Réduit une cible de redirection fournie par le client à un chemin sûr.
+
+    La cible (?next=...) est une donnée distante :
+    - pas de boucle de redirection ni d'autoréférence anormale ;
+    - seules les URL de même origine sont acceptées ;
+    - la cible acceptée est reconstruite en chemin uniquement
+      (path + query + fragment, sans scheme ni netloc) : la redirection
+      ne peut jamais quitter le site ;
+    - sinon retour vers LOGIN_REDIRECT_URL.
+    """
+    if not redirect_to or "go_repanier" in redirect_to or redirect_to.count("next=") > 1:
+        return resolve_url(settings.LOGIN_REDIRECT_URL)
+
+    if not url_has_allowed_host_and_scheme(
+        url=redirect_to, allowed_hosts={request.get_host()}
+    ):
+        return resolve_url(settings.LOGIN_REDIRECT_URL)
+
+    parts = urlsplit(redirect_to)
+    if not parts.path:
+        return resolve_url(settings.LOGIN_REDIRECT_URL)
+    return urlunsplit(
+        (EMPTY_STRING, EMPTY_STRING, parts.path, parts.query, parts.fragment)
+    )
+
+
 def _get_redirect_response(redirect_to, request):
     """
     Construit la réponse de redirection en gérant l'activation de la barre d'outils CMS (v3 ou v4).
     """
-    # Empêche toute boucle de redirection ou autoréférence anormale
-    if not redirect_to or "go_repanier" in redirect_to or redirect_to.count("next=") > 1:
-        redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
-
-    if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts={request.get_host()}):
-        redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
+    redirect_to = _sanitize_redirect_url(redirect_to, request)
 
     if request.user.is_superuser:
         toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
@@ -36,7 +60,8 @@ def _get_redirect_response(redirect_to, request):
         except Exception:
             toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__ENABLE")
 
-    return HttpResponseRedirect(f"{redirect_to}?{toolbar_param}")
+    separator = "&" if "?" in redirect_to else "?"
+    return HttpResponseRedirect(f"{redirect_to}{separator}{toolbar_param}")
 
 
 @sensitive_post_parameters()
@@ -55,13 +80,7 @@ def login_view(
     redirect_to = request.POST.get(
         redirect_field_name, request.GET.get(redirect_field_name, EMPTY_STRING)
     )
-
-    # Validation initiale et sécurisation de l'URL cible
-    if not redirect_to or "go_repanier" in redirect_to or redirect_to.count("next=") > 1:
-        redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
-
-    if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts={request.get_host()}):
-        redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
+    redirect_to = _sanitize_redirect_url(redirect_to, request)
 
     staff_responsibilities = None
     user = request.user

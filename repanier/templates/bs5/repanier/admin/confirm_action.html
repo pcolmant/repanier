@@ -5,8 +5,13 @@
     <div class="breadcrumbs">
         {% translate 'Manage' %}
         &rsaquo;
+        <a id="confirm_action_breadcrumb"></a>
         <script>
-            document.write('<a href="' + document.referrer + '">{{ model_verbose_name_plural }}</a>');
+            (function() {
+                var link = document.getElementById("confirm_action_breadcrumb");
+                link.href = document.referrer;
+                link.textContent = "{{ model_verbose_name_plural|escapejs }}";
+            })();
         </script>
     </div>
 {% endblock %}
