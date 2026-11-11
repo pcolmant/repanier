@@ -1,0 +1,2 @@
+{# Basket icon and amount: injected into #my_basket and #prepared_amount_visible_xs. #}
+<span class="bi bi-cart"></span>&nbsp;{{ order_amount }}&nbsp;&nbsp;&nbsp;{% if show_icon %}{% if show_confirm %}<span class="bi bi-exclamation-circle"></span>&nbsp;<span class="bi bi-floppy"></span>{% else %}<span class="bi bi-check-lg"></span>{% endif %}{% endif %}

@@ -1,6 +1,6 @@
 from django.db import models
-from django.utils.html import escape, format_html
-from django.utils.safestring import mark_safe
+from django.template.loader import render_to_string
+from django.utils.html import escape
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from repanier.const import EMPTY_STRING
@@ -20,40 +20,15 @@ class Notification(models.Model):
         return self.notification_v2
 
     def get_html_notification_card_display(self):
+        """Render the flash card (repanier/notification_card.html), or
+        nothing when the notification is empty.
+
+        The notification content is escaped by the template, exactly as
+        the previous format_html based rendering did."""
         notification = self.get_notification_display()
         if notification:
-            html = [format_html(
-                '<div class="card-body">{}</div>',
-                self.get_notification_display(),
-            )]
-            return mark_safe(
-                """
-            <div class="container-repanier">
-                <div class="container">
-                    <div class="row">
-                        <div class="col">
-                            <div class="card card-flash">
-                                {html}
-                                <a href="#" class="card-close"><i class="far fa-times-circle"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <script type="text/javascript">
-            // Close card
-            $(".card-close").click(function(){{
-                $(this).parent().fadeOut(300);
-                $("a").click(function(){{
-                    // Stop displaying flash in next pages
-                    $(this).attr('href',$(this).attr('href')+"?flash=0");
-                    return true;
-                }});
-            }});
-            </script>
-            """.format(
-                    html=EMPTY_STRING.join(html)
-                )
+            return render_to_string(
+                "repanier/notification_card.html", {"notification": notification}
             )
         return EMPTY_STRING
 
