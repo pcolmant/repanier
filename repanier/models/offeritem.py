@@ -3,7 +3,6 @@ from django.db.models import Sum, DecimalField
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from djangocms_text_ckeditor.fields import HTMLField
 
 from repanier.const import (
     DECIMAL_ZERO,
@@ -21,8 +20,6 @@ class OfferItem(Item):
     long_name_v2 = models.CharField(
         _("Long name"), max_length=100, default=EMPTY_STRING, blank=True
     )
-    cache_part_a_v2 = HTMLField(default=EMPTY_STRING, blank=True)
-    cache_part_b_v2 = HTMLField(default=EMPTY_STRING, blank=True)
     order_sort_order_v2 = models.IntegerField(default=0, db_index=True)
     preparation_sort_order_v2 = models.IntegerField(default=0, db_index=True)
     producer_sort_order_v2 = models.IntegerField(default=0, db_index=True)

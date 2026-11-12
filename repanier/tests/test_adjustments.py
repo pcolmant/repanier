@@ -15,6 +15,7 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
 
 from repanier.const import DECIMAL_ZERO, OrderUnit, SaleStatus, Vat
 from repanier.models.configuration import Configuration
@@ -28,6 +29,17 @@ from repanier.task import task_order
 from repanier.tools import create_or_update_one_cart_item
 
 D = Decimal
+
+
+def utc_today():
+    """The clock close_order() runs on when it extends a membership:
+    timezone.now().date(), always UTC.
+
+    Membership assertions must use this clock, never datetime.date.today()
+    (the OS local date): from 23:00 to 00:00 UTC the two clocks disagree for
+    a Europe/Brussels-style timezone and the test becomes flaky.
+    """
+    return timezone.now().date()
 
 
 def build_journey_to_send(product_kwargs=None, customer_kwargs=None):
@@ -46,7 +58,7 @@ def build_journey_to_send(product_kwargs=None, customer_kwargs=None):
     )
     producer = Producer.objects.create(short_profile_name="Ferme")
     permanence = Permanence.objects.create(
-        permanence_date=datetime.date.today(), status=SaleStatus.PLANNED
+        permanence_date=utc_today(), status=SaleStatus.PLANNED
     )
     permanence.producers.add(producer)
     defaults = {
@@ -103,7 +115,7 @@ class MembershipFeeForcedAtCloseTest(TestCase):
 
         # And the membership is valid again, for 12 months
         customer.refresh_from_db()
-        today = datetime.date.today()
+        today = utc_today()
         self.assertGreaterEqual(customer.membership_fee_valid_until, today)
         self.assertLessEqual(
             customer.membership_fee_valid_until,
@@ -113,7 +125,7 @@ class MembershipFeeForcedAtCloseTest(TestCase):
     def test_up_to_date_member_is_not_charged(self):
         customer, producer, permanence, offer_item, product = build_journey_to_send(
             customer_kwargs={
-                "membership_fee_valid_until": datetime.date.today()
+                "membership_fee_valid_until": utc_today()
                 + datetime.timedelta(days=30)
             }
         )
