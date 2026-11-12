@@ -25,6 +25,7 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
 
 from repanier.const import BankMovement, OrderUnit, SaleStatus, Vat
 from repanier.models.bankaccount import BankAccount
@@ -42,6 +43,17 @@ from repanier.tools import create_or_update_one_cart_item
 
 D = Decimal
 PAYMENT_DATE = datetime.date(2026, 12, 31)
+
+
+def utc_today():
+    """The clock close_order() runs on when it extends a membership:
+    timezone.now().date(), always UTC.
+
+    Membership assertions must use this clock, never datetime.date.today()
+    (the OS local date): from 23:00 to 00:00 UTC the two clocks disagree for
+    a Europe/Brussels-style timezone and the test becomes flaky.
+    """
+    return timezone.now().date()
 
 
 class ProducerChainFixtureMixin:
@@ -789,7 +801,7 @@ class MembershipFeeWithinTheSplitTest(ProducerChainJourneyMixin, TestCase):
         self.assertEqual(self.alice.balance.amount, D("-22.00"))
         # And her membership is valid again
         self.assertGreaterEqual(
-            self.alice.membership_fee_valid_until, datetime.date.today()
+            self.alice.membership_fee_valid_until, utc_today()
         )
 
     def test_the_site_producer_is_never_paid_and_the_chain_stays_clean(self):
