@@ -232,10 +232,14 @@ paid (`Permanence.invoice`, `create_child`). Locked rules
   (including at the child): the difference books as a PROFIT of the
   site consumer account, attached to the site invoice of that round's
   permanence;
-- documented behavior: the split **copies** the customer invoices
-  rather than moving them - a fully moved customer leaves an inert
-  zero-total shell at the parent book (no purchase, no balance
-  effect, never debited).
+- the split **copies** the customer invoices rather than moving
+  them, and invoicing the parent then **deletes the inert shells**:
+  a copy without any purchase of its own, without any payment
+  attached and with a zero total does not survive the round - a
+  fully moved customer leaves no trace at the parent book; a copy
+  carrying a payment stays, the money already paid before the
+  invoicing remains booked at the parent.
+  Test: `PaymentAttachedShellIsKeptTest`.
 
 ### Cancellation (`cancel_invoice`)
 

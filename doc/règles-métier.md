@@ -234,10 +234,14 @@ tard, jusqu'au paiement du dernier (`Permanence.invoice`,
   quel tour (y compris à l'enfant) : la différence devient un PROFIT
   du compte consommateur du site, attaché à la facture site de la
   permanence du tour ;
-- comportement documenté : la scission **copie** les factures clients
-  plutôt qu'elle ne les déplace — un client entièrement déplacé
-  laisse une coquille inerte à 0,00 dans le livre du parent (sans
-  achat, sans effet de solde, jamais débitée).
+- la scission **copie** les factures clients plutôt qu'elle ne les
+  déplace, puis la facturation du parent **supprime les coquilles
+  inertes** : une copie sans aucun achat propre, sans paiement
+  rattaché et à total nul ne survit pas au tour — un client
+  entièrement déplacé ne laisse aucune trace dans le livre du
+  parent ; une copie portant un paiement survit, l'argent déjà payé
+  avant la facturation reste comptabilisé au parent.
+  Test : `PaymentAttachedShellIsKeptTest`.
 
 ### Annulation (`cancel_invoice`)
 
