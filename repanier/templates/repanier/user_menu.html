@@ -1,0 +1,24 @@
+{% load i18n %}{% if user.is_authenticated %}
+    {% if permanence_id > 0 %}
+        <li id="li_my_basket" style="display:none;" class="nav-item dropdown">
+            <a href="{% url 'repanier:order_view' permanence_id %}?is_basket=yes" class="btn btn-success"><span id="my_basket"></span></a>
+        </li>
+    {% endif %}
+    <li id="li_my_name" class="nav-item dropdown">
+        <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="bi bi-person" aria-hidden="true"></span> {% if user.username %}{{ user.username }}{% else %}<span id="my_name"></span>{% endif %}</a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'repanier:send_mail_to_coordinators_view' %}">{% translate "Inform" %}</a></li>
+            {% if display_who_is_who %}
+                <li><a class="dropdown-item" href="{% url 'repanier:who_is_who_view' %}">{% translate "Who's who" %}</a></li>
+            {% endif %}
+            {% if user.customer_id %}
+                <li><a class="dropdown-item" href="{% url 'repanier:my_profile_view' %}">{% translate "My profile" %}</a></li>
+                <li><a class="dropdown-item" href="{% url 'repanier:customer_invoice_view' 0 user.customer_id %}">{{ my_balance|safe }}</a></li>
+                <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="{% url 'repanier:logout' %}">{% translate "Logout" %}</a></li>
+        </ul>
+    </li>
+{% else %}
+    <li id="li_my_name" class="nav-item"><a href="{% url 'repanier:login_form' %}" role="button" class="btn btn-success"><span class="bi bi-person" aria-hidden="true"></span> {% translate "Sign in" %}</a></li>
+{% endif %}
