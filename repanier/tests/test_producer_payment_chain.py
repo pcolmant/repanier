@@ -1390,9 +1390,11 @@ class PaymentAttachedShellIsKeptTest(TestCase):
 class ClaimedHigherThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestCase):
     """Mirror of ClaimedLowerThanCalculatedAtTheChildTest: the producer's
     paper invoice claims MORE than calculated (e.g. delivered extra
-    weight). The group pays what the producer asks, out of its own pocket
-    for the difference: the correction books as a PROFIT movement out of
-    the site consumer account, and the producer ends square."""
+    weight). The group pays what the producer asks: an economic LOSS for
+    the group, paid out of its own pocket. The correction books as a
+    bank movement out of the site consumer account (operation_status
+    PROFIT - the correction entry - with bank_amount_out), and the
+    producer ends square."""
 
     purchases = [
         ("Abrigots", D("3.00"), D("2")),  # 6.00 calculated, unpaid at round 1
@@ -1428,6 +1430,8 @@ class ClaimedHigherThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestC
         self.assertEqual(invoice.balance.amount, D("0"))
 
     def test_the_extra_paid_books_on_the_site_consumer_account(self):
+        # A LOSS for the group: the operation_status is PROFIT (the
+        # correction entry), the direction bank_amount_out makes it a loss
         site_customer = Customer.get_or_create_group()
         correction = BankAccount.objects.get(operation_status=BankMovement.PROFIT)
         self.assertEqual(correction.customer_id, site_customer.id)
@@ -1468,8 +1472,12 @@ class ClaimedHigherThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestC
 class ShortfallCoveredByTheGroupTest(ProducerChainJourneyMixin, TestCase):
     """The producer delivered less than invoiced - the child purchase is
     adjusted down - but the group accepts to pay the difference out of
-    its own funds and keeps paying the full amount. The covered shortfall
-    books as a PROFIT movement out of the site consumer account."""
+    its own funds and keeps paying the full amount: an economic LOSS for
+    the group, booked as a bank movement out of the site consumer account
+    (operation_status PROFIT - the correction entry - with
+    bank_amount_out). The profit case is the opposite: a producer billing
+    less goods than delivered, the customers having been charged for the
+    full delivery (ClaimedLowerThanCalculatedAtTheChildTest)."""
 
     purchases = [
         ("Abrigots", D("3.00"), D("2")),  # 6.00 estimated, unpaid at round 1
@@ -1507,6 +1515,7 @@ class ShortfallCoveredByTheGroupTest(ProducerChainJourneyMixin, TestCase):
         self.assertEqual(invoice.bank_amount_out.amount, D("6.00"))
 
     def test_the_covered_shortfall_books_on_the_site_consumer_account(self):
+        # A LOSS for the group: bank_amount_out on the correction entry
         site_customer = Customer.get_or_create_group()
         correction = BankAccount.objects.get(operation_status=BankMovement.PROFIT)
         self.assertEqual(correction.customer_id, site_customer.id)
