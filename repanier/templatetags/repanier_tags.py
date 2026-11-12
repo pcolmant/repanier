@@ -1,5 +1,6 @@
 from django import template
 from django.conf import settings
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -98,67 +99,22 @@ def repanier_user(context, *args, **kwargs):
 
     request = context["request"]
     user = request.user
-    nodes = []
-    if user.is_authenticated:
-        p_permanence_id = sint(kwargs.get("permanence_id", 0))
-        if p_permanence_id > 0:
-            nodes.append(
-                '<li id="li_my_basket" style="display:none;" class="nav-item dropdown">'
-            )
-            nodes.append(
-                '<a href="{}?is_basket=yes" class="btn btn-success"><span id="my_basket"></span></a>'.format(
-                    reverse("repanier:order_view", args=(p_permanence_id,))
-                )
-            )
-            nodes.append("</li>")
-        nodes.append(
-            """
-            <li id="li_my_name" class="nav-item dropdown">
-            <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="bi bi-person" aria-hidden="true"></span> {}</a>
-            <ul class="dropdown-menu dropdown-menu-end">
-            """.format(
-                user.username
-                or '<span id="my_name"></span>'
-            )
-        )
-        nodes.append(
-            '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
-                reverse("repanier:send_mail_to_coordinators_view"), _("Inform")
-            )
-        )
-        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-            nodes.append(
-                '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
-                    reverse("repanier:who_is_who_view"), _("Who's who")
-                )
-            )
-        if user.customer_id is not None:
-            nodes.append(
-                '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
-                    reverse("repanier:my_profile_view"), _("My profile")
-                )
-            )
-            my_balance = history_label(request)
-            nodes.append(
-                '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
-                    reverse("repanier:customer_invoice_view", args=(0,user.customer_id,)), my_balance
-                )
-            )
-            nodes.append('<li><hr class="dropdown-divider"></li>')
-        nodes.append(
-            '<li><a class="dropdown-item" href="{}">{}</a></li>'.format(
-                reverse("repanier:logout"), _("Logout")
-            )
-        )
-        nodes.append("</ul></li>")
-    else:
-        nodes = [
-            '<li id="li_my_name" class="nav-item"><a href="{}" role="button" class="btn btn-success"><span class="bi bi-person" aria-hidden="true"></span> {}</a></li>'.format(
-                reverse("repanier:login_form"), _("Sign in")
-            )
-        ]
-
-    return mark_safe("".join(nodes))
+    p_permanence_id = sint(kwargs.get("permanence_id", 0))
+    return render_to_string(
+        "repanier/user_menu.html",
+        {
+            "user": user,
+            "permanence_id": p_permanence_id,
+            "display_who_is_who": REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
+            # Same query as before: only customers see their balance in the menu
+            "my_balance": (
+                history_label(request)
+                if user.is_authenticated and user.customer_id is not None
+                else None
+            ),
+        },
+        request=request,
+    )
 
 
 def history_label(request) -> str:
