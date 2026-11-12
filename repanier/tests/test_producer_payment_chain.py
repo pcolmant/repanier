@@ -1385,3 +1385,155 @@ class PaymentAttachedShellIsKeptTest(TestCase):
         # the parent round shows in Alice's balance so far.
         self.alice.refresh_from_db()
         self.assertEqual(self.alice.balance.amount, D("4.00"))
+
+
+class ClaimedHigherThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestCase):
+    """Mirror of ClaimedLowerThanCalculatedAtTheChildTest: the producer's
+    paper invoice claims MORE than calculated (e.g. delivered extra
+    weight). The group pays what the producer asks, out of its own pocket
+    for the difference: the correction books as a PROFIT movement out of
+    the site consumer account, and the producer ends square."""
+
+    purchases = [
+        ("Abrigots", D("3.00"), D("2")),  # 6.00 calculated, unpaid at round 1
+        ("Bananes", D("2.00"), D("3")),  # 6.00, paid at round 1
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.round_1 = cls.first_permanence
+        cls.pay_producers(cls.round_1, {"Bananes": D("6.00")})
+        cls.child = cls.child_of(cls.round_1)
+        # The producer claims 6.50 instead of the calculated 6.00
+        cls.pay_producers(cls.child, {"Abrigots": D("6.50")})
+
+    def test_the_producer_is_paid_the_claimed_amount_and_ends_square(self):
+        producer = self.producers["Abrigots"]
+        pay = BankAccount.objects.get(
+            operation_status=BankMovement.CALCULATED_INVOICE,
+            producer_id=producer.id,
+        )
+        self.assertEqual(pay.bank_amount_out.amount, D("6.50"))
+        self.assertEqual(pay.permanence_id, self.child.id)
+        producer.refresh_from_db()
+        # The producer ends square: the 0.50 difference is paid out of the
+        # group's pocket, booked on the site consumer account - not kept
+        # as a producer credit
+        self.assertEqual(producer.balance.amount, D("0"))
+        invoice = ProducerInvoice.objects.get(producer_id=producer.id)
+        self.assertEqual(invoice.total_price_with_tax.amount, D("6.00"))
+        self.assertEqual(invoice.to_be_invoiced_balance.amount, D("6.50"))
+        self.assertEqual(invoice.bank_amount_out.amount, D("6.50"))
+        self.assertEqual(invoice.balance.amount, D("0"))
+
+    def test_the_extra_paid_books_on_the_site_consumer_account(self):
+        site_customer = Customer.get_or_create_group()
+        correction = BankAccount.objects.get(operation_status=BankMovement.PROFIT)
+        self.assertEqual(correction.customer_id, site_customer.id)
+        self.assertEqual(correction.bank_amount_in.amount, D("0"))
+        self.assertEqual(correction.bank_amount_out.amount, D("0.50"))
+        self.assertEqual(correction.permanence_id, self.child.id)
+        # The correction is attached to the site invoice of the child:
+        # the out of pocket payment is booked on the group's own funds
+        site_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.child.id, customer_id=site_customer.id
+        )
+        self.assertEqual(correction.customer_invoice_id, site_invoice.id)
+        site_customer.refresh_from_db()
+        self.assertEqual(site_customer.balance.amount, D("-0.50"))
+
+    def test_the_site_producer_book_is_inert_and_removed(self):
+        site_producer = Producer.get_or_create_group()
+        self.assertFalse(
+            ProducerInvoice.objects.filter(
+                permanence_id=self.child.id, producer_id=site_producer.id
+            ).exists()
+        )
+
+    def test_the_customer_pays_the_calculated_amount_anyway(self):
+        # The extra paid to the producer is not charged to the customer:
+        # Alice pays the calculated amount of her purchases only
+        child_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.child.id, customer_id=self.alice.id
+        )
+        self.assertEqual(child_invoice.get_total_price_with_tax().amount, D("6.00"))
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("-12.00"))
+        # The anchor reflects the payments only
+        self.assertEqual(self.anchor_net(self.round_1.id), D("-6.00"))
+        self.assertEqual(self.anchor_net(self.child.id), D("-12.50"))
+
+
+class ShortfallCoveredByTheGroupTest(ProducerChainJourneyMixin, TestCase):
+    """The producer delivered less than invoiced - the child purchase is
+    adjusted down - but the group accepts to pay the difference out of
+    its own funds and keeps paying the full amount. The covered shortfall
+    books as a PROFIT movement out of the site consumer account."""
+
+    purchases = [
+        ("Abrigots", D("3.00"), D("2")),  # 6.00 estimated, unpaid at round 1
+        ("Bananes", D("2.00"), D("3")),  # 6.00, paid at round 1
+    ]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.round_1 = cls.first_permanence
+        cls.pay_producers(cls.round_1, {"Bananes": D("6.00")})
+        cls.child = cls.child_of(cls.round_1)
+        # One of the two Abrigots was broken at distribution: the child
+        # purchase is adjusted, exactly what the correction screens do
+        cls.purchase = Purchase.objects.get(
+            permanence_id=cls.child.id, producer_id=cls.producers["Abrigots"].id
+        )
+        cls.purchase.quantity_invoiced = D("1.000")
+        cls.purchase.save()
+        cls.child.calculate_order_amount()
+        # The group nevertheless pays the full estimated amount
+        cls.pay_producers(cls.child, {"Abrigots": D("6.00")})
+
+    def test_the_producer_is_paid_the_full_amount(self):
+        producer = self.producers["Abrigots"]
+        producer.refresh_from_db()
+        self.assertEqual(producer.balance.amount, D("0"))
+        pay = BankAccount.objects.get(
+            operation_status=BankMovement.CALCULATED_INVOICE,
+            producer_id=producer.id,
+        )
+        self.assertEqual(pay.bank_amount_out.amount, D("6.00"))
+        invoice = ProducerInvoice.objects.get(producer_id=producer.id)
+        self.assertEqual(invoice.total_price_with_tax.amount, D("3.00"))
+        self.assertEqual(invoice.bank_amount_out.amount, D("6.00"))
+
+    def test_the_covered_shortfall_books_on_the_site_consumer_account(self):
+        site_customer = Customer.get_or_create_group()
+        correction = BankAccount.objects.get(operation_status=BankMovement.PROFIT)
+        self.assertEqual(correction.customer_id, site_customer.id)
+        self.assertEqual(correction.bank_amount_out.amount, D("3.00"))
+        self.assertEqual(correction.permanence_id, self.child.id)
+        site_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.child.id, customer_id=site_customer.id
+        )
+        self.assertEqual(correction.customer_invoice_id, site_invoice.id)
+        site_customer.refresh_from_db()
+        self.assertEqual(site_customer.balance.amount, D("-3.00"))
+        # The site producer book stays inert in this scenario: removed
+        site_producer = Producer.get_or_create_group()
+        self.assertFalse(
+            ProducerInvoice.objects.filter(
+                permanence_id=self.child.id, producer_id=site_producer.id
+            ).exists()
+        )
+
+    def test_the_customer_pays_only_what_he_received(self):
+        child_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.child.id, customer_id=self.alice.id
+        )
+        self.assertEqual(child_invoice.get_total_price_with_tax().amount, D("3.00"))
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("-9.00"))
+        # The anchor reflects the payments only: the covered shortfall is
+        # not a real bank entry either
+        self.assertEqual(self.anchor_net(self.round_1.id), D("-6.00"))
+        self.assertEqual(self.anchor_net(self.child.id), D("-12.00"))
