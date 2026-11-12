@@ -5,7 +5,6 @@ from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.db import transaction, connection
 from django.db.models import F, Sum, DecimalField
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
@@ -39,7 +38,6 @@ from repanier.picture.fields import RepanierPictureField
 from repanier.tools import (
     cap,
     create_or_update_one_purchase,
-    get_repanier_template_name,
     debug_parameters,
 )
 
@@ -1499,21 +1497,8 @@ class Permanence(models.Model):
             offer_item.save()
 
         # Now got everything to calculate the sort order of the order display screen
-        template_cache_part_a = get_repanier_template_name("cache_part_a.html")
-        template_cache_part_b = get_repanier_template_name("cache_part_b.html")
-
-        for offer_item in permanence_offer_item_qs.select_related(
-            "producer", "department_for_customer"
-        ):
+        for offer_item in permanence_offer_item_qs.select_related("product"):
             offer_item.long_name_v2 = offer_item.product.long_name_v2
-            offer_item.cache_part_a_v2 = render_to_string(
-                template_cache_part_a,
-                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
-            )
-            offer_item.cache_part_b_v2 = render_to_string(
-                template_cache_part_b,
-                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
-            )
             offer_item.save()
 
     def calculate_order_amount(self):
