@@ -16,6 +16,7 @@ from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
+    sboolean,
     sint,
     get_str_selected_value,
 )
@@ -379,6 +380,9 @@ def repanier_custom_quantity_dropdown(context, offer_item):
         'offer_item_id': str(offer_item.id),
         'current_qty': str_current_qty,
         'is_open': is_open,
+        # Propagate the basket flag to the dropdown so that its order_ajax
+        # calls return the basket-aware confirmation box on ?is_basket=yes pages.
+        'is_basket': sboolean(request.GET.get("is_basket", False)),
         'request': context.get('request'),
     }
 
