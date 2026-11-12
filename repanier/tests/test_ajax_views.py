@@ -184,3 +184,88 @@ class OrderAjaxTest(AjaxFixtureMixin, TestCase):
         # Nothing was ordered: the endpoint answers with an empty update
         self.assertEqual(Purchase.objects.count(), 0)
         self.assertEqual(response.json(), {})
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER=False,
+)
+class QuantityDropdownBasketFlagTest(AjaxFixtureMixin, TestCase):
+    """Regression tests: the quantity dropdown must propagate ?is_basket=yes.
+
+    On the basket page (?is_basket=yes) each quantity change calls order_ajax
+    from the dropdown markup. Without the is_basket flag the server answers
+    with an empty #span_btn_confirm_order fragment, which erases the visible
+    confirmation box instead of refreshing it.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        from repanier.models.configuration import Configuration
+
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",  # PermanenceName.PERMANENCE
+            bank_account="BE99 9999 9999 9999",
+            currency="100",  # Currency.EUR
+        )
+        cls.build_fixture()
+        from repanier.task import task_order
+
+        cls.permanence.set_status(
+            old_status=SaleStatus.OPENED, new_status=SaleStatus.PLANNED
+        )
+        task_order.open_order(cls.permanence.id, send_mail=False)
+        cls.offer_item = cls.product.offeritem_set.get(permanence=cls.permanence)
+
+    def _order(self, value, is_basket=None):
+        self.client.login(username="client@example.com", password="x")
+        data = {"offer_item": self.offer_item.id, "value": value}
+        if is_basket is not None:
+            data["is_basket"] = is_basket
+        return self.client.get(reverse("repanier:order_ajax"), data, follow=True)
+
+    def test_dropdown_carries_the_basket_flag_on_basket_pages(self):
+        from django.template import Context, Template
+        from django.test import RequestFactory
+
+        request = RequestFactory().get("/dummy/", {"is_basket": "yes"})
+        request.user = self.user
+        # RepanierAuthBackend.set_user_right attaches customer_id to the
+        # authenticated user: emulate the same state on a RequestFactory user.
+        request.user.customer_id = self.customer.id
+        tpl = Template(
+            "{% load repanier_tags %}"
+            "{% repanier_custom_quantity_dropdown offer_item=offer %}"
+        )
+        html = tpl.render(Context({"request": request, "offer": self.offer_item}))
+        # The dropdown JS reads data-is-basket to build the order_ajax URL
+        self.assertIn('data-is-basket="yes"', html)
+        self.assertIn("data-order-url", html)
+
+    def test_dropdown_omits_the_basket_flag_on_order_pages(self):
+        from django.template import Context, Template
+        from django.test import RequestFactory
+
+        request = RequestFactory().get("/dummy/")
+        request.user = self.user
+        request.user.customer_id = self.customer.id
+        tpl = Template(
+            "{% load repanier_tags %}"
+            "{% repanier_custom_quantity_dropdown offer_item=offer %}"
+        )
+        html = tpl.render(Context({"request": request, "offer": self.offer_item}))
+        self.assertNotIn("data-is-basket", html)
+
+    def test_order_ajax_without_flag_erases_the_confirmation_box(self):
+        # This is why the flag matters: without it the fragment is empty and
+        # would blank the box still displayed on the basket page.
+        response = self._order(2, is_basket=None)
+        self.assertEqual(response.json()["#span_btn_confirm_order"], "")
+
+    def test_order_ajax_with_flag_refreshes_the_confirmation_box(self):
+        response = self._order(2, is_basket="yes")
+        fragment = response.json()["#span_btn_confirm_order"]
+        self.assertIn('id="btn_confirm_order"', fragment)

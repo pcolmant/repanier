@@ -6,7 +6,7 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
 {% endcomment %}
 
 {% if is_open %}
-<div class="dropdown quantity-dropdown" id="quantity-dropdown-{{ offer_item_id }}" data-order-url="{% url 'repanier:order_ajax' %}">
+<div class="dropdown quantity-dropdown" id="quantity-dropdown-{{ offer_item_id }}" data-order-url="{% url 'repanier:order_ajax' %}"{% if is_basket %} data-is-basket="yes"{% endif %}>
     <!-- Bouton principal affichant la quantite actuelle -->
     <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
             type="button"
@@ -44,6 +44,9 @@ function selectQuantity(offerItemId, quantity, element) {
     // Récupérer l'URL stockée dans le conteneur parent
     const dropdown = element.closest('.dropdown');
     const orderAjaxUrl = dropdown.dataset.orderUrl;
+    // On basket pages (?is_basket=yes) propagate the flag to order_ajax so the
+    // server returns the basket-aware #span_btn_confirm_order update.
+    const isBasket = dropdown.dataset.isBasket === 'yes';
 
     // Fermer le dropdown
     const bootstrapDropdown = bootstrap.Dropdown.getInstance(dropdown);
@@ -62,7 +65,10 @@ function selectQuantity(offerItemId, quantity, element) {
     }
     
     // Appeler order_ajax avec l'URL correcte (inclut /fr/ ou autre prefixe de langue)
-    const url = orderAjaxUrl + '?offer_item=' + offerItemId + '&value=' + quantity;
+    let url = orderAjaxUrl + '?offer_item=' + offerItemId + '&value=' + quantity;
+    if (isBasket) {
+        url += '&is_basket=yes';
+    }
     fetch(url, { cache: 'no-store' })
         .then(response => response.json())
         .then(result => {
