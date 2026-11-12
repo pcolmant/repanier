@@ -504,6 +504,14 @@ class NothingBilledGroupIsRemovedTest(TestCase):
                 CustomerInvoice.objects.get(
                     customer_id=customer.id, permanence_id=self.permanence.id
                 )
+        # The site consumer account is billed nothing either: its book,
+        # created by invoice() to attach profits and taxes, carries no
+        # movement and disappears too
+        site_customer = Customer.get_or_create_group()
+        with self.assertRaises(CustomerInvoice.DoesNotExist):
+            CustomerInvoice.objects.get(
+                customer_id=site_customer.id, permanence_id=self.permanence.id
+            )
 
     def test_the_balances_stay_square(self):
         for customer in (self.group,) + tuple(self.members):

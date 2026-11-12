@@ -1102,12 +1102,14 @@ class Permanence(models.Model):
         # charged via their members - is zero. Such shells never carry
         # accounting: they only pollute the customer invoice list of the
         # permanence. Real invoices, e.g. a group invoice charged with the
-        # purchases of its members, have a non-zero total and stay.
+        # purchases of its members, have a non-zero total and stay. The
+        # same rule removes the book of the site consumer account when
+        # nothing is billed to it: as soon as a PROFIT, a TAX or an
+        # adjustment attaches a bank movement to it, it stays.
         for customer_invoice in CustomerInvoice.objects.filter(
             permanence_id=self.id,
             transport=DECIMAL_ZERO,
             min_transport=DECIMAL_ZERO,
-            customer__represent_this_buyinggroup=False,
         ).exclude(
             purchase__isnull=False
         ).exclude(
