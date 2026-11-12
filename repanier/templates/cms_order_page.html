@@ -1,5 +1,5 @@
 {% extends 'cms_page.html' %}
-{% load cms_tags sekizai_tags i18n l10n menu_tags repanier_tags %}
+{% load cms_tags sekizai_tags i18n l10n menu_tags static repanier_tags %}
 
 {% block sub_content %}
     {% block notification %}
@@ -465,4 +465,10 @@
             </script>
         {% endspaceless %}{% endaddtoblock %}
     {% endblock link_to_order_js %}
+
+    {% block quantity_dropdown_assets %}
+        {# Behaviour and styles of the per-item quantity dropdowns: loaded once per page. #}
+        {% addtoblock "css" %}{% spaceless %}<link rel="stylesheet" href="{% static 'repanier/css/quantity_dropdown.css' %}">{% endspaceless %}{% endaddtoblock %}
+        {% addtoblock "lastjs" %}{% spaceless %}<script src="{% static 'repanier/js/quantity_dropdown.js' %}" defer></script>{% endspaceless %}{% endaddtoblock %}
+    {% endblock quantity_dropdown_assets %}
 {% endblock sub_content %}

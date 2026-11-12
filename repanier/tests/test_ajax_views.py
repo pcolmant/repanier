@@ -244,6 +244,25 @@ class QuantityDropdownBasketFlagTest(AjaxFixtureMixin, TestCase):
         # The dropdown JS reads data-is-basket to build the order_ajax URL
         self.assertIn('data-is-basket="yes"', html)
         self.assertIn("data-order-url", html)
+        # The behaviour and the styles are shared static files loaded once per
+        # page by cms_order_page.html: the widget markup stays inline-free.
+        self.assertNotIn("<script", html)
+        self.assertNotIn("<style", html)
+
+    def test_quantity_dropdown_assets_are_shared_static_files(self):
+        from django.contrib.staticfiles import finders
+
+        js_path = finders.find("repanier/js/quantity_dropdown.js")
+        css_path = finders.find("repanier/css/quantity_dropdown.css")
+        self.assertIsNotNone(js_path)
+        self.assertIsNotNone(css_path)
+        with open(js_path, encoding="utf-8") as f:
+            js = f.read()
+        # The basket flag propagation must survive in the shared script
+        self.assertIn("function selectQuantity", js)
+        self.assertIn("function showOtherQtyModal", js)
+        self.assertIn("dataset.isBasket", js)
+        self.assertIn("is_basket=yes", js)
 
     def test_dropdown_omits_the_basket_flag_on_order_pages(self):
         from django.template import Context, Template

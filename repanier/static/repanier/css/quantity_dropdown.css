@@ -1,0 +1,25 @@
+/* Quantity dropdown widget on the order screen.
+   Loaded once per page by cms_order_page.html. */
+
+.quantity-dropdown .dropdown-toggle {
+    white-space: nowrap;
+    text-align: right; /* Aligns the quantity on the right */
+}
+
+.quantity-dropdown .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 120px;
+}
+
+.quantity-dropdown .quantity-option {
+    padding: 0.25rem 0.5rem;
+    text-align: right; /* Aligns the quantity options on the right */
+    cursor: pointer;
+}
+
+.quantity-dropdown .quantity-option:hover,
+.quantity-dropdown .quantity-option:focus {
+    background-color: #f8f9fa;
+    color: #212529;
+}

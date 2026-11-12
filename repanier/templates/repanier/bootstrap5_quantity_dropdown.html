@@ -3,6 +3,9 @@
 Bootstrap 5 custom dropdown for quantity selection.
 Replaces native select to fix iOS compatibility issues.
 Options are loaded dynamically from server via HTMX when dropdown is opened.
+The behaviour lives in repanier/static/repanier/js/quantity_dropdown.js and
+the styles in repanier/static/repanier/css/quantity_dropdown.css: both are
+loaded once per page by cms_order_page.html, not per offer item.
 {% endcomment %}
 
 {% if is_open %}
@@ -20,7 +23,7 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
             style="width: 100%; min-width: 80px;">
         <span id="offer_item{{ offer_item_id }}" class="quantity-display">{{ current_qty }}</span>
     </button>
-    
+
     <!-- Menu deroulant qui sera rempli dynamiquement par HTMX -->
     <ul class="dropdown-menu dropdown-menu-end"
         id="dropdown-menu-{{ offer_item_id }}"
@@ -28,135 +31,7 @@ Options are loaded dynamically from server via HTMX when dropdown is opened.
         <!-- Chargement initial : option par defaut -->
         <li><a class="dropdown-item" href="#">{% translate "Loading..." %}</a></li>
     </ul>
-    
-    <!-- Champ cache pour compatibilite -->
-{#    <select id="offer_item{{ offer_item_id }}" style="display: none;">#}
-{#        <option value="{{ current_qty }}" selected>{{ current_qty }}</option>#}
-{#    </select>#}
 </div>
-
-<script>
-// URL de l'endpoint order_ajax (generée par Django avec le bon prefixe de langue)
-{#const orderAjaxUrl = "{% url 'repanier:order_ajax' %}";#}
-
-// Fonction pour selectionner une quantite et mettre a jour le panier
-function selectQuantity(offerItemId, quantity, element) {
-    // Récupérer l'URL stockée dans le conteneur parent
-    const dropdown = element.closest('.dropdown');
-    const orderAjaxUrl = dropdown.dataset.orderUrl;
-    // On basket pages (?is_basket=yes) propagate the flag to order_ajax so the
-    // server returns the basket-aware #span_btn_confirm_order update.
-    const isBasket = dropdown.dataset.isBasket === 'yes';
-
-    // Fermer le dropdown
-    const bootstrapDropdown = bootstrap.Dropdown.getInstance(dropdown);
-    if (bootstrapDropdown) {
-        bootstrapDropdown.hide();
-    }
-    
-    // Mettre a jour l'affichage
-    const display = dropdown.querySelector('.quantity-display');
-    display.textContent = quantity;
-    
-    // Mettre a jour le select cache pour compatibilite
-    const hiddenSelect = document.getElementById('offer_item' + offerItemId);
-    if (hiddenSelect) {
-        hiddenSelect.value = quantity;
-    }
-    
-    // Appeler order_ajax avec l'URL correcte (inclut /fr/ ou autre prefixe de langue)
-    let url = orderAjaxUrl + '?offer_item=' + offerItemId + '&value=' + quantity;
-    if (isBasket) {
-        url += '&is_basket=yes';
-    }
-    fetch(url, { cache: 'no-store' })
-        .then(response => response.json())
-        .then(result => {
-            // Trace globale pour voir l'objet JSON reçu du serveur
-            console.log("Données reçues de l'API :", result);
-
-            // Mettre a jour les elements du DOM avec les resultats
-            for (const key in result) {
-                if (result.hasOwnProperty(key)) {
-                    // Trace pour identifier la clé (le sélecteur CSS) et la valeur associée
-                    console.log(`Traitement de la clé [${key}] avec la valeur :`, result[key]);
-
-                    const elements = document.querySelectorAll(key);
-
-                    // Trace pour savoir combien d'éléments du DOM correspondent à ce sélecteur
-                    console.log(`-> Nombre d'éléments trouvés pour "${key}" :`, elements.length);
-
-                    elements.forEach((el, index) => {
-                        // Trace pour chaque élément individuel mis à jour
-                        console.log(`--> Mise à jour de l'élément #${index} pour ${key}`);
-
-                        el.innerHTML = result[key];
-
-                        if (key === "#communicationModal") {
-                            console.log("--> Ouverture de la modale Bootstrap #communicationModal");
-                            const modal = bootstrap.Modal.getOrCreateInstance(el);
-                            modal.show();
-                        }
-                    });
-                }
-            }
-        })
-        .catch(error => console.error('Erreur:', error));
-}
-
-
-// Fonction pour afficher la modale "Autre quantité"
-function showOtherQtyModal(offerItemId, element) {
-    // Fermer le dropdown
-    const dropdown = element.closest('.dropdown');
-    const bootstrapDropdown = bootstrap.Dropdown.getInstance(dropdown);
-    if (bootstrapDropdown) {
-        bootstrapDropdown.hide();
-    }
-
-    // Récupérer le nom du produit depuis le data-attribute
-    const productName = element.getAttribute('data-product-name') || '';
-
-    // Mettre à jour le titre de la modale
-    const labelEl = document.getElementById('otherQtyModalLabel');
-    if (labelEl) {
-        labelEl.textContent = productName;
-    }
-
-    // Afficher la modale
-    const otherQtyModalEl = document.getElementById('otherQtyModal');
-    if (otherQtyModalEl) {
-        const modal = bootstrap.Modal.getOrCreateInstance(otherQtyModalEl);
-        modal.show();
-    }
-}
-</script>
-
-<style>
-    /* Style pour le dropdown de quantité aligné à droite */
-    .quantity-dropdown .dropdown-toggle {
-        white-space: nowrap;
-        text-align: right; /* Aligne le texte du bouton à droite */
-    }
-
-    .quantity-dropdown .dropdown-menu {
-        max-height: 300px;
-        overflow-y: auto;
-        min-width: 120px;
-    }
-
-    .quantity-dropdown .quantity-option {
-        padding: 0.25rem 0.5rem;
-        text-align: right; /* Aligne le texte des options à droite */
-        cursor: pointer;
-    }
-
-    .quantity-dropdown .quantity-option:hover,
-    .quantity-dropdown .quantity-option:focus {
-        background-color: #f8f9fa;
-        color: #212529;
-    }
-</style>
 {% else %}
 <!-- Si la commande n'est pas ouverte, afficher un select desactive -->
 <select name="offer_item{{ offer_item_id }}" id="offer_item{{ offer_item_id }}" class="form-control" disabled>
