@@ -196,6 +196,15 @@ The Repanier site itself owns a consumer account and a producer account
   anchor (it is not a real entry).
 - Customer payments recorded before the invoicing are attached to the
   permanence and credit the balances before the debit.
+- After the movements attach, the invoicing **deletes the inert
+  zero-total books**: the split shells, the nothing-billed delivery
+  point groups and their ordering-but-empty members, and the books of
+  the site accounts themselves - the site consumer book when no
+  profit, tax or adjustment attached a bank movement to it, the site
+  producer book when it carries neither the group deltas nor the
+  products sold by the site. A book carrying a purchase or a payment
+  can never be deleted (PROTECT).
+  Tests: `PaymentAttachedShellIsKeptTest`, `NothingBilledGroupIsRemovedTest`.
 - End-to-end locked identities (producers paid square, individual and
   group charging, chained anchor, singleton site accounts):
   `test_accounting_chain.py`.

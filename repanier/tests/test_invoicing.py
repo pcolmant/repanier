@@ -413,3 +413,120 @@ class PartialDeliveryPointClosureTest(InvoicingFixtureMixin, TestCase):
         board2.refresh_from_db()
         self.assertEqual(board1.status, SaleStatus.SEND)
         self.assertEqual(board2.status, SaleStatus.SEND)
+
+
+class NothingBilledGroupIsRemovedTest(TestCase):
+    """A group whose members ordered nothing is charged nothing: invoicing
+    the permanence then removes the group and its ordering-but-empty
+    members from the customer invoice list of the permanence."""
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",  # PermanenceName.PERMANENCE
+            bank_account="BE99 9999 9999 9999",
+            currency="100",  # Currency.EUR
+        )
+        # The bank anchor required by Permanence.invoice()
+        BankAccount.objects.create(
+            operation_status=BankMovement.LATEST_TOTAL,
+            operation_date=datetime.date.today(),
+            operation_comment="Account opening",
+        )
+        group_user = User.objects.create_user(
+            username="group@example.com", email="group@example.com", password="x"
+        )
+        cls.group = Customer.objects.create(
+            user=group_user, short_basket_name="MonGroupe", may_order=True, is_group=True
+        )
+        cls.delivery_point = LUT_DeliveryPoint.objects.create(
+            short_name_v2="PointGroupe", group=cls.group
+        )
+        cls.producer = Producer.objects.create(short_profile_name="Ferme Compta")
+        cls.permanence = Permanence.objects.create(
+            permanence_date=datetime.date.today(),
+            status=SaleStatus.PLANNED,
+            with_delivery_point=True,
+        )
+        cls.permanence.producers.add(cls.producer)
+        task_order.open_order(cls.permanence.id, send_mail=False)
+        cls.delivery_board = DeliveryBoard.objects.create(
+            permanence=cls.permanence, delivery_point=cls.delivery_point
+        )
+        # Two members open the order screen and attach to the group delivery
+        # point - which creates the group invoice - but order nothing
+        # (set_order_delivery does not save, exactly like the view
+        # delivery_ajax does it)
+        cls.members = []
+        for n in range(2):
+            user = User.objects.create_user(
+                username="member%d@example.com" % n,
+                email="member%d@example.com" % n,
+                password="x",
+            )
+            member = Customer.objects.create(
+                user=user,
+                short_basket_name="Membre%d" % n,
+                may_order=True,
+                group_id=cls.group.id,
+            )
+            invoice = CustomerInvoice.get_or_create_invoice(
+                permanence_id=cls.permanence.id,
+                customer_id=member.id,
+                status=SaleStatus.OPENED,
+            )
+            invoice.set_order_delivery(cls.delivery_board)
+            invoice.save()
+            cls.members.append(member)
+        task_order.close_order(
+            cls.permanence.id,
+            everything=True,
+            deliveries_id=(cls.delivery_board.id,),
+            send_mail=False,
+        )
+        cls.permanence.refresh_from_db()
+        assert cls.permanence.status == SaleStatus.SEND
+        # The group book exists before the invoicing of the permanence,
+        # charged with the purchases of its members: none of them
+        cls.group_invoice = CustomerInvoice.objects.get(
+            permanence_id=cls.permanence.id, customer_id=cls.group.id
+        )
+        assert cls.group_invoice.is_group
+        assert cls.group_invoice.get_total_price_with_tax().amount == D("0")
+        cls.permanence.invoice(payment_date=PAYMENT_DATE)
+        cls.permanence.refresh_from_db()
+        assert cls.permanence.status == SaleStatus.INVOICED
+
+    def test_nothing_billed_to_the_group_removes_it_from_the_permanence(self):
+        for customer in (self.group,) + tuple(self.members):
+            with self.assertRaises(CustomerInvoice.DoesNotExist):
+                CustomerInvoice.objects.get(
+                    customer_id=customer.id, permanence_id=self.permanence.id
+                )
+        # The site consumer account is billed nothing either: its book,
+        # created by invoice() to attach profits and taxes, carries no
+        # movement and disappears too
+        site_customer = Customer.get_or_create_group()
+        with self.assertRaises(CustomerInvoice.DoesNotExist):
+            CustomerInvoice.objects.get(
+                customer_id=site_customer.id, permanence_id=self.permanence.id
+            )
+
+    def test_the_balances_stay_square(self):
+        for customer in (self.group,) + tuple(self.members):
+            customer.refresh_from_db()
+            self.assertEqual(customer.balance.amount, D("0"))
+        # The producer, having sold nothing, carries no book either
+        self.assertFalse(
+            ProducerInvoice.objects.filter(
+                permanence_id=self.permanence.id, producer_id=self.producer.id
+            ).exists()
+        )
+        # The invoicing still anchored the permanence
+        self.assertTrue(
+            BankAccount.objects.filter(
+                operation_status=BankMovement.LATEST_TOTAL,
+                permanence_id=self.permanence.id,
+            ).exists()
+        )

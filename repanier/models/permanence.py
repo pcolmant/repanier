@@ -1102,12 +1102,14 @@ class Permanence(models.Model):
         # charged via their members - is zero. Such shells never carry
         # accounting: they only pollute the customer invoice list of the
         # permanence. Real invoices, e.g. a group invoice charged with the
-        # purchases of its members, have a non-zero total and stay.
+        # purchases of its members, have a non-zero total and stay. The
+        # same rule removes the book of the site consumer account when
+        # nothing is billed to it: as soon as a PROFIT, a TAX or an
+        # adjustment attaches a bank movement to it, it stays.
         for customer_invoice in CustomerInvoice.objects.filter(
             permanence_id=self.id,
             transport=DECIMAL_ZERO,
             min_transport=DECIMAL_ZERO,
-            customer__represent_this_buyinggroup=False,
         ).exclude(
             purchase__isnull=False
         ).exclude(
@@ -1115,6 +1117,27 @@ class Permanence(models.Model):
         ):
             if customer_invoice.get_total_price_with_tax().amount == DECIMAL_ZERO:
                 customer_invoice.delete()
+
+        # The book of the site producer follows the same rule. Re-created
+        # at every calculate_order_amount, it exists to carry the group
+        # deltas and the products sold by the site itself (membership
+        # fees, resale). The amounts the group pays out of its own pocket
+        # to cover a producer's shortfall - the producer claims or is
+        # paid more than the calculated amount - book on the site CONSUMER
+        # account, a bank movement attached to its book. When nothing
+        # attached to the site producer book and its total - purchases
+        # plus deltas - is zero, it is inert and disappears from the
+        # producer invoice list of the permanence.
+        for producer_invoice in ProducerInvoice.objects.filter(
+            permanence_id=self.id,
+            producer__represent_this_buyinggroup=True,
+        ).exclude(
+            purchase__isnull=False
+        ).exclude(
+            bankaccount__isnull=False
+        ):
+            if producer_invoice.get_total_price_with_tax().amount == DECIMAL_ZERO:
+                producer_invoice.delete()
 
         BankAccount.objects.filter(operation_status=BankMovement.LATEST_TOTAL).update(
             operation_status=BankMovement.NOT_LATEST_TOTAL
