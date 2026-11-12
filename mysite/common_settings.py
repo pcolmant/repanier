@@ -11,8 +11,17 @@ REPANIER_SETTINGS_VERSION = "repanier"
 # https://stackoverflow.com/questions/53014435/why-is-logging-in-my-django-settings-py-ignored
 
 
+from django.utils.translation import gettext_lazy
+
+
 def gettext(s):
-    return s
+    # The translation machinery cannot run while the settings module is
+    # still being imported: return a lazy proxy, evaluated at display time
+    # with the language of the current user. This translates the django
+    # CMS template names, placeholder names and help menu entries
+    # configured below - provided the mysite locale catalog (compiled
+    # django.mo in mysite/locale) is up to date.
+    return gettext_lazy(s)
 
 
 # def get_allowed_mail_extension(site_name):

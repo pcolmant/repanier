@@ -12,6 +12,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.test import TestCase
+from django.utils import translation
 
 
 class MysiteCatalogTest(TestCase):
@@ -21,6 +22,27 @@ class MysiteCatalogTest(TestCase):
         locale_dir = Path(settings.LOCALE_PATHS[0]) / "fr" / "LC_MESSAGES"
         self.mo = locale_dir / "django.mo"
         self.po = locale_dir / "django.po"
+
+    def test_the_cms_template_names_translate_at_display_time(self):
+        # common_settings.py wraps gettext_lazy: the template names stay
+        # lazy proxies and resolve with the language of the current user,
+        # not at settings import.
+        from django.utils.functional import Promise
+
+        name = dict(settings.CMS_TEMPLATES)[settings.CMS_TEMPLATE_HOME]
+        self.assertIsInstance(name, Promise)
+        with translation.override("en"):
+            self.assertEqual(str(name), "Home page")
+        with translation.override("fr"):
+            self.assertEqual(str(name), "Page d'accueil")
+            self.assertEqual(
+                str(dict(settings.CMS_TEMPLATES)[settings.CMS_TEMPLATE_PAGE]),
+                "Page interne",
+            )
+            self.assertEqual(
+                str(dict(settings.CMS_TEMPLATES)[settings.CMS_TEMPLATE_SUB_PAGE]),
+                "Page interne avec menu à gauche",
+            )
 
     def test_the_catalog_translates_the_cms_strings(self):
         with open(self.mo, "rb") as f:
