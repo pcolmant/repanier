@@ -198,6 +198,16 @@ producteur (auto-créés par `Customer.get_or_create_group` /
   bancaire (ce n'est pas une entrée réelle).
 - Les paiements clients saisis avant la facturation sont rattachés à
   la permanence et viennent créditer les soldes avant le débit.
+- Après le rattachement des mouvements, la facturation **supprime les
+  livres inertes à total nul** : coquilles de la scission, groupes de
+  points de livraison sans aucune facturation et leurs membres qui
+  n'ont rien commandé, et les livres des comptes du site eux-mêmes —
+  le livre consommateur du site tant qu'aucun profit, taxe ou
+  ajustement n'y a rattaché de mouvement, le livre producteur du site
+  tant qu'il ne porte ni les deltas du groupe ni les produits vendus
+  par le site. Un livre portant un achat ou un paiement ne peut
+  jamais être supprimé (PROTECT).
+  Tests : `PaymentAttachedShellIsKeptTest`, `NothingBilledGroupIsRemovedTest`.
 - Identités verrouillées bout en bout (produits payés carré, payer
   individuellement et par groupe, ancre chaînée, comptes du site
   singletons) : `test_accounting_chain.py`.
