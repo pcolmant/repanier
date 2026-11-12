@@ -977,24 +977,16 @@ class SplitWithDeliveryPointsAndGroupTest(TestCase):
             )
             self.assertEqual(invoice.customer_charged_id, self.group.id)
             self.assertEqual(invoice.get_total_price_with_tax().amount, expected)
-        # The split COPIES rather than moves: a fully moved customer
-        # leaves an inert zero-total shell at the parent book (no
-        # purchase, no balance effect, never charged) while his real
-        # invoice lives at the child
-        for member in (self.member1, self.member2):
-            parent_shell = CustomerInvoice.objects.get(
-                customer_id=member.id, permanence_id=self.permanence.id
-            )
-            self.assertEqual(
-                parent_shell.get_total_price_with_tax().amount, D("0")
-            )
-            self.assertEqual(parent_shell.balance.amount, D("0"))
-        parent_group_shell = CustomerInvoice.objects.get(
-            customer_id=self.group.id, permanence_id=self.permanence.id
-        )
-        self.assertEqual(
-            parent_group_shell.get_total_price_with_tax().amount, D("0")
-        )
+        # The split COPIES rather than moves: a fully moved customer would
+        # leave an inert zero-total shell at the parent book. The invoicing
+        # of the parent now deletes those shells (no purchase, no payment,
+        # never charged): no trace of the customer stays at the parent while
+        # his real invoice lives at the child
+        for customer in (self.member1, self.member2, self.group):
+            with self.assertRaises(CustomerInvoice.DoesNotExist):
+                CustomerInvoice.objects.get(
+                    customer_id=customer.id, permanence_id=self.permanence.id
+                )
         # The group invoice itself follows its members into the child
         group_invoice = CustomerInvoice.objects.get(
             customer_id=self.group.id, permanence_id=self.child.id
@@ -1262,3 +1254,134 @@ class CancelTheParentWhileTheChildIsStillOpenTest(ProducerChainJourneyMixin, Tes
             operation_status=BankMovement.LATEST_TOTAL
         )
         self.assertIsNone(latest.permanence_id)
+
+
+class PaymentAttachedShellIsKeptTest(TestCase):
+    """The invoice cleanup that follows a split only removes inert
+    zero-total shells. A fully moved customer who already paid at the
+    parent keeps a zero-total book there: it carries his payment."""
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        # The bank anchor required by Permanence.invoice()
+        BankAccount.objects.create(
+            operation_status=BankMovement.LATEST_TOTAL,
+            operation_date=datetime.date.today(),
+            operation_comment="Account opening",
+        )
+        user = User.objects.create_user(
+            username="alice@example.com", email="alice@example.com", password="x"
+        )
+        cls.alice = Customer.objects.create(
+            user=user, short_basket_name="Alice", may_order=True
+        )
+        cls.producer_a = Producer.objects.create(short_profile_name="Abrigots")
+        cls.producer_b = Producer.objects.create(short_profile_name="Bananes")
+        # A sells to Bob, B sells only to Alice: Bob keeps a real book at
+        # the parent while Alice is fully moved into the child
+        cls.product_a = Product.objects.create(
+            producer=cls.producer_a,
+            long_name_v2="Abrigots",
+            order_unit="100",
+            producer_unit_price=D("3.00"),
+            vat_level=Vat.VAT_100,
+            stock=D("99"),
+        )
+        cls.product_a.is_into_offer = True
+        cls.product_a.save()
+        # Alice buys only from B, the producer that will move to the child
+        cls.product_b = Product.objects.create(
+            producer=cls.producer_b,
+            long_name_v2="Bananes",
+            order_unit="100",
+            producer_unit_price=D("2.00"),
+            vat_level=Vat.VAT_100,
+            stock=D("99"),
+        )
+        cls.product_b.is_into_offer = True
+        cls.product_b.save()
+        cls.parent = Permanence.objects.create(
+            permanence_date=datetime.date.today(), status=SaleStatus.PLANNED
+        )
+        cls.parent.producers.add(cls.producer_a, cls.producer_b)
+        task_order.open_order(cls.parent.id, send_mail=False)
+        CustomerInvoice.get_or_create_invoice(
+            permanence_id=cls.parent.id,
+            customer_id=cls.alice.id,
+            status=SaleStatus.OPENED,
+        )
+        user_bob = User.objects.create_user(
+            username="bob@example.com", email="bob@example.com", password="x"
+        )
+        cls.bob = Customer.objects.create(
+            user=user_bob, short_basket_name="Bob", may_order=True
+        )
+        CustomerInvoice.get_or_create_invoice(
+            permanence_id=cls.parent.id,
+            customer_id=cls.bob.id,
+            status=SaleStatus.OPENED,
+        )
+        offer_a = cls.product_a.offeritem_set.get(permanence=cls.parent)
+        purchase, updated = create_or_update_one_cart_item(
+            customer=cls.bob, offer_item_id=offer_a.id, q_order=D("2"), comment=""
+        )
+        assert updated and purchase is not None
+        offer_b = cls.product_b.offeritem_set.get(permanence=cls.parent)
+        purchase, updated = create_or_update_one_cart_item(
+            customer=cls.alice, offer_item_id=offer_b.id, q_order=D("3"), comment=""
+        )
+        assert updated and purchase is not None
+        task_order.close_order(
+            cls.parent.id, everything=True, deliveries_id=(), send_mail=False
+        )
+        cls.parent.refresh_from_db()
+        assert cls.parent.status == SaleStatus.SEND
+        # Alice pays 4.00 in advance at the parent: the payment carries no
+        # book yet, invoice() will bind it to her parent invoice.
+        BankAccount.objects.create(
+            customer_id=cls.alice.id,
+            operation_date=datetime.date.today(),
+            operation_comment="Payment Alice",
+            bank_amount_in=D("4.00"),
+        )
+        # The treasurer pays A; B stays unpaid and moves to the child
+        ProducerInvoice.objects.filter(
+            permanence_id=cls.parent.id, producer_id=cls.producer_a.id
+        ).update(to_be_paid=True, to_be_invoiced_balance=D("0"))
+        ProducerInvoice.objects.filter(
+            permanence_id=cls.parent.id, producer_id=cls.producer_b.id
+        ).update(to_be_paid=False, to_be_invoiced_balance=D("0"))
+        cls.parent.invoice(payment_date=PAYMENT_DATE)
+        cls.parent.refresh_from_db()
+        assert cls.parent.status == SaleStatus.INVOICED
+        cls.child = Permanence.objects.get(master_permanence_id=cls.parent.id)
+
+    def test_the_payment_stays_attached_to_a_zero_total_parent_book(self):
+        # Without her payment Alice's parent book would have been an inert
+        # shell, deleted by the cleanup after the split. The payment
+        # attached at invoicing protects it.
+        parent_invoice = CustomerInvoice.objects.get(
+            customer_id=self.alice.id, permanence_id=self.parent.id
+        )
+        self.assertEqual(parent_invoice.get_total_price_with_tax().amount, D("0"))
+        self.assertEqual(parent_invoice.bank_amount_in.amount, D("4.00"))
+        self.assertTrue(
+            BankAccount.objects.filter(customer_invoice_id=parent_invoice.id).exists()
+        )
+        # Her real book lives at the child
+        child_invoice = CustomerInvoice.objects.get(
+            customer_id=self.alice.id, permanence_id=self.child.id
+        )
+        self.assertEqual(child_invoice.get_total_price_with_tax().amount, D("6.00"))
+
+    def test_the_customer_balance_reflects_the_payment_of_the_parent_round(self):
+        # The parent book is zero-total: only the 4.00 payment booked at
+        # the parent round shows in Alice's balance so far.
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("4.00"))

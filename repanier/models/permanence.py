@@ -1094,6 +1094,28 @@ class Permanence(models.Model):
             bank_account.producer_invoice_id = producer_invoice.id
             bank_account.save()
 
+        # Cleanup the inert zero-total shells eventually left at the parent
+        # by the split above: a fully moved customer leaves a customer
+        # invoice behind. The candidate shells carry no purchase of their
+        # own, no payment and no delivery fee; their total - kept accurate
+        # by calculate_order_amount above, including for group invoices
+        # charged via their members - is zero. Such shells never carry
+        # accounting: they only pollute the customer invoice list of the
+        # permanence. Real invoices, e.g. a group invoice charged with the
+        # purchases of its members, have a non-zero total and stay.
+        for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=self.id,
+            transport=DECIMAL_ZERO,
+            min_transport=DECIMAL_ZERO,
+            customer__represent_this_buyinggroup=False,
+        ).exclude(
+            purchase__isnull=False
+        ).exclude(
+            bankaccount__isnull=False
+        ):
+            if customer_invoice.get_total_price_with_tax().amount == DECIMAL_ZERO:
+                customer_invoice.delete()
+
         BankAccount.objects.filter(operation_status=BankMovement.LATEST_TOTAL).update(
             operation_status=BankMovement.NOT_LATEST_TOTAL
         )
