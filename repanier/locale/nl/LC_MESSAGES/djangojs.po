@@ -1,0 +1,41 @@
+# FIRST LINE SKIPPED BY POLIB
+msgid ""
+msgstr ""
+"Project-Id-Version: repanier\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-08 21:59+0100\n"
+"PO-Revision-Date: 2026-11-08 22:06+0100\n"
+"Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
+"Language-Team: Repanier\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.10\n"
+
+#: static/repanier/bs3/js/admin/confirm_exit.js:12
+#: static/repanier/bs5/js/admin/confirm_exit.js:12
+msgid "New information not saved. Do you wish to leave the page?"
+msgstr "Nieuwe informatie niet opgeslagen. Wilt u de pagina verlaten?"
+
+#: static/repanier/bs3/js/admin/confirm_purchase.js:5
+#: static/repanier/bs5/js/admin/confirm_purchase.js:5
+msgid "✓🔐"
+msgstr "🔑 - bevestigen en vergrendelen"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "loading"
+msgstr "laden"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "no_results"
+msgstr "geen resultaten"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "not_loading"
+msgstr "in afwachting"
+
+#: static/repanier/bs5/tom-select/js/tom-select.complete.min.js:286
+msgid "option_create"
+msgstr "optie aanmaken"

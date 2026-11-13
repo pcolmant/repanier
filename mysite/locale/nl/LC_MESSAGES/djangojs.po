@@ -1,0 +1,675 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-30 12:05+0100\n"
+"PO-Revision-Date: 2026-10-30 12:05+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Available %s"
+msgstr "Beschikbare %s"
+
+msgid ""
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
+msgstr ""
+"Dit is de lijst met beschikbare %s. U kunt er een aantal kiezen door ze in "
+"het vak hieronder te selecteren en daarna op de pijl 'Kiezen' tussen de twee "
+"vakken te klikken."
+
+msgid "Type into this box to filter down the list of available %s."
+msgstr "Typ in dit vak om de lijst met beschikbare %s te filteren."
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Choose all"
+msgstr "Alle kiezen"
+
+msgid "Click to choose all %s at once."
+msgstr "Klik om alle %s te kiezen."
+
+msgid "Choose"
+msgstr "Kiezen"
+
+msgid "Remove"
+msgstr "Verwijderen"
+
+msgid "Chosen %s"
+msgstr "Gekozen %s"
+
+msgid ""
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
+msgstr ""
+"Dit is de lijst met gekozen %s. U kunt er een aantal verwijderen door ze in "
+"het vak hieronder te selecteren en daarna op de pijl 'Verwijderen' tussen de "
+"twee vakken te klikken."
+
+msgid "Type into this box to filter down the list of selected %s."
+msgstr "Typ in dit vak om de lijst met geselecteerde %s te filteren."
+
+msgid "Remove all"
+msgstr "Alle verwijderen"
+
+msgid "Click to remove all chosen %s at once."
+msgstr "Klik om alle gekozen %s tegelijk te verwijderen."
+
+msgid "%s selected option not visible"
+msgid_plural "%s selected options not visible"
+msgstr[0] "%s geselecteerde optie niet zichtbaar"
+msgstr[1] "%s geselecteerde opties niet zichtbaar"
+
+msgid "Choose %s by selecting them and then select the \"Choose\" arrow button."
+msgstr "Kies %s door ze te selecteren en klik dan op de pijlknop \"Kiezen\"."
+
+msgid "Choose all %s"
+msgstr "Alle waarden \"%s\" kiezen"
+
+msgid "Choose selected %s"
+msgstr "De geselecteerde waarden \"%s\" kiezen"
+
+msgid "Remove selected %s"
+msgstr "De geselecteerde waarden \"%s\" verwijderen"
+
+msgid "Remove %s by selecting them and then select the \"Remove\" arrow button."
+msgstr ""
+"Verwijder de waarden \"%s\" door ze te selecteren en klik dan op de pijlknop "
+"\"Verwijderen\"."
+
+msgid "(click to clear)"
+msgstr "(klik om te wissen)"
+
+msgid "Remove all %s"
+msgstr "Alle waarden \"%s\" verwijderen"
+
+msgid "%(sel)s of %(cnt)s selected"
+msgid_plural "%(sel)s of %(cnt)s selected"
+msgstr[0] "%(sel)s van de %(cnt)s geselecteerd"
+msgstr[1] "%(sel)s van de %(cnt)s geselecteerd"
+
+msgid ""
+"You have unsaved changes on individual editable fields. If you run an action,"
+" your unsaved changes will be lost."
+msgstr ""
+"U hebt niet-opgeslagen wijzigingen op afzonderlijke bewerkbare velden. Als u "
+"een actie uitvoert, gaan uw wijzigingen verloren."
+
+msgid ""
+"You have selected an action, but you haven’t saved your changes to individual"
+" fields yet. Please click OK to save. You’ll need to re-run the action."
+msgstr ""
+"U hebt een actie geselecteerd, maar uw wijzigingen in afzonderlijke velden "
+"nog niet opgeslagen. Klik op OK om deze op te slaan. U dient de actie opnieuw"
+" uit te voeren."
+
+msgid ""
+"You have selected an action, and you haven’t made any changes on individual "
+"fields. You’re probably looking for the Go button rather than the Save "
+"button."
+msgstr ""
+"U hebt een actie geselecteerd, en geen wijzigingen in afzonderlijke velden "
+"aangebracht. Waarschijnlijk zoekt u de knop Gaan in plaats van de knop "
+"Opslaan."
+
+msgid "Now"
+msgstr "Nu"
+
+msgid "Midnight"
+msgstr "Middernacht"
+
+msgid "6 a.m."
+msgstr "6 uur 's ochtends"
+
+msgid "Noon"
+msgstr "12 uur 's middags"
+
+msgid "6 p.m."
+msgstr "6 uur 's avonds"
+
+msgid "Note: You are %s hour ahead of server time."
+msgid_plural "Note: You are %s hours ahead of server time."
+msgstr[0] "Let op: u ligt %s uur voor ten opzichte van de servertijd."
+msgstr[1] "Let op: u ligt %s uur voor ten opzichte van de servertijd."
+
+msgid "Note: You are %s hour behind server time."
+msgid_plural "Note: You are %s hours behind server time."
+msgstr[0] "Let op: u ligt %s uur achter ten opzichte van de servertijd."
+msgstr[1] "Let op: u ligt %s uur achter ten opzichte van de servertijd."
+
+msgid "Choose a Time"
+msgstr "Kies een tijdstip"
+
+msgid "Choose a time"
+msgstr "Kies een tijd"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Today"
+msgstr "Vandaag"
+
+msgid "Choose a Date"
+msgstr "Kies een datum"
+
+msgid "Yesterday"
+msgstr "Gisteren"
+
+msgid "Tomorrow"
+msgstr "Morgen"
+
+msgid "January"
+msgstr "januari"
+
+msgid "February"
+msgstr "februari"
+
+msgid "March"
+msgstr "maart"
+
+msgid "April"
+msgstr "april"
+
+msgid "May"
+msgstr "mei"
+
+msgid "June"
+msgstr "juni"
+
+msgid "July"
+msgstr "juli"
+
+msgid "August"
+msgstr "augustus"
+
+msgid "September"
+msgstr "september"
+
+msgid "October"
+msgstr "oktober"
+
+msgid "November"
+msgstr "november"
+
+msgid "December"
+msgstr "december"
+
+msgid "Jan"
+msgstr "jan"
+
+msgid "Feb"
+msgstr "feb"
+
+msgid "Mar"
+msgstr "mrt"
+
+msgid "Apr"
+msgstr "apr"
+
+msgid "May"
+msgstr "mei"
+
+msgid "Jun"
+msgstr "jun"
+
+msgid "Jul"
+msgstr "jul"
+
+msgid "Aug"
+msgstr "aug"
+
+msgid "Sep"
+msgstr "sep"
+
+msgid "Oct"
+msgstr "okt"
+
+msgid "Nov"
+msgstr "nov"
+
+msgid "Dec"
+msgstr "dec"
+
+msgid "S"
+msgstr "z"
+
+msgid "M"
+msgstr "m"
+
+msgid "T"
+msgstr "d"
+
+msgid "W"
+msgstr "w"
+
+msgid "T"
+msgstr "d"
+
+msgid "F"
+msgstr "v"
+
+msgid "S"
+msgstr "z"
+
+msgid "Sunday"
+msgstr "zondag"
+
+msgid "Monday"
+msgstr "maandag"
+
+msgid "Tuesday"
+msgstr "dinsdag"
+
+msgid "Wednesday"
+msgstr "woensdag"
+
+msgid "Thursday"
+msgstr "donderdag"
+
+msgid "Friday"
+msgstr "vrijdag"
+
+msgid "Saturday"
+msgstr "zaterdag"
+
+msgid "Sun"
+msgstr "zo"
+
+msgid "Mon"
+msgstr "ma"
+
+msgid "Tue"
+msgstr "di"
+
+msgid "Wed"
+msgstr "wo"
+
+msgid "Thur"
+msgstr "do"
+
+msgid "Fri"
+msgstr "vr"
+
+msgid "Sat"
+msgstr "za"
+
+msgid "Show"
+msgstr "Tonen"
+
+msgid "Hide"
+msgstr "Verbergen"
+
+msgid "Are you sure you want to change tabs without saving the page first?"
+msgstr ""
+"Weet u zeker dat u van tabblad wilt wisselen zonder eerst de pagina op te "
+"slaan?"
+
+msgid "edit"
+msgstr "Bewerken"
+
+msgid "view"
+msgstr "Bekijken"
+
+msgid "add"
+msgstr "Toevoegen"
+
+msgid "Error while loading the data from the server"
+msgstr "Fout bij het laden van de gegevens van de server"
+
+msgid "move failed"
+msgstr "verplaatsen mislukt"
+
+msgid "Edit %s"
+msgstr "%s bewerken"
+
+msgid "View %s"
+msgstr "%s bekijken"
+
+msgid "Add child to %s"
+msgstr "Toevoegen aan %s"
+
+msgid "Loading"
+msgstr "Laden"
+
+msgid "'"
+msgstr "'"
+
+msgid "%l, %F %j, %Y"
+msgstr "%l %j %F %Y"
+
+msgid "including"
+msgstr "inclusief"
+
+msgid "excluding"
+msgstr "uitgezonderd"
+
+msgid "Frequency"
+msgstr "Frequentie"
+
+msgid "On the"
+msgstr "Op de"
+
+msgid "Each"
+msgstr "Iedere"
+
+msgid "Every"
+msgstr "Om de"
+
+msgid "Until"
+msgstr "Tot"
+
+msgid "Occurs %(number)s time"
+msgstr "Herhaal %(number)s keer"
+
+msgid "Occurs %(number)s times"
+msgstr "Herhaal %(number)s keer"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Time"
+msgstr "Tijd"
+
+msgid "Repeat until"
+msgstr "Herhaal tot"
+
+msgid "Exclude these occurences"
+msgstr "Sluit deze uit"
+
+msgid "Exclude this date"
+msgstr "Deze datum uitsluiten"
+
+msgid "Add rule"
+msgstr "Herhaling toevoegen"
+
+msgid "Add date"
+msgstr "Datum toevoegen"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "%Y-%m-%d"
+msgstr ""
+
+msgid "midnight"
+msgstr "'s avonds"
+
+msgid "noon"
+msgstr "'s middags"
+
+msgid "on the %(items)s"
+msgstr "op de %(items)s"
+
+msgid "every %(number)s %(freq)s"
+msgstr "iedere %(number)s %(freq)s"
+
+msgid "each %(items)s"
+msgstr "elke %(items)s"
+
+msgid "occuring %(number)s time"
+msgstr "herhaalt %(number)s keer"
+
+msgid "occuring %(number)s times"
+msgstr "herhaalt %(number)s keer"
+
+msgid "until %(date)s"
+msgstr "tot %(date)s"
+
+msgid "year"
+msgstr "jaren"
+
+msgid "month"
+msgstr "maanden"
+
+msgid "week"
+msgstr "weken"
+
+msgid "day"
+msgstr "dagen"
+
+msgid "hour"
+msgstr "uur"
+
+msgid "minute"
+msgstr "minuut"
+
+msgid "second"
+msgstr "seconde"
+
+msgid "years"
+msgstr "jaren"
+
+msgid "months"
+msgstr "maandelijks"
+
+msgid "weeks"
+msgstr "wekelijks"
+
+msgid "days"
+msgstr "dagelijks"
+
+msgid "hours"
+msgstr "elk uur"
+
+msgid "minutes"
+msgstr "elke minuut"
+
+msgid "seconds"
+msgstr "elke seconde"
+
+msgid "annually"
+msgstr "jaarlijks"
+
+msgid "monthly"
+msgstr "maandelijks"
+
+msgid "weekly"
+msgstr "wekelijks"
+
+msgid "daily"
+msgstr "dagelijks"
+
+msgid "hourly"
+msgstr "elk uur"
+
+msgid "minutely"
+msgstr "elke minuut"
+
+msgid "secondly"
+msgstr "elke seconde"
+
+msgid "Mon"
+msgstr "ma"
+
+msgid "Tue"
+msgstr "di"
+
+msgid "Wed"
+msgstr "wo"
+
+msgid "Thu"
+msgstr "do"
+
+msgid "Fri"
+msgstr "vr"
+
+msgid "Sat"
+msgstr "za"
+
+msgid "Sun"
+msgstr "zo"
+
+msgid "M"
+msgstr "m"
+
+msgid "T"
+msgstr "d"
+
+msgid "W"
+msgstr "w"
+
+msgid "T"
+msgstr "d"
+
+msgid "F"
+msgstr "v"
+
+msgid "S"
+msgstr "z"
+
+msgid "S"
+msgstr "z"
+
+msgid "first %(weekday)s"
+msgstr "eerste %(weekday)s"
+
+msgid "second %(weekday)s"
+msgstr "tweede %(weekday)s"
+
+msgid "third %(weekday)s"
+msgstr "derde %(weekday)s"
+
+msgid "fourth %(weekday)s"
+msgstr "vierde %(weekday)s"
+
+msgid "last %(weekday)s"
+msgstr "laatste %(weekday)s"
+
+msgid "second last %(weekday)s"
+msgstr "twee na laatste %(weekday)s"
+
+msgid "third last %(weekday)s"
+msgstr "drie na laatste %(weekday)s"
+
+msgid "1st %(weekday)s"
+msgstr "1e %(weekday)s"
+
+msgid "2nd %(weekday)s"
+msgstr "2e %(weekday)s"
+
+msgid "3rd %(weekday)s"
+msgstr "3e %(weekday)s"
+
+msgid "4th %(weekday)s"
+msgstr "4e %(weekday)s"
+
+msgid "2nd last %(weekday)s"
+msgstr "2 na laatste %(weekday)s"
+
+msgid "3rd last %(weekday)s"
+msgstr "3 na laatste %(weekday)s"
+
+msgid "last"
+msgstr "laatste"
+
+msgid "second last"
+msgstr "voorlaatste"
+
+msgid "third last"
+msgstr "derde laatste"
+
+msgid "fourth last"
+msgstr "vierde laatste"
+
+msgid "2nd last"
+msgstr "2 na laatste"
+
+msgid "3rd last"
+msgstr "3 na laatste"
+
+msgid "4th last"
+msgstr "4 na laatste"
+
+msgid "May"
+msgstr "mei"
+
+msgid "Jan"
+msgstr "jan"
+
+msgid "Feb"
+msgstr "feb"
+
+msgid "Mar"
+msgstr "mrt"
+
+msgid "Apr"
+msgstr "apr"
+
+msgid "Jun"
+msgstr "jun"
+
+msgid "Jul"
+msgstr "jul"
+
+msgid "Aug"
+msgstr "aug"
+
+msgid "Sep"
+msgstr "sep"
+
+msgid "Oct"
+msgstr "okt"
+
+msgid "Nov"
+msgstr "nov"
+
+msgid "Dec"
+msgstr "dec"
+
+msgid "Jan."
+msgstr "jan"
+
+msgid "Feb."
+msgstr "feb"
+
+msgid "Aug."
+msgstr "aug"
+
+msgid "Sept."
+msgstr "sept"
+
+msgid "Oct."
+msgstr "okt"
+
+msgid "Nov."
+msgstr "nov"
+
+msgid "Dec."
+msgstr "dec"
+
+msgid "a.m."
+msgstr "a.m."
+
+msgid "p.m."
+msgstr "p.m."
+
+msgid "AM"
+msgstr "AM"
+
+msgid "PM"
+msgstr "PM"
+
+msgid "%j%S"
+msgstr ""
+
+msgid "New information not saved. Do you wish to leave the page?"
+msgstr "Nieuwe informatie niet opgeslagen. Wilt u de pagina verlaten?"
+
+msgid "✓🔐"
+msgstr "🔑 - bevestigen en vergrendelen"
+
+msgid "Abort"
+msgstr "Annuleren"
+
+msgid "As Sibling"
+msgstr "Als naastliggend onderdeel"
+
+msgid "As child"
+msgstr "Als subonderdeel"

@@ -1,0 +1,59 @@
+# FIRST LINE SKIPPED BY POLIB
+msgid ""
+msgstr ""
+"Project-Id-Version: Repanier\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-30 12:05+0100\n"
+"PO-Revision-Date: 2026-10-30 11:13+0100\n"
+"Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
+"Language-Team: Repanier\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.10\n"
+
+#: _a_dev_site/common_settings.py:488
+msgid "Repanier guide"
+msgstr "Repanier-handleiding"
+
+#: _a_dev_site/common_settings.py:492
+msgid "django CMS guide"
+msgstr "Handleiding django CMS"
+
+#: _a_dev_site/common_settings.py:874
+msgid "Internal page with menu on left"
+msgstr "Interne pagina met menu links"
+
+#: _a_dev_site/common_settings.py:875
+msgid "Internal page"
+msgstr "Interne pagina"
+
+#: _a_dev_site/common_settings.py:876
+msgid "Home page"
+msgstr "Startpagina"
+
+#: _a_dev_site/common_settings.py:938
+msgid "Hero"
+msgstr "Hero"
+
+#: _a_dev_site/common_settings.py:946
+msgid "Column 1"
+msgstr "Kolom 1"
+
+#: _a_dev_site/common_settings.py:954
+msgid "Column 2"
+msgstr "Kolom 2"
+
+#: _a_dev_site/common_settings.py:962
+msgid "Column 3"
+msgstr "Kolom 3"
+
+#: _a_dev_site/common_settings.py:970
+msgid "Content"
+msgstr "Inhoud"
+
+#: _a_dev_site/common_settings.py:987
+msgid "Footer"
+msgstr "Voettekst"

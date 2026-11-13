@@ -183,6 +183,13 @@ REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER=False
 - `REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER` (`True`, `False`): Automatically cancels unconfirmed customer orders if set to `True`.
 - `REPANIER_SETTINGS_BCC_ALL_EMAIL_TO`: Send copy of all outbound transactional emails to this address.
 
+#### Available Options in `[DJANGO_SETTINGS]`:
+- `DJANGO_SETTINGS_LANGUAGE`: The languages of the site.
+  - `fr` (default): French only.
+  - `fr`-`nl`: French and Dutch, French as fallback.
+  - `fr-nl-de-en`: French, Dutch, German and English, French as fallback.
+  - `fr-de-en-nl-sv`: the historical five language combination.
+
 ---
 
 ## 5. Web Server Configuration
