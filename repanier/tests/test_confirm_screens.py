@@ -70,6 +70,12 @@ class ConfirmScreenLayoutTest(TestCase):
     def test_the_generate_permanence_confirm_screen_uses_the_admin_layout(self):
         self.build_and_login()
         self.assert_admin_layout("admin:generate-permanence")
+        # The template comment explaining the recurrence widget layout
+        # is invisible: a single line {# ... #} spans into literal text
+        html = self.client.get(
+            reverse("admin:generate-permanence", args=[self.permanence.pk])
+        ).content.decode("utf-8")
+        self.assertNotIn("recurrence widget comes with its own", html)
 
     def test_the_close_order_confirm_screen_uses_the_admin_layout(self):
         self.build_and_login()

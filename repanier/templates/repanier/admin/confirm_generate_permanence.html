@@ -34,9 +34,11 @@
                 <input type="submit" name="apply" value="{% translate "Yes, I'm sure" %}" class="default">
                 <input type="submit" name="cancel" value="{% translate "No, cancel the action" %}">
             </div>
-            {# The recurrence widget comes with its own layout, which the
-               custom checkbox rules of the admin stylesheet expect in
-               their original nesting: restored as is. #}
+            {% comment %}
+                The recurrence widget comes with its own layout, which
+                the custom checkbox rules of the admin stylesheet expect
+                in their original nesting: restored as is.
+            {% endcomment %}
             <div class="form-row">
                 <div class="fieldBox">
                     <div class="fieldWrapper">
