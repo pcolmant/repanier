@@ -1,4 +1,5 @@
 from django.http import Http404, JsonResponse
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET
 
 from repanier.models.offeritem import OfferItemReadOnly
@@ -20,7 +21,13 @@ def like_ajax(request):
         else:
             # add a new like for a company
             product.likes.add(user_id)
-        like_html = offer_item.get_html_like(user_id=user_id)
+        like_html = render_to_string(
+            "repanier/like_heart.html",
+            {
+                "offer_item_id": offer_item.id,
+                "is_liked": product.likes.filter(id=user_id).exists(),
+            },
+        )
         json_dict[".btn_like{}".format(offer_item.id)] = like_html
         return JsonResponse(json_dict)
     raise Http404

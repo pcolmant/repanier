@@ -127,18 +127,6 @@ class OfferItem(Item):
     get_html_producer_price_purchased.short_description = _("Row amount")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
-    def get_html_like(self, user_id):
-        # Si le produit est liké (exists() == True), on met "-fill" (noir), sinon chaîne vide (transparent)
-        is_liked = self.product.likes.filter(id=user_id).only("id").exists()
-        heart_class = "bi bi-heart-fill" if is_liked else "bi bi-heart"
-
-        return mark_safe(
-            '<span class="{}" onclick="like_ajax({});return false;" style="cursor: pointer;"></span>'.format(
-                heart_class,
-                self.id,
-            )
-        )
-
     def get_order_name(self):
         qty_display = self.get_qty_display()
         if qty_display:

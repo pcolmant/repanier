@@ -1,0 +1,9 @@
+{% if editable %}<b><i>
+    <select name="value" id="task{{ task_id }}" onchange="task_ajax({{ task_id }})" class="form-control">
+        {% if own %}<option value="0">---</option><option value="1" selected>{{ my_name }}</option>
+        {% else %}<option value="0" selected>---</option><option value="1">{{ my_name }}</option>{% endif %}
+    </select>
+</i></b>
+{% elif own %}<select name="value" id="task{{ task_id }}" class="form-control"><option value="0" selected>{{ other_name }}</option></select>
+{% else %}<select name="value" id="task{{ task_id }}" class="form-control"><option value="0" selected>---</option></select>
+{% endif %}
