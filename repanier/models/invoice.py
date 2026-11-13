@@ -174,6 +174,49 @@ class CustomerInvoice(Invoice):
         validators=[MinValueValidator(0)],
     )
     is_group = models.BooleanField(_("Group"), default=False)
+    # Membership fee snapshot: the renewal date the customer had BEFORE
+    # close_order() forced the fee. Revert flows (cancel_invoice,
+    # cancel_delivery) restore the customer renewal date from it;
+    # restore_delivery and a re-invoicing re-apply the extension from it.
+    membership_fee_valid_until_save = models.DateField(
+        _("Membership fee valid until, before this permanence"),
+        default=None,
+        blank=True,
+        null=True,
+    )
+
+    def cancel_membership_fee_extension(self):
+        """Restore the renewal date the customer had before close_order()
+        forced the membership fee.
+
+        No-op when the fee was never forced (no snapshot). Never shortens
+        a date extended by another permanence: the update only fires when
+        the current date is still the one this permanence computed."""
+        from repanier.models.customer import Customer
+
+        if self.membership_fee_valid_until_save is not None:
+            Customer.objects.filter(
+                id=self.customer_id,
+                membership_fee_valid_until__gt=self.membership_fee_valid_until_save,
+            ).update(
+                membership_fee_valid_until=self.membership_fee_valid_until_save
+            )
+
+    def restore_membership_fee_extension(self):
+        """Re-apply the membership extension computed at close time, when
+        a cancellation has been cancelled. Idempotent: in the normal flow
+        close_order() already extended the date, and the update only fires
+        when the current date is the snapshot itself."""
+        from repanier.models.customer import Customer
+
+        if self.membership_fee_valid_until_save is not None:
+            valid_until = Customer.compute_membership_fee_valid_until(
+                self.membership_fee_valid_until_save
+            )
+            Customer.objects.filter(
+                id=self.customer_id,
+                membership_fee_valid_until__lt=valid_until,
+            ).update(membership_fee_valid_until=valid_until)
 
     def get_abs_delta_vat(self):
         return abs(self.delta_vat)

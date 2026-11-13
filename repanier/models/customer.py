@@ -146,6 +146,24 @@ class Customer(models.Model):
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     @classmethod
+    def compute_membership_fee_valid_until(cls, previous_valid_until):
+        """The renewal rule of close_order(): the forced membership fee
+        extends the previous validity by the configured duration, at
+        least to today."""
+        from dateutil.relativedelta import relativedelta
+
+        from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
+
+        valid_until = previous_valid_until + relativedelta(
+            months=int(REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION)
+        )
+        today = timezone.now().date()
+        if valid_until < today:
+            # For occasional customers
+            valid_until = today
+        return valid_until
+
+    @classmethod
     def get_or_create_group(cls):
         customer_buyinggroup = Customer.objects.filter(
             represent_this_buyinggroup=True

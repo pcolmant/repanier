@@ -483,9 +483,9 @@ class PermanenceDoneAdmin(SaleAdmin):
                         old_status=SaleStatus.ARCHIVED, new_status=SaleStatus.SEND
                     )
                 if permanence.status == SaleStatus.CANCELLED:
-                    permanence.set_status(
-                        old_status=SaleStatus.CANCELLED, new_status=SaleStatus.SEND
-                    )
+                    # Also re-applies the membership fee extensions
+                    # of the members charged at close time
+                    permanence.restore_delivery()
                 user_message = _("Archiving has been cancelled")
                 user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
