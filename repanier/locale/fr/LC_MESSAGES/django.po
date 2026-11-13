@@ -4198,6 +4198,18 @@ msgstr ""
 
 msgid "The permanence has been deleted."
 msgstr "La permanence a été supprimée."
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "You no longer receive the general mails of the group. Your order confirmations keep arriving: they follow your orders."
+msgstr "Vous ne recevez plus les mails généraux du groupe. Les confirmations de commande continuent d'arriver : elles suivent vos commandes."
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "Receive the mails again"
+msgstr "Recevoir à nouveau les mails"
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "You receive the mails of the group again."
+msgstr "Vous recevez à nouveau les mails du groupe."
+
 
 #~ msgid "My balance"
 #~ msgstr "Mon solde"
