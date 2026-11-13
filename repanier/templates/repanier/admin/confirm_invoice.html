@@ -10,28 +10,27 @@
     <div class="breadcrumbs">
         {% translate 'Manage' %}
         &rsaquo; <a href="{% url 'admin:repanier_permanencedone_changelist' %}">{% translate 'Offers in payment' %}</a>
+        &rsaquo;
+        {{ permanence }}
     </div>
 {% endblock %}
 
 {% block content %}
-    <form action="{{ form_url }}" method="post">{% csrf_token %}
-        <h2>{{ permanence|title }}</h2>
-        <div class="form-row">
-            <h3>{% translate "Please confirm your request for payments calculation" %}</h3>
-            <p>&nbsp;</p>
+    <div id="content-main">
+        <form action="{{ form_url }}" method="post" id="repanier_confirm_action_form">{% csrf_token %}
+            <h1>{{ permanence }}</h1>
+            <p>{% translate "Please confirm your request for payments calculation" %}</p>
             <div id="myDIV">
-                <button type="submit" class="repanier-submit-info" name="cancel"
-                        value="cancel">{% translate "No, cancel the action" %}</button>
-                <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default"
-                        onclick="document.getElementById('myDIV').style.display = 'none';document.getElementById('myDIVsubmitted').style.display = 'block';">
-                    {% translate "Yes, I'm sure and I have already encoded the customer's prepayments into the bank account" %}
-                </button>
+                <div class="submit-row">
+                    <input type="submit" name="apply" value="{% translate "Yes, I'm sure and I have already encoded the customer's prepayments into the bank account" %}" class="default"
+                           onclick="document.getElementById('myDIV').style.display = 'none';document.getElementById('myDIVsubmitted').style.display = 'block';">
+                    <input type="submit" name="cancel" value="{% translate "No, cancel the action" %}">
+                </div>
             </div>
              <div id="myDIVsubmitted" style="display: none">
                  {% translate "Please wait while payments are calculated" %}
              </div>
             {{ producer_invoiced_formset.management_form }}
-        </div>
         <div class="form-row">
             <div class="form-group">
                 {{ permanence_form.non_field_errors }}
@@ -100,5 +99,6 @@
         {% endfor %}
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>
-    </form>
+        </form>
+    </div>
 {% endblock %}

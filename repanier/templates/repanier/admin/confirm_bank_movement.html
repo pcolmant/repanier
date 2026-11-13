@@ -5,18 +5,20 @@
     <div class="breadcrumbs">
         {% translate 'Manage' %}
         &rsaquo; <a href="{% url 'admin:repanier_permanencedone_changelist' %}">{% translate 'Offers in payment' %}</a>
+        &rsaquo;
+        {{ permanence }}
     </div>
 {% endblock %}
 
 {% block content %}
-    <form action="{{ form_url }}" method="post">{% csrf_token %}
-        <h2>{{ permanence|title }}</h2>
-        <div class="form-row">
-            <h3>{% translate "Please make the following payments" %}</h3>
-            <h3>{% translate "The corresponding account transactions have been generated" %}</h3>
-            <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="done" value="done" class="default">{% translate "Done" %}</button>
-        </div>
+    <div id="content-main">
+        <form action="{{ form_url }}" method="post" id="repanier_confirm_action_form">{% csrf_token %}
+            <h1>{{ permanence }}</h1>
+            <p>{% translate "Please make the following payments" %}</p>
+            <p>{% translate "The corresponding account transactions have been generated" %}</p>
+            <div class="submit-row">
+                <input type="submit" name="done" value="{% translate "Done" %}" class="default">
+            </div>
         {% for bankaccount in bankaccounts %}
             <div class="form-row">
                 <ul class="repanier-flex-ul">
@@ -28,5 +30,6 @@
         {% endfor %}
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>
-    </form>
+        </form>
+    </div>
 {% endblock %}
