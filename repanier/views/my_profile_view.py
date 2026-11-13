@@ -22,7 +22,7 @@ class CustomerForm(forms.Form):
     zero_waste = fields.BooleanField(
         label=EMPTY_STRING,
         required=False,
-        widget=RepanierCheckboxWidget(label=_("Family zero waste")),
+        widget=RepanierCheckboxWidget(label=_("Zero waste family")),
     )
     subscribe_to_email = fields.BooleanField(
         label=EMPTY_STRING,
