@@ -107,6 +107,22 @@ a.repanier-a-cancel:hover, a.repanier-a-cancel:active {
     color: var(--info-hover-text-color);
 }
 
+/* The cancel buttons of the permanence-in-preparation screen: a plain
+   flexbox centers the icon inside the button, on both axes, whatever the
+   surrounding line-height does to an inline icon. */
+a.repanier-a-cancel-prepared:link, a.repanier-a-cancel-prepared:link:visited {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ... and a bolder icon, so the red ban of a cancel action stands out
+   as clearly as the other buttons of the row. */
+a.repanier-a-cancel-prepared > i {
+    font-weight: 900;
+    -webkit-text-stroke: 1px Tomato;
+}
+
 a.repanier-a-cancel-selected:link, a.repanier-a-cancel-selected:visited {
     background-color: var(--info-hover-border-color);
     color: var(--info-hover-text-color);

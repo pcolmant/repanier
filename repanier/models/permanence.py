@@ -1260,18 +1260,21 @@ class Permanence(models.Model):
 
     @transaction.atomic
     def cancel_prepared(self):
-        """Get rid of a permanence still in preparation (scheduled or
-        opened) that the group created by mistake.
+        """Get rid of a permanence still in preparation (scheduled) that
+        the group created by mistake.
 
-        When no order was placed the permanence is an empty shell: it is
-        deleted for good, together with its offer items and its empty
-        invoices. Otherwise cancellations must stay traceable: this runs
-        the exact chain a careful staff member would run by hand - open
-        the orders without sending any email, close them without sending
-        any email, cancel the delivery - so every transition passes
-        through the well tested status machinery. Purchases and invoices
-        are preserved, and the cancellation itself stays reversible (see
-        restore_delivery)."""
+        A permanence that went back to scheduled may still carry orders
+        placed while it was opened: purchases are never deleted to get
+        rid of a mistake. When orders exist the action runs the exact
+        chain a careful staff member would run by hand - open the orders
+        without sending any email, close them without sending any email,
+        cancel the delivery - so every transition passes through the
+        well tested status machinery, the cancellation stays reversible
+        (see restore_delivery) and the membership fees behave as on the
+        payment screen. Without any order the permanence is an empty
+        shell: it is deleted for good, together with its offer items
+        and its empty invoices.
+        """
         from repanier.models.offeritem import OfferItem
         from repanier.models.purchase import Purchase
         from repanier.task import task_order
@@ -1285,8 +1288,7 @@ class Permanence(models.Model):
             OfferItem.objects.filter(permanence_id=self.id).delete()
             self.delete()
             return
-        if self.status == SaleStatus.PLANNED:
-            task_order.open_order(self.id, send_mail=False)
+        task_order.open_order(self.id, send_mail=False)
         task_order.close_order(
             self.id, everything=True, deliveries_id=(), send_mail=False
         )
