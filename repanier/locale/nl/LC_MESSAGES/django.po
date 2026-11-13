@@ -432,7 +432,7 @@ msgstr "Importeren"
 
 #: admin/permanence_done.py:560 admin/permanence_done.py:578
 msgid "Cancel the delivery"
-msgstr "De levering annuleren"
+msgstr "Levering annuleren"
 
 #: admin/permanence_done.py:564
 msgid "Book"
@@ -567,11 +567,11 @@ msgstr "Bestellingen openen"
 
 #: admin/permanence_in_preparation.py:640
 msgid "Modify the offer"
-msgstr "Het aanbod wijzigen"
+msgstr "Aanbod wijzigen"
 
 #: admin/permanence_in_preparation.py:644
 msgid "Close orders"
-msgstr "De bestellingen sluiten"
+msgstr "Bestellingen sluiten"
 
 #: admin/producer.py:74
 msgid "The short_basket_name {} is already used by another producer."
@@ -4070,7 +4070,7 @@ msgid "Stock check"
 msgstr "Voorraadcontrole"
 
 msgid "Cancel this permanence"
-msgstr "Deze uitdeling annuleren"
+msgstr "Uitdeling annuleren"
 
 msgid "The permanence has been cancelled."
 msgstr "De uitdeling werd geannuleerd."

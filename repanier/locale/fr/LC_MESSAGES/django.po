@@ -442,7 +442,7 @@ msgstr "Importer"
 
 #: admin/permanence_done.py:560 admin/permanence_done.py:578
 msgid "Cancel the delivery"
-msgstr "Annuler la livraison"
+msgstr "Annuler"
 
 #: admin/permanence_done.py:564
 msgid "Book"
@@ -454,7 +454,7 @@ msgstr "Archiver"
 
 #: admin/permanence_done.py:598
 msgid "Cancel accounting registration"
-msgstr "Annuler l'enregistrement comptable"
+msgstr "Annuler"
 
 #: admin/permanence_done.py:623 admin/permanence_done.py:634
 msgid "Restore"
@@ -572,11 +572,11 @@ msgstr "{} duplicatas créés."
 #: admin/permanence_in_preparation.py:625 admin/product.py:392
 #: admin/product.py:505
 msgid "Duplicate"
-msgstr "Créer un duplicata"
+msgstr "Dupliquer"
 
 #: admin/permanence_in_preparation.py:629
 msgid "Open orders"
-msgstr "Ouvrir les commandes"
+msgstr "Ouvrir"
 
 #: admin/permanence_in_preparation.py:640
 msgid "Modify the offer"
@@ -584,7 +584,7 @@ msgstr "Modifier l'offre"
 
 #: admin/permanence_in_preparation.py:644
 msgid "Close orders"
-msgstr "Clôturer les commandes"
+msgstr "Clôturer"
 
 #: admin/producer.py:74
 msgid "The short_basket_name {} is already used by another producer."
@@ -4145,7 +4145,7 @@ msgstr "Contrôle du stock"
 
 # New strings of the "cancel a prepared permanence" feature
 msgid "Cancel this permanence"
-msgstr "Annuler cette permanence"
+msgstr "Annuler"
 
 msgid "The permanence has been cancelled."
 msgstr "La permanence a été annulée."
@@ -4198,86 +4198,6 @@ msgstr ""
 
 msgid "The permanence has been deleted."
 msgstr "La permanence a été supprimée."
-
-msgid "Create copies of this permanence on other dates, based on this one."
-msgstr ""
-"Créer des copies de cette permanence à d'autres dates, sur base de celle-ci."
-
-msgid ""
-"Open the orders of this permanence to the members. The next screen confirms "
-"the opening, with or without the opening email."
-msgstr ""
-"Ouvrir les commandes de cette permanence aux membres. L'écran suivant "
-"confirme l'ouverture, avec ou sans l'e-mail d'ouverture."
-
-msgid ""
-"A permanence without any order is deleted for good. A permanence already "
-"containing orders is only cancelled and the cancellation can be reverted."
-msgstr ""
-"Une permanence sans aucune commande est supprimée définitivement. Une "
-"permanence contenant déjà des commandes est seulement annulée et "
-"l'annulation est réversible."
-
-msgid "Go back to scheduled, modify the offer and re-open the orders."
-msgstr ""
-"Repasser en mode préparation, modifier l'offre puis rouvrir les commandes."
-
-msgid ""
-"The members can not order anymore. The next screen confirms the closing, "
-"with or without the order emails."
-msgstr ""
-"Les membres ne peuvent plus commander. L'écran suivant confirme la clôture, "
-"avec ou sans les e-mails de commande."
-
-msgid "Purchases and invoices are kept and the cancellation can be reverted."
-msgstr ""
-"Les achats et les factures sont conservés et l'annulation est réversible."
-
-msgid ""
-"Download the purchases of this permanence as an Excel file meant to be "
-"corrected and reimported."
-msgstr ""
-"Télécharger les achats de cette permanence dans un fichier Excel à corriger "
-"puis à réimporter."
-
-msgid ""
-"Upload the corrected Excel file to apply the delivered quantities and prices."
-msgstr ""
-"Charger le fichier Excel corrigé pour appliquer les quantités et les prix "
-"livrés."
-
-msgid ""
-"Register this permanence in the accounting of the group: the customers pay, "
-"the producers get paid."
-msgstr ""
-"Enregistrer cette permanence dans la comptabilité du groupe : les clients "
-"paient, les producteurs sont payés."
-
-msgid "Move this permanence, its purchases and its invoices to the archive."
-msgstr ""
-"Déplacer cette permanence, ses achats et ses factures vers l'archive."
-
-msgid ""
-"Cancel the accounting entries of this permanence, when a correction is "
-"needed."
-msgstr ""
-"Annuler les écritures comptables de cette permanence, lorsqu'une correction "
-"est nécessaire."
-
-msgid "Download the accounting report (bank and invoices) as an Excel file."
-msgstr ""
-"Télécharger le rapport comptable (banque et factures) dans un fichier Excel."
-
-msgid "Take this permanence out of the archive to correct or rebook it."
-msgstr ""
-"Sortir cette permanence de l'archive pour la corriger ou la refacturer."
-
-msgid ""
-"Uncancel this delivery: the permanence is back to the payment screen, with "
-"all its purchases."
-msgstr ""
-"Annuler l'annulation de cette livraison : la permanence revient à l'écran de "
-"paiement, avec tous ses achats."
 
 #~ msgid "My balance"
 #~ msgstr "Mon solde"

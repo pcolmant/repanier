@@ -665,29 +665,20 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         if permanence.status == SaleStatus.PLANNED.value:
             return format_html(
                 '<div class="repanier-button-row">'
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-retweet"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i style="color:Tomato" class="fas fa-ban"></i></a>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><i style="color:Tomato" class="fas fa-ban"></i></a>'
                 "</div>",
                 add_filter(reverse("admin:generate-permanence", args=[permanence.pk])),
                 _("Duplicate"),
-                _(
-                    "Create copies of this permanence on other dates, based on this one."
-                ),
                 add_filter(
                     reverse("admin:permanence-open-order", args=[permanence.pk])
                 ),
                 _("Open orders"),
-                _(
-                    "Open the orders of this permanence to the members. The next screen confirms the opening, with or without the opening email."
-                ),
                 add_filter(
                     reverse("admin:permanence-cancel-prepared", args=[permanence.pk])
                 ),
                 _("Cancel this permanence"),
-                _(
-                    "A permanence without any order is deleted for good. A permanence already containing orders is only cancelled and the cancellation can be reverted."
-                ),
             )
         elif permanence.status == SaleStatus.OPENED.value:
             # Orders may already be placed: no shortcut allows to get
@@ -695,21 +686,17 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             # or goes back to scheduled - before cancelling anything.
             return format_html(
                 '<div class="repanier-button-row">'
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-pencil-alt"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-stop" style="color: red;"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a> '
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-back-to-scheduled", args=[permanence.pk])
                 ),
                 _("Modify the offer"),
-                _("Go back to scheduled, modify the offer and re-open the orders."),
                 add_filter(
                     reverse("admin:permanence-close-order", args=[permanence.pk])
                 ),
                 _("Close orders"),
-                _(
-                    "The members can not order anymore. The next screen confirms the closing, with or without the order emails."
-                ),
             )
         elif permanence.status == SaleStatus.SEND.value:
             # Same action as the payment screen: cancel_delivery of
@@ -726,13 +713,10 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             cancel_delivery_url += "back=" + quote(back_url, safe="")
             return format_html(
                 '<div class="repanier-button-row">'
-                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
+                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
                 "</div>",
                 cancel_delivery_url,
                 _("Cancel the delivery"),
-                _(
-                    "Purchases and invoices are kept and the cancellation can be reverted."
-                ),
             )
         return EMPTY_STRING
 

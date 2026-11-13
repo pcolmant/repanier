@@ -10,7 +10,7 @@ everything stays reversible.
 import datetime
 from urllib.parse import quote, urlsplit
 from decimal import Decimal
-from html import escape
+import re
 
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
@@ -311,39 +311,22 @@ class CancelPreparedRowActionsTest(TestCase):
         self.build_and_login(status=SaleStatus.PLANNED)
         row = self.row_actions(self.permanence)
         self.assertIn("/cancel-prepared/", row)
-        # Every button carries the one sentence help shown in the
-        # tooltip, translated like any other message.
-        self.assertEqual(row.count("data-repanier-help="), 3)
-        self.assertIn(
-            escape(
-                str(
-                    gettext(
-                        "A permanence without any order is deleted for good. A "
-                        "permanence already containing orders is only cancelled and "
-                        "the cancellation can be reverted."
-                    )
-                )
-            ),
-            row,
-        )
+        # Every button carries a tooltip, and it stays terse: at most
+        # two translated words, no help sentence anymore.
+        self.assertEqual(row.count("data-repanier-tooltip="), 3)
+        self.assertNotIn("data-repanier-help=", row)
+        for tooltip in re.findall(r'data-repanier-tooltip="([^"]*)"', row):
+            self.assertLessEqual(len(tooltip.split()), 2)
 
     def test_an_opened_permanence_offers_no_cancel_button(self):
         self.build_and_login(status=SaleStatus.OPENED)
         row = self.row_actions(self.permanence)
         self.assertIn("/close-order/", row)
         self.assertNotIn("/cancel-prepared/", row)
-        self.assertEqual(row.count("data-repanier-help="), 2)
-        self.assertIn(
-            escape(
-                str(
-                    gettext(
-                        "The members can not order anymore. The next screen "
-                        "confirms the closing, with or without the order emails."
-                    )
-                )
-            ),
-            row,
-        )
+        self.assertEqual(row.count("data-repanier-tooltip="), 2)
+        self.assertNotIn("data-repanier-help=", row)
+        for tooltip in re.findall(r'data-repanier-tooltip="([^"]*)"', row):
+            self.assertLessEqual(len(tooltip.split()), 2)
 
     def test_a_closed_permanence_offers_the_cancel_delivery_of_the_payment_screen(self):
         self.build_and_login(status=SaleStatus.SEND)
@@ -352,22 +335,15 @@ class CancelPreparedRowActionsTest(TestCase):
         # there with restore_delivery
         self.assertIn("/cancel-delivery/", row)
         self.assertNotIn("/cancel-prepared/", row)
-        self.assertEqual(row.count("data-repanier-help="), 1)
-        self.assertIn(
-            escape(
-                str(
-                    gettext(
-                        "Purchases and invoices are kept and the cancellation can "
-                        "be reverted."
-                    )
-                )
-            ),
-            row,
-        )
+        self.assertEqual(row.count("data-repanier-tooltip="), 1)
+        self.assertNotIn("data-repanier-help=", row)
+        for tooltip in re.findall(r'data-repanier-tooltip="([^"]*)"', row):
+            self.assertLessEqual(len(tooltip.split()), 2)
 
 
 class PermanenceDoneRowActionsTest(TestCase):
-    """The buttons of the payment and archive screens carry the same help."""
+    """The buttons of the payment and archive screens carry the same
+    terse tooltips, at most two translated words each."""
 
     def build(self, status, latest_total=False):
         Configuration.objects.create(
@@ -395,69 +371,37 @@ class PermanenceDoneRowActionsTest(TestCase):
             Permanence, default_admin_site
         ).get_row_actions
 
-    def test_the_payment_screen_buttons_carry_their_help(self):
+    def short_tooltips_only(self, row):
+        self.assertNotIn("data-repanier-help=", row)
+        self.assertGreaterEqual(row.count("data-repanier-tooltip="), 1)
+        for tooltip in re.findall(r'data-repanier-tooltip="([^"]*)"', row):
+            self.assertLessEqual(len(tooltip.split()), 2)
+
+    def test_the_payment_screen_buttons_carry_their_tooltip(self):
         self.build(status=SaleStatus.SEND)
         row = self.row_actions(self.permanence)
-        self.assertEqual(row.count("data-repanier-help="), 4)
-        self.assertIn(
-            escape(
-                str(
-                    gettext(
-                        "Register this permanence in the accounting of the group: "
-                        "the customers pay, the producers get paid."
-                    )
-                )
-            ),
-            row,
-        )
+        self.assertEqual(row.count("data-repanier-tooltip="), 4)
+        self.short_tooltips_only(row)
 
     def test_an_invoiced_permanence_with_latest_total_offers_the_cancel_booking(self):
         self.build(status=SaleStatus.INVOICED, latest_total=True)
         row = self.row_actions(self.permanence)
-        self.assertEqual(row.count("data-repanier-help="), 2)
-        self.assertIn(
-            escape(
-                str(
-                    gettext(
-                        "Cancel the accounting entries of this permanence, when a "
-                        "correction is needed."
-                    )
-                )
-            ),
-            row,
-        )
+        self.assertEqual(row.count("data-repanier-tooltip="), 2)
+        self.assertIn("/cancel-invoicing/", row)
+        self.short_tooltips_only(row)
 
     def test_an_archived_permanence_only_offers_the_restore(self):
         self.build(status=SaleStatus.ARCHIVED)
         row = self.row_actions(self.permanence)
-        self.assertEqual(row.count("data-repanier-help="), 1)
-        self.assertIn(
-            escape(
-                str(
-                    gettext(
-                        "Take this permanence out of the archive to correct or "
-                        "rebook it."
-                    )
-                )
-            ),
-            row,
-        )
+        self.assertEqual(row.count("data-repanier-tooltip="), 1)
+        self.short_tooltips_only(row)
 
     def test_a_cancelled_delivery_offers_the_uncancel(self):
         self.build(status=SaleStatus.CANCELLED)
         row = self.row_actions(self.permanence)
-        self.assertEqual(row.count("data-repanier-help="), 1)
-        self.assertIn(
-            escape(
-                str(
-                    gettext(
-                        "Uncancel this delivery: the permanence is back to the "
-                        "payment screen, with all its purchases."
-                    )
-                )
-            ),
-            row,
-        )
+        self.assertEqual(row.count("data-repanier-tooltip="), 1)
+        self.assertIn("/restore-delivery/", row)
+        self.short_tooltips_only(row)
 
 
 

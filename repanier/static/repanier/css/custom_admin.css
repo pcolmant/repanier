@@ -205,26 +205,6 @@ a.repanier-a-tooltip:focus:before {
     opacity: 1;
 }
 
-/* The row actions of the permanence lists carry a one sentence help
-   (data-repanier-help) below the short label of the action, so that an
-   occasional staff member knows what the button does before clicking
-   it. The wide bubble is right aligned: the action columns sit at the
-   right edge of the screen. */
-a.repanier-a-tooltip[data-repanier-help]:after {
-    content: attr(data-repanier-tooltip) "\A" attr(data-repanier-help);
-    white-space: pre-line;
-    text-align: left;
-    left: auto;
-    right: 0;
-    transform: none;
-    width: max-content;
-    max-width: 320px;
-}
-
-a.repanier-a-tooltip[data-repanier-help]:before {
-    content: none;
-}
-
 input[type="submit"].repanier-submit-info,
 button[type="submit"].repanier-submit-info {
     border-radius: var(--border-radius);
