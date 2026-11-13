@@ -20,7 +20,7 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h3>{% translate "Please, confirm the action : cancel this permanence." %}</h3>
+            <h3>{% translate "Please confirm the action: cancel this permanence." %}</h3>
             <p>&nbsp;</p>
             <p>{% translate "A permanence created by mistake must not pollute the preparation screen: it can be cancelled here in one single action." %}</p>
             {% if orders_counter > 0 %}

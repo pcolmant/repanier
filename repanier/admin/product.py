@@ -211,7 +211,7 @@ class ProductDataForm(forms.ModelForm):
         if producer is None:
             self.add_error(
                 "producer",
-                _("Please select first a producer in the filter of previous screen..."),
+                _("Please select a producer in the filter of the previous screen..."),
             )
             return
         else:
@@ -464,7 +464,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
                     (
                         "-1",
                         _(
-                            "Please select first a producer in the filter of previous screen..."
+                            "Please select a producer in the filter of the previous screen..."
                         ),
                     )
                 ]

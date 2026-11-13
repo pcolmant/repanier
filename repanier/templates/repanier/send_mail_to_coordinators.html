@@ -5,7 +5,7 @@
         <div class="row">
             <div class="col">
                 {% if send %}
-                    <div class="alert alert-success" role="alert">{% translate "The mail has been send" %}</div>
+                    <div class="alert alert-success" role="alert">{% translate "The mail has been sent" %}</div>
                 {% endif %}
                 <form name="{{ form.form_name }}" method="post" action="">
                     {% csrf_token %}

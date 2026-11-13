@@ -23,6 +23,7 @@ from repanier.admin.tools import (
     check_permanence,
     check_cancel_in_post,
     check_done_in_post,
+    get_back_to_change_list_url,
 )
 from django.conf import settings
 from repanier.const import BankMovement, DECIMAL_ZERO, EMPTY_STRING, SaleStatus
@@ -177,7 +178,9 @@ class PermanenceDoneAdmin(SaleAdmin):
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+            return HttpResponseRedirect(
+                get_back_to_change_list_url(request, self)
+            )
         template_name = get_repanier_template_name("admin/confirm_action.html")
         return render(
             request,
@@ -185,7 +188,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in payment"),
-                "sub_title": _("Please, confirm the action : cancel delivery."),
+                "sub_title": _("Please confirm the action: cancel delivery."),
                 "action": "cancel_delivery",
                 "permanence": permanence,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
@@ -429,7 +432,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in payment"),
-                "sub_title": _("Please, confirm the action : generate archive."),
+                "sub_title": _("Please confirm the action: generate archive."),
                 "action": "archive",
                 "permanence": permanence,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
@@ -458,7 +461,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                             user_message_level = messages.INFO
                         else:
                             user_message = _(
-                                "You mus first cancel the invoices of {} whose date is {}."
+                                "You must first cancel the invoices of {} whose date is {}."
                             ).format(
                                 last_bank_account_total.permanence,
                                 last_bank_account_total.permanence.permanence_date.strftime(
@@ -511,7 +514,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             request,
             permanence,
             "cancel_invoicing",
-            _("Please, confirm the action : cancel the invoices."),
+            _("Please confirm the action: cancel the invoices."),
         )
 
     @check_cancel_in_post
@@ -521,7 +524,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             request,
             permanence,
             "cancel_archiving",
-            _("Please, confirm the action : cancel the archiving."),
+            _("Please confirm the action: cancel the archiving."),
         )
 
     @check_cancel_in_post
@@ -531,7 +534,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             request,
             permanence,
             "restore_delivery",
-            _("Please, confirm the action : restore the delivery."),
+            _("Please confirm the action: restore the delivery."),
         )
 
     def get_row_actions(self, permanence):

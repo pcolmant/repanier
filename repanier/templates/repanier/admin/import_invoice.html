@@ -12,7 +12,7 @@
     <form enctype="multipart/form-data" action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ sub_title|title }}</h2>
         <div class="form-row">
-            <b>{% translate "The importation concern :" %}</b> {% for object in queryset.all %}{{ object }}
+            <b>{% translate "The import concerns:" %}</b> {% for object in queryset.all %}{{ object }}
             <input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>
             {% if not forloop.last %}, {% endif %}{% endfor %}
             <br>

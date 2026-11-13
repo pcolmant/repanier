@@ -1,5 +1,6 @@
 import logging
 import threading
+from urllib.parse import quote
 
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
@@ -390,7 +391,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 args=(permanence.id, everything, deliveries_to_be_send, send_mail),
             )
             t.start()
-            user_message = _("The orders are being send.")
+            user_message = _("The orders are being sent.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(self.get_redirect_to_change_list_url())
@@ -573,7 +574,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in preparation"),
-                "sub_title": _("Please, confirm the action : back to scheduled"),
+                "sub_title": _("Please confirm the action: back to scheduled"),
                 "action": "back_to_scheduled",
                 "permanence": permanence,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
@@ -712,14 +713,22 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             )
         elif permanence.status == SaleStatus.SEND.value:
             # Same action as the payment screen: cancel_delivery of
-            # PermanenceDoneAdmin, reversible with restore_delivery.
+            # PermanenceDoneAdmin, reversible with restore_delivery. The
+            # user lands back on this preparation screen, thanks to the
+            # back parameter honored by the payment view.
+            cancel_delivery_url = add_filter(
+                reverse("admin:permanence-cancel-delivery", args=[permanence.pk])
+            )
+            back_url = add_filter(
+                reverse("admin:repanier_permanenceinpreparation_changelist")
+            )
+            cancel_delivery_url += ("&" if "?" in cancel_delivery_url else "?")
+            cancel_delivery_url += "back=" + quote(back_url, safe="")
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
                 "</div>",
-                add_filter(
-                    reverse("admin:permanence-cancel-delivery", args=[permanence.pk])
-                ),
+                cancel_delivery_url,
                 _("Cancel the delivery"),
                 _(
                     "Purchases and invoices are kept and the cancellation can be reverted."

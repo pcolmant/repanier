@@ -58,7 +58,7 @@ msgid "Balance"
 msgstr "Solde"
 
 #: admin/admin_filter.py:46
-msgid "Loses and profits"
+msgid "Losses and profits"
 msgstr "Pertes et profits"
 
 #: admin/bankaccount.py:92
@@ -151,9 +151,7 @@ msgid "Only one customer or one producer must be given."
 msgstr "Soit un consommateur, soit un producteur doit être renseigné."
 
 #: admin/bankaccount.py:342
-msgid ""
-"The operation date must be greater or equal to the latest total operation "
-"date."
+msgid "The operation date must be greater than or equal to the latest total operation date."
 msgstr ""
 "La date du mouvement doit être supérieure ou égale à la date du dernier "
 "solde."
@@ -270,7 +268,7 @@ msgid "Email content"
 msgstr "Contenu du mail"
 
 #: admin/forms.py:19
-msgid "If customers must confirm orderds, cancelled order customer mail"
+msgid "If customers must confirm orders, cancelled order customer mail"
 msgstr ""
 "Si l'option \"seules les commandes confirmées sont prises en compte\" est "
 "activée, alors ce mail servira à signaler qu'une commande a été annulée"
@@ -371,7 +369,7 @@ msgid "Offers in payment"
 msgstr "Offres en paiement"
 
 #: admin/permanence_done.py:187
-msgid "Please, confirm the action : cancel delivery."
+msgid "Please confirm the action: cancel delivery."
 msgstr "Veuillez confirmer votre demande d'annulation de la livraison."
 
 #: admin/permanence_done.py:208 admin/permanence_done.py:611
@@ -397,7 +395,7 @@ msgid "You must select at least one producer."
 msgstr "Vous deviez sélectionner au moins un producteur."
 
 #: admin/permanence_done.py:431
-msgid "Please, confirm the action : generate archive."
+msgid "Please confirm the action: generate archive."
 msgstr "Veuillez confirmer votre demande d'archivage."
 
 #: admin/permanence_done.py:456 admin/permanence_done.py:474
@@ -405,7 +403,7 @@ msgid "The selected accounting entry has been cancelled"
 msgstr "La comptabilisation sélectionnée a été annulée"
 
 #: admin/permanence_done.py:460
-msgid "You mus first cancel the invoices of {} whose date is {}."
+msgid "You must first cancel the invoices of {} whose date is {}."
 msgstr "Vous devez d'abord annuler les factures de {} dont la date est le {}."
 
 #: admin/permanence_done.py:470
@@ -417,15 +415,15 @@ msgid "Archiving has been cancelled"
 msgstr "L'archivage a été annulé"
 
 #: admin/permanence_done.py:513
-msgid "Please, confirm the action : cancel the invoices."
+msgid "Please confirm the action: cancel the invoices."
 msgstr "Veuillez confirmer votre demande d'annulation des factures."
 
 #: admin/permanence_done.py:523
-msgid "Please, confirm the action : cancel the archiving."
+msgid "Please confirm the action: cancel the archiving."
 msgstr "Veuillez confirmer votre demande d'annulation de l'archivage."
 
 #: admin/permanence_done.py:533
-msgid "Please, confirm the action : restore the delivery."
+msgid "Please confirm the action: restore the delivery."
 msgstr "Veuillez confirmer votre demande de reprise en compte de la livraison."
 
 #: admin/permanence_done.py:550 models/permanence.py:144
@@ -497,7 +495,7 @@ msgid "Long name"
 msgstr "Nom étendu"
 
 #: admin/permanence_in_preparation.py:385
-msgid "The orders are being send."
+msgid "The orders are being sent."
 msgstr "Les commandes sont en train d'être envoyées."
 
 #: admin/permanence_in_preparation.py:420
@@ -556,7 +554,7 @@ msgid "Offers in preparation"
 msgstr "Offres en préparation"
 
 #: admin/permanence_in_preparation.py:568
-msgid "Please, confirm the action : back to scheduled"
+msgid "Please confirm the action: back to scheduled"
 msgstr "Veuillez confirmer votre demande de re-planification de la permanence"
 
 #: admin/permanence_in_preparation.py:585
@@ -659,7 +657,7 @@ msgid "The reference %(reference)s is already used by %(product)s"
 msgstr "La référence %(reference)s est déjà attribuée à %(product)s"
 
 #: admin/product.py:214 admin/product.py:468
-msgid "Please select first a producer in the filter of previous screen..."
+msgid "Please select a producer in the filter of the previous screen..."
 msgstr ""
 "Vous devez d'abord sélectionner un producteur via les filtres dans l'écran "
 "précédent…"
@@ -723,7 +721,7 @@ msgid "Nothing to confirm."
 msgstr "Rien à confirmer."
 
 #: admin/rule_of_3_per_customer.py:125
-msgid "The same product can not be selected twice."
+msgid "The same product cannot be selected twice."
 msgstr "Le même produit ne peut pas être sélectionné deux fois."
 
 #: admin/rule_of_3_per_customer.py:139 models/offeritem.py:188
@@ -745,7 +743,7 @@ msgid "Apply the rule of 3"
 msgstr "Appliquer la règle de 3"
 
 #: admin/rule_of_3_per_product.py:109
-msgid "The same customer can not be selected twice."
+msgid "The same customer cannot be selected twice."
 msgstr "Le même consommateur ne peut pas être sélectionné deux fois."
 
 #: admin/rule_of_3_per_product.py:120 xlsx/xlsx_invoice_export.py:145
@@ -814,9 +812,7 @@ msgid "Permanence on "
 msgstr "Permanence du "
 
 #: auth_backend.py:63 auth_backend.py:71
-msgid ""
-"You must now first reset your password because you tried to log in too many "
-"time without success."
+msgid "You must now first reset your password because you tried to log in too many times without success."
 msgstr ""
 "Vous devez d'abord réinitialiser votre mot de passe car vous avez effectué "
 "trop de tentatives de connexions sans succès."
@@ -1002,9 +998,7 @@ msgid "Into the basket"
 msgstr "Panier"
 
 #: const.py:84
-msgid ""
-"Sold by the piece without further details (not recommended if the weight or "
-"the litter is available): bouquet of thyme, ..."
+msgid "Sold by the piece without further details (not recommended if the weight or the litre is available): bouquet of thyme, ..."
 msgstr ""
 "Vendu à la pièce sans autre précision (déconseillé si le poids ou le litrage "
 "est disponible) : bouquet de thym, ..."
@@ -1100,13 +1094,11 @@ msgstr ""
 "La configuration de serveur de messagerie fonctionne sur votre site {}."
 
 #: email/email.py:173
-msgid "An email has been send from {} to {}."
+msgid "An email has been sent from {} to {}."
 msgstr "Un mail a été envoyé depuis {} à {}."
 
 #: email/email.py:246
-msgid ""
-"Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be send "
-"to : {}"
+msgid "Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be sent to: {}"
 msgstr ""
 "Mode debug avec REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. Cet email sera envoyé "
 "à : {}"
@@ -1138,9 +1130,7 @@ msgid "No email will be sent."
 msgstr "Aucun mail ne sera envoyé."
 
 #: email/email_order.py:155
-msgid ""
-"⚠ Mail not send to our producer {} because the minimum order value has not "
-"been reached."
+msgid "⚠ Mail not sent to our producer {} because the minimum order value has not been reached."
 msgstr ""
 "⚠ Mail non transmis au producteur {} car le minimum de commande n'a pas été "
 "atteint."
@@ -1228,7 +1218,7 @@ msgid "Alert the customer after this number of weeks without participation"
 msgstr "Alerter le consommateur après ce nombre de semaines sans participation"
 
 #: models/configuration.py:47
-msgid "0 mean : never display a pop up."
+msgid "0 means: never display a pop-up."
 msgstr "0 signifie : ne jamais alerter."
 
 #: models/configuration.py:54
@@ -1268,7 +1258,7 @@ msgid "Membership fee duration"
 msgstr "Mois couverts"
 
 #: models/configuration.py:84
-msgid "Number of month(s). 0 mean : no membership fee."
+msgid "Number of months. 0 means: no membership fee."
 msgstr ""
 "Nombre de mois couvert(s) par la cotisation. 0 signifie : pas de cotisation."
 
@@ -1602,7 +1592,7 @@ msgid "Delivery board"
 msgstr "Tableau des livraisons"
 
 #: models/deliveryboard.py:86
-msgid "Deliveries board"
+msgid "Delivery boards"
 msgstr "Tableaux des livraisons"
 
 #: models/invoice.py:29
@@ -1704,11 +1694,11 @@ msgid "Receive an email containing this order summary."
 msgstr "Recevoir un mail récapitulatif de ma commande."
 
 #: models/invoice.py:472 views/delivery_select_ajax.py:77
-msgid "Please, select a delivery point"
+msgid "Please select a delivery point"
 msgstr "Veuillez sélectionner un point de livraison"
 
 #: models/invoice.py:477 views/delivery_select_ajax.py:74
-msgid "No delivery point is open for you. You can not place order."
+msgid "No delivery point is open for you. You cannot place an order."
 msgstr ""
 "Vous ne pouvez pas passer commande car aucun point de livraison n'est ouvert "
 "pour vous."
@@ -1797,7 +1787,7 @@ msgid "Maximum quantity"
 msgstr "Quantité maximale"
 
 #: models/item.py:98
-msgid "0 mean : do not limit the quantity on sale."
+msgid "0 means: do not limit the quantity on sale."
 msgstr "0 signifie : pas de limite aux quantités à vendre."
 
 #: models/item.py:162
@@ -1861,11 +1851,11 @@ msgid "Production modes"
 msgstr "Labels"
 
 #: models/lut.py:97
-msgid "The group centralise payments"
+msgid "The group centralises payments"
 msgstr "Le groupe centralise les paiements"
 
 #: models/lut.py:136
-msgid "Deliveries points"
+msgid "Delivery points"
 msgstr "Points de livraisons"
 
 #: models/lut.py:208
@@ -1881,7 +1871,7 @@ msgid "Permanence role"
 msgstr "Tâche"
 
 #: models/lut.py:222
-msgid "Permanences roles"
+msgid "Permanence roles"
 msgstr "Tâches"
 
 #: models/notification.py:12 models/notification.py:65
@@ -1945,9 +1935,7 @@ msgid "Offer description"
 msgstr "Message accompagnant l'offre"
 
 #: models/permanence.py:58
-msgid ""
-"This message is send by mail to all customers when opening the order or on "
-"top."
+msgid "This message is sent by mail to all customers when opening the order or on top."
 msgstr ""
 "A l'ouverture des commandes, ce message est envoyé à chaque consommateur du "
 "groupe autorisé à passer commande. Il est aussi affiché en haut de l'écran "
@@ -2067,7 +2055,7 @@ msgid "Permanence board"
 msgstr "Tableau des permanenciers"
 
 #: models/permanenceboard.py:51
-msgid "Permanences board"
+msgid "Permanence boards"
 msgstr "Tableaux des tâches"
 
 #: models/producer.py:44
@@ -2116,7 +2104,7 @@ msgid "Minimum order value to place an order"
 msgstr "Montant minimum d'une commande pour pouvoir passer commande"
 
 #: models/producer.py:116
-msgid "0 mean : no minimum order value."
+msgid "0 means: no minimum order value."
 msgstr "0 signifie : pas de montant minimum à commander."
 
 #: models/producer.py:123
@@ -2124,7 +2112,7 @@ msgid "Date_balance"
 msgstr "Date de calcul du solde"
 
 #: models/producer.py:131
-msgid "Represent this buyinggroup"
+msgid "Represent this buying group"
 msgstr "Représente ce groupement d'achats"
 
 #: models/producer.py:181 models/product.py:148
@@ -2263,9 +2251,7 @@ msgid "Wrong picture size."
 msgstr "Taille d'image non reconnue."
 
 #: picture/views.py:31
-msgid ""
-"Please, contact the administrator of the webserver : There is not enough "
-"disk space."
+msgid "Please contact the administrator of the web server: there is not enough disk space."
 msgstr ""
 "Il n'y a plus assez d'espace de stockage sur le serveur pour ajouter cette "
 "photo."
@@ -2275,9 +2261,7 @@ msgid "The system does not recognize the format."
 msgstr "Repanier ne reconnaît pas le format du fichier."
 
 #: picture/views.py:56
-msgid ""
-"A picture with the same file name already exist. This picture will not "
-"replace it."
+msgid "A picture with the same file name already exists. This picture will not replace it."
 msgstr "Repanier a repris un photo qui portait déjà le même nom de fichier."
 
 #: picture/views.py:65
@@ -2707,7 +2691,7 @@ msgstr "Oui, je confirme cette action mais sans envoyer de mail"
 
 #: templates/bs3/repanier/admin/confirm_close_order.html:29
 #: templates/bs5/repanier/admin/confirm_close_order.html:29
-msgid "Please indicate the deviveries points you wish to close"
+msgid "Please indicate the delivery points you wish to close"
 msgstr "Veuillez indiquer les points de livraisons que vous souhaitez clôturer"
 
 #: templates/bs3/repanier/admin/confirm_close_order.html:37
@@ -2737,7 +2721,7 @@ msgstr ""
 
 #: templates/bs3/repanier/admin/confirm_duplicate_product.html:13
 #: templates/bs5/repanier/admin/confirm_duplicate_product.html:13
-msgid "Please, confirm the action : duplicate product"
+msgid "Please confirm the action: duplicate product"
 msgstr ""
 "Veuillez confirmer votre demande de duplication d'un produit et renseigner "
 "le producteur cible"
@@ -2749,7 +2733,7 @@ msgstr "Veuillez confirmer votre demande d'exportation des commandes"
 
 #: templates/bs3/repanier/admin/confirm_export_customer_order.html:25
 #: templates/bs5/repanier/admin/confirm_export_customer_order.html:25
-msgid "Please indicate the deviveries points you wish to export"
+msgid "Please indicate the delivery points you wish to export"
 msgstr "Veuillez indiquer les points de livraisons que vous souhaitez exporter"
 
 #: templates/bs3/repanier/admin/confirm_generate_permanence.html:30
@@ -2831,7 +2815,7 @@ msgstr "Veuillez confirmer votre demande d'ouvrir les commandes"
 #: templates/bs3/repanier/admin/import_purchases.html:15
 #: templates/bs5/repanier/admin/import_invoice.html:15
 #: templates/bs5/repanier/admin/import_purchases.html:15
-msgid "The importation concern :"
+msgid "The import concerns:"
 msgstr "L'importation concerne :"
 
 #: templates/bs3/repanier/admin/import_invoice.html:19
@@ -2856,7 +2840,7 @@ msgstr "Effectuer l'importation"
 #: templates/bs3/repanier/communication_permanence_board.html:6
 #: templates/bs5/repanier/communication_confirm_order.html:5
 #: templates/bs5/repanier/communication_permanence_board.html:5
-msgid "Personnal communication"
+msgid "Personal communication"
 msgstr "Communication personnelle"
 
 #: templates/bs3/repanier/communication_confirm_order.html:9
@@ -2878,7 +2862,7 @@ msgstr ""
 
 #: templates/bs3/repanier/communication_permanence_board.html:9
 #: templates/bs5/repanier/communication_permanence_board.html:9
-msgid "Your are registered to the following task :"
+msgid "You are registered for the following task:"
 msgstr ""
 "Vous êtes inscrit/e pour les tâches suivantes au tableau des permanenciers :"
 
@@ -3073,7 +3057,7 @@ msgstr "Pas de produit trouvé"
 #: templates/bs3/repanier/order_product_description.html:18
 #: templates/bs5/repanier/order_product_description.html:24
 #: templates/bs5/repanier/order_product_description.html:40
-msgid "There is no more product's information."
+msgid "There is no more product information."
 msgstr "Il n'y a pas d'autre information sur ce produit."
 
 #: templates/bs3/repanier/producer_invoice_form.html:65
@@ -3134,7 +3118,7 @@ msgstr "Mot de passe"
 
 #: templates/bs3/repanier/registration/login.html:58
 #: templates/bs5/repanier/registration/login.html:63
-msgid "Create an account ?"
+msgid "Create an account?"
 msgstr "Créer un compte ?"
 
 #: templates/bs3/repanier/registration/login.html:73
@@ -3213,9 +3197,7 @@ msgstr ""
 #: templates/bs3/repanier/registration/password_reset_done_email.html:2
 #: templates/bs5/repanier/registration/password_reset_done_email.html:2
 #, python-format
-msgid ""
-"You're receiving this email because you have reseted the password of your "
-"user account at %(site_name)s."
+msgid "You're receiving this email because you have reset the password of your user account at %(site_name)s."
 msgstr ""
 "Le mot de passe de votre compte sur %(site_name)s vient d'être réinitialisé."
 
@@ -3296,7 +3278,7 @@ msgstr ""
 
 #: templates/bs3/repanier/send_mail_to_coordinators.html:8
 #: templates/bs5/repanier/send_mail_to_coordinators.html:8
-msgid "The mail has been send"
+msgid "The mail has been sent"
 msgstr "Le mail a été envoyé"
 
 #: templates/bs3/repanier/send_mail_to_coordinators.html:14
@@ -3354,7 +3336,7 @@ msgstr "Le fichier n&quot;est pas une image"
 
 #: templates/bs3/repanier/widgets/picture.html:178
 #: templates/bs5/repanier/widgets/picture.html:70
-msgid "Processing this image take too much time"
+msgid "Processing this image takes too much time"
 msgstr "Le traitement de cette image prend trop de temps"
 
 #: templates/bs3/repanier/widgets/select_admin_order_unit.html:70
@@ -4050,7 +4032,7 @@ msgstr "par produit"
 
 #: xlsx/xlsx_order_producer.py:323 xlsx/xlsx_order_producer.py:361
 #: xlsx/xlsx_order_producer.py:526 xlsx/xlsx_order_producer.py:553
-msgid "w TVA"
+msgid "w VAT"
 msgstr "avec TVA"
 
 #: xlsx/xlsx_order_producer.py:420
@@ -4162,7 +4144,7 @@ msgstr "Annuler cette permanence"
 msgid "The permanence has been cancelled."
 msgstr "La permanence a été annulée."
 
-msgid "Please, confirm the action : cancel this permanence."
+msgid "Please confirm the action: cancel this permanence."
 msgstr "Veuillez confirmer l'action : annuler cette permanence."
 
 msgid ""

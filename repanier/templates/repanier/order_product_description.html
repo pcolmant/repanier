@@ -21,7 +21,7 @@
                     {% if offer.product.offer_description_v2 %}
                         {{ offer.product.offer_description_v2 | safe }}
                     {% else %}
-                        <p class="text-muted">{% translate "There is no more product's information." %}</p>
+                        <p class="text-muted">{% translate "There is no more product information." %}</p>
                     {% endif %}
                 </div>
             </div>
@@ -37,7 +37,7 @@
             {% if offer.product.offer_description_v2 %}
                 {{ offer.product.offer_description_v2 | safe }}
             {% else %}
-                <p class="text-muted">{% translate "There is no more product's information." %}</p>
+                <p class="text-muted">{% translate "There is no more product information." %}</p>
             {% endif %}
         </div>
     {% endif %}

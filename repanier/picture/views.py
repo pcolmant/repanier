@@ -28,7 +28,7 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
         if disk.f_blocks > 0 and ((disk.f_bfree + 1.0) / disk.f_blocks) < 0.2:
             msg = "{}".format(
                 _(
-                    "Please, contact the administrator of the webserver : There is not enough disk space."
+                    "Please contact the administrator of the web server: there is not enough disk space."
                 )
             )
             return JsonResponse({"error": msg}, status=403)
@@ -53,7 +53,7 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
         if default_storage.exists(name):
             msg = "{}".format(
                 _(
-                    "A picture with the same file name already exist. This picture will not replace it."
+                    "A picture with the same file name already exists. This picture will not replace it."
                 )
             )
             return JsonResponse(
