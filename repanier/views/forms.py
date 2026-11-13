@@ -7,6 +7,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.template import loader
 from django.utils import timezone
+from django.utils.html import strip_tags
 from repanier.const import (
     DECIMAL_ONE,
     DECIMAL_ZERO,
@@ -70,22 +71,24 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
     ):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
+
+        The template given by email_template_name is html: it becomes
+        the html alternative of the mail, and strip_tags of it the
+        plain text body - the same split RepanierEmail applies.
         """
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
         subject = EMPTY_STRING.join(subject.splitlines())
-        body = loader.render_to_string(email_template_name, context)
+        html_body = loader.render_to_string(email_template_name, context)
 
         email_message = EmailMultiAlternatives(
             subject,
-            body,
-            [
+            strip_tags(html_body),
+            to=[
                 to_email,
             ],
         )
-        if html_email_template_name is not None:
-            html_email = loader.render_to_string(html_email_template_name, context)
-            email_message.attach_alternative(html_email, "text/html")
+        email_message.attach_alternative(html_body, "text/html")
 
         email_message.send()
 
