@@ -95,7 +95,7 @@ class LUT_DeliveryPoint(MPTTModel):
         related_name="+",
         verbose_name=_("Group"),
         help_text=_(
-            "The group centralise payments"
+            "The group centralises payments"
         ),
         blank=True,
         null=True,
@@ -134,7 +134,7 @@ class LUT_DeliveryPoint(MPTTModel):
 
     class Meta:
         verbose_name = _("Delivery point")
-        verbose_name_plural = _("Deliveries points")
+        verbose_name_plural = _("Delivery points")
 
 
 class LUT_DepartmentForCustomerQuerySet(QuerySet):
@@ -220,4 +220,4 @@ class LUT_PermanenceRole(MPTTModel):
 
     class Meta:
         verbose_name = _("Permanence role")
-        verbose_name_plural = _("Permanences roles")
+        verbose_name_plural = _("Permanence roles")

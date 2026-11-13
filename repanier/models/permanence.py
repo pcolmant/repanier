@@ -58,7 +58,7 @@ class Permanence(models.Model):
         _("Offer description"),
         configuration="CKEDITOR_SETTINGS_MODEL2",
         help_text=_(
-            "This message is send by mail to all customers when opening the order or on top."
+            "This message is sent by mail to all customers when opening the order or on top."
         ),
         blank=True,
         default=EMPTY_STRING,

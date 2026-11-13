@@ -95,7 +95,7 @@ class Item(models.Model):
 
     stock = models.DecimalField(
         _("Maximum quantity"),
-        help_text=_("0 mean : do not limit the quantity on sale."),
+        help_text=_("0 means: do not limit the quantity on sale."),
         default=DECIMAL_ZERO,
         max_digits=9,
         decimal_places=3,

@@ -413,13 +413,15 @@ class CustomerInvoice(Invoice):
                     )
 
                 if qs.exists():
-                    label = _("Please, select a delivery point")
+                    label = _("Please select a delivery point")
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id, customer_id=self.customer_id
                     ).update(status=SaleStatus.OPENED)
                 else:
                     has_delivery_points = False
-                    label = _("No delivery point is open for you. You can not place order.")
+                    label = _(
+                        "No delivery point is open for you. You cannot place an order."
+                    )
                     # IMPORTANT :
                     # 1 / This prohibits to place an order into the customer UI
                     # 2 / task_order.close_send_order will delete any CLOSED orders without any delivery point

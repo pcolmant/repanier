@@ -81,7 +81,7 @@ class Placement(models.TextChoices):
 
 class OrderUnit(models.TextChoices):
     PC = "100", _(
-        "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."
+        "Sold by the piece without further details (not recommended if the weight or the litre is available): bouquet of thyme, ..."
     )
     PC_PRICE_KG = "105", _(
         "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."

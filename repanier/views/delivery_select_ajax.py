@@ -78,10 +78,10 @@ def delivery_select_ajax(request):
     if not is_selected:
         if delivery_counter == 0:
             label = "{}".format(
-                _("No delivery point is open for you. You can not place order.")
+                _("No delivery point is open for you. You cannot place an order.")
             )
         else:
-            label = "{}".format(_("Please, select a delivery point"))
+            label = "{}".format(_("Please select a delivery point"))
         # A placeholder item: the customer has not selected a delivery
         # point yet, selecting one is done through the items below.
         html = '<li><a class="dropdown-item disabled" href="#">{}</a></li>'.format(

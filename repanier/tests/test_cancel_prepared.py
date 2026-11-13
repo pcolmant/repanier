@@ -8,6 +8,7 @@ scheduled - and cancelling the delivery from the payment screen, where
 everything stays reversible.
 """
 import datetime
+from urllib.parse import quote, urlsplit
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -321,3 +322,67 @@ class CancelPreparedRowActionsTest(TestCase):
         # there with restore_delivery
         self.assertIn("/cancel-delivery/", row)
         self.assertNotIn("/cancel-prepared/", row)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False)
+class CancelDeliveryFromPreparationScreenTest(TestCase):
+    """The preparation screen embeds the cancel_delivery action of the
+    payment screen: the user must land back on the preparation list."""
+
+    def build_and_login(self):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        self.user = User.objects.create_superuser(
+            username="staff@example.com", email="staff@example.com", password="x"
+        )
+        self.client.force_login(user=self.user)
+        self.permanence = Permanence.objects.create(
+            permanence_date=utc_today(), status=SaleStatus.SEND, highest_status=SaleStatus.SEND
+        )
+        self.back = reverse("admin:repanier_permanenceinpreparation_changelist")
+        self.url = (
+            reverse("admin:permanence-cancel-delivery", args=[self.permanence.id])
+            + "?back="
+            + quote(self.back, safe="")
+        )
+
+    def test_applying_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.client.post(self.url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
+        # The action itself did run
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.CANCELLED)
+
+    def test_refusing_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.client.post(self.url, {"cancel": "cancel"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.SEND)
+
+    def test_without_back_the_payment_list_stays_the_target(self):
+        self.build_and_login()
+        url = reverse("admin:permanence-cancel-delivery", args=[self.permanence.id])
+        response = self.client.post(url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # The payment change list, possibly with its preserved filters
+        target = urlsplit(response.redirect_chain[-1][0]).path
+        self.assertEqual(target, "/fr/coordi/repanier/permanencedone/")
+
+    def test_a_forged_back_parameter_is_ignored(self):
+        self.build_and_login()
+        url = (
+            reverse("admin:permanence-cancel-delivery", args=[self.permanence.id])
+            + "?back=https://example.org/evil"
+        )
+        response = self.client.post(url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        target = urlsplit(response.redirect_chain[-1][0]).path
+        self.assertEqual(target, "/fr/coordi/repanier/permanencedone/")

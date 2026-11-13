@@ -4,6 +4,7 @@ from threading import local
 
 from django.core.checks import messages
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from repanier.const import SaleStatus
 from repanier.models import Permanence
@@ -13,6 +14,23 @@ logger = logging.getLogger(__name__)
 _thread_locals = local()
 
 
+def get_back_to_change_list_url(request, model_admin):
+    """An admin screen may embed the action of another one: the cancel
+    delivery button of the preparation screen targets the view of the
+    payment screen. Such URLs carry a ?back= change list, and the user
+    must land there after the action - not on the list of the screen
+    owning the view.
+
+    The back parameter is compared to the known change list, never
+    trusted as-is: a forged value cannot redirect outside the admin.
+    Without it the action redirects, as before, to the change list of
+    the view owner."""
+    back = request.GET.get("back", "")
+    if back:
+        base = back.split("?", 1)[0]
+        if base == reverse("admin:repanier_permanenceinpreparation_changelist"):
+            return back
+    return model_admin.get_redirect_to_change_list_url()
 def check_cancel_in_post(func):
     @wraps(func)
     def func_wrapper(*args, **kwargs):
@@ -24,7 +42,9 @@ def check_cancel_in_post(func):
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             args[0].message_user(args[1], user_message, user_message_level)
-            return HttpResponseRedirect(args[0].get_redirect_to_change_list_url())
+            return HttpResponseRedirect(
+                get_back_to_change_list_url(args[1], args[0])
+            )
         return func(*args, **kwargs)
 
     return func_wrapper

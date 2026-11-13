@@ -16,7 +16,7 @@ class OpenAndSendOfferForm(forms.Form):
         label=_("Email content"), widget=TextEditorWidget, required=False
     )
     template_cancel_order_customer_mail = forms.CharField(
-        label=_("If customers must confirm orderds, cancelled order customer mail"),
+        label=_("If customers must confirm orders, cancelled order customer mail"),
         widget=TextEditorWidget,
         required=False,
     )

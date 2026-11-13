@@ -138,7 +138,7 @@ class CustomerPurchaseSendInlineFormSet(BaseInlineFormSet):
                 if value is not None:
                     if value in values:
                         raise forms.ValidationError(
-                            _("The same product can not be selected twice.")
+                            _("The same product cannot be selected twice.")
                         )
                     else:
                         values.add(value)

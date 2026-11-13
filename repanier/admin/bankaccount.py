@@ -341,7 +341,7 @@ class BankAccountDataForm(forms.ModelForm):
                 self.add_error(
                     "operation_date",
                     _(
-                        "The operation date must be greater or equal to the latest total operation date."
+                        "The operation date must be greater than or equal to the latest total operation date."
                     ),
                 )
 
