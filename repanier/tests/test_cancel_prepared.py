@@ -311,6 +311,10 @@ class CancelPreparedRowActionsTest(TestCase):
         self.build_and_login(status=SaleStatus.PLANNED)
         row = self.row_actions(self.permanence)
         self.assertIn("/cancel-prepared/", row)
+        # The cancel button has the same look as the one of the closed
+        # rows: truck crossed out, whatever the action behind it
+        self.assertIn("fa-truck", row)
+        self.assertIn("fa-ban", row)
         # Every button carries a tooltip, and it stays terse: at most
         # two translated words, no help sentence anymore.
         self.assertEqual(row.count("data-repanier-tooltip="), 3)

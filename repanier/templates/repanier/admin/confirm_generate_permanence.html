@@ -30,19 +30,28 @@
                 {% if forloop.first %}<b>{{ point|verbose_name_plural }} :</b> {% endif %}{{ point.delivery_point }}{% if not forloop.last %}, {% endif %}
             {% endfor %}</p>
             <p>{% translate "On what dates do you want to generate permanence(s) based on the model of this one?" %}</p>
-            <div class="fieldBox">
-                <div class="fieldWrapper">
-                    {{ form.recurrences.errors }}
-                    {{ form.recurrences.label_tag }}
-                    {{ form.recurrences }}
-                    {% if form.recurrences.help_text %}
-                        <p class="help">{{ form.recurrences.help_text|safe }}</p>
-                    {% endif %}
-                </div>
-            </div>
             <div class="submit-row">
                 <input type="submit" name="apply" value="{% translate "Yes, I'm sure" %}" class="default">
                 <input type="submit" name="cancel" value="{% translate "No, cancel the action" %}">
+            </div>
+            {# The recurrence widget comes with its own layout, which the
+               custom checkbox rules of the admin stylesheet expect in
+               their original nesting: restored as is. #}
+            <div class="form-row">
+                <div class="fieldBox">
+                    <div class="fieldWrapper">
+                        {{ form.recurrences.errors }}
+                        <p></p>
+                        <p></p>
+                        {{ form.recurrences.label_tag }}
+                        <p></p>
+                        <p></p>
+                        {{ form.recurrences }}
+                        {% if form.recurrences.help_text %}
+                            <p class="help">{{ form.recurrences.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
             <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
             <input type="hidden" name="action" value="{{ action }}"/>

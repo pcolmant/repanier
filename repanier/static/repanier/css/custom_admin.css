@@ -205,6 +205,13 @@ a.repanier-a-tooltip:focus:before {
     opacity: 1;
 }
 
+/* The confirm screens of the admin actions: a choice line is a radio
+   button followed by its label. Leave a gap to the right of the radio
+   button so that the label of the choice stays readable. */
+#repanier_confirm_action_form input[type="radio"] {
+    margin-right: 0.5cm;
+}
+
 input[type="submit"].repanier-submit-info,
 button[type="submit"].repanier-submit-info {
     border-radius: var(--border-radius);
