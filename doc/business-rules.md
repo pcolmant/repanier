@@ -167,6 +167,19 @@ debt to the group, and the site producer is never paid by the bank.
 Test: `test_producer_payment_chain.py`
 (MembershipFeeWithinTheSplitTest).
 
+**Symmetry of the cancellation flows.** The closure snapshots the member's
+previous validity date onto his customer invoice
+(`CustomerInvoice.membership_fee_valid_until_save`). Whatever unwinds
+the permanence restores that previous date: cancelling the delivery
+(`cancel_delivery`, SEND -> CANCELLED) or cancelling the invoicing
+(`cancel_invoice`, the accounting reversal). Whatever re-applies the
+permanence re-extends the validity from the same snapshot: restoring a
+cancelled delivery (`restore_delivery`) or invoicing again after a
+cancelled invoicing. The restore never shortens a date another
+permanence extended afterwards (the update only fires when the current
+date is still the one this permanence computed).
+Tests: `test_membership_fee_cancel.py`.
+
 ### The site accounts (consumer / producer)
 
 The Repanier site itself owns a consumer account and a producer account

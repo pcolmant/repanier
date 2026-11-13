@@ -169,6 +169,20 @@ c'est une dette envers le groupe, et le producteur du site n'est jamais
 payé par la banque.
 Test : `test_producer_payment_chain.py` (MembershipFeeWithinTheSplitTest).
 
+**Symétrie des flux d'annulation.** La clôture mémorise la date de
+validité antérieure du membre sur sa facture client
+(`CustomerInvoice.membership_fee_valid_until_save`). Tout ce qui défait
+la permanence restaure cette date antérieure : l'annulation de la
+livraison (`cancel_delivery`, SEND -> CANCELLED) et l'annulation de la
+facturation (`cancel_invoice`, la réversion compta). Tout ce qui
+ré-applique la permanence re-prolonge la validité depuis ce même
+snapshot : la restauration d'une livraison annulée (`restore_delivery`)
+et la re-facturation après une facturation annulée. La restauration ne
+raccourcit jamais une date prolongée ensuite par une autre permanence
+(la mise à jour ne s'applique que si la date courante est encore celle
+calculée par cette permanence).
+Tests : `test_membership_fee_cancel.py`.
+
 ### Les comptes du site (consommateur / producteur)
 
 Le site Repanier lui-même possède un compte consommateur et un compte

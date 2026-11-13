@@ -1,7 +1,6 @@
 import datetime
 import logging
 
-from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.db import transaction, connection
 from django.db.models import F, Sum, DecimalField
@@ -693,18 +692,19 @@ class Permanence(models.Model):
                                 batch_job=True,
                                 comment=EMPTY_STRING,
                             )
+                            # Snapshot the renewal date before extending it:
+                            # cancel_delivery / cancel_invoice restore it,
+                            # restore_delivery / a re-invoicing re-apply it
+                            CustomerInvoice.objects.filter(
+                                id=customer_invoice.id
+                            ).update(
+                                membership_fee_valid_until_save=customer.membership_fee_valid_until
+                            )
                             membership_fee_valid_until = (
-                                customer.membership_fee_valid_until
-                                + relativedelta(
-                                    months=int(
-                                        REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
-                                    )
+                                Customer.compute_membership_fee_valid_until(
+                                    customer.membership_fee_valid_until
                                 )
                             )
-                            today = timezone.now().date()
-                            if membership_fee_valid_until < today:
-                                # For or occasional customer
-                                membership_fee_valid_until = today
                             # customer.save(update_fields=['membership_fee_valid_until', ])
                             # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
                             Customer.objects.filter(id=customer.id).update(
@@ -1118,6 +1118,14 @@ class Permanence(models.Model):
             update_payment_date=True,
             payment_date=payment_date,
         )
+        # The invoicing counts the forced membership fees: re-apply the
+        # extension computed at close time. A no-op in the normal flow
+        # (close_order already extended the dates); it restores the
+        # extension after a cancel_invoice of a previous invoicing.
+        for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=self.id, membership_fee_valid_until_save__isnull=False
+        ):
+            customer_invoice.restore_membership_fee_extension()
 
     # def get_or_create_group_invoice(self, customer_buyinggroup, payment_date, status):
     #     customer_invoice_buyinggroup = CustomerInvoice.objects.filter(
@@ -1153,6 +1161,8 @@ class Permanence(models.Model):
             invoice_sort_order=None,
         )
         for customer_invoice in CustomerInvoice.objects.filter(permanence_id=self.id):
+            # Restore the membership renewal date extended at close time
+            customer_invoice.cancel_membership_fee_extension()
             # customer = customer_invoice.customer
             # customer.balance = customer_invoice.previous_balance
             # customer.date_balance = customer_invoice.date_previous_balance
@@ -1228,10 +1238,25 @@ class Permanence(models.Model):
     @transaction.atomic
     def cancel_delivery(self):
         self.set_status(old_status=SaleStatus.SEND, new_status=SaleStatus.CANCELLED)
+        # A cancelled delivery never pays the forced membership fee:
+        # restore the renewal dates extended at close time
+        for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=self.id, membership_fee_valid_until_save__isnull=False
+        ):
+            customer_invoice.cancel_membership_fee_extension()
         bank_account = BankAccount.get_closest_to(self.permanence_date)
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
             self.save(update_fields=["invoice_sort_order"])
+
+    def restore_delivery(self):
+        """Cancel the cancellation of a delivery: back to SEND and the
+        membership fees forced at close time apply again."""
+        self.set_status(old_status=SaleStatus.CANCELLED, new_status=SaleStatus.SEND)
+        for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=self.id, membership_fee_valid_until_save__isnull=False
+        ):
+            customer_invoice.restore_membership_fee_extension()
 
     @transaction.atomic
     def archive(self):
