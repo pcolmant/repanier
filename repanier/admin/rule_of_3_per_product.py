@@ -108,7 +108,7 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
                 if value is not None:
                     if value in values:
                         raise forms.ValidationError(
-                            _("The same customer can not be selected twice.")
+                            _("The same customer cannot be selected twice.")
                         )
                     else:
                         values.add(value)

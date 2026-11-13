@@ -154,7 +154,7 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
         ):
             html_body = "{}<br><br>{}".format(order_producer_mail_subject, html_body)
             order_producer_mail_subject = _(
-                "⚠ Mail not send to our producer {} because the minimum order value has not been reached."
+                "⚠ Mail not sent to our producer {} because the minimum order value has not been reached."
             ).format(long_profile_name)
             send_email = True
         else:

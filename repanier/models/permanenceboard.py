@@ -48,7 +48,7 @@ class PermanenceBoard(models.Model):
 
     class Meta:
         verbose_name = _("Permanence board")
-        verbose_name_plural = _("Permanences board")
+        verbose_name_plural = _("Permanence boards")
         unique_together = ("permanence", "permanence_role", "customer")
         indexes = [
             models.Index(

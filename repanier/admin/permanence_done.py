@@ -185,7 +185,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in payment"),
-                "sub_title": _("Please, confirm the action : cancel delivery."),
+                "sub_title": _("Please confirm the action: cancel delivery."),
                 "action": "cancel_delivery",
                 "permanence": permanence,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
@@ -429,7 +429,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in payment"),
-                "sub_title": _("Please, confirm the action : generate archive."),
+                "sub_title": _("Please confirm the action: generate archive."),
                 "action": "archive",
                 "permanence": permanence,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
@@ -458,7 +458,7 @@ class PermanenceDoneAdmin(SaleAdmin):
                             user_message_level = messages.INFO
                         else:
                             user_message = _(
-                                "You mus first cancel the invoices of {} whose date is {}."
+                                "You must first cancel the invoices of {} whose date is {}."
                             ).format(
                                 last_bank_account_total.permanence,
                                 last_bank_account_total.permanence.permanence_date.strftime(
@@ -511,7 +511,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             request,
             permanence,
             "cancel_invoicing",
-            _("Please, confirm the action : cancel the invoices."),
+            _("Please confirm the action: cancel the invoices."),
         )
 
     @check_cancel_in_post
@@ -521,7 +521,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             request,
             permanence,
             "cancel_archiving",
-            _("Please, confirm the action : cancel the archiving."),
+            _("Please confirm the action: cancel the archiving."),
         )
 
     @check_cancel_in_post
@@ -531,7 +531,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             request,
             permanence,
             "restore_delivery",
-            _("Please, confirm the action : restore the delivery."),
+            _("Please confirm the action: restore the delivery."),
         )
 
     def get_row_actions(self, permanence):

@@ -43,7 +43,7 @@ class AdminFilterBankAccountStatus(SimpleListFilter):
         return [
             (1, _("Not booked")),
             (2, _("Balance")),
-            (3, _("Loses and profits")),
+            (3, _("Losses and profits")),
         ]
 
     def queryset(self, request, queryset):

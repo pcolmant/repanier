@@ -390,7 +390,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 args=(permanence.id, everything, deliveries_to_be_send, send_mail),
             )
             t.start()
-            user_message = _("The orders are being send.")
+            user_message = _("The orders are being sent.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(self.get_redirect_to_change_list_url())
@@ -573,7 +573,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in preparation"),
-                "sub_title": _("Please, confirm the action : back to scheduled"),
+                "sub_title": _("Please confirm the action: back to scheduled"),
                 "action": "back_to_scheduled",
                 "permanence": permanence,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,

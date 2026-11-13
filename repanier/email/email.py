@@ -170,7 +170,7 @@ class RepanierEmail(EmailMultiAlternatives):
 
             email.send()
             return _(
-                "An email has been send from {} to {}.".format(
+                "An email has been sent from {} to {}.".format(
                     settings.DEFAULT_FROM_EMAIL, to_email
                 )
             )
@@ -241,7 +241,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     return (
                         True,
                         _(
-                            "Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be send to : {}"
+                            "Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be sent to: {}"
                         ).format(settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO),
                     )
                 else:
