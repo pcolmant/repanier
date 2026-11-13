@@ -37,62 +37,6 @@ def repanier_admins(*args, **kwargs):
     )
 
 
-@register.simple_tag(takes_context=False)
-def repanier_notification(*args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
-
-    return REPANIER_SETTINGS_NOTIFICATION.get_html_notification_card_display()
-
-
-@register.simple_tag(takes_context=False)
-def repanier_permanences(*args, **kwargs):
-    permanences_cards = []
-    for permanence in (
-        Permanence.objects.filter(status=SaleStatus.OPENED)
-        .only("id", "permanence_date", "with_delivery_point")
-        .order_by("permanence_date", "id")
-    ):
-        permanences_cards.append(permanence.get_html_permanence_card_display())
-
-    displayed_permanence_counter = 0
-    for permanence in (
-        Permanence.objects.filter(
-            status__in=[SaleStatus.CLOSED, SaleStatus.SEND],
-            master_permanence__isnull=True,
-        )
-        .only("id", "permanence_date")
-        .order_by("-permanence_date")
-    ):
-        displayed_permanence_counter += 1
-        permanences_cards.append(permanence.get_html_permanence_card_display())
-        if displayed_permanence_counter > 4:
-            break
-
-    return mark_safe(
-        """
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <div class="card container-activities">
-                        <div class="card-header">
-                            <h2 class="card-title">{card_title}</h2>
-                        </div>
-                        {html}
-                    </div>
-                </div>
-            </div>
-        </div>
-        """.format(
-            card_title=("No offer to display")
-            if len(permanences_cards) == 0
-            else _("Sale")
-            if len(permanences_cards) == 1
-            else _("Sales"),
-            html='<div class="dropdown-divider"></div>'.join(permanences_cards),
-        )
-    )
-
-
 @register.simple_tag(takes_context=True)
 def repanier_user(context, *args, **kwargs):
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
@@ -154,32 +98,6 @@ def history_label(request) -> str:
     else:
         my_balance = "{}".format(_("History"))
     return my_balance
-
-
-@register.simple_tag(takes_context=False)
-def repanier_permanence_title(*args, **kwargs):
-    result = EMPTY_STRING
-    p_permanence_id = sint(kwargs.get("permanence_id", 0))
-    if p_permanence_id > 0:
-        permanence = Permanence.objects.filter(id=p_permanence_id).first()
-        if permanence is not None:
-            result = permanence.get_permanence_display()
-        else:
-            result = EMPTY_STRING
-    return result
-
-
-@register.simple_tag(takes_context=False)
-def repanier_html_permanence_title(*args, **kwargs):
-    result = EMPTY_STRING
-    p_permanence_id = sint(kwargs.get("permanence_id", 0))
-    if p_permanence_id > 0:
-        permanence = Permanence.objects.filter(id=p_permanence_id).first()
-        if permanence is not None:
-            result = permanence.get_html_permanence_title_display()
-        else:
-            result = EMPTY_STRING
-    return result
 
 
 @register.simple_tag(takes_context=False)

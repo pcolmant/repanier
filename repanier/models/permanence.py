@@ -1658,9 +1658,6 @@ class Permanence(models.Model):
 
     get_permanence_admin_display.short_description = _("Sales")
 
-    def get_html_permanence_title_display(self):
-        return self.get_html_permanence_display(align="vertical-align: bottom; ")
-
     def get_html_permanence_display(self, align=EMPTY_STRING):
         if self.status == SaleStatus.OPENED:
             return mark_safe(
@@ -1670,9 +1667,6 @@ class Permanence(models.Model):
             )
         else:
             return self.get_permanence_display()
-
-    def get_html_permanence_card_display(self):
-        return EMPTY_STRING
 
     def get_html_board_composition(self):
         from repanier.models.permanenceboard import PermanenceBoard

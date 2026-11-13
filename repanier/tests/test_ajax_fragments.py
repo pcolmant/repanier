@@ -1,13 +1,12 @@
-"""Tests of the notification flash card and the basket button fragments.
+"""Tests of the basket button fragment.
 
-Both now render from templates (repanier/notification_card.html and
-repanier/my_basket.html) instead of building markup strings in Python.
+It renders from a template (repanier/my_basket.html) instead of building
+markup strings in Python.
 """
 from decimal import Decimal
 
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import SimpleTestCase, override_settings
 
-from repanier.models.notification import Notification
 from repanier.tools import my_basket
 
 D = Decimal
@@ -51,30 +50,3 @@ class MyBasketTemplateTest(SimpleTestCase):
         json_dict = my_basket(True, Amount(D("10.00")))
         self.assertIn('class="bi bi-check-lg"', json_dict["#my_basket"])
         self.assertNotIn("bi-exclamation-circle", json_dict["#my_basket"])
-
-
-class NotificationFlashCardTest(TestCase):
-    def test_empty_notification_renders_nothing(self):
-        self.assertEqual(
-            Notification.objects.create().get_html_notification_card_display(), ""
-        )
-
-    def test_notification_renders_from_the_template_escaped(self):
-        notification = Notification.objects.create(
-            notification_v2="Welcome aboard!"
-        )
-        fragment = notification.get_html_notification_card_display()
-        self.assertIn('class="card card-flash"', fragment)
-        self.assertIn("Welcome aboard!", fragment)
-        self.assertIn('class="card-close"', fragment)
-        self.assertIn("flash=0", fragment)
-
-    def test_notification_content_is_not_injected_as_html(self):
-        # The rich text content is escaped: an html payload in the
-        # notification must not produce a live tag.
-        notification = Notification.objects.create(
-            notification_v2="<img src=x onerror=alert(1)>"
-        )
-        fragment = notification.get_html_notification_card_display()
-        self.assertIn("&lt;img", fragment)
-        self.assertNotIn("<img src=x", fragment)
