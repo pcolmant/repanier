@@ -4133,3 +4133,16 @@ msgstr ""
 
 msgid "The permanence has been deleted."
 msgstr "De uitdeling werd verwijderd."
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "You no longer receive the general mails of the group. Your order confirmations keep arriving: they follow your orders."
+msgstr "Je ontvangt de algemene e-mails van de groep niet meer. De bevestigingen van je bestellingen komen wel nog toe: die volgen je bestellingen."
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "Receive the mails again"
+msgstr "De e-mails opnieuw ontvangen"
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "You receive the mails of the group again."
+msgstr "Je ontvangt de e-mails van de groep opnieuw."
+

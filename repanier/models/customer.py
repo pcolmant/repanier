@@ -515,7 +515,9 @@ class Customer(models.Model):
     def check_token(self, token):
         try:
             key = "{}:{}".format(self.id, token)
-            TimestampSigner().unsign(key, max_age=60 * 60 * 48)  # Valid for 2 days
+            # Valid for 30 days: a mail read long after its arrival must
+            # still let its reader stop the mails.
+            TimestampSigner().unsign(key, max_age=60 * 60 * 24 * 30)
         except (BadSignature, SignatureExpired):
             return False
         return True

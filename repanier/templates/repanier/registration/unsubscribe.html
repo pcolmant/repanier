@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load i18n static %}
+{% extends "base.html" %}{% load i18n %}
 {% block base_content %}
 <div id="content-main" class="container-repanier py-4">
   <div class="container">
@@ -9,9 +9,17 @@
             <h4 class="card-title mb-0">{% translate "Unsubscribe" %}</h4>
           </div>
           <div class="card-body">
-            {% blocktrans %}Your unsubscription is registered. You can go right now on the
-                <a href="/repanier/go_repanier/" class="btn btn-success btn-sm text-white my-1">sign in page</a> or on the
-                <a href="/" class="btn btn-success btn-sm text-white my-1">home page</a>.{% endblocktrans %}
+            {% if resubscribed %}
+              <p>{% translate "You receive the mails of the group again." %}</p>
+              <a href="/" class="btn btn-outline-secondary">{% translate "Home" %}</a>
+            {% else %}
+              <p>{% translate "You no longer receive the general mails of the group. Your order confirmations keep arriving: they follow your orders." %}</p>
+              <form method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success text-white">{% translate "Receive the mails again" %}</button>
+              </form>
+              <a href="/" class="btn btn-outline-secondary">{% translate "Home" %}</a>
+            {% endif %}
           </div>
         </div>
       </div>

@@ -4153,3 +4153,16 @@ msgstr ""
 
 msgid "The permanence has been deleted."
 msgstr "Die Verteilung wurde gelöscht."
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "You no longer receive the general mails of the group. Your order confirmations keep arriving: they follow your orders."
+msgstr "Sie erhalten die allgemeinen E-Mails der Gruppe nicht mehr. Ihre Bestellbestätigungen kommen weiterhin an: Sie folgen Ihren Bestellungen."
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "Receive the mails again"
+msgstr "Die E-Mails wieder empfangen"
+
+#: repanier/templates/repanier/registration/unsubscribe.html
+msgid "You receive the mails of the group again."
+msgstr "Sie erhalten die E-Mails der Gruppe wieder."
+
