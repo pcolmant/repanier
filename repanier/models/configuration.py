@@ -48,7 +48,7 @@ class Configuration(models.Model):
     )
     max_week_wo_participation = models.DecimalField(
         _("Alert the customer after this number of weeks without participation"),
-        help_text=_("0 mean : never display a pop up."),
+        help_text=_("0 means: never display a pop-up."),
         default=DECIMAL_ZERO,
         max_digits=2,
         decimal_places=0,
@@ -85,7 +85,7 @@ class Configuration(models.Model):
     )
     membership_fee_duration = models.DecimalField(
         _("Membership fee duration"),
-        help_text=_("Number of month(s). 0 mean : no membership fee."),
+        help_text=_("Number of months. 0 means: no membership fee."),
         default=DECIMAL_ZERO,
         max_digits=3,
         decimal_places=0,

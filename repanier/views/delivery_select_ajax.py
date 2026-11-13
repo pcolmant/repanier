@@ -71,10 +71,10 @@ def delivery_select_ajax(request):
     if not is_selected:
         if delivery_counter == 0:
             label = "{}".format(
-                _("No delivery point is open for you. You can not place order.")
+                _("No delivery point is open for you. You cannot place an order.")
             )
         else:
-            label = "{}".format(_("Please, select a delivery point"))
+            label = "{}".format(_("Please select a delivery point"))
         html = '<option value="-1" selected>{}</option>'.format(label) + html
 
     return JsonResponse({"#delivery": mark_safe(html)})

@@ -321,7 +321,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                     else:
                         c.value = "{} {} {}".format(
                             _("Total Price"),
-                            _("w TVA"),
+                            _("w VAT"),
                             department_for_customer_save.short_name_v2
                             if department_for_customer_save is not None
                             else "---",
@@ -359,7 +359,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                 else:
                     c.value = "{} {} {}".format(
                         _("Total Price"),
-                        _("w TVA"),
+                        _("w VAT"),
                         settings.REPANIER_SETTINGS_GROUP_NAME,
                     )
                 c.number_format = FORMAT_TEXT
@@ -524,7 +524,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     else:
                         c.value = "{} {} {}".format(
                             _("Total Price"),
-                            _("w TVA"),
+                            _("w VAT"),
                             customer_save.short_basket_name,
                         )
                     c.number_format = FORMAT_TEXT
@@ -551,7 +551,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                 else:
                     c.value = "{} {} {}".format(
                         _("Total Price"),
-                        _("w TVA"),
+                        _("w VAT"),
                         settings.REPANIER_SETTINGS_GROUP_NAME,
                     )
                 c.number_format = FORMAT_TEXT

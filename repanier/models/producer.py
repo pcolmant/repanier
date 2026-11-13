@@ -113,7 +113,7 @@ class Producer(models.Model):
     )
     minimum_order_value = ModelRepanierMoneyField(
         _("Minimum order value to place an order"),
-        help_text=_("0 mean : no minimum order value."),
+        help_text=_("0 means: no minimum order value."),
         max_digits=8,
         decimal_places=2,
         default=DECIMAL_ZERO,
@@ -128,7 +128,7 @@ class Producer(models.Model):
         _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
     represent_this_buyinggroup = models.BooleanField(
-        _("Represent this buyinggroup"), default=False
+        _("Represent this buying group"), default=False
     )
     is_active = models.BooleanField(_("Active"), default=True)
     # This indicate that the user record data have been replaced with anonymous data in application of GDPR

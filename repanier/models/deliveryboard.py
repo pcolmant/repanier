@@ -83,5 +83,5 @@ class DeliveryBoard(models.Model):
 
     class Meta:
         verbose_name = _("Delivery board")
-        verbose_name_plural = _("Deliveries board")
+        verbose_name_plural = _("Delivery boards")
         ordering = ("id",)
