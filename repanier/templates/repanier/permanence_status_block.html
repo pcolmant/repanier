@@ -1,0 +1,22 @@
+{% if need_refresh %}<div class="wrap-text" id="id_get_status_{{ permanence_id }}">
+    <script type="text/javascript">
+        window.setTimeout(function(){
+            django.jQuery.ajax({
+                url: '{{ status_url }}',
+                cache: false,
+                async: true,
+                success: function (result) {
+                    django.jQuery("#id_get_status_{{ permanence_id }}").html(result);
+                }
+            });
+        }, {{ delay }});
+    </script>
+    {{ progress|safe }}{{ message }}</div>
+{% else %}<div class="wrap-text">{{ message }}</div>
+    <script type="text/javascript">
+        if (sessionStorage.getItem('repanier_trigger_reload_{{ permanence_id }}') === 'true') {
+            sessionStorage.removeItem('repanier_trigger_reload_{{ permanence_id }}');
+            window.location.reload();
+        }
+    </script>
+{% endif %}

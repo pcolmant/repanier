@@ -1,0 +1,5 @@
+{% load i18n %}{% if producers_html %}<div id="id_show_producers_{{ permanence_id }}" style="display:block;" class="repanier-button-row">{{ button_download }}
+    <p></p><div class="wrap-text">{{ producers_html }}</div>
+</div>
+{% else %}<div class="wrap-text">{% translate "No offer" %}</div>
+{% endif %}

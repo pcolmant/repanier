@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.db import transaction, connection
 from django.db.models import F, Sum, DecimalField
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
@@ -289,22 +290,16 @@ class Permanence(models.Model):
             ]
             producers_html = producers
         len_producer = len(producers)
-        if len_producer > 0:
-            if not with_download:
-                button_download = EMPTY_STRING
-            msg_producers_html = ", ".join(producers_html)
-            msg_html = """
-    <div id="id_show_producers_{id}" style="display:block;" class="repanier-button-row">{button_download}
-        <p></p><div class="wrap-text">{msg_producers_html}</div>
-    </div>
-            """.format(
-                id=self.id,
-                button_download=button_download,
-                msg_producers_html=msg_producers_html,
-            )
-            return mark_safe(msg_html)
-        else:
-            return mark_safe('<div class="wrap-text">{}</div>'.format(_("No offer")))
+        if len_producer == 0 or not with_download:
+            button_download = EMPTY_STRING
+        return render_to_string(
+            "repanier/permanence_producers_block.html",
+            {
+                "permanence_id": self.id,
+                "button_download": button_download,
+                "producers_html": mark_safe(", ".join(producers_html)),
+            },
+        )
 
     @cached_property
     def get_customers_with_download(self):
@@ -471,59 +466,18 @@ class Permanence(models.Model):
             ]
             customers_html = customers
         len_customers = len(customers)
-        if len_customers > 0:
-            if not with_download:
-                button_download = EMPTY_STRING
-            msg_customers_html = ", ".join(customers_html)
-            msg_show = _("Show")
-            msg_hide = _("Hide")
-
-            if len_customers > 0:
-                # Do not display the customers by default if more than 0 customers
-                display_customers = "none"
-                hide_customers = ""
-            else:
-                display_customers = "block"
-                hide_customers = "none"
-            msg_html = """
-    <div id="id_hide_customers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}{button_add}
-        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_show}"
-                onclick="document.getElementById('id_show_customers_{id}').style.display = 'block'; document.getElementById('id_hide_customers_{id}').style.display = 'none'; return false;">
-            <i
-                    class="far fa-eye"></i> {len_customers}</a>
-    </div>
-    <div id="id_show_customers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}{button_add}
-        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_hide}"
-                onclick="document.getElementById('id_show_customers_{id}').style.display = 'none'; document.getElementById('id_hide_customers_{id}').style.display = ''; return false;">
-            <i
-                    class="far fa-eye-slash"></i></a>
-        <p></p><div class="wrap-text">{msg_producers_html}</div>
-    </div>
-            """.format(
-                id=self.id,
-                button_download=button_download,
-                button_add=button_add,
-                msg_show=msg_show,
-                msg_hide=msg_hide,
-                display_producers=display_customers,
-                hide_producers=hide_customers,
-                msg_producers_html=msg_customers_html,
-                len_customers=len_customers,
-            )
-            return mark_safe(msg_html)
-        else:
-            if button_add:
-                return mark_safe(
-                    '<div class="repanier-button-row">{button_add}</div><p></p><div class="wrap-text">{no_purchase}</div>'.format(
-                        button_add=button_add, no_purchase=_("No purchase")
-                    )
-                )
-            else:
-                return mark_safe(
-                    '<div class="wrap-text">{no_purchase}</div>'.format(
-                        no_purchase=_("No purchase")
-                    )
-                )
+        if len_customers == 0 or not with_download:
+            button_download = EMPTY_STRING
+        return render_to_string(
+            "repanier/permanence_customers_block.html",
+            {
+                "permanence_id": self.id,
+                "button_download": button_download,
+                "button_add": button_add,
+                "customers_html": mark_safe(", ".join(customers_html)),
+                "len_customers": len_customers,
+            },
+        )
 
     get_customers.short_description = _("Purchases by")
 
@@ -580,40 +534,21 @@ class Permanence(models.Model):
                     board.append(c.short_basket_name)
                 board_html.append(r_link + c_link)
         len_board = len(board)
-        if len_board > 0 or max_board_entry > 0:
-            # At least one role is defined in the permanence board
-            # msg_board = cap(" ".join(board), 50)
-            msg_board_html = "<br> ".join(board_html)
-            msg_show = _("Show")
-            msg_hide = _("Hide")
-            if len_board == max_board_entry:
-                msg_len = len_board
-            else:
-                msg_len = "{} / {}".format(len_board, max_board_entry)
-            msg_html = """
-    <div id="id_hide_board_{id}" style="display:block;" class="repanier-button-row">
-        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_show}"
-                onclick="document.getElementById('id_show_board_{id}').style.display = 'block'; document.getElementById('id_hide_board_{id}').style.display = 'none'; return false;">
-            <i
-                    class="far fa-eye"></i> {msg_len}</a>
-    </div>
-    <div id="id_show_board_{id}" style="display:none;" class="repanier-button-row">
-        <a class="repanier-a-tooltip repanier-a-info" href="#" data-repanier-tooltip="{msg_hide}"
-                onclick="document.getElementById('id_show_board_{id}').style.display = 'none'; document.getElementById('id_hide_board_{id}').style.display = 'block'; return false;">
-            <i
-                    class="far fa-eye-slash"></i></a>
-        <p></p><div class="wrap-text">{msg_board_html}</div>
-    </div>
-            """.format(
-                id=self.id,
-                msg_show=msg_show,
-                msg_hide=msg_hide,
-                msg_board_html=msg_board_html,
-                msg_len=msg_len,
-            )
-            return mark_safe(msg_html)
+        # At least one role is defined in the permanence board
+        has_entries = len_board > 0 or max_board_entry > 0
+        if len_board == max_board_entry:
+            msg_len = len_board
         else:
-            return mark_safe('<div class="wrap-text">{}</div>'.format(_("No task")))
+            msg_len = "{} / {}".format(len_board, max_board_entry)
+        return render_to_string(
+            "repanier/permanence_board_block.html",
+            {
+                "permanence_id": self.id,
+                "has_entries": has_entries,
+                "board_html": mark_safe("<br> ".join(board_html)),
+                "msg_len": msg_len,
+            },
+        )
 
     get_board.short_description = _("Tasks")
 
@@ -1686,36 +1621,22 @@ class Permanence(models.Model):
                 self.gauge = (self.gauge + 1) % 4
                 delay = 500
             self.save(update_fields=["gauge"])
-
-            # Plus de sessionStorage ici pour éviter la boucle !
-            msg_html = f"""
-                <div class="wrap-text" id="id_get_status_{self.id}">
-                <script type="text/javascript">
-                    window.setTimeout(function(){{
-                        django.jQuery.ajax({{
-                            url: '{url}',
-                            cache: false,
-                            async: true,
-                            success: function (result) {{
-                                django.jQuery("#id_get_status_{self.id}").html(result);
-                            }}
-                        }});
-                    }}, {delay});
-                </script>
-                {progress}{message}</div>
-            """
         else:
             # Le statut est stable (tâche terminée) : on vérifie si l'utilisateur avait lancé l'action
-            msg_html = f"""
-                <div class="wrap-text">{message}</div>
-                <script type="text/javascript">
-                    if (sessionStorage.getItem('repanier_trigger_reload_{self.id}') === 'true') {{
-                        sessionStorage.removeItem('repanier_trigger_reload_{self.id}');
-                        window.location.reload();
-                    }}
-                </script>
-            """
-        return mark_safe(msg_html)
+            url = EMPTY_STRING
+            progress = EMPTY_STRING
+            delay = 0
+        return render_to_string(
+            "repanier/permanence_status_block.html",
+            {
+                "need_refresh": need_to_refresh_status,
+                "permanence_id": self.id,
+                "status_url": url,
+                "progress": progress,
+                "delay": delay,
+                "message": mark_safe(message),
+            },
+        )
 
     get_html_status_display.short_description = _("Status")
 
