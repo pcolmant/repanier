@@ -543,36 +543,48 @@ class PermanenceDoneAdmin(SaleAdmin):
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 return format_html(
                     '<div class="repanier-button-row">'
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a> '
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-upload"></i></a> '
-                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a>'
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-download"></i></a> '
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-upload"></i></a> '
+                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a>'
                     "</div>",
                     add_filter(
                         reverse("admin:permanence-export-invoice", args=[permanence.pk])
                     ),
                     _("Export"),
+                    _(
+                        "Download the purchases of this permanence as an Excel file meant to be corrected and reimported."
+                    ),
                     add_filter(
                         reverse("admin:permanence-import-invoice", args=[permanence.pk])
                     ),
                     _("Import"),
+                    _(
+                        "Upload the corrected Excel file to apply the delivered quantities and prices."
+                    ),
                     add_filter(
                         reverse(
                             "admin:permanence-cancel-delivery", args=[permanence.pk]
                         )
                     ),
                     _("Cancel the delivery"),
+                    _(
+                        "Purchases and invoices are kept and the cancellation can be reverted."
+                    ),
                     add_filter(
                         reverse("admin:permanence-invoice", args=[permanence.pk])
                     ),
                     _("Book"),
+                    _(
+                        "Register this permanence in the accounting of the group: the customers pay, the producers get paid."
+                    ),
                 )
 
             else:
                 return format_html(
                     '<div class="repanier-button-row">'
-                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> '
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a>'
+                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> '
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a>'
                     "</div>",
                     add_filter(
                         reverse(
@@ -580,10 +592,16 @@ class PermanenceDoneAdmin(SaleAdmin):
                         )
                     ),
                     _("Cancel the delivery"),
+                    _(
+                        "Purchases and invoices are kept and the cancellation can be reverted."
+                    ),
                     add_filter(
                         reverse("admin:permanence-archive", args=[permanence.pk])
                     ),
                     _("To archive"),
+                    _(
+                        "Move this permanence, its purchases and its invoices to the archive."
+                    ),
                 )
 
         elif permanence.status == SaleStatus.INVOICED:
@@ -593,49 +611,59 @@ class PermanenceDoneAdmin(SaleAdmin):
                 # This is the latest invoiced permanence
                 # Invoicing can be cancelled
                 cancel_invoice = format_html(
-                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> ',
+                    '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a> ',
                     add_filter(
                         reverse(
                             "admin:permanence-cancel-invoicing", args=[permanence.pk]
                         )
                     ),
                     _("Cancel accounting registration"),
+                    _(
+                        "Cancel the accounting entries of this permanence, when a correction is needed."
+                    ),
                 )
             else:
                 cancel_invoice = EMPTY_STRING
 
             return format_html(
                 '<div class="repanier-button-row">'
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-file-invoice-dollar"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-file-invoice-dollar"></i></a> '
                 "{}"
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-accounting-report", args=[permanence.pk])
                 ),
                 _("Accounting report"),
+                _(
+                    "Download the accounting report (bank and invoices) as an Excel file."
+                ),
                 cancel_invoice,
             )
 
         elif permanence.status == SaleStatus.ARCHIVED:
             return format_html(
                 '<div class="repanier-button-row">'
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-trash-restore"></i></a>'
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-cancel-archiving", args=[permanence.pk])
                 ),
                 _("Restore"),
+                _("Take this permanence out of the archive to correct or rebook it."),
             )
 
         elif permanence.status == SaleStatus.CANCELLED:
             return format_html(
                 '<div class="repanier-button-row">'
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}" data-repanier-help="{}"><i class="fas fa-trash-restore"></i></a>'
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-restore-delivery", args=[permanence.pk])
                 ),
                 _("Restore"),
+                _(
+                    "Uncancel this delivery: the permanence is back to the payment screen, with all its purchases."
+                ),
             )
 
         return EMPTY_STRING

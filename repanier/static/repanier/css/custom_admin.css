@@ -145,7 +145,7 @@ a.repanier-a-cancel-selected:hover, a.repanier-a-cancel-selected:active {
 /*    clear: both;*/
 /*}*/
 
-/*tooltip css inspired by : https://designshack.net/articles/css/html5-css3-anchor-link-tooltips/ */
+/* Tooltip css inspired by : https://designshack.net/articles/css/html5-css3-anchor-link-tooltips/ */
 
 a.repanier-a-tooltip {
     position: relative;
@@ -156,46 +156,9 @@ a.repanier-a-tooltip:after {
     display: block;
     visibility: hidden;
     position: absolute;
-    bottom: 0;
-    left: 20%;
-    opacity: 0;
-    content: attr(data-repanier-tooltip);
-    height: auto;
-    /*min-width: 150px;*/
-    padding: 5px 8px;
-    z-index: 999;
-    color: var(--cms-white-color);
-    text-decoration: none;
-    text-align: center;
-    background-color: var(--cms-blue-color);
-    -webkit-border-radius: var(--border-radius);
-    -moz-border-radius: var(--border-radius);
-    border-radius: var(--border-radius);
-    transition: all 50ms ease-in-out;
-}
-
-/* L'ajout de pointer-events: none; sur a.repanier-a-tooltip:after et a.repanier-a-tooltip:before va résoudre instantanément le conflit de survol et supprimer le clignotement des boutons. */
-a.repanier-a-tooltip:before {
-    position: absolute;
-    visibility: hidden;
-    width: 0;
-    height: 0;
+    bottom: 115%;
     left: 50%;
-    bottom: 0;
-    opacity: 0;
-    content: "";
-    border-style: solid;
-    border-width: 6px 6px 0 6px;
-    border-color: var(--cms-blue-color) transparent transparent transparent;
-    transition: all 50ms ease-in-out;
-}
-
-a.repanier-a-tooltip:after {
-    display: block;
-    visibility: hidden;
-    position: absolute;
-    bottom: 0;
-    left: 20%;
+    transform: translateX(-50%);
     opacity: 0;
     content: attr(data-repanier-tooltip);
     height: auto;
@@ -208,8 +171,10 @@ a.repanier-a-tooltip:after {
     -webkit-border-radius: var(--border-radius);
     -moz-border-radius: var(--border-radius);
     border-radius: var(--border-radius);
-    transition: all 50ms ease-in-out;
-    pointer-events: none; /* <-- AJOUTÉ : Empêche l'infobulle de capter les événements de la souris */
+    transition: all 150ms ease-in-out;
+    /* pointer-events avoids the bubble capturing the mouse and
+       making the buttons flicker. */
+    pointer-events: none;
 }
 
 a.repanier-a-tooltip:before {
@@ -218,14 +183,46 @@ a.repanier-a-tooltip:before {
     width: 0;
     height: 0;
     left: 50%;
-    bottom: 0;
+    bottom: 115%;
     opacity: 0;
     content: "";
     border-style: solid;
     border-width: 6px 6px 0 6px;
     border-color: var(--cms-blue-color) transparent transparent transparent;
-    transition: all 50ms ease-in-out;
-    pointer-events: none; /* <-- AJOUTÉ : Empêche aussi la flèche de capter la souris */
+    transition: all 150ms ease-in-out;
+    pointer-events: none;
+}
+
+a.repanier-a-tooltip:hover:after,
+a.repanier-a-tooltip:focus:after {
+    visibility: visible;
+    opacity: 1;
+}
+
+a.repanier-a-tooltip:hover:before,
+a.repanier-a-tooltip:focus:before {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* The row actions of the permanence lists carry a one sentence help
+   (data-repanier-help) below the short label of the action, so that an
+   occasional staff member knows what the button does before clicking
+   it. The wide bubble is right aligned: the action columns sit at the
+   right edge of the screen. */
+a.repanier-a-tooltip[data-repanier-help]:after {
+    content: attr(data-repanier-tooltip) "\A" attr(data-repanier-help);
+    white-space: pre-line;
+    text-align: left;
+    left: auto;
+    right: 0;
+    transform: none;
+    width: max-content;
+    max-width: 320px;
+}
+
+a.repanier-a-tooltip[data-repanier-help]:before {
+    content: none;
 }
 
 input[type="submit"].repanier-submit-info,
