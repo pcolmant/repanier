@@ -1,5 +1,6 @@
 import logging
 import threading
+from urllib.parse import quote
 
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
@@ -38,8 +39,8 @@ from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
-from repanier.models.purchase import Purchase
 from repanier.models.product import Product
+from repanier.models.purchase import Purchase
 from repanier.models.staff import Staff
 from repanier.task import task_order
 from repanier.task.task_order import open_order, close_order
@@ -580,12 +581,14 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             },
         )
 
-    @check_permanence((SaleStatus.PLANNED, SaleStatus.OPENED))
+    @check_cancel_in_post
+    @check_permanence(SaleStatus.PLANNED)
     def cancel_prepared(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             permanence.cancel_prepared()
             if Permanence.objects.filter(id=permanence.id).exists():
-                # Orders were placed: the shell only got cancelled
+                # Orders survive a return to scheduled: they got
+                # cancelled, the way of the payment screen
                 user_message = _("The permanence has been cancelled.")
             else:
                 user_message = _("The permanence has been deleted.")
@@ -603,15 +606,15 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 "model_verbose_name_plural": _("Offers in preparation"),
                 "action": "cancel_prepared",
                 "permanence": permanence,
-                # Help the staff member spot a real permanence before
-                # cancelling a mistake: the members who ordered
+                # Orders placed while the permanence was opened survive
+                # its return to scheduled: help the staff member spot a
+                # real permanence before getting rid of a mistake.
                 "orders_counter": Purchase.objects.filter(
                     permanence_id=permanence.id, quantity_ordered__gt=0
                 )
                 .values("customer_id")
                 .distinct()
                 .count(),
-                "is_planned": permanence.status == SaleStatus.PLANNED.value,
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
             },
         )
@@ -664,7 +667,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a> '
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><i style="color:Tomato" class="fas fa-ban"></i></a>'
+                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><i style="color:Tomato" class="fas fa-ban"></i></a>'
                 "</div>",
                 add_filter(reverse("admin:generate-permanence", args=[permanence.pk])),
                 _("Duplicate"),
@@ -678,11 +681,13 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 _("Cancel this permanence"),
             )
         elif permanence.status == SaleStatus.OPENED.value:
+            # Orders may already be placed: no shortcut allows to get
+            # rid of the permanence here. The staff closes the orders -
+            # or goes back to scheduled - before cancelling anything.
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a> '
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><i style="color:Tomato" class="fas fa-ban"></i></a>'
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-back-to-scheduled", args=[permanence.pk])
@@ -692,10 +697,26 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                     reverse("admin:permanence-close-order", args=[permanence.pk])
                 ),
                 _("Close orders"),
-                add_filter(
-                    reverse("admin:permanence-cancel-prepared", args=[permanence.pk])
-                ),
-                _("Cancel this permanence"),
+            )
+        elif permanence.status == SaleStatus.SEND.value:
+            # Same action as the payment screen: cancel_delivery of
+            # PermanenceDoneAdmin, reversible with restore_delivery. The
+            # user lands back on this preparation screen, thanks to the
+            # back parameter honored by the payment view.
+            cancel_delivery_url = add_filter(
+                reverse("admin:permanence-cancel-delivery", args=[permanence.pk])
+            )
+            back_url = add_filter(
+                reverse("admin:repanier_permanenceinpreparation_changelist")
+            )
+            cancel_delivery_url += ("&" if "?" in cancel_delivery_url else "?")
+            cancel_delivery_url += "back=" + quote(back_url, safe="")
+            return format_html(
+                '<div class="repanier-button-row">'
+                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
+                "</div>",
+                cancel_delivery_url,
+                _("Cancel the delivery"),
             )
         return EMPTY_STRING
 

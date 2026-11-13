@@ -1,11 +1,14 @@
 """Tests of the "cancel this permanence" action of the preparation screen.
 
-Groups create permanences by mistake and never run the three step manual
-chain to get rid of them. The red button runs it in one action: open the
-orders without sending any email, close them without sending any email,
-cancel the delivery. Everything stays reversible.
+Groups create permanences by mistake and pollute the preparation screen
+with empty shells. The red button deletes a scheduled permanence in one
+action. A permanence whose orders were opened is not handled here:
+getting rid of it passes through closing the orders - or going back to
+scheduled - and cancelling the delivery from the payment screen, where
+everything stays reversible.
 """
 import datetime
+from urllib.parse import quote, urlsplit
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -14,13 +17,18 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext
 
+from django.contrib.admin import site as default_admin_site
+
+from repanier.admin.permanence_in_preparation import (
+    PermanenceInPreparationAdmin,
+)
 from repanier.const import OrderUnit, SaleStatus, Vat
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
+from repanier.models.offeritem import OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
-from repanier.models.offeritem import OfferItem
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
 from repanier.task import task_order
@@ -44,11 +52,12 @@ class CancelPreparedTest(TestCase):
             bank_account="BE99 9999 9999 9999",
             currency="100",
         )
-        # The group charges a 10.00 membership fee valid 12 months
-        Configuration.objects.update(
-            membership_fee=D("10.00"), membership_fee_duration=D("12")
-        )
+        # The group charges a 10.00 membership fee valid 12 months.
+        # save() reloads the settings caches: close_order reads them
+        # from there, not from the row alone.
         configuration = Configuration.objects.first()
+        configuration.membership_fee = D("10.00")
+        configuration.membership_fee_duration = D("12")
         configuration.save()
         user = User.objects.create_user(
             username="client@example.com", email="client@example.com", password="x"
@@ -91,31 +100,37 @@ class CancelPreparedTest(TestCase):
                 comment="",
             )
             self.assertTrue(updated)
+            return purchase
+        return None
 
-    def test_an_empty_planned_permanence_is_deleted_for_good(self):
+    def test_a_scheduled_permanence_without_order_is_deleted_for_good(self):
         self.build_permanence(with_order=False)
-        self.permanence.cancel_prepared()
-        # Nothing was ever ordered: no shell stays in any list
-        self.assertFalse(Permanence.objects.filter(id=self.permanence.id).exists())
-
-    def test_an_empty_opened_permanence_is_deleted_for_good(self):
-        self.build_permanence(with_order=False)
+        # Opening creates the offer items even without any order: they
+        # leave with the shell
         task_order.open_order(self.permanence.id, send_mail=False)
-        # Opening created the offer items: they leave with the shell
+        self.permanence.refresh_from_db()
+        task_order.back_to_scheduled(self.permanence)
         self.assertTrue(
             OfferItem.objects.filter(permanence_id=self.permanence.id).exists()
         )
-        self.permanence.refresh_from_db()
         self.permanence.cancel_prepared()
+        # Nothing was ever ordered: no shell stays in any list
         self.assertFalse(Permanence.objects.filter(id=self.permanence.id).exists())
         self.assertFalse(
             OfferItem.objects.filter(permanence_id=self.permanence.id).exists()
         )
+        self.assertFalse(
+            CustomerInvoice.objects.filter(permanence_id=self.permanence.id).exists()
+        )
 
-    def test_an_opened_permanence_with_orders_is_cancelled_and_reversible(self):
+    def test_a_scheduled_permanence_with_orders_is_cancelled_and_reversible(self):
+        # Orders placed while the permanence was opened survive its
+        # return to scheduled: they are never deleted to get rid of a
+        # mistake, the cancellation goes through the status machinery.
         self.build_permanence(with_order=True)
+        task_order.back_to_scheduled(self.permanence)
         self.permanence.refresh_from_db()
-        self.assertEqual(self.permanence.status, SaleStatus.OPENED)
+        self.assertEqual(self.permanence.status, SaleStatus.PLANNED)
 
         self.permanence.cancel_prepared()
         self.assertEqual(self.permanence.status, SaleStatus.CANCELLED)
@@ -147,7 +162,7 @@ class CancelPreparedTest(TestCase):
 
 @override_settings(SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False)
 class CancelPreparedViewTest(TestCase):
-    def build_and_login(self):
+    def build_and_login(self, status=SaleStatus.PLANNED):
         Configuration.objects.create(
             group_name="Test Group",
             name="100",
@@ -159,7 +174,7 @@ class CancelPreparedViewTest(TestCase):
         )
         self.client.force_login(user=self.user)
         self.permanence = Permanence.objects.create(
-            permanence_date=utc_today(), status=SaleStatus.PLANNED
+            permanence_date=utc_today(), status=status
         )
         return reverse("admin:permanence-cancel-prepared", args=[self.permanence.id])
 
@@ -176,17 +191,18 @@ class CancelPreparedViewTest(TestCase):
             ),
             content,
         )
-        # The cancellation chain is not announced for a shell
+        # The cancellation chain is announced only when orders were
+        # placed, not for an empty shell
         self.assertNotIn("restaurer la livraison", content)
         self.assertNotIn("Cette permanence contient", content)
 
-    def test_applying_deletes_the_empty_planned_permanence(self):
+    def test_applying_deletes_the_scheduled_permanence(self):
         url = self.build_and_login()
         response = self.client.post(url, {"apply": "apply"}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Permanence.objects.filter(id=self.permanence.id).exists())
 
-    def test_the_screen_shows_the_orders_counter_of_an_opened_permanence(self):
+    def test_the_screen_shows_the_orders_counter_of_a_scheduled_permanence(self):
         url = self.build_and_login()
         producer = Producer.objects.create(short_profile_name="Ferme")
         self.permanence.producers.add(producer)
@@ -219,10 +235,13 @@ class CancelPreparedViewTest(TestCase):
             customer=customer, offer_item_id=offer_item.id, q_order=D("1"), comment=""
         )
         self.assertTrue(updated)
+        # Orders survive the return to scheduled: the screen must
+        # still show the counter before the confirmation
+        task_order.back_to_scheduled(self.permanence)
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.PLANNED)
         response = self.client.get(url, follow=True)
         content = response.content.decode("utf-8")
-        # One order was placed: the screen shows the counter so that the
-        # staff member can spot a real permanence before cancelling
         self.assertIn("Cette permanence contient", content)
 
     def test_refusing_cancels_nothing(self):
@@ -232,12 +251,138 @@ class CancelPreparedViewTest(TestCase):
         self.permanence.refresh_from_db()
         self.assertEqual(self.permanence.status, SaleStatus.PLANNED)
 
+    def test_an_opened_permanence_is_refused(self):
+        url = self.build_and_login()
+        producer = Producer.objects.create(short_profile_name="Ferme")
+        self.permanence.producers.add(producer)
+        product = Product.objects.create(
+            producer=producer,
+            long_name_v2="Produit",
+            order_unit=OrderUnit.PC,
+            producer_unit_price=D("2.50"),
+            vat_level=Vat.VAT_100,
+            stock=D("99"),
+        )
+        product.is_into_offer = True
+        product.save()
+        task_order.open_order(self.permanence.id, send_mail=False)
+        response = self.client.post(url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # Refused: the staff closes the orders or goes back to scheduled
+        self.assertTrue(Permanence.objects.filter(id=self.permanence.id).exists())
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.OPENED)
+
     def test_a_closed_permanence_is_refused(self):
         url = self.build_and_login()
         self.permanence.status = SaleStatus.SEND
         self.permanence.save()
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 200)
-        # Refused with an explicit status message; the permanence stays
+        self.assertTrue(Permanence.objects.filter(id=self.permanence.id).exists())
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False)
+class CancelPreparedRowActionsTest(TestCase):
+    """The buttons offered by the preparation screen, per status."""
+
+    def build_and_login(self, status=SaleStatus.PLANNED):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        self.user = User.objects.create_superuser(
+            username="staff@example.com", email="staff@example.com", password="x"
+        )
+        self.client.force_login(user=self.user)
+        self.permanence = Permanence.objects.create(
+            permanence_date=utc_today(), status=status, highest_status=status
+        )
+        self.row_actions = PermanenceInPreparationAdmin(
+            Permanence, default_admin_site
+        ).get_row_actions
+
+    def test_a_scheduled_permanence_offers_the_cancel_button(self):
+        self.build_and_login(status=SaleStatus.PLANNED)
+        row = self.row_actions(self.permanence)
+        self.assertIn("/cancel-prepared/", row)
+
+    def test_an_opened_permanence_offers_no_cancel_button(self):
+        self.build_and_login(status=SaleStatus.OPENED)
+        row = self.row_actions(self.permanence)
+        self.assertIn("/close-order/", row)
+        self.assertNotIn("/cancel-prepared/", row)
+
+    def test_a_closed_permanence_offers_the_cancel_delivery_of_the_payment_screen(self):
+        self.build_and_login(status=SaleStatus.SEND)
+        row = self.row_actions(self.permanence)
+        # The very same action as the payment screen, reversible from
+        # there with restore_delivery
+        self.assertIn("/cancel-delivery/", row)
+        self.assertNotIn("/cancel-prepared/", row)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False)
+class CancelDeliveryFromPreparationScreenTest(TestCase):
+    """The preparation screen embeds the cancel_delivery action of the
+    payment screen: the user must land back on the preparation list."""
+
+    def build_and_login(self):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        self.user = User.objects.create_superuser(
+            username="staff@example.com", email="staff@example.com", password="x"
+        )
+        self.client.force_login(user=self.user)
+        self.permanence = Permanence.objects.create(
+            permanence_date=utc_today(), status=SaleStatus.SEND, highest_status=SaleStatus.SEND
+        )
+        self.back = reverse("admin:repanier_permanenceinpreparation_changelist")
+        self.url = (
+            reverse("admin:permanence-cancel-delivery", args=[self.permanence.id])
+            + "?back="
+            + quote(self.back, safe="")
+        )
+
+    def test_applying_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.client.post(self.url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
+        # The action itself did run
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.CANCELLED)
+
+    def test_refusing_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.client.post(self.url, {"cancel": "cancel"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
         self.permanence.refresh_from_db()
         self.assertEqual(self.permanence.status, SaleStatus.SEND)
+
+    def test_without_back_the_payment_list_stays_the_target(self):
+        self.build_and_login()
+        url = reverse("admin:permanence-cancel-delivery", args=[self.permanence.id])
+        response = self.client.post(url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # The payment change list, possibly with its preserved filters
+        target = urlsplit(response.redirect_chain[-1][0]).path
+        self.assertEqual(target, "/fr/coordi/repanier/permanencedone/")
+
+    def test_a_forged_back_parameter_is_ignored(self):
+        self.build_and_login()
+        url = (
+            reverse("admin:permanence-cancel-delivery", args=[self.permanence.id])
+            + "?back=https://example.org/evil"
+        )
+        response = self.client.post(url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        target = urlsplit(response.redirect_chain[-1][0]).path
+        self.assertEqual(target, "/fr/coordi/repanier/permanencedone/")
