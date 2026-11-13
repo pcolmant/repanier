@@ -4,24 +4,18 @@
 {% block breadcrumbs %}
     <div class="breadcrumbs">
         {% translate 'Manage' %}
+        &rsaquo; <a
+            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% translate 'Offers in preparation' %}</a>
         &rsaquo;
-        <a id="confirm_action_breadcrumb"></a>
-        <script>
-            (function() {
-                var link = document.getElementById("confirm_action_breadcrumb");
-                link.href = document.referrer;
-                link.textContent = "{{ model_verbose_name_plural|escapejs }}";
-            })();
-        </script>
+        {{ permanence }}
     </div>
 {% endblock %}
 
 {% block content %}
-    <form action="{{ form_url }}" method="post">{% csrf_token %}
-        <h2>{{ permanence|title }}</h2>
-        <div class="form-row">
-            <h3>{% translate "Please confirm the action: cancel this permanence." %}</h3>
-            <p>&nbsp;</p>
+    <div id="content-main">
+        <form action="{{ form_url }}" method="post" id="repanier_confirm_action_form">{% csrf_token %}
+            <h1>{{ permanence }}</h1>
+            <p>{% translate "Please confirm the action: cancel this permanence." %}</p>
             <p>{% translate "A permanence created by mistake must not pollute the preparation screen: it can be cancelled here in one single action." %}</p>
             {% if orders_counter > 0 %}
                 <p>{% translate "The orders will be opened without sending any email, then closed without sending any email." %}</p>
@@ -30,11 +24,12 @@
             {% else %}
                 <p>{% translate "No order was placed: the permanence is an empty shell, it will be deleted for good." %}</p>
             {% endif %}
-            <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}</button>
-        </div>
-        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
-        <input type="hidden" name="action" value="{{ action }}"/>
-    </form>
+            <div class="submit-row">
+                <input type="submit" name="apply" value="{% translate "Yes, I'm sure" %}" class="default">
+                <input type="submit" name="cancel" value="{% translate "No, cancel the action" %}">
+            </div>
+            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+            <input type="hidden" name="action" value="{{ action }}"/>
+        </form>
+    </div>
 {% endblock %}

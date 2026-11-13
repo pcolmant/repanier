@@ -188,6 +188,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in payment"),
+                "breadcrumb_url": self.change_list_url,
                 "sub_title": _("Please confirm the action: cancel delivery."),
                 "action": "cancel_delivery",
                 "permanence": permanence,
@@ -432,6 +433,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in payment"),
+                "breadcrumb_url": self.change_list_url,
                 "sub_title": _("Please confirm the action: generate archive."),
                 "action": "archive",
                 "permanence": permanence,
@@ -500,6 +502,7 @@ class PermanenceDoneAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in payment"),
+                "breadcrumb_url": self.change_list_url,
                 "sub_title": sub_title,
                 "action": action,
                 "permanence": permanence,
