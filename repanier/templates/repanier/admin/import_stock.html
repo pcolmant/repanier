@@ -5,20 +5,27 @@
     <div class="breadcrumbs">
         {% translate 'Manage' %}
         &rsaquo; <a href="{% url 'admin:repanier_product_changelist' %}">{% translate 'Products' %}</a>
+        &rsaquo;
+        {{ sub_title }}
     </div>
 {% endblock %}
 
 {% block content %}
-    <form enctype="multipart/form-data" action="{{ form_url }}" method="post">{% csrf_token %}
-        <h2>{{ sub_title |title }}</h2>
-        <div class="form-group">
-            <label for="id_file_to_import"><b>{% translate "File to import :"%}</b></label><input id="id_file_to_import" name="file_to_import" type="file" />
-        </div>
-        <div class="submit-row repanier-submit-row">
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Perform the import" %}</button>
-        </div>
+    <div id="content-main">
+        <form enctype="multipart/form-data" action="{{ form_url }}" method="post"
+              id="repanier_confirm_action_form">{% csrf_token %}
+            <h1>{{ sub_title }}</h1>
+            <div class="form-row">
+                <label for="id_file_to_import">{% translate "File to import :"%}</label><input id="id_file_to_import"
+                                                                                                  name="file_to_import"
+                                                                                                  type="file"/>
+            </div>
+            <div class="submit-row">
+                <input type="submit" name="apply" value="{% translate "Perform the import" %}" class="default">
+                <input type="submit" name="cancel" value="{% translate "No, cancel the action" %}">
+            </div>
 
-        <input type="hidden" name="action" value="{{ action }}"/>
-    </form>
+            <input type="hidden" name="action" value="{{ action }}"/>
+        </form>
+    </div>
 {% endblock %}
