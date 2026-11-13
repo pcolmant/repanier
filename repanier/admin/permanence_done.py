@@ -23,6 +23,7 @@ from repanier.admin.tools import (
     check_permanence,
     check_cancel_in_post,
     check_done_in_post,
+    get_back_to_change_list_url,
 )
 from django.conf import settings
 from repanier.const import BankMovement, DECIMAL_ZERO, EMPTY_STRING, SaleStatus
@@ -177,7 +178,9 @@ class PermanenceDoneAdmin(SaleAdmin):
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+            return HttpResponseRedirect(
+                get_back_to_change_list_url(request, self)
+            )
         template_name = get_repanier_template_name("admin/confirm_action.html")
         return render(
             request,

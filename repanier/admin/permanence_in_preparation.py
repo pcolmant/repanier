@@ -1,5 +1,6 @@
 import logging
 import threading
+from urllib.parse import quote
 
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
@@ -699,14 +700,22 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             )
         elif permanence.status == SaleStatus.SEND.value:
             # Same action as the payment screen: cancel_delivery of
-            # PermanenceDoneAdmin, reversible with restore_delivery.
+            # PermanenceDoneAdmin, reversible with restore_delivery. The
+            # user lands back on this preparation screen, thanks to the
+            # back parameter honored by the payment view.
+            cancel_delivery_url = add_filter(
+                reverse("admin:permanence-cancel-delivery", args=[permanence.pk])
+            )
+            back_url = add_filter(
+                reverse("admin:repanier_permanenceinpreparation_changelist")
+            )
+            cancel_delivery_url += ("&" if "?" in cancel_delivery_url else "?")
+            cancel_delivery_url += "back=" + quote(back_url, safe="")
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
                 "</div>",
-                add_filter(
-                    reverse("admin:permanence-cancel-delivery", args=[permanence.pk])
-                ),
+                cancel_delivery_url,
                 _("Cancel the delivery"),
             )
         return EMPTY_STRING
