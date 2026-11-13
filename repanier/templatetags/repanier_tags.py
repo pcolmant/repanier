@@ -112,10 +112,22 @@ def repanier_display_task(*args, **kwargs):
         )
         if permanence_board is not None:
             if permanence_board.permanence_role.customers_may_register:
-                result = permanence_board.permanence_role
+                result = render_to_string(
+                    "repanier/display_task.html",
+                    {
+                        "role_name": permanence_board.permanence_role,
+                        "bold": False,
+                    },
+                )
             else:
-                result = "<p><b>{}</b></p>".format(permanence_board.permanence_role)
-    return mark_safe(result)
+                result = render_to_string(
+                    "repanier/display_task.html",
+                    {
+                        "role_name": permanence_board.permanence_role,
+                        "bold": True,
+                    },
+                )
+    return result
 
 
 @register.simple_tag(takes_context=True)
@@ -133,58 +145,44 @@ def repanier_select_task(context, *args, **kwargs):
                 .first()
             )
             if permanence_board is not None:
+                editable = False
+                own = False
+                render_task = False
+                my_name = EMPTY_STRING
+                other_name = EMPTY_STRING
                 if permanence_board.customer is not None:
+                    own = True
+                    render_task = True
                     if (
                         permanence_board.customer_id == customer.id
-                        and permanence_board.permanence.status <= SaleStatus.CLOSED
+                        and permanence_board.permanence.status
+                        <= SaleStatus.CLOSED
                     ):
-                        result = """
-                        <b><i>
-                        <select name="value" id="task{task_id}"
-                        onchange="task_ajax({task_id})" class="form-control">
-                        <option value="0">---</option>
-                        <option value="1" selected>{long_basket_name}</option>
-                        </select>
-                        </i></b>
-                        """.format(
-                            task_id=permanence_board.id,
-                            long_basket_name=customer.long_basket_name,
-                        )
+                        # The customer may give his task back while ordering
+                        editable = True
+                        my_name = customer.long_basket_name
                     else:
-                        result = """
-                        <select name="value" id="task{task_id}"
-                        class="form-control">
-                        <option value="0" selected>{long_basket_name}</option>
-                        </select>
-                        """.format(
-                            task_id=permanence_board.id,
-                            long_basket_name=permanence_board.customer.long_basket_name,
-                        )
-                else:
-                    if permanence_board.permanence_role.customers_may_register:
-                        if permanence_board.permanence.status <= SaleStatus.CLOSED:
-                            result = """
-                            <b><i>
-                            <select name="value" id="task{task_id}"
-                            onchange="task_ajax({task_id})" class="form-control">
-                            <option value="0" selected>---</option>
-                            <option value="1">{long_basket_name}</option>
-                            </select>
-                            </i></b>
-                            """.format(
-                                task_id=permanence_board.id,
-                                long_basket_name=customer.long_basket_name,
-                            )
-                        else:
-                            result = """
-                            <select name="value" id="task{task_id}"
-                            class="form-control">
-                            <option value="0" selected>---</option>
-                            </select>
-                            """.format(
-                                task_id=permanence_board.id
-                            )
-    return mark_safe(result)
+                        # Already taken, or the permanence no longer accepts
+                        # registrations: read-only display
+                        other_name = permanence_board.customer.long_basket_name
+                elif permanence_board.permanence_role.customers_may_register:
+                    render_task = True
+                    if permanence_board.permanence.status <= SaleStatus.CLOSED:
+                        # Free task, the customer may register
+                        editable = True
+                        my_name = customer.long_basket_name
+                if render_task:
+                    result = render_to_string(
+                        "repanier/select_task.html",
+                        {
+                            "task_id": permanence_board.id,
+                            "editable": editable,
+                            "own": own,
+                            "my_name": my_name,
+                            "other_name": other_name,
+                        },
+                    )
+    return result
 
 
 @register.simple_tag(takes_context=True)
@@ -192,11 +190,13 @@ def repanier_btn_like(context, *args, **kwargs):
     request = context["request"]
     user_id = request.user.id
     offer_item = kwargs.get("offer_item", None)
-    str_id = str(offer_item.id)
-    result = '<br><span class="btn_like{str_id}" style="cursor: pointer;">{html}</span>'.format(
-        str_id=str_id, html=offer_item.get_html_like(user_id)
+    return render_to_string(
+        "repanier/btn_like.html",
+        {
+            "offer_item_id": offer_item.id,
+            "is_liked": offer_item.product.likes.filter(id=user_id).exists(),
+        },
     )
-    return mark_safe(result)
 
 
 def bootstrap_offer_item(offer_item, user):
