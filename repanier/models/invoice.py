@@ -38,11 +38,11 @@ class Invoice(models.Model):
     )
     # Calculated with Purchase
     total_price_with_tax = ModelRepanierMoneyField(
-        _("Accounted for w VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
+        _("Accounted for incl. VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
     )
     delta_price_with_tax = ModelRepanierMoneyField(
         _("Total amount"),
-        help_text=_("Purchase to add amount w VAT"),
+        help_text=_("Purchase to add amount incl. VAT"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
@@ -82,7 +82,7 @@ class Invoice(models.Model):
         decimal_places=2,
         default=DECIMAL_ZERO,
     )
-    date_balance = models.DateField(_("Date balance"), default=datetime.date.today)
+    date_balance = models.DateField(_("Balance date"), default=datetime.date.today)
     balance = ModelRepanierMoneyField(
         _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
@@ -867,7 +867,7 @@ class CustomerProducerInvoice(models.Model):
     )
     # Calculated with Purchase
     total_selling_with_tax = ModelRepanierMoneyField(
-        _("Accounted to the customer w VAT"),
+        _("Accounted to the customer incl. VAT"),
         help_text=_("Total selling amount vat included"),
         default=DECIMAL_ZERO,
         max_digits=8,
@@ -879,7 +879,7 @@ class CustomerProducerInvoice(models.Model):
             return format_html("<b>{}</b>", self.total_purchase_with_tax)
         return EMPTY_STRING
 
-    get_html_producer_price_purchased.short_description = _("Row amount")
+    get_html_producer_price_purchased.short_description = _("Line amount")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     @classmethod

@@ -55,7 +55,7 @@ class Configuration(models.Model):
         validators=[MinValueValidator(0)],
     )
     send_abstract_order_mail_to_customer = models.BooleanField(
-        _("Send abstract order mail to customers"), default=False
+        _("Send each customer an email with the orders of the whole group"), default=False
     )
     send_order_mail_to_board = models.BooleanField(
         _("Send an order distribution email to members registered for a task"),

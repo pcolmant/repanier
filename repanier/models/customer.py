@@ -105,7 +105,7 @@ class Customer(models.Model):
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None
     )
-    date_balance = models.DateField(_("Date balance"), default=datetime.date.today)
+    date_balance = models.DateField(_("Balance date"), default=datetime.date.today)
     balance = ModelRepanierMoneyField(
         _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
@@ -227,7 +227,7 @@ class Customer(models.Model):
     def get_admin_date_balance(self):
         return timezone.now().strftime(settings.DJANGO_SETTINGS_DATETIME)
 
-    get_admin_date_balance.short_description = _("Date balance")
+    get_admin_date_balance.short_description = _("Balance date")
 
     def get_admin_date_joined(self):
         # New customer have no user during import of customers in admin.customer.CustomerResource

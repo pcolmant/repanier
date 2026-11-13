@@ -240,7 +240,7 @@ class CustomerSendForm(forms.ModelForm):
         initial=REPANIER_MONEY_ZERO,
     )
     offer_selling_price = FormRepanierMoneyField(
-        label=_("Accounted to the customer w VAT"),
+        label=_("Accounted to the customer incl. VAT"),
         max_digits=8,
         decimal_places=2,
         required=True,

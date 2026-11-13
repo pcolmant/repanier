@@ -170,7 +170,7 @@ class Purchase(models.Model):
         # workaround for a display problem with Money field in the admin list_display
         return self.selling_price
 
-    get_selling_price.short_description = _("Row amount")
+    get_selling_price.short_description = _("Line amount")
 
     def get_producer_unit_price(self):
         offer_item = self.offer_item

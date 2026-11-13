@@ -717,7 +717,7 @@ msgstr "Gefactureerd door de producent"
 
 #: admin/rule_of_3_per_customer.py:227 models/invoice.py:912
 #: models/offeritem.py:54
-msgid "Accounted to the customer w VAT"
+msgid "Accounted to the customer incl. VAT"
 msgstr "Geboekt bij de klant incl. btw"
 
 #: admin/rule_of_3_per_customer.py:234 admin/rule_of_3_per_product.py:195
@@ -746,7 +746,7 @@ msgid "Qty prepared"
 msgstr "Voorbereide hoeveelheid"
 
 #: admin/rule_of_3_per_product.py:243
-msgid "Producer amount booked wo VAT"
+msgid "Producer amount booked excl. VAT"
 msgstr "Geboekt voor de producent zonder btw"
 
 #: admin/sale.py:143 models/permanence.py:53
@@ -996,7 +996,7 @@ msgstr ""
 "aardappelen, lasagne van 200 gr., ..."
 
 #: const.py:89
-msgid "Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ..."
+msgid "Sold packaged in box of 3 ℓ, bottle of 75 cℓ, ..."
 msgstr "Verpakt verkocht in kubus van 3 ℓ, fles van 75 cl, ..."
 
 #: const.py:91
@@ -1212,10 +1212,8 @@ msgid "0 means: never display a pop-up."
 msgstr "0 betekent: nooit een melding weergeven."
 
 #: models/configuration.py:54
-msgid "Send abstract order mail to customers"
-msgstr ""
-"Aan elke klant die bestelde een mail sturen met de bestellingen van de hele "
-"groep"
+msgid "Send each customer an email with the orders of the whole group"
+msgstr "Stuur elke klant een e-mail met de bestellingen van de hele groep"
 
 #: models/configuration.py:57
 msgid "Send an order distribution email to members registered for a task"
@@ -1497,7 +1495,7 @@ msgstr ""
 
 #: models/customer.py:102 models/customer.py:206 models/invoice.py:80
 #: models/producer.py:192
-msgid "Date balance"
+msgid "Balance date"
 msgstr "Berekeningsdatum van het saldo"
 
 #: models/customer.py:111
@@ -1599,7 +1597,7 @@ msgid "Previous balance"
 msgstr "Vorig saldo"
 
 #: models/invoice.py:36
-msgid "Accounted for w VAT"
+msgid "Accounted for incl. VAT"
 msgstr "Geboekt incl. btw"
 
 #: models/invoice.py:39 models/permanence.py:409 models/permanence.py:434
@@ -1607,7 +1605,7 @@ msgid "Total amount"
 msgstr "Totaal incl. btw"
 
 #: models/invoice.py:40
-msgid "Purchase to add amount w VAT"
+msgid "Purchase to add amount incl. VAT"
 msgstr "Toe te voegen bedrag incl. btw"
 
 #: models/invoice.py:47
@@ -1722,7 +1720,7 @@ msgid "Total selling amount vat included"
 msgstr "Aan de klant gefactureerd per stuk of per kg, incl. btw"
 
 #: models/invoice.py:924 models/offeritem.py:131 models/purchase.py:170
-msgid "Row amount"
+msgid "Line amount"
 msgstr "Totaal van de regel"
 
 #: models/item.py:42 templates/bs3/repanier/producer_invoice_form.html:111
@@ -1891,7 +1889,7 @@ msgid "The resale price is fixed (boxes, deposit)"
 msgstr "De verkoopprijs voor de klant is vast (samenstellingen, statiegeld)"
 
 #: models/offeritem.py:47
-msgid "Accounted to the producer w VAT"
+msgid "Accounted to the producer incl. VAT"
 msgstr "Geboekt bij de producent incl. btw"
 
 #: models/offeritem.py:65 models/purchase.py:97 models/purchase.py:214
@@ -2092,10 +2090,6 @@ msgstr "Minimaal bestelbedrag om te kunnen bestellen"
 msgid "0 means: no minimum order value."
 msgstr "0 betekent: geen minimaal bestelbedrag."
 
-#: models/producer.py:123
-msgid "Date_balance"
-msgstr "Berekeningsdatum van het saldo"
-
 #: models/producer.py:131
 msgid "Represent this buying group"
 msgstr "Vertegenwoordigt dit voedselteam"
@@ -2124,7 +2118,7 @@ msgstr "PRODUCENT"
 #: templates/bs5/repanier/admin/confirm_invoice.html:93
 #: xlsx/xlsx_order_producer.py:315 xlsx/xlsx_order_producer.py:355
 #: xlsx/xlsx_order_producer.py:520 xlsx/xlsx_order_producer.py:547
-msgid "wo VAT"
+msgid "excl. VAT"
 msgstr "zonder btw"
 
 #: models/product.py:18
@@ -2771,7 +2765,7 @@ msgstr ", berekend : "
 #: templates/bs3/repanier/admin/confirm_invoice.html:94
 #: templates/bs5/repanier/admin/confirm_invoice.html:83
 #: templates/bs5/repanier/admin/confirm_invoice.html:94
-msgid "w VAT"
+msgid "incl. VAT"
 msgstr "incl. btw"
 
 #: templates/bs3/repanier/admin/confirm_invoice.html:87
@@ -3268,7 +3262,7 @@ msgstr "Als u informatie over uzelf wilt tonen, dan"
 
 #: templates/bs3/repanier/who_is_who.html:36
 #: templates/bs5/repanier/who_is_who.html:30
-msgid "update your profil"
+msgid "update your profile"
 msgstr "uw profiel bijwerken"
 
 #: templates/bs3/repanier/who_is_who.html:62
@@ -3412,7 +3406,7 @@ msgstr "Bedrag van een abonnement"
 #: templates/bs5/repanier/widgets/select_producer_order_unit.html:54
 #: templates/bs5/repanier/widgets/select_producer_order_unit.html:64
 #: templates/bs5/repanier/widgets/select_producer_order_unit.html:74
-msgid "Conditioned by"
+msgid "Packaged in"
 msgstr "Verpakt in"
 
 #: templates/bs3/repanier/widgets/select_producer_order_unit.html:26
@@ -3607,7 +3601,7 @@ msgid "You are not currently registered for any tasks or permanences."
 msgstr "U bent momenteel voor geen enkele uitdeling of taak ingeschreven."
 
 #: templatetags/repanier_tags.py:127 templatetags/repanier_tags.py:196
-msgid "Inform"
+msgid "Notify"
 msgstr "Waarschuwen"
 
 #: templatetags/repanier_tags.py:133 templatetags/repanier_tags.py:202
@@ -3711,7 +3705,7 @@ msgid "My name is"
 msgstr "Mijn naam is"
 
 #: views/my_profile_view.py:25
-msgid "Family zero waste"
+msgid "Zero waste family"
 msgstr "Familie zero waste"
 
 #: views/my_profile_view.py:31
@@ -3973,7 +3967,7 @@ msgstr "per produkt"
 
 #: xlsx/xlsx_order_producer.py:323 xlsx/xlsx_order_producer.py:361
 #: xlsx/xlsx_order_producer.py:526 xlsx/xlsx_order_producer.py:553
-msgid "w VAT"
+msgid "incl. VAT"
 msgstr "incl. btw"
 
 #: xlsx/xlsx_order_producer.py:420

@@ -40,14 +40,14 @@ class OfferItem(Item):
 
     # Calculated with Purchase : Total producer purchase price vat included
     total_purchase_with_tax = ModelRepanierMoneyField(
-        _("Accounted to the producer w VAT"),
+        _("Accounted to the producer incl. VAT"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
     )
     # Calculated with Purchase : Total customer selling price vat included
     total_selling_with_tax = ModelRepanierMoneyField(
-        _("Accounted to the customer w VAT"),
+        _("Accounted to the customer incl. VAT"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
@@ -124,7 +124,7 @@ class OfferItem(Item):
             return mark_safe(_("<b>%(price)s</b>") % {"price": price})
         return EMPTY_STRING
 
-    get_html_producer_price_purchased.short_description = _("Row amount")
+    get_html_producer_price_purchased.short_description = _("Line amount")
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     def get_order_name(self):
