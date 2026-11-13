@@ -3225,6 +3225,14 @@ msgstr ""
 msgid "Reset my password"
 msgstr "Mijn wachtwoord opnieuw instellen"
 
+#: repanier/templates/repanier/registration/password_reset_email.html
+msgid "If the button above does not work, open this address:"
+msgstr "Werkt de knop hierboven niet? Open dan dit adres:"
+
+#: repanier/templates/repanier/registration/password_reset_email.html
+msgid "If you did not ask for a new password, you can ignore this email: your current password keeps working."
+msgstr "Heb je geen nieuw wachtwoord aangevraagd? Dan kun je deze e-mail negeren: je huidige wachtwoord blijft werken."
+
 #: templates/bs3/repanier/registration/unsubscribe.html:8
 #: templates/bs5/repanier/registration/unsubscribe.html:9
 msgid "Unsubscribe"

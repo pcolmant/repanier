@@ -1499,6 +1499,25 @@ class Permanence(models.Model):
             offer_item.long_name_v2 = offer_item.product.long_name_v2
             offer_item.save()
 
+    def calculate_product_order_amount(self, product):
+        """Surgical version of calculate_order_amount(), for one single
+        product of this permanence: the fast path of the offer toggle
+        of the products screen.
+
+        Switching a product in or out of offer touches its offer items
+        only. The purchases do not move, so the aggregates of the
+        customer invoices, of the producer invoices and of the
+        customer-producer invoices are derived from unchanged
+        purchases: recomputing the whole permanence on every toggle is
+        what made the products screen slow on big groups. The offer
+        item rows are the only ones carrying data that depends on the
+        product record and its availability flag - recompute those."""
+        for offer_item in OfferItemReadOnly.objects.filter(
+            permanence_id=self.id, product_id=product.id
+        ):
+            offer_item.calculate_order_amount(status=self.status)
+            offer_item.save()
+
     def calculate_order_amount(self):
         for customer_invoice in CustomerInvoice.objects.filter(permanence_id=self.id):
             customer_invoice.calculate_order_amount()
