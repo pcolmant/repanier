@@ -3,7 +3,7 @@ from functools import wraps
 from threading import local
 
 from django.core.checks import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from repanier.const import SaleStatus
@@ -24,8 +24,17 @@ def get_back_to_change_list_url(request, model_admin):
     The back parameter is compared to the known change list, never
     trusted as-is: a forged value cannot redirect outside the admin.
     Without it the action redirects, as before, to the change list of
-    the view owner."""
+    the view owner.
+
+    The confirm screens post to a relative action built by the filter
+    middleware: the ?back= of the initial GET is wrapped inside a
+    _changelist_filters parameter - read it back from there too.
+    """
     back = request.GET.get("back", "")
+    if not back:
+        wrapped = request.GET.get("_changelist_filters", "")
+        if wrapped:
+            back = QueryDict(wrapped).get("back", "")
     if back:
         base = back.split("?", 1)[0]
         if base == reverse("admin:repanier_permanenceinpreparation_changelist"):

@@ -467,3 +467,36 @@ class CancelDeliveryFromPreparationScreenTest(TestCase):
         self.assertEqual(response.status_code, 200)
         target = urlsplit(response.redirect_chain[-1][0]).path
         self.assertEqual(target, "/fr/coordi/repanier/permanencedone/")
+
+    def post_through_the_confirm_screen(self, button):
+        """The real flow of a browser: load the confirm screen, then
+        post to the form action it renders. That action is a relative
+        query built by the filter middleware, which wraps the ?back=
+        of the initial GET inside _changelist_filters."""
+        response = self.client.get(self.url)
+        html = response.content.decode("utf-8")
+        match = re.search(r'<form action="([^"]*)"', html)
+        self.assertTrue(match)
+        self.assertIn("_changelist_filters=", match.group(1))
+        post_url = (
+            reverse("admin:permanence-cancel-delivery", args=[self.permanence.id])
+            + match.group(1)
+        )
+        return self.client.post(post_url, {button: button}, follow=True)
+
+    def test_refusing_through_the_confirm_screen_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.post_through_the_confirm_screen("cancel")
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.SEND)
+
+    def test_applying_through_the_confirm_screen_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.post_through_the_confirm_screen("apply")
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
+        # The action itself did run
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.CANCELLED)
