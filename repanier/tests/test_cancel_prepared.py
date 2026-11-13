@@ -10,6 +10,7 @@ everything stays reversible.
 import datetime
 from urllib.parse import quote, urlsplit
 from decimal import Decimal
+from html import escape
 
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
@@ -22,7 +23,9 @@ from django.contrib.admin import site as default_admin_site
 from repanier.admin.permanence_in_preparation import (
     PermanenceInPreparationAdmin,
 )
-from repanier.const import OrderUnit, SaleStatus, Vat
+from repanier.admin.permanence_done import PermanenceDoneAdmin
+from repanier.const import BankMovement, OrderUnit, SaleStatus, Vat
+from repanier.models.bankaccount import BankAccount
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
@@ -308,12 +311,39 @@ class CancelPreparedRowActionsTest(TestCase):
         self.build_and_login(status=SaleStatus.PLANNED)
         row = self.row_actions(self.permanence)
         self.assertIn("/cancel-prepared/", row)
+        # Every button carries the one sentence help shown in the
+        # tooltip, translated like any other message.
+        self.assertEqual(row.count("data-repanier-help="), 3)
+        self.assertIn(
+            escape(
+                str(
+                    gettext(
+                        "A permanence without any order is deleted for good. A "
+                        "permanence already containing orders is only cancelled and "
+                        "the cancellation can be reverted."
+                    )
+                )
+            ),
+            row,
+        )
 
     def test_an_opened_permanence_offers_no_cancel_button(self):
         self.build_and_login(status=SaleStatus.OPENED)
         row = self.row_actions(self.permanence)
         self.assertIn("/close-order/", row)
         self.assertNotIn("/cancel-prepared/", row)
+        self.assertEqual(row.count("data-repanier-help="), 2)
+        self.assertIn(
+            escape(
+                str(
+                    gettext(
+                        "The members can not order anymore. The next screen "
+                        "confirms the closing, with or without the order emails."
+                    )
+                )
+            ),
+            row,
+        )
 
     def test_a_closed_permanence_offers_the_cancel_delivery_of_the_payment_screen(self):
         self.build_and_login(status=SaleStatus.SEND)
@@ -322,6 +352,113 @@ class CancelPreparedRowActionsTest(TestCase):
         # there with restore_delivery
         self.assertIn("/cancel-delivery/", row)
         self.assertNotIn("/cancel-prepared/", row)
+        self.assertEqual(row.count("data-repanier-help="), 1)
+        self.assertIn(
+            escape(
+                str(
+                    gettext(
+                        "Purchases and invoices are kept and the cancellation can "
+                        "be reverted."
+                    )
+                )
+            ),
+            row,
+        )
+
+
+class PermanenceDoneRowActionsTest(TestCase):
+    """The buttons of the payment and archive screens carry the same help."""
+
+    def build(self, status, latest_total=False):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        self.user = User.objects.create_superuser(
+            username="staff@example.com", email="staff@example.com", password="x"
+        )
+        self.client.force_login(user=self.user)
+        self.permanence = Permanence.objects.create(
+            permanence_date=utc_today(),
+            status=status,
+            highest_status=status,
+        )
+        if latest_total:
+            BankAccount.objects.create(
+                permanence=self.permanence,
+                operation_status=BankMovement.LATEST_TOTAL,
+                operation_date=utc_today(),
+            )
+        self.row_actions = PermanenceDoneAdmin(
+            Permanence, default_admin_site
+        ).get_row_actions
+
+    def test_the_payment_screen_buttons_carry_their_help(self):
+        self.build(status=SaleStatus.SEND)
+        row = self.row_actions(self.permanence)
+        self.assertEqual(row.count("data-repanier-help="), 4)
+        self.assertIn(
+            escape(
+                str(
+                    gettext(
+                        "Register this permanence in the accounting of the group: "
+                        "the customers pay, the producers get paid."
+                    )
+                )
+            ),
+            row,
+        )
+
+    def test_an_invoiced_permanence_with_latest_total_offers_the_cancel_booking(self):
+        self.build(status=SaleStatus.INVOICED, latest_total=True)
+        row = self.row_actions(self.permanence)
+        self.assertEqual(row.count("data-repanier-help="), 2)
+        self.assertIn(
+            escape(
+                str(
+                    gettext(
+                        "Cancel the accounting entries of this permanence, when a "
+                        "correction is needed."
+                    )
+                )
+            ),
+            row,
+        )
+
+    def test_an_archived_permanence_only_offers_the_restore(self):
+        self.build(status=SaleStatus.ARCHIVED)
+        row = self.row_actions(self.permanence)
+        self.assertEqual(row.count("data-repanier-help="), 1)
+        self.assertIn(
+            escape(
+                str(
+                    gettext(
+                        "Take this permanence out of the archive to correct or "
+                        "rebook it."
+                    )
+                )
+            ),
+            row,
+        )
+
+    def test_a_cancelled_delivery_offers_the_uncancel(self):
+        self.build(status=SaleStatus.CANCELLED)
+        row = self.row_actions(self.permanence)
+        self.assertEqual(row.count("data-repanier-help="), 1)
+        self.assertIn(
+            escape(
+                str(
+                    gettext(
+                        "Uncancel this delivery: the permanence is back to the "
+                        "payment screen, with all its purchases."
+                    )
+                )
+            ),
+            row,
+        )
+
 
 
 @override_settings(SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False)
