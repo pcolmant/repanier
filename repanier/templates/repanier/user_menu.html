@@ -7,7 +7,7 @@
     <li id="li_my_name" class="nav-item dropdown">
         <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="bi bi-person" aria-hidden="true"></span> {% if user.username %}{{ user.username }}{% else %}<span id="my_name"></span>{% endif %}</a>
         <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="{% url 'repanier:send_mail_to_coordinators_view' %}">{% translate "Inform" %}</a></li>
+            <li><a class="dropdown-item" href="{% url 'repanier:send_mail_to_coordinators_view' %}">{% translate "Notify" %}</a></li>
             {% if display_who_is_who %}
                 <li><a class="dropdown-item" href="{% url 'repanier:who_is_who_view' %}">{% translate "Who's who" %}</a></li>
             {% endif %}

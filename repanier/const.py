@@ -86,7 +86,7 @@ class OrderUnit(models.TextChoices):
     PC_PRICE_KG = "105", _(
         "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."
     )
-    PC_PRICE_LT = "110", _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")
+    PC_PRICE_LT = "110", _("Sold packaged in box of 3 ℓ, bottle of 75 cℓ, ...")
     PC_PRICE_PC = "115", _(
         "Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."
     )

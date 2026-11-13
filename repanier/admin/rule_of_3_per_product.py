@@ -242,7 +242,7 @@ class OfferItemSendForm(forms.ModelForm):
             self.fields["offer_purchase_price"].disabled = True
         if producer.producer_price_are_wo_vat:
             self.fields["offer_purchase_price"].label = _(
-                "Producer amount booked wo VAT"
+                "Producer amount booked excl. VAT"
             )
 
         permanence_field = self.fields["permanence"]

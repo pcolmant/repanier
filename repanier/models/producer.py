@@ -120,7 +120,7 @@ class Producer(models.Model):
         validators=[MinValueValidator(0)],
     )
 
-    date_balance = models.DateField(_("Date_balance"), default=datetime.date.today)
+    date_balance = models.DateField(_("Balance date"), default=datetime.date.today)
     balance = ModelRepanierMoneyField(
         _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
@@ -189,7 +189,7 @@ class Producer(models.Model):
     def get_admin_date_balance(self):
         return timezone.now().strftime(settings.DJANGO_SETTINGS_DATETIME)
 
-    get_admin_date_balance.short_description = _("Date balance")
+    get_admin_date_balance.short_description = _("Balance date")
 
     def get_admin_balance(self):
         return (
@@ -452,7 +452,7 @@ class Producer(models.Model):
 
     def __str__(self):
         if self.producer_price_are_wo_vat:
-            return "{} {}".format(self.short_profile_name, _("wo VAT"))
+            return "{} {}".format(self.short_profile_name, _("excl. VAT"))
         return self.short_profile_name
 
     class Meta:
