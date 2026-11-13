@@ -50,7 +50,7 @@
                 <div class="row">
                     <div class="col-12">
                         {% if bank_account.bank_amount_in != 0 %}
-                            <span class="btn btn-outline-secondary btn-sm">{% translate "Pending provision" %} :</span>
+                            <span class="btn btn-outline-secondary btn-sm">{% translate "Pending prepayment" %} :</span>
                             {{ bank_account.bank_amount_in }}
                             <small>(
                                 {% if bank_account.operation_comment %}
@@ -131,7 +131,7 @@
                             {% if bank_account.bank_amount_in != 0 %}
                                 <a href="{% url 'repanier:customer_invoice_view' invoiced.customer_invoice.id object.id %}"
                                    class="btn btn-outline-secondary btn-sm">
-                                    {% translate "Provision" %}
+                                    {% translate "Prepayment" %}
                                 </a>
                                 &nbsp;: {{ bank_account.bank_amount_in }}
                                 <small>(

@@ -65,7 +65,7 @@
                 {% for bank_account in bank_account_set %}
                     {% if bank_account.bank_amount_in != 0 %}
                         <div>
-                            <span class="bi bi-dash" aria-hidden="true"></span> {% translate "Provision" %} :
+                            <span class="bi bi-dash" aria-hidden="true"></span> {% translate "Prepayment" %} :
                             {% if bank_account.operation_comment %}
                                 {{ bank_account.operation_comment }}
                             {% else %}

@@ -9,7 +9,7 @@
                 <p><span class="text-success">{{ email_sent_to }}</span></p>
             {% endif %}
             {% if warning_unconfirmed_orders %}
-                <span class="text-danger">{% translate "⚠ Unconfirmed orders will be canceled." %}</span><br>
+                <span class="text-danger">{% translate "⚠ Unconfirmed orders will be cancelled." %}</span><br>
             {% endif %}
             {% if goto_basket %}
                 <a href="{{ order_url }}?is_basket=yes" class="btn btn-info{% if confirm_disabled %} disabled{% endif %}">{% translate "➜ Go to the confirmation step of my order." %}</a>

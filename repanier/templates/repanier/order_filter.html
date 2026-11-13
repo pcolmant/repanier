@@ -43,7 +43,7 @@
                     <a class="nav-link {% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}">{% translate "All products" %}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_basket=yes">{% translate "My cart" %}</a>
+                    <a class="nav-link {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_basket=yes">{% translate "My basket" %}</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if is_like %}bs-docs-sidebar-active{% endif %}" href="{{ permanence.get_order_url }}?is_like=yes{% if q %}&q={{ q }}{% endif %}">{% translate "My" %} <span class="bi bi-heart-fill"></span></a>

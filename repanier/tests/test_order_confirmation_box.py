@@ -98,7 +98,7 @@ class ConfirmationBoxWithoutForcedConfirmationTest(
         self.assertIn("History", fragment)
         # No warnings and no go to basket link when the group does not
         # force the confirmation.
-        self.assertNotIn("Unconfirmed orders will be canceled.", fragment)
+        self.assertNotIn("Unconfirmed orders will be cancelled.", fragment)
         self.assertNotIn("confirmation step of my order", fragment)
 
     def test_basket_without_purchase_disables_the_confirm_button(self):
@@ -121,7 +121,7 @@ class ConfirmationBoxWithForcedConfirmationTest(ConfirmationBoxFixtureMixin, Tes
             fragment,
         )
         self.assertIn("➜ Go to the confirmation step of my order.", fragment)
-        self.assertIn("Unconfirmed orders will be canceled.", fragment)
+        self.assertIn("Unconfirmed orders will be cancelled.", fragment)
         # No confirm button on the order page itself
         self.assertNotIn('id="btn_confirm_order"', fragment)
 
@@ -133,7 +133,7 @@ class ConfirmationBoxWithForcedConfirmationTest(ConfirmationBoxFixtureMixin, Tes
             "➜ Confirm this order and receive an email containing its summary.",
             fragment,
         )
-        self.assertIn("Unconfirmed orders will be canceled.", fragment)
+        self.assertIn("Unconfirmed orders will be cancelled.", fragment)
 
     def test_closed_permanence_locks_the_go_to_basket_link(self):
         customer_invoice, permanence = self.build_fixture()
@@ -151,5 +151,5 @@ class ConfirmationBoxWithForcedConfirmationTest(ConfirmationBoxFixtureMixin, Tes
         self.assertIn("History", fragment)
         # Everything confirm-ish disappears
         self.assertNotIn('id="btn_confirm_order"', fragment)
-        self.assertNotIn("Unconfirmed orders will be canceled.", fragment)
+        self.assertNotIn("Unconfirmed orders will be cancelled.", fragment)
         self.assertNotIn("confirmation step of my order", fragment)
