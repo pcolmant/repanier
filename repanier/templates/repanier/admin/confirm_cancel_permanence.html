@@ -24,11 +24,7 @@
             <p>&nbsp;</p>
             <p>{% translate "A permanence created by mistake must not pollute the preparation screen: it can be cancelled here in one single action." %}</p>
             {% if orders_counter > 0 %}
-                {% if not is_planned %}
-                    <p>{% translate "The orders will be closed without sending any email." %}</p>
-                {% else %}
-                    <p>{% translate "The orders will be opened without sending any email, then closed without sending any email." %}</p>
-                {% endif %}
+                <p>{% translate "The orders will be opened without sending any email, then closed without sending any email." %}</p>
                 <p>{% translate "The permanence will then be cancelled. Purchases and invoices are kept, and the cancellation can itself be reverted from the payment screen (restore the delivery)." %}</p>
                 <p>{% blocktranslate count counter=orders_counter %}This permanence carries {{ counter }} order. It will be cancelled.{% plural %}This permanence carries {{ counter }} orders. They will be cancelled.{% endblocktranslate %}</p>
             {% else %}
