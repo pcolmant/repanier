@@ -228,7 +228,6 @@
             {% addtoblock "lastjs" %}{% spaceless %}
                 <script>
                 var saved_offer_item_id = -1;
-                var saved_delivery_id = -1;
 
                 document.addEventListener("DOMContentLoaded", function () {
                     // Gestionnaire global par délégation d'événements (compatible éléments dynamiques htmx)
@@ -349,54 +348,6 @@
                     }
                 }
 
-                function delivery_ajax() {
-                    var delivery = document.getElementById("delivery");
-                    if (!delivery) return;
-                    var selectedOption = delivery.options[delivery.selectedIndex];
-                    var delivery_val = selectedOption ? selectedOption.value : '';
-
-                    var lien = '{% url 'repanier:delivery_ajax' %}?delivery=' + delivery_val + "&permanence=" + {{ permanence.id|unlocalize }} + "{% if is_basket %}&is_basket=yes{%  endif %}";
-                    fetch(lien, { cache: 'no-store' })
-                        .then(response => response.json())
-                        .then(result => {
-                            for (var key in result) {
-                                if (result.hasOwnProperty(key)) {
-                                    document.querySelectorAll(key).forEach(el => {
-                                        el.innerHTML = result[key];
-                                        if (key === "#communicationModal") {
-                                            var modalObj = bootstrap.Modal.getOrCreateInstance(el);
-                                            modalObj.show();
-                                        }
-                                    });
-                                }
-                            }
-                        })
-                        .catch(error => console.error('Erreur delivery ajax:', error));
-                }
-
-                function clear_select_delivery_list_ajax() {
-                    saved_delivery_id = -1;
-                }
-
-                function show_select_delivery_list_ajax(delivery_id) {
-                    if(saved_delivery_id !== delivery_id) {
-                        saved_delivery_id = delivery_id;
-                        var lien2 = '{% url 'repanier:delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
-                        fetch(lien2, { cache: 'no-store' })
-                            .then(response => response.json())
-                            .then(result => {
-                                for (var key in result) {
-                                    if (result.hasOwnProperty(key)) {
-                                        document.querySelectorAll(key).forEach(el => {
-                                            el.innerHTML = result[key];
-                                        });
-                                    }
-                                }
-                            })
-                            .catch(error => console.error('Erreur select delivery list:', error));
-                    }
-                }
-
                 function btn_receive_order_email() {
                     var receive_email = document.getElementById("btn_confirm_order");
                     if (receive_email) {
@@ -417,7 +368,6 @@
                             }
                         })
                         .catch(error => console.error('Erreur confirm order:', error));
-                    saved_delivery_id = -1;
                 }
 
                 function like_ajax(offer_item_id) {
@@ -467,8 +417,10 @@
     {% endblock link_to_order_js %}
 
     {% block quantity_dropdown_assets %}
-        {# Behaviour and styles of the per-item quantity dropdowns: loaded once per page. #}
+        {# Behaviour and styles of the quantity and delivery point dropdowns: loaded once per page. #}
         {% addtoblock "css" %}{% spaceless %}<link rel="stylesheet" href="{% static 'repanier/css/quantity_dropdown.css' %}">{% endspaceless %}{% endaddtoblock %}
+        {% addtoblock "css" %}{% spaceless %}<link rel="stylesheet" href="{% static 'repanier/css/delivery_dropdown.css' %}">{% endspaceless %}{% endaddtoblock %}
         {% addtoblock "lastjs" %}{% spaceless %}<script src="{% static 'repanier/js/quantity_dropdown.js' %}" defer></script>{% endspaceless %}{% endaddtoblock %}
+        {% addtoblock "lastjs" %}{% spaceless %}<script src="{% static 'repanier/js/delivery_dropdown.js' %}" defer></script>{% endspaceless %}{% endaddtoblock %}
     {% endblock quantity_dropdown_assets %}
 {% endblock sub_content %}

@@ -385,14 +385,12 @@ class CustomerInvoice(Invoice):
             )
         return {"#span_btn_confirm_order": mark_safe(confirm_box)}
 
-    def get_html_select_delivery_point(self, permanence, status):
+    def get_html_select_delivery_point(self, permanence, status, is_basket=False):
         if status == SaleStatus.OPENED and permanence.with_delivery_point:
+            has_delivery_points = True
             if self.delivery is not None:
                 label = self.delivery.get_delivery_customer_display()
-                delivery_id = self.delivery_id
             else:
-                delivery_id = 0
-
                 if self.customer.group is not None:
                     qs = DeliveryBoard.objects.filter(
                         Q(
@@ -420,7 +418,10 @@ class CustomerInvoice(Invoice):
                         permanence_id=permanence.id, customer_id=self.customer_id
                     ).update(status=SaleStatus.OPENED)
                 else:
-                    label = _("No delivery point is open for you. You cannot place an order.")
+                    has_delivery_points = False
+                    label = _(
+                        "No delivery point is open for you. You cannot place an order."
+                    )
                     # IMPORTANT :
                     # 1 / This prohibits to place an order into the customer UI
                     # 2 / task_order.close_send_order will delete any CLOSED orders without any delivery point
@@ -433,19 +434,32 @@ class CustomerInvoice(Invoice):
             else:
                 if self.transport.amount <= DECIMAL_ZERO:
                     msg_transport = EMPTY_STRING
+                elif self.min_transport.amount > DECIMAL_ZERO:
+                    msg_transport = _(
+                        "The shipping costs for this delivery point amount to "
+                        "%(transport)s for orders of less than %(min_transport)s."
+                    ) % {
+                        "transport": self.transport,
+                        "min_transport": self.min_transport,
+                    }
                 else:
-                    if self.min_transport.amount > DECIMAL_ZERO:
-                        msg_transport = f"{_('The shipping costs for this delivery point amount to %(transport)s for orders of less than %(min_transport)s.') % {'transport': self.transport, 'min_transport': self.min_transport} }<br>"
-                    else:
-                        msg_transport = f"{_('The shipping costs for this delivery point amount to %(transport)s.') % {'transport': self.transport} }<br>"
+                    msg_transport = _(
+                        "The shipping costs for this delivery point amount to "
+                        "%(transport)s."
+                    ) % {"transport": self.transport}
 
-            msg_delivery = f"""
-            {_("Delivery point")} :
-            <select name="delivery" id="delivery" onmouseover="show_select_delivery_list_ajax({delivery_id})" onmouseout="clear_select_delivery_list_ajax()" onchange="delivery_ajax()" class="form-control">
-            <option value="{delivery_id}" selected>{label}</option>
-            </select>
-            {msg_transport}
-            """
+            # The markup lives in repanier/bootstrap5_delivery_dropdown.html:
+            # a Bootstrap 5 dropdown, like the quantity ones.
+            msg_delivery = render_to_string(
+                "repanier/bootstrap5_delivery_dropdown.html",
+                {
+                    "permanence_id": permanence.id,
+                    "label": label,
+                    "has_delivery_points": has_delivery_points,
+                    "msg_transport": msg_transport,
+                    "is_basket": is_basket,
+                },
+            )
         else:
             msg_delivery = EMPTY_STRING
         return msg_delivery

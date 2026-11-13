@@ -1,0 +1,7 @@
+/* Delivery point dropdown widget on the order screen.
+   Loaded once per page by cms_order_page.html. */
+
+.delivery-dropdown .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+}

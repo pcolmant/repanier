@@ -1,0 +1,41 @@
+{% load i18n l10n %}
+{% comment %}
+Bootstrap 5 custom dropdown for the delivery point selection.
+Replaces the native select of the order screens, like the quantity
+dropdowns do. The menu items are loaded from the server via HTMX when
+the dropdown is opened; selecting one calls delivery_ajax through
+repanier/static/repanier/js/delivery_dropdown.js, which also updates
+the basket and the order confirmation box.
+{% endcomment %}
+
+{% translate "Delivery point" %} :
+<div class="dropdown delivery-dropdown" id="delivery-dropdown"
+     data-delivery-url="{% url 'repanier:delivery_ajax' %}"
+     data-permanence="{{ permanence_id|unlocalize }}"
+     {% if is_basket %}data-is-basket="yes"{% endif %}>
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+            type="button"
+            id="deliveryBtn"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            {% if has_delivery_points %}
+                hx-get="{% url 'repanier:delivery_select_ajax' %}?permanence={{ permanence_id|unlocalize }}"
+                hx-trigger="click"
+                hx-target="#deliveryDropdownMenu"
+                hx-swap="innerHTML"
+            {% else %}
+                disabled
+            {% endif %}>
+        {{ label }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end"
+        id="deliveryDropdownMenu"
+        aria-labelledby="deliveryBtn">
+        {% if has_delivery_points %}
+            <li><a class="dropdown-item" href="#">{% translate "Loading..." %}</a></li>
+        {% else %}
+            <li><a class="dropdown-item disabled" href="#">{{ label }}</a></li>
+        {% endif %}
+    </ul>
+</div>
+{% if msg_transport %}<br><small>{{ msg_transport }}</small>{% endif %}

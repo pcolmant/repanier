@@ -117,7 +117,7 @@ def order_ajax(request):
             permanence = Permanence.objects.filter(id=offer_item.permanence_id).first()
             is_basket = sboolean(request.GET.get("is_basket", False))
             delivery_message = customer_invoice.get_html_select_delivery_point(
-                permanence, SaleStatus.OPENED
+                permanence, SaleStatus.OPENED, is_basket=is_basket
             )
             if is_basket:
                 basket_message = get_html_basket_message(
