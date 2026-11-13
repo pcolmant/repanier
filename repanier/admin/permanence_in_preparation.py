@@ -574,6 +574,7 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             {
                 **self.admin_site.each_context(request),
                 "model_verbose_name_plural": _("Offers in preparation"),
+                "breadcrumb_url": self.change_list_url,
                 "sub_title": _("Please confirm the action: back to scheduled"),
                 "action": "back_to_scheduled",
                 "permanence": permanence,

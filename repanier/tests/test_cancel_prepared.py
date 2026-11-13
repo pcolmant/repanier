@@ -468,6 +468,27 @@ class CancelDeliveryFromPreparationScreenTest(TestCase):
         target = urlsplit(response.redirect_chain[-1][0]).path
         self.assertEqual(target, "/fr/coordi/repanier/permanencedone/")
 
+    def test_the_confirm_screen_uses_the_admin_layout(self):
+        """The confirm screen is dressed with the classes of the Django
+        admin itself (title, crumbs, submit-row), not with the custom
+        button styles of the old screens."""
+        self.build_and_login()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn('<div id="content-main">', html)
+        self.assertIn('<div class="submit-row">', html)
+        self.assertIn('class="default"', html)
+        self.assertIn('name="apply"', html)
+        self.assertIn('name="cancel"', html)
+        self.assertNotIn("repanier-submit-info", html)
+        # A real breadcrumb, no javascript document.referrer anymore,
+        # pointing at the change list owning the view (the payment list)
+        self.assertNotIn("document.referrer", html)
+        self.assertIn(
+            'href="/fr/coordi/repanier/permanencedone/"', html
+        )
+
     def post_through_the_confirm_screen(self, button):
         """The real flow of a browser: load the confirm screen, then
         post to the form action it renders. That action is a relative
