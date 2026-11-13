@@ -1267,6 +1267,41 @@ class CancelTheParentWhileTheChildIsStillOpenTest(ProducerChainJourneyMixin, Tes
         )
         self.assertIsNone(latest.permanence_id)
 
+    def test_the_chain_arrives_square_after_the_cancel(self):
+        # The treasurer rebooks the round 1 that he cancelled, then
+        # books its child: each round is counted exactly once, the
+        # cancelled books leave no anchor behind.
+        self.cancel_last_invoice(self.round_1)
+        self.pay_producers(self.round_1, {"Abrigots": D("6.00")})
+        self.pay_producers(self.child, {"Bananes": D("6.00")})
+
+        # Alice is charged for A and B, exactly once each
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.balance.amount, D("-12.00"))
+        # Each producer is paid at its own round, and square
+        for name in ("Abrigots", "Bananes"):
+            producer = self.producers[name]
+            producer.refresh_from_db()
+            self.assertEqual(producer.balance.amount, D("0"), name)
+        # The anchors of the final chain: one per book, chaining the
+        # payments of the two rounds
+        self.assertEqual(self.anchor_net(self.round_1.id), D("-6.00"))
+        self.assertEqual(self.anchor_net(self.child.id), D("-12.00"))
+        # The cancelled book of round 1 left no anchor row behind: the
+        # latest_total() helper would have found two anchors otherwise.
+        # The payment rows of the producers are not anchors and do not
+        # count.
+        self.assertEqual(
+            BankAccount.objects.filter(
+                permanence_id=self.round_1.id,
+                operation_status__in=[
+                    BankMovement.LATEST_TOTAL,
+                    BankMovement.NOT_LATEST_TOTAL,
+                ],
+            ).count(),
+            1,
+        )
+
 
 class PaymentAttachedShellIsKeptTest(TestCase):
     """The invoice cleanup that follows a split only removes inert
