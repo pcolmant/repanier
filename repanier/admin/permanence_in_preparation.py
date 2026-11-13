@@ -33,10 +33,12 @@ from repanier.const import EMPTY_STRING, OrderUnit, SaleStatus
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.middleware import add_filter
-from repanier.models import PermanenceInPreparation
+from repanier.models import Permanence, PermanenceInPreparation
 from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
+from repanier.models.purchase import Purchase
 from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
@@ -128,6 +130,11 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 "<int:permanence_id>/back-to-scheduled/",
                 self.admin_site.admin_view(self.back_to_scheduled),
                 name="permanence-back-to-scheduled",
+            ),
+            path(
+                "<int:permanence_id>/cancel-prepared/",
+                self.admin_site.admin_view(self.cancel_prepared),
+                name="permanence-cancel-prepared",
             ),
             path(
                 "<int:permanence_id>/generate-permanence/",
@@ -573,6 +580,42 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             },
         )
 
+    @check_permanence((SaleStatus.PLANNED, SaleStatus.OPENED))
+    def cancel_prepared(self, request, permanence_id, permanence=None):
+        if "apply" in request.POST:
+            permanence.cancel_prepared()
+            if Permanence.objects.filter(id=permanence.id).exists():
+                # Orders were placed: the shell only got cancelled
+                user_message = _("The permanence has been cancelled.")
+            else:
+                user_message = _("The permanence has been deleted.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name(
+            "admin/confirm_cancel_permanence.html"
+        )
+        return render(
+            request,
+            template_name,
+            {
+                **self.admin_site.each_context(request),
+                "model_verbose_name_plural": _("Offers in preparation"),
+                "action": "cancel_prepared",
+                "permanence": permanence,
+                # Help the staff member spot a real permanence before
+                # cancelling a mistake: the members who ordered
+                "orders_counter": Purchase.objects.filter(
+                    permanence_id=permanence.id, quantity_ordered__gt=0
+                )
+                .values("customer_id")
+                .distinct()
+                .count(),
+                "is_planned": permanence.status == SaleStatus.PLANNED.value,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
+            },
+        )
+
     @check_cancel_in_post
     @check_permanence(SaleStatus.PLANNED)
     def generate_permanence(self, request, permanence_id, permanence=None):
@@ -620,7 +663,8 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><i style="color:Tomato" class="fas fa-ban"></i></a>'
                 "</div>",
                 add_filter(reverse("admin:generate-permanence", args=[permanence.pk])),
                 _("Duplicate"),
@@ -628,12 +672,17 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                     reverse("admin:permanence-open-order", args=[permanence.pk])
                 ),
                 _("Open orders"),
+                add_filter(
+                    reverse("admin:permanence-cancel-prepared", args=[permanence.pk])
+                ),
+                _("Cancel this permanence"),
             )
         elif permanence.status == SaleStatus.OPENED.value:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a>'
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a> '
+                '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><i style="color:Tomato" class="fas fa-ban"></i></a>'
                 "</div>",
                 add_filter(
                     reverse("admin:permanence-back-to-scheduled", args=[permanence.pk])
@@ -643,6 +692,10 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                     reverse("admin:permanence-close-order", args=[permanence.pk])
                 ),
                 _("Close orders"),
+                add_filter(
+                    reverse("admin:permanence-cancel-prepared", args=[permanence.pk])
+                ),
+                _("Cancel this permanence"),
             )
         return EMPTY_STRING
 

@@ -45,7 +45,10 @@ def check_done_in_post(func):
     return func_wrapper
 
 
-def check_permanence(status: SaleStatus):
+def check_permanence(status: SaleStatus | tuple):
+    """Accept one status or several (a tuple): the status check passes when
+    the permanence carries any of them."""
+
     def actual_decorator(func):
         @wraps(func)
         def func_wrapper(*args, **kwargs):
@@ -60,11 +63,25 @@ def check_permanence(status: SaleStatus):
                 user_message_level = messages.INFO
                 args[0].message_user(args[1], user_message, user_message_level)
                 return HttpResponseRedirect(args[0].get_redirect_to_change_list_url())
-            if permanence.status != status.value:
-                # logger.debug("check_permanence, permanence.status != status")
-                user_message = _(
-                    "To perform this action, the status of {permanence} must be '{status.label}.'."
-                ).format(permanence=permanence, status=status)
+            if isinstance(status, tuple):
+                allowed_values = [one_status.value for one_status in status]
+            else:
+                allowed_values = [status.value]
+            if permanence.status not in allowed_values:
+                # logger.debug("check_permanence, permanence.status not in statuses")
+                if isinstance(status, tuple):
+                    expected_statuses = "' or '.".join(
+                        str(one_status.label) for one_status in status
+                    )
+                    user_message = _(
+                        "To perform this action, the status of {permanence} must be '{expected_statuses}.'"
+                    ).format(
+                        permanence=permanence, expected_statuses=expected_statuses
+                    )
+                else:
+                    user_message = _(
+                        "To perform this action, the status of {permanence} must be '{status.label}.'"
+                    ).format(permanence=permanence, status=status)
                 user_message_level = messages.ERROR
                 args[0].message_user(args[1], user_message, user_message_level)
                 return HttpResponseRedirect(args[0].get_redirect_to_change_list_url())

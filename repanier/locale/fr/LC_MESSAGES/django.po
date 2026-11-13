@@ -4155,5 +4155,64 @@ msgstr "Stock restant"
 msgid "Stock check"
 msgstr "Contrôle du stock"
 
+# New strings of the "cancel a prepared permanence" feature
+msgid "Cancel this permanence"
+msgstr "Annuler cette permanence"
+
+msgid "The permanence has been cancelled."
+msgstr "La permanence a été annulée."
+
+msgid "Please, confirm the action : cancel this permanence."
+msgstr "Veuillez confirmer l'action : annuler cette permanence."
+
+msgid ""
+"A permanence created by mistake must not pollute the preparation screen: it "
+"can be cancelled here in one single action."
+msgstr ""
+"Une permanence créée par erreur ne doit pas polluer l'écran de préparation : "
+"elle peut être annulée ici en une seule action."
+
+msgid ""
+"The orders will be opened without sending any email, then closed without "
+"sending any email."
+msgstr ""
+"Les commandes seront ouvertes sans envoyer d'email, puis clôturées sans "
+"envoyer d'email."
+
+msgid "The orders will be closed without sending any email."
+msgstr "Les commandes seront clôturées sans envoyer d'email."
+
+msgid ""
+"The permanence will then be cancelled. Purchases and invoices are kept, and "
+"the cancellation can itself be reverted from the payment screen (restore the "
+"delivery)."
+msgstr ""
+"La permanence sera ensuite annulée. Les achats et factures sont conservés, et "
+"l'annulation peut elle-même être annulée depuis l'écran de paiement (restaurer "
+"la livraison)."
+
+#, python-format
+msgid "This permanence carries %(counter)s order. It will be cancelled."
+msgid_plural "This permanence carries %(counter)s orders. They will be cancelled."
+msgstr[0] "Cette permanence contient %(counter)s commande. Elle sera annulée."
+msgstr[1] ""
+"Cette permanence contient %(counter)s commandes. Elles seront annulées."
+
+#, python-brace-format
+msgid ""
+"To perform this action, the status of {permanence} must be "
+"'{expected_statuses}.'"
+msgstr ""
+"Pour effectuer cette action, le statut de {permanence} doit être "
+"'{expected_statuses}'."
+
+msgid "No order was placed: the permanence is an empty shell, it will be deleted for good."
+msgstr ""
+"Aucune commande n'a été passée : la permanence est une coquille vide, elle sera "
+"supprimée définitivement."
+
+msgid "The permanence has been deleted."
+msgstr "La permanence a été supprimée."
+
 #~ msgid "My balance"
 #~ msgstr "Mon solde"

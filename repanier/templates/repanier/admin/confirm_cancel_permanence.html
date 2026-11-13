@@ -1,0 +1,44 @@
+{% extends "admin/change_form.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% translate 'Manage' %}
+        &rsaquo;
+        <a id="confirm_action_breadcrumb"></a>
+        <script>
+            (function() {
+                var link = document.getElementById("confirm_action_breadcrumb");
+                link.href = document.referrer;
+                link.textContent = "{{ model_verbose_name_plural|escapejs }}";
+            })();
+        </script>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
+        <h2>{{ permanence|title }}</h2>
+        <div class="form-row">
+            <h3>{% translate "Please, confirm the action : cancel this permanence." %}</h3>
+            <p>&nbsp;</p>
+            <p>{% translate "A permanence created by mistake must not pollute the preparation screen: it can be cancelled here in one single action." %}</p>
+            {% if orders_counter > 0 %}
+                {% if not is_planned %}
+                    <p>{% translate "The orders will be closed without sending any email." %}</p>
+                {% else %}
+                    <p>{% translate "The orders will be opened without sending any email, then closed without sending any email." %}</p>
+                {% endif %}
+                <p>{% translate "The permanence will then be cancelled. Purchases and invoices are kept, and the cancellation can itself be reverted from the payment screen (restore the delivery)." %}</p>
+                <p>{% blocktranslate count counter=orders_counter %}This permanence carries {{ counter }} order. It will be cancelled.{% plural %}This permanence carries {{ counter }} orders. They will be cancelled.{% endblocktranslate %}</p>
+            {% else %}
+                <p>{% translate "No order was placed: the permanence is an empty shell, it will be deleted for good." %}</p>
+            {% endif %}
+            <p>&nbsp;</p>
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}</button>
+        </div>
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

@@ -1259,6 +1259,42 @@ class Permanence(models.Model):
             customer_invoice.restore_membership_fee_extension()
 
     @transaction.atomic
+    def cancel_prepared(self):
+        """Get rid of a permanence still in preparation (scheduled or
+        opened) that the group created by mistake.
+
+        When no order was placed the permanence is an empty shell: it is
+        deleted for good, together with its offer items and its empty
+        invoices. Otherwise cancellations must stay traceable: this runs
+        the exact chain a careful staff member would run by hand - open
+        the orders without sending any email, close them without sending
+        any email, cancel the delivery - so every transition passes
+        through the well tested status machinery. Purchases and invoices
+        are preserved, and the cancellation itself stays reversible (see
+        restore_delivery)."""
+        from repanier.models.offeritem import OfferItem
+        from repanier.models.purchase import Purchase
+        from repanier.task import task_order
+
+        if not Purchase.objects.filter(
+            permanence_id=self.id, quantity_ordered__gt=0
+        ).exists():
+            # Nothing was ever ordered: delete the shell, no trace to keep
+            CustomerInvoice.objects.filter(permanence_id=self.id).delete()
+            ProducerInvoice.objects.filter(permanence_id=self.id).delete()
+            OfferItem.objects.filter(permanence_id=self.id).delete()
+            self.delete()
+            return
+        if self.status == SaleStatus.PLANNED:
+            task_order.open_order(self.id, send_mail=False)
+        task_order.close_order(
+            self.id, everything=True, deliveries_id=(), send_mail=False
+        )
+        self.refresh_from_db()
+        self.cancel_delivery()
+        self.refresh_from_db()
+
+    @transaction.atomic
     def archive(self):
         self.set_status(old_status=SaleStatus.SEND, new_status=SaleStatus.ARCHIVED)
         bank_account = BankAccount.get_closest_to(self.permanence_date)
