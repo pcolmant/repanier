@@ -43,7 +43,7 @@
                         <div class="row">
                             <div class="col-12">
                                 {% if bank_account.bank_amount_in != 0 %}
-                                    <span class="btn btn-outline-secondary btn-sm">{% translate "Pending provision" %}</span>
+                                    <span class="btn btn-outline-secondary btn-sm">{% translate "Pending prepayment" %}</span>
                                     &nbsp;: {{ bank_account.bank_amount_in }}
                                     <small>(
                                         {% if bank_account.operation_comment %}
@@ -101,7 +101,7 @@
                 <div class="row">
                     <div class="col-12">
                         {% if bank_account.bank_amount_in != 0 %}
-                            <span class="btn btn-outline-secondary btn-sm">{% translate "Provision" %}</span>
+                            <span class="btn btn-outline-secondary btn-sm">{% translate "Prepayment" %}</span>
                             &nbsp;: {{ bank_account.bank_amount_in }}
                             <small>(
                                 {% if bank_account.operation_comment %}

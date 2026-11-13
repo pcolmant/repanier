@@ -39,7 +39,7 @@ def check_cancel_in_post(func):
         # args[0] = self
         # args[1] = request
         if "cancel" in args[1].POST:
-            user_message = _("Action canceled by the user.")
+            user_message = _("Action cancelled by the user.")
             user_message_level = messages.INFO
             args[0].message_user(args[1], user_message, user_message_level)
             return HttpResponseRedirect(

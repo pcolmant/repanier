@@ -223,7 +223,7 @@ def payment_message(customer, permanence, customer_invoice):
             if balance.amount < const.DECIMAL_ZERO:
                 communication = f"{customer.short_basket_name} ({permanence.short_name_v2})" if permanence.short_name_v2 else customer.short_basket_name
                 group_name = settings.REPANIER_SETTINGS_GROUP_NAME
-                customer_payment_needed = _("Please pay a provision of {payment} to the bank account {name} {number} with communication {communication}.").format(
+                customer_payment_needed = _("Please pay a prepayment of {payment} to the bank account {name} {number} with communication {communication}.").format(
                     payment= -balance,
                     name= group_name,
                     number= bank_account_number,

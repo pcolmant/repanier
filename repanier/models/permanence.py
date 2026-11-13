@@ -113,7 +113,7 @@ class Permanence(models.Model):
     )
     # canceled_invoice_sort_order is used in admin.permanence_done to display the canceled permanence in correct order
     canceled_invoice_sort_order = models.IntegerField(
-        "Canceled accounting entry sort order", default=None, blank=True, null=True
+        "Cancelled accounting entry sort order", default=None, blank=True, null=True
     )
     picture = RepanierPictureField(
         verbose_name=_("Picture"),

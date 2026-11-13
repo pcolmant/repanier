@@ -682,7 +682,7 @@ class CustomerInvoice(Invoice):
             if send_mail:
                 from repanier.email.email_order import export_order_2_1_customer
 
-                filename = "{}-{}.xlsx".format(_("Canceled order"), self.permanence)
+                filename = "{}-{}.xlsx".format(_("Cancelled order"), self.permanence)
 
                 export_order_2_1_customer(
                     self.customer, filename, self.permanence, cancel_order=True

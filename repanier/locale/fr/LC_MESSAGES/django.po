@@ -709,7 +709,7 @@ msgid "Customer tariff"
 msgstr "Tarif consommateur"
 
 #: admin/purchase.py:601
-msgid "Action canceled by the system."
+msgid "Action cancelled by the system."
 msgstr "Action annulée par Repanier."
 
 #: admin/purchase.py:613
@@ -784,7 +784,7 @@ msgstr ""
 "de gestion."
 
 #: admin/tools.py:24
-msgid "Action canceled by the user."
+msgid "Action cancelled by the user."
 msgstr "Action annulée par l'utilisateur."
 
 #: admin/tools.py:59
@@ -1678,7 +1678,7 @@ msgstr ""
 #: models/invoice.py:311 models/invoice.py:394
 #: templates/bs3/repanier/communication_confirm_order.html:11
 #: templates/bs5/repanier/communication_confirm_order.html:13
-msgid "⚠ Unconfirmed orders will be canceled."
+msgid "⚠ Unconfirmed orders will be cancelled."
 msgstr "⚠ Les commandes non confirmées sont annulées."
 
 #: models/invoice.py:322 models/invoice.py:405
@@ -1718,8 +1718,15 @@ msgid "The shipping costs for this delivery point amount to %(transport)s."
 msgstr "Les frais pour ce point de livraison s'élèvent à %(transport)s."
 
 #: models/invoice.py:727
-msgid "Canceled order"
+msgid "Cancelled order"
 msgstr "Commande annulée"
+
+
+msgid "Cancelled accounting entry sort order"
+msgstr "Ordonnancement de l'entrée comptable annulée"
+
+msgid "Yes, I'm sure and I have already encoded the customer's prepayments into the bank account"
+msgstr "Oui, je confirme cette action et j'ai déjà encodé les provisions des clients dans le compte bancaire"
 
 #: models/invoice.py:745
 msgid "Qty not confirmed : {}"
@@ -2582,7 +2589,7 @@ msgstr "Tous les produits"
 #: templates/bs3/cms_order_page_htmx.html:107
 #: templates/bs5/cms_order_page.html:111
 #: templates/bs5/repanier/order_filter.html:46
-msgid "My cart"
+msgid "My basket"
 msgstr "Mon panier"
 
 #: templates/bs3/cms_order_page.html:124
@@ -2915,8 +2922,14 @@ msgstr "Paiement centralisé par"
 #: templates/bs3/repanier/customer_invoice_form.html:52
 #: templates/bs5/repanier/customer_history_form.html:53
 #: templates/bs5/repanier/customer_invoice_form.html:46
-msgid "Pending provision"
+msgid "Pending prepayment"
 msgstr "Paiement en traitement"
+
+msgid "Please pay a prepayment of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
+msgstr "Veuillez payer une provision de %(payment)s sur le compte bancaire %(name)s %(number)s avec la communication %(communication)s."
+
+msgid "Please pay a prepayment of {payment} to the bank account {name} {number} with communication {communication}."
+msgstr "Veuillez payer une provision de {payment} sur le compte bancaire {name} {number} avec la communication {communication}."
 
 #: templates/bs3/repanier/customer_history_form.html:64
 #: templates/bs3/repanier/customer_invoice_form.html:62
@@ -2940,7 +2953,7 @@ msgstr "Mon solde au"
 #: templates/bs5/repanier/customer_history_form.html:134
 #: templates/bs5/repanier/customer_invoice_form.html:104
 #: templates/bs5/repanier/producer_invoice_form.html:68
-msgid "Provision"
+msgid "Prepayment"
 msgstr "Provision"
 
 #: templates/bs3/repanier/customer_history_form.html:131

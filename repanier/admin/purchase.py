@@ -598,7 +598,7 @@ class PurchaseAdmin(admin.ModelAdmin):
         permanence_id = query_params.get("permanence", "0")
         customer_id = query_params.get("customer", "0")
         user_message_level = messages.ERROR
-        user_message = _("Action canceled by the system.")
+        user_message = _("Action cancelled by the system.")
         customer = Customer.objects.filter(id=customer_id).first()
         permanence = Permanence.objects.filter(id=permanence_id).first()
         if permanence is not None and customer is not None:
