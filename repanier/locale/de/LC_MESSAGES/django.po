@@ -436,7 +436,7 @@ msgstr "Importieren"
 
 #: admin/permanence_done.py:560 admin/permanence_done.py:578
 msgid "Cancel the delivery"
-msgstr "Die Lieferung stornieren"
+msgstr "Lieferung stornieren"
 
 #: admin/permanence_done.py:564
 msgid "Book"
@@ -448,7 +448,7 @@ msgstr "Archivieren"
 
 #: admin/permanence_done.py:598
 msgid "Cancel accounting registration"
-msgstr "Buchungserfassung stornieren"
+msgstr "Buchung stornieren"
 
 #: admin/permanence_done.py:623 admin/permanence_done.py:634
 msgid "Restore"
@@ -571,11 +571,11 @@ msgstr "Bestellungen öffnen"
 
 #: admin/permanence_in_preparation.py:640
 msgid "Modify the offer"
-msgstr "Das Angebot ändern"
+msgstr "Angebot ändern"
 
 #: admin/permanence_in_preparation.py:644
 msgid "Close orders"
-msgstr "Die Bestellungen schließen"
+msgstr "Bestellungen schließen"
 
 #: admin/producer.py:74
 msgid "The short_basket_name {} is already used by another producer."
@@ -4096,7 +4096,7 @@ msgid "Stock check"
 msgstr "Bestandskontrolle"
 
 msgid "Cancel this permanence"
-msgstr "Diese Verteilung stornieren"
+msgstr "Verteilung stornieren"
 
 msgid "The permanence has been cancelled."
 msgstr "Die Verteilung wurde storniert."
