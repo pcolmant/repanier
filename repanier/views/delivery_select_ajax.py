@@ -1,13 +1,13 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse
 from django.utils import translation
-from django.utils.safestring import mark_safe
+from django.utils.html import escape
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import EMPTY_STRING, SaleStatus
+from repanier.const import SaleStatus
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
@@ -51,22 +51,29 @@ def delivery_select_ajax(request):
         )
     is_selected = False
     delivery_counter = 0
-    html = EMPTY_STRING
+    html = ""
     # IMPORTANT : Do not limit to delivery.status=PERMANENCE_OPENED to include potentialy closed
     # delivery already selected by the customer
     for delivery in qs:
         if delivery.id == customer_invoice.delivery_id:
             is_selected = True
-            html += '<option value="{}" selected>{}</option>'.format(
-                delivery.id, delivery.get_delivery_customer_display()
+            # The already selected delivery point: not selectable again,
+            # delivery_ajax refuses it anyway.
+            html += (
+                '<li><a class="dropdown-item active" href="#">{}</a></li>'.format(
+                    escape(delivery.get_delivery_customer_display())
+                )
             )
         elif (
             delivery.status == SaleStatus.OPENED
             and customer_invoice.status == SaleStatus.OPENED
         ):
             delivery_counter += 1
-            html += '<option value="{}">{}</option>'.format(
-                delivery.id, delivery.get_delivery_customer_display()
+            html += (
+                '<li><a class="dropdown-item" href="#" onclick="event.preventDefault(); '
+                'selectDelivery({}, this);">{}</a></li>'.format(
+                    delivery.id, escape(delivery.get_delivery_customer_display())
+                )
             )
     if not is_selected:
         if delivery_counter == 0:
@@ -75,6 +82,11 @@ def delivery_select_ajax(request):
             )
         else:
             label = "{}".format(_("Please, select a delivery point"))
-        html = '<option value="-1" selected>{}</option>'.format(label) + html
+        # A placeholder item: the customer has not selected a delivery
+        # point yet, selecting one is done through the items below.
+        html = '<li><a class="dropdown-item disabled" href="#">{}</a></li>'.format(
+            escape(label)
+        ) + html
 
-    return JsonResponse({"#delivery": mark_safe(html)})
+    # HTMX swaps the menu of the Bootstrap dropdown with this fragment.
+    return HttpResponse(html)

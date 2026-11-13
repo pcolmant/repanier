@@ -102,7 +102,7 @@ def delivery_ajax(request):
         status = customer_invoice.status
 
     delivery_message = customer_invoice.get_html_select_delivery_point(
-        permanence, status
+        permanence, status, is_basket=is_basket
     )
     if is_basket:
         basket_message = get_html_basket_message(
