@@ -529,21 +529,29 @@ def update_offer_item(product=None, producer_id=None):
     from repanier.models.offeritem import OfferItem
 
     producer_id = product.producer_id if product else producer_id
+    # When a single product is updated - the offer toggle of the
+    # products screen, or the save of one product - only the offer
+    # items of that product change: its surgical recalculation keeps
+    # the products screen fast on big groups. A producer level update
+    # keeps the full recalculation of every permanence concerned.
     # The user can also modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
+    permanence_updated = False
     for permanence in Permanence.objects.filter(
         status=const.SaleStatus.OPENED,
         producers=producer_id,
     ):
+        permanence_updated = True
         if product is not None:
             # Create the offer item if needed and clean it
             product.get_or_create_offer_item(permanence)
+            permanence.calculate_product_order_amount(product)
         else:
             offer_item_qs = OfferItem.objects.filter(
                 permanence_id=permanence.id,
                 producer_id=producer_id
             )
             permanence.clean_offer_item(offer_item_qs=offer_item_qs)
-        permanence.calculate_order_amount()
+            permanence.calculate_order_amount()
 
     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
         for permanence in Permanence.objects.filter(
@@ -553,17 +561,24 @@ def update_offer_item(product=None, producer_id=None):
             if product is not None:
                 if product.is_into_offer:
                     # Create the offer item if needed and clean it
+                    permanence_updated = True
                     product.get_or_create_offer_item(permanence)
-                    permanence.calculate_order_amount()
+                    permanence.calculate_product_order_amount(product)
             else:
                 offer_item_qs = OfferItem.objects.filter(
                     permanence_id=permanence.id,
                     producer_id=producer_id,
                     product__is_into_offer=True,
                 )
+                permanence_updated = True
                 permanence.clean_offer_item(offer_item_qs=offer_item_qs)
                 permanence.calculate_order_amount()
-    cache.clear()
+    # The file cache of the site is expensive to wipe: clear it only
+    # when something was actually updated. Without any permanence
+    # concerned - the products of the next round, before opening - the
+    # toggle touches nothing visible outside the admin.
+    if permanence_updated:
+        cache.clear()
 
 def web_services_activated(reference_site=None):
     activated = False
