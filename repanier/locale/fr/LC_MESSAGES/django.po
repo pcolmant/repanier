@@ -4179,9 +4179,6 @@ msgstr ""
 "Les commandes seront ouvertes sans envoyer d'email, puis clôturées sans "
 "envoyer d'email."
 
-msgid "The orders will be closed without sending any email."
-msgstr "Les commandes seront clôturées sans envoyer d'email."
-
 msgid ""
 "The permanence will then be cancelled. Purchases and invoices are kept, and "
 "the cancellation can itself be reverted from the payment screen (restore the "
