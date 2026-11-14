@@ -4138,6 +4138,10 @@ msgstr "De uitdeling werd verwijderd."
 msgid "You no longer receive the general mails of the group. Your order confirmations keep arriving: they follow your orders."
 msgstr "Je ontvangt de algemene e-mails van de groep niet meer. De bevestigingen van je bestellingen komen wel nog toe: die volgen je bestellingen."
 
+#: repanier/templates/repanier/widgets/money.html
+msgid "Calculator: type a formula like 4*2,20= and the field keeps only the result (decimal comma, a dot groups thousands)."
+msgstr "Rekenmachine : typ een formule zoals 4*2,20= en het veld bewaart alleen het resultaat (decimale komma, een punt groepeert duizenden)."
+
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "Receive the mails again"
 msgstr "De e-mails opnieuw ontvangen"

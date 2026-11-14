@@ -4210,6 +4210,10 @@ msgstr "La permanence a été supprimée."
 msgid "You no longer receive the general mails of the group. Your order confirmations keep arriving: they follow your orders."
 msgstr "Vous ne recevez plus les mails généraux du groupe. Les confirmations de commande continuent d'arriver : elles suivent vos commandes."
 
+#: repanier/templates/repanier/widgets/money.html
+msgid "Calculator: type a formula like 4*2,20= and the field keeps only the result (decimal comma, a dot groups thousands)."
+msgstr "Calculatrice : tapez une formule comme 4*2,20= et le champ ne garde que le résultat (virgule décimale, le point sépare les milliers)."
+
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "Receive the mails again"
 msgstr "Recevoir à nouveau les mails"

@@ -78,6 +78,11 @@ function parse(code) {
         } else if (isName(t)) {
             consume(t);
             return {type: "name", id: t};
+        } else if (t === "-") {
+            // A leading minus, as in a negative adjustment:
+            // "-2,50*" and "-(3+4)" now parse instead of failing.
+            consume(t);
+            return {type: "neg", expr: parsePrimaryExpr()};
         } else if (t === "(") {
             consume(t);
             var expr = parseExpr();
@@ -129,28 +134,50 @@ function parse(code) {
 
 // ## Part Three – The evaluation
 function evaluateAsFloat(code) {
-    // If code end with "="
-    if (code.includes("=")) {
-        // Take the content of code but last character which is "="
-        // and replace all , with .
-
-        function evaluate(obj) {
-            switch (obj.type) {
-                case "number":
-                    return parseFloat(obj.value);
-                case "+":
-                    return evaluate(obj.left) + evaluate(obj.right);
-                case "-":
-                    return evaluate(obj.left) - evaluate(obj.right);
-                case "*":
-                    return evaluate(obj.left) * evaluate(obj.right);
-                case "/":
-                    return evaluate(obj.left) / evaluate(obj.right);
-            }
-        }
-
-        var before_equal = code.split('=', 1)[0].replaceAll(",", ".");
-        return evaluate(parse(before_equal)).toFixed(2).toString().replaceAll(".", ",");
+    // The "=" trailing the formula is the trigger of the computation.
+    if (!code.includes("=")) {
+        return code;
     }
-    return code
+    function evaluate(obj) {
+        switch (obj.type) {
+            case "number":
+                return parseFloat(obj.value);
+            case "neg":
+                return -evaluate(obj.expr);
+            case "+":
+                return evaluate(obj.left) + evaluate(obj.right);
+            case "-":
+                return evaluate(obj.left) - evaluate(obj.right);
+            case "*":
+                return evaluate(obj.left) * evaluate(obj.right);
+            case "/":
+                return evaluate(obj.left) / evaluate(obj.right);
+        }
+    }
+
+    // In the Belgian notation a dot only separates groups of
+    // thousands: a price copied from a producer document, such as
+    // "1.250", keeps its digits instead of becoming 1,25.
+    var before_equal = code.split('=', 1)[0]
+        .replace(/(\d)((?:\.\d{3})+)(?=\D|$)/g, function (all, firstDigit, groups) {
+            return firstDigit + groups.split(".").join("");
+        })
+        .replaceAll(",", ".");
+    try {
+        var result = evaluate(parse(before_equal));
+        if (!isFinite(result)) {
+            // A division by zero or a stray letter keeps the raw
+            // formula instead of writing "Infinity" or "NaN" in
+            // the field.
+            return code;
+        }
+        var fixed = result.toFixed(2);
+        if (fixed === "-0.00") {
+            fixed = "0.00";
+        }
+        return fixed.replaceAll(".", ",");
+    } catch (error) {
+        // An unfinished or invalid formula stays as typed.
+        return code;
+    }
 }
