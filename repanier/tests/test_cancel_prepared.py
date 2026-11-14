@@ -311,9 +311,11 @@ class CancelPreparedRowActionsTest(TestCase):
         self.build_and_login(status=SaleStatus.PLANNED)
         row = self.row_actions(self.permanence)
         self.assertIn("/cancel-prepared/", row)
-        # The cancel button has the same look as the one of the closed
-        # rows: truck crossed out, whatever the action behind it
-        self.assertIn("fa-truck", row)
+        # The cancel button of a scheduled permanence crosses out a
+        # shop - nothing has been delivered - while the cancel delivery
+        # button of the closed rows crosses out a truck. Font Awesome 6
+        # names the shop glyph with its fa-solid family.
+        self.assertIn("fa-solid fa-shop", row)
         self.assertIn("fa-ban", row)
         # Every button carries a tooltip, and it stays terse: at most
         # two translated words, no help sentence anymore.
@@ -343,6 +345,33 @@ class CancelPreparedRowActionsTest(TestCase):
         self.assertNotIn("data-repanier-help=", row)
         for tooltip in re.findall(r'data-repanier-tooltip="([^"]*)"', row):
             self.assertLessEqual(len(tooltip.split()), 2)
+
+        # The row of a closed permanence depends on the accounting
+        # management: with accounting, the booking itself stays the
+        # way out of the preparation screen; without accounting, the
+        # archive button of the payment screen comes here, right of
+        # the cancel button.
+        with override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=False):
+            row = self.row_actions(self.permanence)
+            self.assertIn("/archive/", row)
+            self.assertIn("fa-archive", row)
+            self.assertEqual(row.count("data-repanier-tooltip="), 2)
+            # The archive button sits to the right of the cancel one
+            self.assertLess(
+                row.index("/cancel-delivery/"), row.index("/archive/")
+            )
+            # Both carry the back parameter of the preparation list:
+            # the actions come from the payment screen, the user
+            # stays on the list he started from.
+            self.assertEqual(row.count("back="), 2)
+            # The back value is the preparation changelist, url encoded
+            self.assertIn(
+                quote(
+                    reverse("admin:repanier_permanenceinpreparation_changelist"),
+                    safe="",
+                ),
+                row,
+            )
 
 
 class PermanenceDoneRowActionsTest(TestCase):
@@ -485,6 +514,16 @@ class CancelDeliveryFromPreparationScreenTest(TestCase):
         self.assertIn('class="default"', html)
         self.assertIn('name="apply"', html)
         self.assertIn('name="cancel"', html)
+
+    def test_the_admin_pages_load_font_awesome_6(self):
+        """The admin icon font comes from the Font Awesome 6 line of
+        the CDN: the fa-solid family (fa-shop, ...) only exists there."""
+        self.build_and_login()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn("font-awesome/6.", html)
+        self.assertNotIn("font-awesome/5.", html)
         self.assertNotIn("repanier-submit-info", html)
         # A real breadcrumb, no javascript document.referrer anymore,
         # pointing at the change list owning the view (the payment list)
@@ -525,3 +564,56 @@ class CancelDeliveryFromPreparationScreenTest(TestCase):
         # The action itself did run
         self.permanence.refresh_from_db()
         self.assertEqual(self.permanence.status, SaleStatus.CANCELLED)
+
+@override_settings(SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False)
+class ArchiveFromPreparationScreenTest(TestCase):
+    """Without accounting management, the preparation screen of a
+    closed permanence embeds the archive action of the payment screen:
+    the user must land back on the preparation list."""
+
+    def build_and_login(self):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        self.user = User.objects.create_superuser(
+            username="staff@example.com", email="staff@example.com", password="x"
+        )
+        self.client.force_login(user=self.user)
+        self.permanence = Permanence.objects.create(
+            permanence_date=utc_today(), status=SaleStatus.SEND, highest_status=SaleStatus.SEND
+        )
+        self.back = reverse("admin:repanier_permanenceinpreparation_changelist")
+        self.url = (
+            reverse("admin:permanence-archive", args=[self.permanence.id])
+            + "?back="
+            + quote(self.back, safe="")
+        )
+
+    def test_applying_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.client.post(self.url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
+        # The action itself did run
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.ARCHIVED)
+
+    def test_refusing_returns_to_the_preparation_list(self):
+        self.build_and_login()
+        response = self.client.post(self.url, {"cancel": "cancel"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, self.back)
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.SEND)
+
+    def test_without_back_the_payment_list_stays_the_target(self):
+        self.build_and_login()
+        url = reverse("admin:permanence-archive", args=[self.permanence.id])
+        response = self.client.post(url, {"apply": "apply"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # The payment change list, possibly with its preserved filters
+        target = urlsplit(response.redirect_chain[-1][0]).path
+        self.assertEqual(target, "/fr/coordi/repanier/permanencedone/")
