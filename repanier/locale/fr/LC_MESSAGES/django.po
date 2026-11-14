@@ -4214,6 +4214,34 @@ msgstr "Vous ne recevez plus les mails généraux du groupe. Les confirmations d
 msgid "Receive the mails again"
 msgstr "Recevoir à nouveau les mails"
 
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "Your account is temporarily locked"
+msgstr "Votre compte est temporairement verrouillé"
+
+#: repanier/auth_backend.py
+msgid "Your account is locked after too many failed attempts: try again in %(minutes)d minutes, or ask for a new password right now."
+msgstr "Votre compte est verrouillé après trop de tentatives échouées : réessayez dans %(minutes)d minutes, ou demandez tout de suite un nouveau mot de passe."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "Someone tried to sign in to your account at %(group_name)s too many times: your account is now locked for %(login_lock_minutes)s minutes."
+msgstr "Quelqu'un a tenté de se connecter à votre compte sur %(group_name)s un trop grand nombre de fois : votre compte est maintenant verrouillé pendant %(login_lock_minutes)s minutes."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "This message concerns the account %(customer_email)s."
+msgstr "Ce message concerne le compte %(customer_email)s."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "If these attempts were yours: check the caps lock and the num lock of your keyboard before trying again in %(login_lock_minutes)s minutes."
+msgstr "Si ces tentatives venaient de vous : vérifiez la touche majuscule et le verrouillage numérique de votre clavier avant de réessayer dans %(login_lock_minutes)s minutes."
+
+#: repanier/auth_backend.py
+msgid "If these attempts were not yours, someone is probably trying to access your account: change your password now."
+msgstr "Si ces tentatives ne venaient pas de vous, quelqu'un essaie probablement d'accéder à votre compte : changez votre mot de passe maintenant."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "Ask for a new password"
+msgstr "Demander un nouveau mot de passe"
+
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "You receive the mails of the group again."
 msgstr "Vous recevez à nouveau les mails du groupe."

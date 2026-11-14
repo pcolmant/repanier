@@ -31,6 +31,14 @@ class Configuration(models.Model):
         max_digits=2,
         decimal_places=0,
     )
+    login_locked_on = models.DateTimeField(
+        # The temporary lock of the sign in, for the superuser account
+        # of the site: same mechanism as the customers.
+        _("Sign in locked on"),
+        null=True,
+        blank=True,
+        default=None,
+    )
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None
     )
