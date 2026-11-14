@@ -3,10 +3,15 @@
 The ?next= target is remote data: an external URL may never reach the
 redirection, and a same-origin absolute URL is reduced to its path.
 """
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.utils.html import escape
+from django.core import mail
+from django.utils import timezone
 from django.utils.translation import gettext, override
+
+from unittest.mock import patch
 
 from repanier.models.customer import Customer
 from repanier.models.configuration import Configuration
@@ -157,18 +162,192 @@ class LoginAttemptCounterTest(TestCase):
         self.customer.refresh_from_db()
         self.assertEqual(self.customer.login_attempt_counter, 0)
 
-    def test_a_wrong_password_still_tells_to_reset(self):
+    def test_a_wrong_password_locks_a_legacy_counter(self):
+        """The reset guidance of the old counter is gone: a wrong
+        password on an account left above the threshold by the
+        production incident locks the account for a quarter of an
+        hour - and the owner is warned once."""
+        Customer.objects.filter(id=self.customer.id).update(login_attempt_counter=5)
         response = self._post_login("wrong-password")
         self.assertEqual(response.status_code, 200)
-        # The login screen carries the guidance of the counter, in the
-        # language of the request.
-        with override("fr"):
-            message = gettext(
-                "You must now first reset your password because you tried to log in "
-                "too many times without success."
-            )
-        # The template escapes the message: compare the escaped form.
-        self.assertContains(response, escape(message))
-        # And the counter did not grow past its cap
         self.customer.refresh_from_db()
-        self.assertEqual(self.customer.login_attempt_counter, 6)
+        self.assertIsNotNone(self.customer.login_locked_on)
+        # The lock mail warns the owner and copies the site coordinator
+        # - once per lock episode
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            {m.to[0] for m in mail.outbox},
+            {"locked@example.com", settings.REPANIER_SETTINGS_COORDINATOR_EMAIL},
+        )
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False
+)
+class LoginTemporaryLockTest(TestCase):
+    """Three failed attempts close the account for a quarter of an
+    hour, correct password included - the guesser waits, the
+    legitimate user reads when the door reopens and receives one
+    warning mail per lock episode."""
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        cls.user = User.objects.create_user(
+            username="toto@example.com", email="toto@example.com", password="right-password"
+        )
+        cls.customer = Customer.objects.create(
+            user=cls.user, short_basket_name="Toto", may_order=True
+        )
+
+    def _post_login(self, password):
+        return self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "toto@example.com", "password": password},
+            follow=True,
+        )
+
+    def _lock_message(self):
+        with override("fr"):
+            return escape(
+                gettext(
+                    "Your account is locked after too many failed attempts: try "
+                    "again in %(minutes)d minutes, or ask for a new password right now."
+                ).replace("%(minutes)d", "15")
+            )
+
+    def _mail_to(self, email):
+        return next(mail for mail in mail.outbox if mail.to == [email])
+
+    def test_two_failures_stay_harmless(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.login_attempt_counter, 2)
+        self.assertIsNone(self.customer.login_locked_on)
+        # The third attempt is the good one: the door opens
+        response = self._post_login("right-password")
+        self.assertNotIn("go_repanier", response.request["PATH_INFO"])
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.login_attempt_counter, 0)
+
+    def test_the_third_failure_locks_and_mails_once(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        response = self._post_login("wrong-3")
+        self.customer.refresh_from_db()
+        self.assertIsNotNone(self.customer.login_locked_on)
+        # The screen tells when the door reopens
+        self.assertContains(response, self._lock_message())
+        # The warning mail leaves once per lock episode, carrying the
+        # caps lock guidance and the link to the password reset
+        self.assertEqual(len(mail.outbox), 2)
+        locked_mail = self._mail_to("toto@example.com")
+        self.assertEqual(locked_mail.subject.count(settings.REPANIER_SETTINGS_GROUP_NAME), 1)
+        # The coordinator reads who is concerned in the mail itself,
+        # whichever recipient he looks at
+        self.assertIn("toto@example.com", locked_mail.body)
+        self.assertIn("/repanier/password_reset/", locked_mail.alternatives[0][0])
+        self.assertNotIn("List-Unsubscribe", locked_mail.extra_headers)
+        # The site coordinator receives a copy for context
+        self.assertIn(
+            "/repanier/password_reset/",
+            self._mail_to(settings.REPANIER_SETTINGS_COORDINATOR_EMAIL)
+            .alternatives[0][0],
+        )
+        # Transactional: an unsubscribed member is warned too
+        Customer.objects.filter(id=self.customer.id).update(subscribe_to_email=False)
+        mail.outbox.clear()
+
+    def test_during_the_lock_even_the_correct_password_waits(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        self._post_login("wrong-3")
+        self.assertEqual(len(mail.outbox), 2)
+        self.customer.refresh_from_db()
+        locked_on = self.customer.login_locked_on
+        # The correct password bounces during the lock, without a new
+        # mail and without growing anything
+        response = self._post_login("right-password")
+        self.assertContains(response, self._lock_message())
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.login_locked_on, locked_on)
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_the_lock_expires_and_the_door_reopens(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        self._post_login("wrong-3")
+        # Sixteen minutes later: the counter and the lock are gone
+        Customer.objects.filter(id=self.customer.id).update(
+            login_locked_on=timezone.now() - timezone.timedelta(minutes=16)
+        )
+        response = self._post_login("right-password")
+        self.assertNotIn("go_repanier", response.request["PATH_INFO"])
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.login_attempt_counter, 0)
+        self.assertIsNone(self.customer.login_locked_on)
+
+    def test_a_legacy_counter_locks_on_the_next_failure(self):
+        """The production incident left counters above the threshold
+        without any lock timestamp: the first new failure after the
+        temporary lock chantier locks - and the owner is warned."""
+        Customer.objects.filter(id=self.customer.id).update(login_attempt_counter=5)
+        response = self._post_login("wrong-1")
+        self.customer.refresh_from_db()
+        self.assertIsNotNone(self.customer.login_locked_on)
+        self.assertContains(response, self._lock_message())
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            {m.to[0] for m in mail.outbox},
+            {"toto@example.com", settings.REPANIER_SETTINGS_COORDINATOR_EMAIL},
+        )
+        response = self._post_login("right-password")
+        # The legacy customer with the correct password still enters -
+        # until he fails once again, which is now locked
+        # (the previous post locked the account)
+        self.assertContains(response, self._lock_message())
+
+    def test_a_warning_that_cannot_be_sent_reaches_the_admins(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        with patch(
+            "repanier.auth_backend.RepanierEmail.send_email",
+            side_effect=Exception("smtp down"),
+        ):
+            response = self._post_login("wrong-3")
+        # The lock applies even when the warning cannot leave
+        self.customer.refresh_from_db()
+        self.assertIsNotNone(self.customer.login_locked_on)
+        self.assertContains(response, self._lock_message())
+        # No lock mail left, but the admins hold the failure report
+        self.assertEqual(len(mail.outbox), 1)
+        error_mail = mail.outbox[0]
+        self.assertEqual(error_mail.to, [settings.ADMIN_EMAIL])
+        self.assertIn("send_login_locked_email error", error_mail.subject)
+        # The report says which member and which coordinator copy
+        # were concerned
+        self.assertIn("toto@example.com", error_mail.body)
+        self.assertIn(settings.REPANIER_SETTINGS_COORDINATOR_EMAIL, error_mail.body)
+
+    def test_a_warning_that_cannot_be_built_reaches_the_admins(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        with patch(
+            "repanier.auth_backend.render_to_string",
+            side_effect=Exception("template error"),
+        ):
+            self._post_login("wrong-3")
+        self.customer.refresh_from_db()
+        self.assertIsNotNone(self.customer.login_locked_on)
+        # The fallback report still names the failed attempt
+        self.assertEqual(len(mail.outbox), 1)
+        error_mail = mail.outbox[0]
+        self.assertEqual(error_mail.to, [settings.ADMIN_EMAIL])
+        self.assertIn("send_login_locked_email error", error_mail.subject)
+        self.assertIn("toto@example.com", error_mail.body)

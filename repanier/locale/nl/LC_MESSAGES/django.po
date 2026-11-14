@@ -4146,6 +4146,34 @@ msgstr "Rekenmachine : typ een formule zoals 4*2,20= en het veld bewaart alleen 
 msgid "Receive the mails again"
 msgstr "De e-mails opnieuw ontvangen"
 
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "Your account is temporarily locked"
+msgstr "Je account is tijdelijk geblokkeerd"
+
+#: repanier/auth_backend.py
+msgid "Your account is locked after too many failed attempts: try again in %(minutes)d minutes, or ask for a new password right now."
+msgstr "Je account is geblokkeerd na te veel mislukte pogingen : probeer het opnieuw over %(minutes)d minuten, of vraag nu meteen een nieuw wachtwoord aan."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "Someone tried to sign in to your account at %(group_name)s too many times: your account is now locked for %(login_lock_minutes)s minutes."
+msgstr "Iemand heeft te vaak geprobeerd om zich aan te melden op je account bij %(group_name)s : je account is nu gedurende %(login_lock_minutes)s minuten geblokkeerd."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "This message concerns the account %(customer_email)s."
+msgstr "Dit bericht betreft het account %(customer_email)s."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "If these attempts were yours: check the caps lock and the num lock of your keyboard before trying again in %(login_lock_minutes)s minutes."
+msgstr "Als die pogingen van jou kwamen : controleer de capslock- en de numlocktoets van je toetsenbord voordat je het over %(login_lock_minutes)s minuten opnieuw probeert."
+
+#: repanier/auth_backend.py
+msgid "If these attempts were not yours, someone is probably trying to access your account: change your password now."
+msgstr "Als die pogingen niet van jou kwamen, probeert iemand waarschijnlijk toegang te krijgen tot je account : wijzig nu je wachtwoord."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
+msgid "Ask for a new password"
+msgstr "Een nieuw wachtwoord aanvragen"
+
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "You receive the mails of the group again."
 msgstr "Je ontvangt de e-mails van de groep opnieuw."
