@@ -99,6 +99,10 @@ def login_view(
                     return HttpResponseRedirect(redirect_to)
 
                 staff_responsibilities = staff_qs.all()
+                # The staff member lands on the role chooser, which the
+                # login template renders without the form: a fresh form
+                # comes here, the invalid post below keeps its own.
+                form = authentication_form(request)
 
     else:
         if user.is_authenticated:
@@ -123,7 +127,7 @@ def login_view(
             )
             return _get_redirect_response(redirect_to, request)
 
-    form = authentication_form(request)
+        form = authentication_form(request)
 
     if user.is_anonymous:
         from repanier.apps import REPANIER_SETTINGS_CONFIG
