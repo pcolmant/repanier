@@ -65,28 +65,28 @@ class RepanierAuthBackend(ModelBackend):
                     code="attempt",
                 )
         else:
-            if login_attempt_counter > DECIMAL_THREE:
-                raise forms.ValidationError(
-                    _(
-                        "You must now first reset your password because you tried to log in too many times without success."
-                    ),
-                    code="attempt",
-                )
-            else:
-                # Reset login_attempt_counter
-                if customer is not None:
-                    if login_attempt_counter > DECIMAL_ZERO:
-                        Customer.objects.filter(id=customer.id).update(
-                            login_attempt_counter=DECIMAL_ZERO,
-                        )
-                elif is_superuser:
-                    if login_attempt_counter > DECIMAL_ZERO:
-                        Configuration.objects.filter(id=DECIMAL_ONE).update(
-                            login_attempt_counter=DECIMAL_ZERO
-                        )
+            # The password is correct: an authentication that succeeds
+            # proves the credentials, whatever the failures that came
+            # before. The counter exists to slow down guessing on a
+            # wrong password, and the reset flows are not the only
+            # path that proves an identity - an administrator resetting
+            # a password by hand is one too. Locking a correct password
+            # out trapped the customers in a login loop, with no code
+            # path left to lift the lock.
+            # Reset login_attempt_counter
+            if customer is not None:
+                if login_attempt_counter > DECIMAL_ZERO:
+                    Customer.objects.filter(id=customer.id).update(
+                        login_attempt_counter=DECIMAL_ZERO,
+                    )
+            elif is_superuser:
+                if login_attempt_counter > DECIMAL_ZERO:
+                    Configuration.objects.filter(id=DECIMAL_ONE).update(
+                        login_attempt_counter=DECIMAL_ZERO
+                    )
 
-                self.user = self.get_user(user.id)
-                return self.user
+            self.user = self.get_user(user.id)
+            return self.user
 
     @classmethod
     def set_staff_right(cls, request, user=None, as_staff=None):

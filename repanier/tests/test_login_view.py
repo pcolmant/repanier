@@ -5,8 +5,11 @@ redirection, and a same-origin absolute URL is reduced to its path.
 """
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
+from django.utils.html import escape
+from django.utils.translation import gettext, override
 
 from repanier.models.customer import Customer
+from repanier.models.configuration import Configuration
 
 # The login view redirects the browser; in these settings the site uses
 # https only, which would turn every assertion below into a 301.
@@ -111,3 +114,61 @@ class ToolbarEditParamTest(TestCase):
         response = self._redirect_of(boss, CMS_TOOLBAR_URL__EDIT_ON="on")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], "/next/page?on")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False
+)
+class LoginAttemptCounterTest(TestCase):
+    """The attempt counter slows down guessing on a wrong password -
+    it never locks a correct password out: an administrator resetting a
+    password by hand does not run the mail reset flow, and no code
+    path cleared the counter left behind by the failures."""
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        cls.user = User.objects.create_user(
+            username="locked@example.com", email="locked@example.com", password="right-password"
+        )
+        cls.customer = Customer.objects.create(
+            user=cls.user, short_basket_name="Locked", may_order=True
+        )
+        # Four failed attempts left the account at the lock threshold
+        Customer.objects.filter(id=cls.customer.id).update(login_attempt_counter=5)
+
+    def _post_login(self, password):
+        return self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "locked@example.com", "password": password},
+            follow=True,
+        )
+
+    def test_a_correct_password_opens_the_locked_account(self):
+        response = self._post_login("right-password")
+        # The login view redirects the customer: the session is his,
+        # not the login screen again
+        self.assertNotIn("go_repanier", response.request["PATH_INFO"])
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.login_attempt_counter, 0)
+
+    def test_a_wrong_password_still_tells_to_reset(self):
+        response = self._post_login("wrong-password")
+        self.assertEqual(response.status_code, 200)
+        # The login screen carries the guidance of the counter, in the
+        # language of the request.
+        with override("fr"):
+            message = gettext(
+                "You must now first reset your password because you tried to log in "
+                "too many times without success."
+            )
+        # The template escapes the message: compare the escaped form.
+        self.assertContains(response, escape(message))
+        # And the counter did not grow past its cap
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.login_attempt_counter, 6)
