@@ -80,3 +80,34 @@ class SslRedirectTest(TestCase):
         response = self.client.get("/fr/repanier/go_repanier/", data={"next": "/x"})
         self.assertEqual(response.status_code, 301)
         self.assertTrue(response["Location"].startswith("https://"))
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False
+)
+class ToolbarEditParamTest(TestCase):
+    """The login of a superuser redirects with the toolbar edit mode
+    on. Its url parameter used to be read through get_cms_setting,
+    which crashed the login of every superuser on the sites whose cms
+    version carries other defaults - the KeyError of the incident."""
+
+    def _redirect_of(self, user, **overrides):
+        with override_settings(**overrides):
+            self.client.force_login(user=user)
+            return self.client.get("/fr/repanier/go_repanier/", data={"next": "/next/page"})
+
+    def test_the_superuser_redirect_carries_the_edit_param(self):
+        boss = User.objects.create_superuser(
+            username="boss@example.com", email="boss@example.com", password="x"
+        )
+        response = self._redirect_of(boss)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/next/page?edit")
+
+    def test_an_overridden_edit_param_is_honored(self):
+        boss = User.objects.create_superuser(
+            username="boss@example.com", email="boss@example.com", password="x"
+        )
+        response = self._redirect_of(boss, CMS_TOOLBAR_URL__EDIT_ON="on")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/next/page?on")

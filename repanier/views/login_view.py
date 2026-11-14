@@ -1,6 +1,5 @@
 from urllib.parse import urlsplit, urlunsplit
 
-from cms.utils.conf import get_cms_setting
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
@@ -46,19 +45,19 @@ def _sanitize_redirect_url(redirect_to, request):
 
 
 def _get_redirect_response(redirect_to, request):
-    """
-    Construit la réponse de redirection en gérant l'activation de la barre d'outils CMS (v3 ou v4).
+    """Builds the login redirection, activating the edit mode of the
+    CMS toolbar.
+
+    The name of the url parameter is read from the Django settings
+    chain directly: get_cms_setting prefixes the name it receives
+    with CMS_ and then falls back on its own DEFAULTS table, whose
+    keys moved between the cms versions serving the sites - a
+    KeyError there broke the login of every superuser, and the table
+    does not even carry the toolbar settings anymore in cms 5. The
+    historical default of the setting, on every version, is "edit".
     """
     redirect_to = _sanitize_redirect_url(redirect_to, request)
-
-    if request.user.is_superuser:
-        toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
-    else:
-        # Essai de repli pour CMS version 4 ou standard
-        try:
-            toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON")
-        except Exception:
-            toolbar_param = get_cms_setting("CMS_TOOLBAR_URL__ENABLE")
+    toolbar_param = getattr(settings, "CMS_TOOLBAR_URL__EDIT_ON", "edit")
 
     separator = "&" if "?" in redirect_to else "?"
     return HttpResponseRedirect(f"{redirect_to}{separator}{toolbar_param}")
