@@ -664,15 +664,16 @@ class PermanenceInPreparationAdmin(SaleAdmin):
     def get_row_actions(self, permanence):
 
         if permanence.status == SaleStatus.PLANNED.value:
-            # The cancel button of a scheduled permanence carries the
-            # same truck crossed out as the cancel button of a closed
-            # one: the staff member recognizes one single cancel
-            # action, whatever the status behind it.
+            # The cancel button of a scheduled permanence carries a
+            # crossed out shop: nothing has been delivered yet, the
+            # action kills the event itself - unlike the cancel
+            # delivery button of the closed rows, which keeps its
+            # crossed out truck.
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a> '
                 '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a> '
-                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
+                '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fa-solid fa-shop fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
                 "</div>",
                 add_filter(reverse("admin:generate-permanence", args=[permanence.pk])),
                 _("Duplicate"),
@@ -716,6 +717,27 @@ class PermanenceInPreparationAdmin(SaleAdmin):
             )
             cancel_delivery_url += ("&" if "?" in cancel_delivery_url else "?")
             cancel_delivery_url += "back=" + quote(back_url, safe="")
+            if not settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+                # Without accounting management, a closed permanence
+                # has nothing left to book: the archive button of the
+                # payment screen comes here too, right of the cancel
+                # button, and sends the user back to this screen as
+                # well.
+                archive_url = add_filter(
+                    reverse("admin:permanence-archive", args=[permanence.pk])
+                )
+                archive_url += ("&" if "?" in archive_url else "?")
+                archive_url += "back=" + quote(back_url, safe="")
+                return format_html(
+                    '<div class="repanier-button-row">'
+                    '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a>'
+                    "</div>",
+                    cancel_delivery_url,
+                    _("Cancel the delivery"),
+                    archive_url,
+                    _("To archive"),
+                )
             return format_html(
                 '<div class="repanier-button-row">'
                 '<a class="repanier-a-tooltip repanier-a-cancel repanier-a-cancel-prepared" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
