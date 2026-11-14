@@ -6,6 +6,7 @@ body: keep the address of the password reset visible in plain
 text.{% endcomment %}
 <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5; color: #212529; max-width: 560px;">
   <p>{% blocktrans %}Someone tried to sign in to your account at {{ group_name }} too many times: your account is now locked for {{ login_lock_minutes }} minutes.{% endblocktrans %}</p>
+  <p>{% blocktrans %}This message concerns the account {{ customer_email }}.{% endblocktrans %}</p>
   <p>{% blocktrans %}If these attempts were yours: check the caps lock and the num lock of your keyboard before trying again in {{ login_lock_minutes }} minutes.{% endblocktrans %}</p>
   <p>{% blocktrans %}If these attempts were not yours, someone is probably trying to access your account: change your password now.{% endblocktrans %}</p>
   <p style="text-align: center; margin: 32px 0;">

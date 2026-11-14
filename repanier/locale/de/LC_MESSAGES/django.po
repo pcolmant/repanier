@@ -4175,6 +4175,10 @@ msgid "Someone tried to sign in to your account at %(group_name)s too many times
 msgstr "Jemand hat sich zu viele Male bei Ihrem Konto auf %(group_name)s anzumelden versucht : Ihr Konto ist nun für %(login_lock_minutes)s Minuten gesperrt."
 
 #: repanier/templates/repanier/registration/login_locked_email.html
+msgid "This message concerns the account %(customer_email)s."
+msgstr "Diese Nachricht betrifft das Konto %(customer_email)s."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
 msgid "If these attempts were yours: check the caps lock and the num lock of your keyboard before trying again in %(login_lock_minutes)s minutes."
 msgstr "Wenn diese Versuche von Ihnen kamen : prüfen Sie die Feststelltaste und den Nummernblock Ihrer Tastatur, bevor Sie es in %(login_lock_minutes)s Minuten erneut versuchen."
 

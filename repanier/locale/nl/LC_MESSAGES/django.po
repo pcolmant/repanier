@@ -4155,6 +4155,10 @@ msgid "Someone tried to sign in to your account at %(group_name)s too many times
 msgstr "Iemand heeft te vaak geprobeerd om zich aan te melden op je account bij %(group_name)s : je account is nu gedurende %(login_lock_minutes)s minuten geblokkeerd."
 
 #: repanier/templates/repanier/registration/login_locked_email.html
+msgid "This message concerns the account %(customer_email)s."
+msgstr "Dit bericht betreft het account %(customer_email)s."
+
+#: repanier/templates/repanier/registration/login_locked_email.html
 msgid "If these attempts were yours: check the caps lock and the num lock of your keyboard before trying again in %(login_lock_minutes)s minutes."
 msgstr "Als die pogingen van jou kwamen : controleer de capslock- en de numlocktoets van je toetsenbord voordat je het over %(login_lock_minutes)s minuten opnieuw probeert."
 

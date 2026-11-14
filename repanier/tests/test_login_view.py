@@ -170,8 +170,13 @@ class LoginAttemptCounterTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.customer.refresh_from_db()
         self.assertIsNotNone(self.customer.login_locked_on)
-        # The lock mail warns the owner - once per lock episode
-        self.assertEqual(len(mail.outbox), 1)
+        # The lock mail warns the owner and copies the site coordinator
+        # - once per lock episode
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            {m.to[0] for m in mail.outbox},
+            {"locked@example.com", settings.REPANIER_SETTINGS_COORDINATOR_EMAIL},
+        )
 
 
 @override_settings(
@@ -214,6 +219,9 @@ class LoginTemporaryLockTest(TestCase):
                 ).replace("%(minutes)d", "15")
             )
 
+    def _mail_to(self, email):
+        return next(mail for mail in mail.outbox if mail.to == [email])
+
     def test_two_failures_stay_harmless(self):
         self._post_login("wrong-1")
         self._post_login("wrong-2")
@@ -236,14 +244,20 @@ class LoginTemporaryLockTest(TestCase):
         self.assertContains(response, self._lock_message())
         # The warning mail leaves once per lock episode, carrying the
         # caps lock guidance and the link to the password reset
-        self.assertEqual(len(mail.outbox), 1)
-        locked_mail = mail.outbox[0]
-        self.assertEqual(locked_mail.to, ["toto@example.com"])
-        self.assertEqual(
-            locked_mail.subject.count(settings.REPANIER_SETTINGS_GROUP_NAME), 1
-        )
+        self.assertEqual(len(mail.outbox), 2)
+        locked_mail = self._mail_to("toto@example.com")
+        self.assertEqual(locked_mail.subject.count(settings.REPANIER_SETTINGS_GROUP_NAME), 1)
+        # The coordinator reads who is concerned in the mail itself,
+        # whichever recipient he looks at
+        self.assertIn("toto@example.com", locked_mail.body)
         self.assertIn("/repanier/password_reset/", locked_mail.alternatives[0][0])
         self.assertNotIn("List-Unsubscribe", locked_mail.extra_headers)
+        # The site coordinator receives a copy for context
+        self.assertIn(
+            "/repanier/password_reset/",
+            self._mail_to(settings.REPANIER_SETTINGS_COORDINATOR_EMAIL)
+            .alternatives[0][0],
+        )
         # Transactional: an unsubscribed member is warned too
         Customer.objects.filter(id=self.customer.id).update(subscribe_to_email=False)
         mail.outbox.clear()
@@ -252,7 +266,7 @@ class LoginTemporaryLockTest(TestCase):
         self._post_login("wrong-1")
         self._post_login("wrong-2")
         self._post_login("wrong-3")
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.customer.refresh_from_db()
         locked_on = self.customer.login_locked_on
         # The correct password bounces during the lock, without a new
@@ -261,7 +275,7 @@ class LoginTemporaryLockTest(TestCase):
         self.assertContains(response, self._lock_message())
         self.customer.refresh_from_db()
         self.assertEqual(self.customer.login_locked_on, locked_on)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_the_lock_expires_and_the_door_reopens(self):
         self._post_login("wrong-1")
@@ -286,7 +300,11 @@ class LoginTemporaryLockTest(TestCase):
         self.customer.refresh_from_db()
         self.assertIsNotNone(self.customer.login_locked_on)
         self.assertContains(response, self._lock_message())
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            {m.to[0] for m in mail.outbox},
+            {"toto@example.com", settings.REPANIER_SETTINGS_COORDINATOR_EMAIL},
+        )
         response = self._post_login("right-password")
         # The legacy customer with the correct password still enters -
         # until he fails once again, which is now locked

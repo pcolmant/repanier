@@ -165,7 +165,10 @@ class RepanierAuthBackend(ModelBackend):
     def _warn_account_owner(self, user):
         """One mail per lock episode: the account owner must know that
         something strange is happening - a forgotten password with caps
-        lock on, or someone else trying the door."""
+        lock on, or someone else trying the door. The site coordinator
+        receives a copy, so a dormant account asking for help or a
+        complaining member arrives with the context already in the
+        mailbox."""
         try:
             if user is None:
                 return
@@ -177,6 +180,7 @@ class RepanierAuthBackend(ModelBackend):
                 {
                     "group_name": settings.REPANIER_SETTINGS_GROUP_NAME,
                     "site_name": settings.REPANIER_SETTINGS_GROUP_NAME,
+                    "customer_email": to_email,
                     "login_lock_minutes": int(LOGIN_LOCK_MINUTES),
                     "password_reset_url": "https://{}{}".format(
                         settings.ALLOWED_HOSTS[0],
@@ -191,6 +195,7 @@ class RepanierAuthBackend(ModelBackend):
                 ),
                 html_body=html_body,
                 to=[to_email],
+                cc=[settings.REPANIER_SETTINGS_COORDINATOR_EMAIL],
                 show_customer_may_unsubscribe=False,
                 send_even_if_unsubscribed=True,
             )
