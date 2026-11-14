@@ -57,7 +57,7 @@ conf_file_name = PROJECT_DIR / (DJANGO_SETTINGS_SITE_NAME + ".ini")
 
 if not conf_file_name.exists():
     print(
-        "---- common_settings.py - /!\ settings file <{}> not found".format(
+        "---- common_settings.py - /!\\ settings file <{}> not found".format(
             conf_file_name
         )
     )
@@ -158,6 +158,9 @@ REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.get(
 )
 REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_BOOTSTRAP_CSS", fallback="bootstrap.css"
+)
+REPANIER_SETTINGS_SEND_AN_EMAIL_ON_START_UP = config.get(
+    "REPANIER_SETTINGS", "REPANIER_SETTINGS_SEND_AN_EMAIL_ON_START_UP", fallback=False
 )
 
 ALLOWED_HOSTS = []
@@ -416,11 +419,11 @@ MIDDLEWARE = (
     "django.middleware.security.SecurityMiddleware",
     "cms.middleware.utils.ApphookReloadMiddleware",  # not required but useful to run django CMS
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",  # required to run django CMS
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.locale.LocaleMiddleware",  # required to run django CMS
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "cms.middleware.user.CurrentUserMiddleware",  # required to run django CMS
     "cms.middleware.page.CurrentPageMiddleware",  # required to run django CMS

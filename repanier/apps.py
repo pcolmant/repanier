@@ -76,9 +76,10 @@ class RepanierConfig(AppConfig):
 
             Configuration.init_repanier()
 
-            if not settings.DEBUG:
+            if not settings.DEBUG and settings.REPANIER_SETTINGS_SEND_AN_EMAIL_ON_START_UP:
                 from repanier.email.email import RepanierEmail
                 RepanierEmail.send_startup_email(sys.argv[0])
+                print("---- repanier:apps.py - ready : Start-up email sent")
 
         except Exception as error_str:
             logger.error("##################################")
