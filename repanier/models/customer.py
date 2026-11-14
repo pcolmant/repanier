@@ -40,6 +40,15 @@ class Customer(models.Model):
         max_digits=2,
         decimal_places=0,
     )
+    login_locked_on = models.DateTimeField(
+        # The temporary lock of the sign in: three failed attempts lock
+        # the account for a quarter of an hour, correct password
+        # included, to slow down blind guessing.
+        _("Sign in locked on"),
+        null=True,
+        blank=True,
+        default=None,
+    )
 
     short_basket_name = models.CharField(
         _("Short name"),

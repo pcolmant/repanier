@@ -1,10 +1,16 @@
+import logging
+
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
-from django.db.models import F, Q
-from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from repanier.const import (
     DECIMAL_ZERO,
@@ -12,9 +18,22 @@ from repanier.const import (
     DECIMAL_THREE,
     AuthGroup,
 )
+from repanier.email.email import RepanierEmail
 from repanier.models import Customer, Staff, Configuration
+from repanier.tools import get_repanier_template_name
 
 UserModel = get_user_model()
+
+logger = logging.getLogger(__name__)
+
+UserModel = get_user_model()
+
+# The temporary lock of the sign in: three failed attempts lock the
+# account for a quarter of an hour, correct password included. A blind
+# guesser slows down to a few passwords per hour, a locked out
+# legitimate user always knows when the door reopens.
+LOGIN_LOCK_ATTEMPTS = DECIMAL_THREE
+LOGIN_LOCK_MINUTES = 15
 
 
 class RepanierAuthBackend(ModelBackend):
@@ -29,40 +48,86 @@ class RepanierAuthBackend(ModelBackend):
         ).first()
         is_superuser = False
         customer = None
-        login_attempt_counter = DECIMAL_THREE
+        login_attempt_counter = DECIMAL_ZERO
+        login_locked_on = None
         if user_username is not None:
             username = user_username.username
             customer = Customer.objects.filter(user_id=user_username.id).first()
             if customer is None:
                 is_superuser = True
-                login_attempt_counter = (
+                configuration = (
                     Configuration.objects.filter(id=DECIMAL_ONE)
-                    .only("login_attempt_counter")
+                    .only("login_attempt_counter", "login_locked_on")
                     .first()
-                    .login_attempt_counter
                 )
+                login_attempt_counter = configuration.login_attempt_counter
+                login_locked_on = configuration.login_locked_on
             else:
                 login_attempt_counter = customer.login_attempt_counter
+                login_locked_on = customer.login_locked_on
+
+        if login_locked_on is not None:
+            locked_until = login_locked_on + timezone.timedelta(
+                minutes=int(LOGIN_LOCK_MINUTES)
+            )
+            now = timezone.now()
+            if now < locked_until:
+                # The temporary lock: three failed attempts closed the
+                # account for a quarter of an hour, correct password
+                # included - the guesser waits, the legitimate user sees
+                # when the door reopens.
+                minutes_left = int((locked_until - now).total_seconds() // 60) + 1
+                raise forms.ValidationError(
+                    _(
+                        "Your account is locked after too many failed attempts: "
+                        "try again in %(minutes)d minutes, or ask for a new password "
+                        "right now."
+                    )
+                    % {"minutes": minutes_left},
+                    code="login_lock",
+                )
+            # The lock expired: clean slate, the failed attempts of a
+            # quarter hour ago do not poison the new episode.
+            self._reset_attempts(customer, is_superuser)
+            login_locked_on = None
+            login_attempt_counter = DECIMAL_ZERO
 
         user = super().authenticate(request, username=username, password=password)
         if user is None:
             # Failed to log in
-            if login_attempt_counter < 20:
-                # Do not increment indefinitely
-                if customer is not None:
-                    Customer.objects.filter(id=customer.id).update(
-                        login_attempt_counter=F("login_attempt_counter") + DECIMAL_ONE
-                    )
-                elif is_superuser:
-                    Configuration.objects.filter(id=DECIMAL_ONE).update(
-                        login_attempt_counter=F("login_attempt_counter") + DECIMAL_ONE
-                    )
-            if login_attempt_counter > DECIMAL_THREE:
+            counter = login_attempt_counter + DECIMAL_ONE
+            if customer is not None:
+                # The lock engages on the third failed attempt - and
+                # the warning mail leaves once per lock episode, not
+                # once per attempt.
+                Customer.objects.filter(id=customer.id).update(
+                    login_attempt_counter=min(counter, 20),
+                    **(
+                        {"login_locked_on": timezone.now()}
+                        if counter >= LOGIN_LOCK_ATTEMPTS and login_locked_on is None
+                        else {}
+                    ),
+                )
+            elif is_superuser:
+                Configuration.objects.filter(id=DECIMAL_ONE).update(
+                    login_attempt_counter=min(counter, 20),
+                    **(
+                        {"login_locked_on": timezone.now()}
+                        if counter >= LOGIN_LOCK_ATTEMPTS and login_locked_on is None
+                        else {}
+                    ),
+                )
+            if counter >= LOGIN_LOCK_ATTEMPTS:
+                if login_locked_on is None:
+                    self._warn_account_owner(user_username)
                 raise forms.ValidationError(
                     _(
-                        "You must now first reset your password because you tried to log in too many times without success."
-                    ),
-                    code="attempt",
+                        "Your account is locked after too many failed attempts: "
+                        "try again in %(minutes)d minutes, or ask for a new password "
+                        "right now."
+                    )
+                    % {"minutes": int(LOGIN_LOCK_MINUTES)},
+                    code="login_lock",
                 )
         else:
             # The password is correct: an authentication that succeeds
@@ -73,20 +138,65 @@ class RepanierAuthBackend(ModelBackend):
             # a password by hand is one too. Locking a correct password
             # out trapped the customers in a login loop, with no code
             # path left to lift the lock.
-            # Reset login_attempt_counter
-            if customer is not None:
-                if login_attempt_counter > DECIMAL_ZERO:
-                    Customer.objects.filter(id=customer.id).update(
-                        login_attempt_counter=DECIMAL_ZERO,
-                    )
-            elif is_superuser:
-                if login_attempt_counter > DECIMAL_ZERO:
-                    Configuration.objects.filter(id=DECIMAL_ONE).update(
-                        login_attempt_counter=DECIMAL_ZERO
-                    )
-
+            self._reset_attempts(customer, is_superuser)
             self.user = self.get_user(user.id)
             return self.user
+
+    def _reset_attempts(self, customer, is_superuser):
+        if customer is not None and (
+            customer.login_attempt_counter > DECIMAL_ZERO
+            or customer.login_locked_on is not None
+        ):
+            Customer.objects.filter(id=customer.id).update(
+                login_attempt_counter=DECIMAL_ZERO, login_locked_on=None
+            )
+        elif is_superuser:
+            configuration = Configuration.objects.filter(id=DECIMAL_ONE).only(
+                "login_attempt_counter", "login_locked_on"
+            ).first()
+            if configuration is not None and (
+                configuration.login_attempt_counter > DECIMAL_ZERO
+                or configuration.login_locked_on is not None
+            ):
+                Configuration.objects.filter(id=DECIMAL_ONE).update(
+                    login_attempt_counter=DECIMAL_ZERO, login_locked_on=None
+                )
+
+    def _warn_account_owner(self, user):
+        """One mail per lock episode: the account owner must know that
+        something strange is happening - a forgotten password with caps
+        lock on, or someone else trying the door."""
+        try:
+            if user is None:
+                return
+            to_email = user.email
+            if not to_email:
+                return
+            html_body = render_to_string(
+                get_repanier_template_name("registration/login_locked_email.html"),
+                {
+                    "group_name": settings.REPANIER_SETTINGS_GROUP_NAME,
+                    "site_name": settings.REPANIER_SETTINGS_GROUP_NAME,
+                    "login_lock_minutes": int(LOGIN_LOCK_MINUTES),
+                    "password_reset_url": "https://{}{}".format(
+                        settings.ALLOWED_HOSTS[0],
+                        reverse("repanier:password_reset"),
+                    ),
+                },
+            )
+            email = RepanierEmail(
+                subject="{} - {}".format(
+                    settings.REPANIER_SETTINGS_GROUP_NAME,
+                    _("Your account is temporarily locked"),
+                ),
+                html_body=html_body,
+                to=[to_email],
+                show_customer_may_unsubscribe=False,
+                send_even_if_unsubscribed=True,
+            )
+            email.send_email()
+        except Exception as error:
+            logger.error("send_login_locked_email error : {}".format(error))
 
     @classmethod
     def set_staff_right(cls, request, user=None, as_staff=None):
