@@ -56,7 +56,11 @@ class UserDataForm(forms.ModelForm):
         # Check that the email is set
         email = self.cleaned_data["email"].lower()
         user_model = get_user_model()
-        qs = user_model.objects.filter(Q(username=email) | Q(email=email))
+        # The sign in matches e-mail addresses case insensitively:
+        # a variant differing by case only would open the same door
+        qs = user_model.objects.filter(
+            Q(username__iexact=email) | Q(email__iexact=email)
+        )
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.user_id)
         if qs.exists():

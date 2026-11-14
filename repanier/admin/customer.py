@@ -71,7 +71,11 @@ class UserDataForm(forms.ModelForm):
         # Check that the email is set
         email = self.cleaned_data["email"].lower()
         user_model = get_user_model()
-        qs = user_model.objects.filter(Q(username=email) | Q(email=email))
+        # The sign in matches e-mail addresses case insensitively:
+        # a variant differing by case only would open the same door
+        qs = user_model.objects.filter(
+            Q(username__iexact=email) | Q(email__iexact=email)
+        )
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.user_id)
         if qs.exists():
@@ -192,8 +196,12 @@ class CustomerResource(resources.ModelResource):
         Override to add additional logic.
         """
         user_model = get_user_model()
+        # The sign in matches e-mail addresses case insensitively:
+        # store the lowercase spelling and refuse a variant differing
+        # by case only, which would open the same door
+        instance.user.email = instance.user.email.lower()
         user_email_qs = user_model.objects.filter(
-            email=instance.user.email, is_staff=False
+            email__iexact=instance.user.email, is_staff=False
         )
         user_username_qs = user_model.objects.filter(
             username=instance.short_basket_name
