@@ -351,3 +351,45 @@ class LoginTemporaryLockTest(TestCase):
         self.assertEqual(error_mail.to, [settings.ADMIN_EMAIL])
         self.assertIn("send_login_locked_email error", error_mail.subject)
         self.assertIn("toto@example.com", error_mail.body)
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False
+)
+class EmailOnlySignInTest(TestCase):
+    """The sign in happens with the e-mail address only: the long
+    name, an identity displayed everywhere, never opens a door."""
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        cls.user = User.objects.create_user(
+            username="dupont@example.com",
+            email="dupont@example.com",
+            password="right-password",
+            last_name="Dupont",
+        )
+        cls.customer = Customer.objects.create(
+            user=cls.user, short_basket_name="Dupo", may_order=True
+        )
+
+    def _post_login(self, username):
+        return self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": username, "password": "right-password"},
+            follow=True,
+        )
+
+    def test_the_long_name_is_not_a_login(self):
+        self._post_login("Dupont")
+        # Nobody entered: the session carries no user
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_the_email_address_stays_the_only_key(self):
+        self._post_login("dupont@example.com")
+        self.assertIn("_auth_user_id", self.client.session)

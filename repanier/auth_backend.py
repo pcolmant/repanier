@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
-from django.db.models import Q
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -44,9 +43,9 @@ class RepanierAuthBackend(ModelBackend):
         super().__init__()
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        user_username = UserModel.objects.filter(
-            Q(last_name__iexact=username[:150]) | Q(email__iexact=username)
-        ).first()
+        # The sign in happens with the e-mail address only: the short
+        # and long names display an identity, they never open a door.
+        user_username = UserModel.objects.filter(email__iexact=username).first()
         is_superuser = False
         customer = None
         login_attempt_counter = DECIMAL_ZERO

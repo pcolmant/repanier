@@ -13,6 +13,31 @@ tests indiquent où elle est vérifiée.
 
 ## Partie 1 — Règles classiques
 
+### Connexion et protection du compte
+
+- Le membre se connecte **uniquement par son adresse email** : le nom
+  long est une identité d'affichage et le nom court un identifiant
+  pour les listes de préparation — aucun des deux n'ouvre de session
+  (`RepanierAuthBackend.authenticate`).
+- Trois mots de passe erronés **verrouillent le compte pendant 15
+  minutes** : pendant le verrou, tout mot de passe est refusé — le bon
+  compris — et l'écran annonce quand la porte se rouvre. Un bon mot de
+  passe saisi avant le verrou remet le compteur d'échecs à zéro ; un
+  verrou expiré repart d'un compteur vierge à la tentative suivante.
+  Les compteurs laissés au-dessus du seuil par un déploiement
+  antérieur verrouillent le compte au prochain échec.
+- Un **mail d'avertissement transactionnel** par épisode de verrou
+  (envoyé même aux désabonnés, sans pied de désabonnement) invite le
+  membre à vérifier son caps lock et son num lock, l'avertit que
+  quelqu'un d'autre tente peut-être son compte et le relie au flux de
+  réinitialisation du mot de passe. Le corps du mail nomme le compte
+  concerné ; le coordinateur du site reçoit une copie, pour qu'un
+  compte dormant demandant de l'aide ou un membre se plaignant arrive
+  avec le contexte. Quand le mail échoue lui-même, un rapport
+  d'erreur parvient aux admins (`RepanierEmail._send_error`).
+  Tests : `test_login_view.py` (LoginTemporaryLockTest,
+  EmailOnlySignInTest).
+
 ### Chaîne d'achat
 
 Un achat (Purchase) relie **une facture client** (CustomerInvoice), **une

@@ -13,6 +13,31 @@ verified.
 
 ## Part 1 - Classic business rules
 
+### Sign in and account protection
+
+- Members sign in **with their e-mail address only**: the long name
+  is a display identity and the short name an identifier for the
+  preparation lists - neither of them ever opens a session
+  (`RepanierAuthBackend.authenticate`).
+- Three failed passwords **lock the account for 15 minutes**:
+  during the lock, every password bounces - the correct one included -
+  and the screen announces when the door reopens. A correct password
+  entered before the lock resets the failed-attempt counter; an expired
+  lock starts a fresh count on the next try. Counters left above the
+  threshold by an earlier deployment lock the account on the next
+  failed attempt.
+- One **transactional warning mail** per lock episode (sent even to
+  unsubscribed members, without the unsubscribe footer) invites the
+  member to check his caps lock and his num lock, warns him that
+  somebody else may be trying his account, and links to the password
+  reset flow. The body of the mail names the concerned account; the
+  site coordinator receives a copy, so a dormant account asking for
+  help or a complaining member arrives with the context. When the mail
+  itself fails, an error report reaches the admins
+  (`RepanierEmail._send_error`).
+  Tests: `test_login_view.py` (LoginTemporaryLockTest,
+  EmailOnlySignInTest).
+
 ### The purchase chain
 
 A purchase (Purchase) binds together **one customer invoice**
