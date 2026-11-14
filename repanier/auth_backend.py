@@ -16,6 +16,7 @@ from repanier.const import (
     DECIMAL_ZERO,
     DECIMAL_ONE,
     DECIMAL_THREE,
+    EMPTY_STRING,
     AuthGroup,
 )
 from repanier.email.email import RepanierEmail
@@ -169,6 +170,8 @@ class RepanierAuthBackend(ModelBackend):
         receives a copy, so a dormant account asking for help or a
         complaining member arrives with the context already in the
         mailbox."""
+        email = None
+        to_email = None
         try:
             if user is None:
                 return
@@ -202,6 +205,27 @@ class RepanierAuthBackend(ModelBackend):
             email.send_email()
         except Exception as error:
             logger.error("send_login_locked_email error : {}".format(error))
+            # A lock warning that reaches neither the member nor the
+            # coordinator must at least reach the admins: the same
+            # failure report as the other mails of Repanier.
+            try:
+                if email is None:
+                    # The mail itself could not be built: an empty
+                    # RepanierEmail still carries the failed attempt -
+                    # recipient and coordinator copy - in its report.
+                    email = RepanierEmail(
+                        subject=_("Your account is temporarily locked"),
+                        html_body=EMPTY_STRING,
+                        to=[to_email or EMPTY_STRING],
+                        cc=[settings.REPANIER_SETTINGS_COORDINATOR_EMAIL],
+                    )
+                email._send_error("send_login_locked_email error", error)
+            except Exception as nested_error:
+                logger.error(
+                    "send_login_locked_email error report error : {}".format(
+                        nested_error
+                    )
+                )
 
     @classmethod
     def set_staff_right(cls, request, user=None, as_staff=None):

@@ -11,6 +11,8 @@ from django.core import mail
 from django.utils import timezone
 from django.utils.translation import gettext, override
 
+from unittest.mock import patch
+
 from repanier.models.customer import Customer
 from repanier.models.configuration import Configuration
 
@@ -310,3 +312,42 @@ class LoginTemporaryLockTest(TestCase):
         # until he fails once again, which is now locked
         # (the previous post locked the account)
         self.assertContains(response, self._lock_message())
+
+    def test_a_warning_that_cannot_be_sent_reaches_the_admins(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        with patch(
+            "repanier.auth_backend.RepanierEmail.send_email",
+            side_effect=Exception("smtp down"),
+        ):
+            response = self._post_login("wrong-3")
+        # The lock applies even when the warning cannot leave
+        self.customer.refresh_from_db()
+        self.assertIsNotNone(self.customer.login_locked_on)
+        self.assertContains(response, self._lock_message())
+        # No lock mail left, but the admins hold the failure report
+        self.assertEqual(len(mail.outbox), 1)
+        error_mail = mail.outbox[0]
+        self.assertEqual(error_mail.to, [settings.ADMIN_EMAIL])
+        self.assertIn("send_login_locked_email error", error_mail.subject)
+        # The report says which member and which coordinator copy
+        # were concerned
+        self.assertIn("toto@example.com", error_mail.body)
+        self.assertIn(settings.REPANIER_SETTINGS_COORDINATOR_EMAIL, error_mail.body)
+
+    def test_a_warning_that_cannot_be_built_reaches_the_admins(self):
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        with patch(
+            "repanier.auth_backend.render_to_string",
+            side_effect=Exception("template error"),
+        ):
+            self._post_login("wrong-3")
+        self.customer.refresh_from_db()
+        self.assertIsNotNone(self.customer.login_locked_on)
+        # The fallback report still names the failed attempt
+        self.assertEqual(len(mail.outbox), 1)
+        error_mail = mail.outbox[0]
+        self.assertEqual(error_mail.to, [settings.ADMIN_EMAIL])
+        self.assertIn("send_login_locked_email error", error_mail.subject)
+        self.assertIn("toto@example.com", error_mail.body)
