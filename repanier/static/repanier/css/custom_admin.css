@@ -251,6 +251,15 @@ div.repanier-objects-tools {
     text-align: center;
 }
 
+.repanier-money-input-calculator {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    background: var(--info-border-color);
+    color: white;
+    cursor: help;
+}
+
 .repanier-money-input-field {
     width: 90px;
     text-align: right;

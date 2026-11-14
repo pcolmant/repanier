@@ -1,7 +1,8 @@
-<span class="repanier-money-input-container">
+{% load i18n %}<span class="repanier-money-input-container">
     {% if not repanier_currency_after %}
         <span class="repanier-money-input-icon">{{ repanier_currency_str | safe }}</span>
     {% endif %}
+    <span class="repanier-money-input-calculator" title="{% translate "Calculator: type a formula like 4*2,20= and the field keeps only the result (decimal comma, a dot groups thousands)." %}"><i class="fa-solid fa-calculator"></i></span>
     {#    {% include "django/forms/widgets/input.html" %}#}
     <input type="text" name="{{ widget.name }}" class="repanier-money-input-field"
            {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
