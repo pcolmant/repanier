@@ -38,6 +38,32 @@ verified.
   Tests: `test_login_view.py` (LoginTemporaryLockTest,
   EmailOnlySignInTest).
 
+### The Repanier passport
+
+One sign in on a site of the `repanier.be` family opens the member
+sessions on every other site of the family where his account exists,
+without asking anything again (`repanier.middleware.repanier_passport_middleware`):
+
+- the sign in plants a **signed cookie on the parent domain**
+  `.repanier.be` (HttpOnly, Secure, SameSite Lax, a sliding thirty
+  days), refreshed on every visit: one sign in a month covers the
+  whole family;
+- the cookie carries the **e-mail address alone**, signed with
+  `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` - the same value in every
+  site of the family; no central account exists and no personal data
+  ever crosses the databases;
+- arriving on another site, a verified passport opens a **local
+  session** for the local account of that e-mail address - only for
+  an **active member**: the temporary lock of the failed attempts
+  closes the passport as it closes the password, the superusers and
+  the group accounts go through the classical sign in;
+- the sites living on their own domain (colibera.be,
+  commande.lebuisson.be, commande.coopeco-supermarche.be) carry no
+  passport: their members sign in on each site;
+- leaving one site (logout) deletes the family cookie: the member
+  leaves every site at once.
+  Tests: `test_repanier_passport.py`.
+
 ### The purchase chain
 
 A purchase (Purchase) binds together **one customer invoice**

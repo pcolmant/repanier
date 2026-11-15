@@ -38,6 +38,34 @@ tests indiquent où elle est vérifiée.
   Tests : `test_login_view.py` (LoginTemporaryLockTest,
   EmailOnlySignInTest).
 
+### Le passeport Repanier
+
+Une connexion sur un site de la famille `repanier.be` ouvre les
+sessions du membre sur tous les autres sites de la famille où il
+possède un compte, sans rien redemander
+(`repanier.middleware.repanier_passport_middleware`) :
+
+- la connexion plante un **cookie signé sur le domaine parent**
+  `.repanier.be` (HttpOnly, Secure, SameSite Lax, trente jours
+  glissants), rafraîchi à chaque visite : une connexion par mois
+  couvre toute la famille ;
+- le cookie ne transporte que **l'adresse email**, signée avec
+  `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` — la même valeur sur tous
+  les sites de la famille ; aucun compte central n'existe et aucune
+  donnée personnelle ne traverse les bases de données ;
+- arrivant sur un autre site, un passeport vérifié ouvre une
+  **session locale** pour le compte local de cette adresse email —
+  uniquement pour un **membre actif** : le verrou temporaire des
+  tentatives échouées ferme le passeport comme il ferme le mot de
+  passe, les superutilisateurs et les comptes de groupe passent par
+  la connexion classique ;
+- les sites vivant sur leur propre domaine (colibera.be,
+  commande.lebuisson.be, commande.coopeco-supermarche.be) ne portent
+  pas de passeport : leurs membres se connectent site par site ;
+- quitter un site (déconnexion) supprime le cookie de famille : le
+  membre quitte tous les sites à la fois.
+  Tests : `test_repanier_passport.py`.
+
 ### Chaîne d'achat
 
 Un achat (Purchase) relie **une facture client** (CustomerInvoice), **une
