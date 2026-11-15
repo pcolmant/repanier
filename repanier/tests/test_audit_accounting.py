@@ -556,3 +556,38 @@ class AuditMarginTest(AuditAccountingTestCaseMixin, TestCase):
         b2 = [f for f in findings if f.code == "B2"][0]
         self.assertIn("keeps 5.00", b2.message)
         self.assertIn("never", b2.suggestion)
+
+
+class AuditMembershipFeeRowTest(AuditAccountingTestCaseMixin, TestCase):
+    """The old invoicing flows left MEMBERSHIP_FEE bank rows behind.
+
+    The fee row was the trace of a membership fee charged to a book:
+    as a bank row it moved neither the payer balance nor the bank
+    total - pure bookkeeping. The sites of the old era (pigal) still
+    carry the rows, and the audit used to count them as movements,
+    which broke the customer replay and the anchor chain of their
+    round for the exact amount of the fee.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.build_invoiced_permanence()
+
+    def test_a_membership_fee_row_stays_out_of_the_replays(self):
+        alice_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.permanence.id, customer_id=self.alice.id
+        )
+        BankAccount.objects.create(
+            permanence_id=self.permanence.id,
+            customer_id=self.alice.id,
+            customer_invoice=alice_invoice,
+            operation_date=PAYMENT_DATE,
+            operation_status=BankMovement.MEMBERSHIP_FEE,
+            operation_comment="Cotisation",
+            bank_amount_in=D("10.00"),
+        )
+        # Nothing moved: every replay stays square.
+        self.assertEqual(self.run_audit(audit_customer_accounts), [])
+        self.assertEqual(self.run_audit(audit_producer_accounts), [])
+        self.assertEqual(self.run_audit(audit_permanence_closure), [])
+        self.assertEqual(self.run_audit(audit_bank), [])

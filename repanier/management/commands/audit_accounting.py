@@ -94,6 +94,12 @@ INVOICED_STATUSES = [SaleStatus.INVOICED, SaleStatus.ARCHIVED]
 MONEY = DecimalField(max_digits=10, decimal_places=2)
 VAT = DecimalField(max_digits=10, decimal_places=4)
 NOT_BANK_ENTRIES = [BankMovement.PROFIT, BankMovement.TAX]
+# The membership fee rows of the old invoicing flows trace a fee
+# charged to a book: like the profit rows they carry no real bank
+# money, but unlike them they do not move the payer balance either -
+# pure bookkeeping, and the replays of the accounts and of the bank
+# chain must both leave them out. Pigal still carries them.
+BOOKKEEPING_ONLY = [BankMovement.MEMBERSHIP_FEE]
 
 
 class Finding:
@@ -175,13 +181,19 @@ def round_margins():
 
 
 def audit_customer_accounts(customer_id=None):
-    """Every customer balance, replayed from the bank and the books."""
+    """Every customer balance, replayed from the bank and the books.
+
+    The membership fee rows of the old flows are bookkeeping only:
+    they charged a book without moving the balance or the bank, and
+    stay out of the replay.
+    """
     findings = []
     bank_net = {
         row["customer_id"]: net(row["bank_in"], row["bank_out"])
         for row in BankAccount.objects.filter(
             customer_invoice__isnull=False, customer__isnull=False
         )
+        .exclude(operation_status__in=BOOKKEEPING_ONLY)
         .values("customer_id")
         .annotate(bank_in=Sum("bank_amount_in", output_field=MONEY))
         .annotate(bank_out=Sum("bank_amount_out", output_field=MONEY))
@@ -875,6 +887,11 @@ def audit_permanence_closure(permanence_id=None, since=None):
 def audit_bank(since=None):
     """The anchor chain and the attached payments.
 
+    The membership fee rows of the old flows moved no bank money -
+    like the profit and the tax rows they stay out of the chain, and
+    unlike them they never even moved a balance: a fee row attached
+    to a round is not a movement of that round.
+
     With --since, the chain compares the anchors of the era only:
     the first anchor of the era opens it and is never compared -
     the eras before it are the business of another run.
@@ -941,7 +958,6 @@ def audit_bank(since=None):
                     BankMovement.NOT_LATEST_TOTAL,
                     BankMovement.CALCULATED_INVOICE,
                     BankMovement.COMPENSATION,
-                    BankMovement.MEMBERSHIP_FEE,
                 ],
             ).filter(
                 Q(customer_invoice__isnull=False)
