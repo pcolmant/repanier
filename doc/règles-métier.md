@@ -59,8 +59,8 @@ possède un compte, sans rien redemander
   **session locale** pour le compte local de cette adresse email —
   uniquement pour un **membre actif** : le verrou temporaire des
   tentatives échouées ferme le passeport comme il ferme le mot de
-  passe, les superutilisateurs et les comptes de groupe passent par
-  la connexion classique ;
+  passe, les superutilisateurs, les staffs et les comptes de groupe
+  passent par la connexion classique ;
 - la même arrivée installe le membre, **par défaut, dans le groupe
   miroir de son site d'origine**, quand ce groupe **accepte
   explicitement les membres du passeport**
@@ -78,6 +78,14 @@ possède un compte, sans rien redemander
   placés. Un compte déjà enregistré sur le site est réparé à la
   prochaine connexion — par passeport ou classique, quand le
   navigateur porte encore un passeport correspondant ;
+- l'origine **ne dérive jamais avec les sauts du membre** : un
+  passeport émis alors qu'il appartient à un groupe miroir qui
+  l'accepte voyage sous le domicile que ce miroir porte — et quand
+  aucun miroir n'existe sur le site visité, sous le domicile du
+  passeport avec lequel il est arrivé. Un membre de gasath qui
+  rebondit de site en site continue de voyager comme gasath et ne
+  devient jamais, à force de visites, membre de l'endroit qu'il a
+  simplement visité ;
 - les sites vivant sur leur propre domaine (colibera.be,
   commande.lebuisson.be, commande.coopeco-supermarche.be) ne portent
   pas de passeport : leurs membres se connectent site par site ;

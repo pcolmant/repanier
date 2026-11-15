@@ -57,8 +57,8 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
 - arriving on another site, a verified passport opens a **local
   session** for the local account of that e-mail address - only for
   an **active member**: the temporary lock of the failed attempts
-  closes the passport as it closes the password, the superusers and
-  the group accounts go through the classical sign in;
+  closes the passport as it closes the password, the superusers, the
+  staff and the group accounts go through the classical sign in;
 - the same arrival places the member, **by default, in the mirror
   group of his home site**, when that group **explicitly accepts the
   passport members** (`accepts_passport_members`, validated by the
@@ -74,6 +74,13 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   touching the members already placed. An account already registered
   on the site is repaired at the next sign in - by passport or by
   hand, when the browser still carries a matching passport;
+- the origin **never drifts with the hops of the member**: a passport
+  issued while he belongs to a mirror group which accepts him
+  travels under the home that mirror wears - and when no mirror
+  exists on the visited site, under the home of the passport he
+  arrived with. A member of gasath bouncing from site to site keeps
+  travelling as gasath and never becomes, by sheer visiting, a
+  member of the place he merely visited;
 - the sites living on their own domain (colibera.be,
   commande.lebuisson.be, commande.coopeco-supermarche.be) carry no
   passport: their members sign in on each site;

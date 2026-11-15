@@ -9,7 +9,7 @@ from repanier.middleware import (
 from repanier.models.customer import Customer
 from repanier.models.configuration import Configuration
 
-FAMILY_HOSTS = ["gasath.repanier.be", "courtcircuit.repanier.be"]
+FAMILY_HOSTS = ["gasath.repanier.be", "courtcircuit.repanier.be", "pigal.repanier.be"]
 
 
 @override_settings(
@@ -55,6 +55,8 @@ class RepanierPassportTest(TestCase):
         self.assertEqual(morsel["domain"], PASSPORT_DOMAIN)
         self.assertTrue(morsel["secure"])
         self.assertTrue(morsel["httponly"])
+        self.assertEqual(morsel["samesite"], "Lax")
+        self.assertEqual(morsel["max-age"], 2592000)
         # The token carries the e-mail address and the subdomain of
         # the site which welcomed the member, nothing else
         self.assertEqual(
@@ -119,7 +121,7 @@ class RepanierPassportTest(TestCase):
         self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
             "carine@example.com|{}".format(origin)
         )
-        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        return self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
 
     def _refresh_customer(self):
         return Customer.objects.get(id=self.customer.id)
@@ -165,6 +167,51 @@ class RepanierPassportTest(TestCase):
         self._arrive_from("courtcircuit")
         self.assertIsNone(self._refresh_customer().group)
 
+    def test_the_mirror_group_keeps_the_home_stable_across_the_hops(self):
+        group = self._group("GasAth", accepts_passport_members=True)
+        self._arrive_from("gasath")
+        self.assertEqual(self._refresh_customer().group_id, group.id)
+        # The visit to courtcircuit did not turn the member into a
+        # courtcircuit member: the refreshed passport still travels
+        # under the home the mirror group wears - whatever the hops.
+        # (The arrival request may redirect through the CMS: follow
+        # the redirects and read the passport of the last page.)
+        self.client.get(
+            "/dummy/", HTTP_HOST="courtcircuit.repanier.be", follow=True
+        )
+        self.assertEqual(
+            get_passport_signer().unsign(
+                self.client.cookies[PASSPORT_COOKIE].value, max_age=None
+            ),
+            "carine@example.com|GasAth",
+        )
+
+    def test_coming_back_home_with_the_mirror_label_attaches_nothing(self):
+        # On the home site itself, the coordination owns a local
+        # group wearing the site subdomain: a member coming back with
+        # his home label must not be attached to it - and the label
+        # may wear any case
+        self._group("GasAth", accepts_passport_members=True)
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "carine@example.com|GasAth"
+        )
+        self.client.get("/dummy/", HTTP_HOST="gasath.repanier.be")
+        self.assertIsNone(self._refresh_customer().group)
+
+    def test_a_member_of_a_plain_local_group_travels_under_the_site_subdomain(self):
+        # A member placed by the coordination in a group which is not
+        # a mirror travels under the subdomain of the site emitting
+        # the passport, never under the name of his local group
+        other = self._group("Other Group")
+        Customer.objects.filter(id=self.customer.id).update(group=other)
+        _response = self._sign_in_on("gasath.repanier.be")
+        self.assertEqual(
+            get_passport_signer().unsign(
+                _response.cookies[PASSPORT_COOKIE].value, max_age=None
+            ),
+            "carine@example.com|gasath",
+        )
+
     def test_a_passport_without_origin_opens_the_session_and_attaches_nothing(self):
         self._group("GasAth", accepts_passport_members=True)
         self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
@@ -194,6 +241,161 @@ class RepanierPassportTest(TestCase):
         )
         self._sign_in_on("courtcircuit.repanier.be")
         self.assertIsNone(self._refresh_customer().group)
+
+    def test_a_classic_sign_in_without_passport_attaches_nothing(self):
+        # A member erasing his cookies and restarting: no passport,
+        # no attach - his account was built by the coordination
+        self._group("GasAth", accepts_passport_members=True)
+        self._sign_in_on("courtcircuit.repanier.be")
+        self.assertIsNone(self._refresh_customer().group)
+
+    def test_the_home_survives_a_site_without_the_mirror_group(self):
+        # The member travelled under GasAth and arrives on a site
+        # owning no mirror at all: the refreshed passport keeps his
+        # home instead of drifting to the visited site
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "carine@example.com|GasAth"
+        )
+        self.client.get("/dummy/", HTTP_HOST="pigal.repanier.be", follow=True)
+        self.assertEqual(
+            get_passport_signer().unsign(
+                self.client.cookies[PASSPORT_COOKIE].value, max_age=None
+            ),
+            "carine@example.com|GasAth",
+        )
+
+    def test_a_refusing_homonym_does_not_block_the_attach(self):
+        group = self._group("GasAth", accepts_passport_members=True)
+        # A homonym refusing the arrivals is not a passport mirror:
+        # the accepting one remains the single candidate
+        self._group("gasath", accepts_passport_members=False)
+        self._arrive_from("gasath")
+        self.assertEqual(self._refresh_customer().group_id, group.id)
+
+    def test_an_inactive_mirror_group_attaches_nothing(self):
+        group = self._group("GasAth", accepts_passport_members=True)
+        Customer.objects.filter(id=group.id).update(is_active=False)
+        self._arrive_from("gasath")
+        self.assertIsNone(self._refresh_customer().group)
+
+    def test_a_group_account_stays_out_of_the_passport(self):
+        self._group("GasAth", accepts_passport_members=True)
+        # A passport stamped with the e-mail of a group account
+        # opens no group session through the back door
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "group-GasAth@example.com|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_a_staff_account_stays_out_of_the_passport(self):
+        User.objects.filter(id=self.user.id).update(is_staff=True)
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "carine@example.com|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_a_passport_stamped_for_a_superuser_opens_nothing(self):
+        from django.contrib.auth.models import User as UserModel
+
+        UserModel.objects.create_user(
+            username="boss", email="boss@example.com", password="x", is_superuser=True
+        )
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "boss@example.com|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_an_inactive_customer_stays_out_of_the_passport(self):
+        Customer.objects.filter(id=self.customer.id).update(is_active=False)
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "carine@example.com|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_an_account_without_customer_row_stays_out(self):
+        User.objects.create_user(
+            username="orphan", email="orphan@example.com", password="x"
+        )
+        # The user exists but carries no customer profile
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "orphan@example.com|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_an_expired_lock_lets_the_passport_in(self):
+        from django.utils import timezone
+
+        Customer.objects.filter(id=self.customer.id).update(
+            login_locked_on=timezone.now() - timezone.timedelta(hours=1)
+        )
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "carine@example.com|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]), self.user.id
+        )
+        # The lock expired: clean slate, as at the sign in
+        self.assertIsNone(self._refresh_customer().login_locked_on)
+
+    def test_an_expired_passport_opens_nothing(self):
+        import time as time_module
+        from unittest.mock import patch
+
+        with patch(
+            "django.core.signing.time",
+            **{"time.return_value": time_module.time() - 31 * 24 * 3600},
+        ):
+            self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+                "carine@example.com|gasath"
+            )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_a_passport_signed_with_another_key_opens_nothing(self):
+        from django.core import signing as core_signing
+
+        stranger = core_signing.TimestampSigner(
+            key="another-key", salt="repanier/1905/passport"
+        )
+        self.client.cookies[PASSPORT_COOKIE] = stranger.sign(
+            "carine@example.com|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_a_degenerated_passport_opens_nothing(self):
+        for token in ("|gasath", ""):
+            self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(token)
+            self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+            self.assertNotIn("_auth_user_id", self.client.session)
+            self.client.session.flush()
+
+    def test_an_uppercase_email_passport_still_opens_the_session(self):
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "CARINE@EXAMPLE.COM|gasath"
+        )
+        self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]), self.user.id
+        )
+
+    def test_a_broken_email_address_gets_no_passport(self):
+        User.objects.filter(id=self.user.id).update(email="ca|rine@example.com")
+        self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "ca|rine@example.com", "password": "x"},
+            HTTP_HOST="gasath.repanier.be",
+            follow=True,
+        )
+        # An e-mail which cannot travel safely in the token gets no
+        # passport at all
+        self.assertIsNone(self.client.cookies.get(PASSPORT_COOKIE))
 
     def test_the_logout_closes_the_whole_family(self):
         self._sign_in_on("gasath.repanier.be")

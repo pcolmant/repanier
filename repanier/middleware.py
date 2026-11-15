@@ -124,7 +124,9 @@ def admin_filter_middleware(get_response):
 # name places the member, by default, in the local mirror group of
 # their home site when the group explicitly accepts passport members:
 # the customer lists show [home site] + name, and the delivery board
-# follows the group.
+# follows the group. The origin label never drifts with the hops of
+# the member: his mirror group names his home, and coming back home
+# attaches nothing.
 
 from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model
@@ -176,14 +178,20 @@ def _passport_user(email):
     from repanier.models.customer import Customer
 
     user_model = get_user_model()
-    user = user_model.objects.filter(email__iexact=email, is_active=True).first()
-    if user is None or user.is_superuser:
+    user = (
+        user_model.objects.filter(email__iexact=email, is_active=True)
+        .order_by("id")
+        .first()
+    )
+    if user is None or user.is_superuser or user.is_staff:
         # Superusers log in by hand: they carry the CMS toolbar.
+        # Staff accounts go through the roles chooser of the sign
+        # in, they too carry the toolbar.
         return None
     customer = Customer.objects.filter(user_id=user.id).first()
-    if customer is None or not customer.is_active:
-        # Group accounts and staff-only accounts go through the sign
-        # in flow: the passport only opens member sessions.
+    if customer is None or not customer.is_active or customer.is_group:
+        # Group accounts go through the sign in flow: the
+        # passport only opens member sessions.
         return None
     if customer.login_locked_on is not None:
         locked_until = customer.login_locked_on + timezone.timedelta(
@@ -213,6 +221,55 @@ def _passport_origin(request):
     return host[: -len(PASSPORT_DOMAIN)]
 
 
+def _passport_home(request, user):
+    """The home of the member, stamped in every issued passport. The
+    emitting site derives it, in this order:
+
+    1. a member placed in a mirror group which accepts the passport
+       arrivals belongs to the home site that mirror wears;
+    2. otherwise, the home of the passport the member arrived with -
+       his own, since it must carry his e-mail - so that a member of
+       gasath passing through a site without a gasath mirror keeps
+       travelling as gasath;
+    3. otherwise the subdomain of the site emitting the passport -
+       his home, or the site the coordination treats him as coming
+       from.
+
+    Whatever the hops of the member, his home never drifts with the
+    last visited site."""
+    try:
+        from repanier.models.customer import Customer
+
+        customer = Customer.objects.select_related("group").filter(
+            user_id=user.id
+        ).first()
+        if (
+            customer is not None
+            and customer.group_id is not None
+            and customer.group.accepts_passport_members
+        ):
+            return customer.group.short_basket_name.strip()
+        passport = request.COOKIES.get(PASSPORT_COOKIE)
+        if passport:
+            try:
+                passport_value = get_passport_signer().unsign(
+                    passport, max_age=PASSPORT_MAX_AGE
+                )
+            except signing.BadSignature:
+                passport_value = None
+            if passport_value:
+                email, _separator, origin = passport_value.partition("|")
+                if (
+                    origin.strip()
+                    and email.strip().lower()
+                    == (user.email or EMPTY_STRING).strip().lower()
+                ):
+                    return origin.strip()
+    except Exception as error:
+        passport_logger.error("repanier passport home error : {}".format(error))
+    return _passport_origin(request)
+
+
 def _attach_passport_group(request, user, origin):
     """A member arriving with a passport mentions the site which last
     welcomed them. When this site owns a mirror group of that home
@@ -225,7 +282,7 @@ def _attach_passport_group(request, user, origin):
     set is final, an ambiguous, missing or refusing mirror group
     changes nothing."""
     origin = (origin or EMPTY_STRING).strip()
-    if not origin or origin == _passport_origin(request):
+    if not origin or origin.lower() == _passport_origin(request):
         # Coming home attaches nothing.
         return
     try:
@@ -233,6 +290,7 @@ def _attach_passport_group(request, user, origin):
 
         mirror_groups = Customer.objects.filter(
             is_group=True,
+            is_active=True,
             short_basket_name__iexact=origin,
             accepts_passport_members=True,
         )
@@ -293,6 +351,7 @@ def repanier_passport_middleware(get_response):
                 and not was_authenticated
                 and _is_passport_host(request)
                 and not request.user.is_superuser
+                and not request.user.is_staff
             ):
                 # The member just signed in on this site by hand. When
                 # his browser still carries a valid passport of a home
@@ -320,23 +379,33 @@ def repanier_passport_middleware(get_response):
             if request.user.is_authenticated and _is_passport_host(request):
                 # Refreshed on every visit: one sign in a month is
                 # enough for the whole family. The token carries the
-                # e-mail and the subdomain of this site: the next
-                # site knows where the member comes from.
-                response.set_cookie(
-                    PASSPORT_COOKIE,
-                    get_passport_signer().sign(
-                        "{}|{}".format(
-                            (request.user.email or EMPTY_STRING).strip().lower(),
-                            _passport_origin(request),
-                        )
-                    ),
-                    max_age=PASSPORT_MAX_AGE,
-                    domain=PASSPORT_DOMAIN,
-                    secure=True,
-                    httponly=True,
-                    samesite="Lax",
-                )
+                # e-mail and the home of the member - his mirror
+                # group when he has one, the subdomain of this site
+                # otherwise: the next site knows where he comes from
+                # and his home never drifts with his hops.
+                # Superusers log in by hand: no passport for them.
+                passport_email = (request.user.email or EMPTY_STRING).strip().lower()
+                if (
+                    not request.user.is_superuser
+                    and passport_email
+                    and "|" not in passport_email
+                ):
+                    response.set_cookie(
+                        PASSPORT_COOKIE,
+                        get_passport_signer().sign(
+                            "{}|{}".format(
+                                passport_email,
+                                _passport_home(request, request.user),
+                            )
+                        ),
+                        max_age=PASSPORT_MAX_AGE,
+                        domain=PASSPORT_DOMAIN,
+                        secure=True,
+                        httponly=True,
+                        samesite="Lax",
+                    )
         except Exception as error:
+            # A passport problem never blocks the response.
             passport_logger.error("repanier passport cookie error : {}".format(error))
         return response
 
