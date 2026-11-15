@@ -138,6 +138,13 @@ REPANIER_SETTINGS_COUNTRY = config.get(
 REPANIER_SETTINGS_BCC_ALL_EMAIL_TO = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_BCC_ALL_EMAIL_TO", fallback=EMPTY_STRING
 )
+# The signing key of the Repanier passport: the same value in the ini
+# of every site of the repanier.be family lets a sign in on one site
+# open the member sessions on the others. Empty falls back on the
+# SECRET_KEY: the site keeps working, the passport stays local.
+REPANIER_SETTINGS_PASSPORT_SIGNING_KEY = config.get(
+    "REPANIER_SETTINGS", "REPANIER_SETTINGS_PASSPORT_SIGNING_KEY", fallback=EMPTY_STRING
+)
 
 REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER", fallback=False
@@ -423,6 +430,7 @@ MIDDLEWARE = (
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "{}.middleware.repanier_passport_middleware".format(REPANIER_SETTINGS_VERSION),
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "cms.middleware.user.CurrentUserMiddleware",  # required to run django CMS

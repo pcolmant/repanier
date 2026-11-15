@@ -1537,6 +1537,18 @@ msgstr "E-mail validé"
 msgid "Agree to receive mails from this site"
 msgstr "Accepte de recevoir de mails provenant de ce site"
 
+#: models/customer.py:129
+msgid "Accept the members arriving with the Repanier passport"
+msgstr "Accepte les membres arrivant par le passeport Repanier"
+
+#: models/customer.py:131
+msgid ""
+"Only a group which accepts them sees its members arriving from another "
+"site of the family placed here by the passport"
+msgstr ""
+"Seul un groupe qui les accepte voit les membres arrivant d'un autre site "
+"de la famille y être placés par le passeport"
+
 #: models/customer.py:215
 msgid "Date joined"
 msgstr "Date d'inscription"

@@ -38,6 +38,58 @@ verified.
   Tests: `test_login_view.py` (LoginTemporaryLockTest,
   EmailOnlySignInTest).
 
+### The Repanier passport
+
+One sign in on a site of the `repanier.be` family opens the member
+sessions on every other site of the family where his account exists,
+without asking anything again (`repanier.middleware.repanier_passport_middleware`):
+
+- the sign in plants a **signed cookie on the parent domain**
+  `.repanier.be` (HttpOnly, Secure, SameSite Lax, a sliding thirty
+  days), refreshed on every visit: one sign in a month covers the
+  whole family;
+- the cookie carries the **e-mail address and the subdomain of the
+  site which last welcomed the member** (gasath for
+  gasath.repanier.be), signed with
+  `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` - the same value in every
+  site of the family; no central account exists and no personal data
+  ever crosses the databases;
+- arriving on another site, a verified passport opens a **local
+  session** for the local account of that e-mail address - only for
+  an **active member**: the temporary lock of the failed attempts
+  closes the passport as it closes the password, the superusers, the
+  staff and the group accounts go through the classical sign in;
+- the same arrival places the member, **by default, in the mirror
+  group of his home site**, when that group **explicitly accepts the
+  passport members** (`accepts_passport_members`, validated by the
+  local coordination in the group admin) - an attach guarded on every
+  side: only when the local coordination has never placed the member
+  in any group (a group already set is final), only when exactly one
+  local group wears the subdomain of the home site (a name any site
+  of the family can discover in its browser) and accepts the
+  arrivals, never for a member coming back home. The customer lists
+  then show `[gasath] + name` and the delivery board follows the
+  group; the invoicing follows the configuration of the group
+  itself. Turning the flag off stops the future arrivals, without
+  touching the members already placed. An account already registered
+  on the site is repaired at the next sign in - by passport or by
+  hand, when the browser still carries a matching passport;
+- the origin **never drifts with the hops of the member**: a passport
+  issued while he belongs to a mirror group which accepts him
+  travels under the home that mirror wears - and when no mirror
+  exists on the visited site, under the home of the passport he
+  arrived with. A member of gasath bouncing from site to site keeps
+  travelling as gasath and never becomes, by sheer visiting, a
+  member of the place he merely visited;
+- the sites living on their own domain (colibera.be,
+  commande.lebuisson.be, commande.coopeco-supermarche.be) carry no
+  passport: their members sign in on each site;
+- leaving one site (logout) deletes the family cookie: the member
+  leaves every site at once. The signing key comes from
+  `./manage.py generate_passport_signing_key` - the same value in
+  every family site ini, empty on the own-domain sites.
+  Tests: `test_repanier_passport.py`.
+
 ### The purchase chain
 
 A purchase (Purchase) binds together **one customer invoice**

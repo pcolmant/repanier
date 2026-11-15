@@ -1,3 +1,4 @@
+import logging
 import re
 import threading
 from urllib.parse import parse_qsl
@@ -109,6 +110,303 @@ def admin_filter_middleware(get_response):
 
         response = get_response(request)
 
+        return response
+
+    return middleware
+
+# The Repanier passport: a login on one site of the repanier.be family
+# opens the door of the other sites where the member owns an account,
+# without asking anything again. A signed cookie travels on the parent
+# domain; each site verifies it and opens its own local session - no
+# central account, no personal data crossing the databases, only the
+# e-mail address and the subdomain of the site which last welcomed
+# the member inside a signed token the family can verify. That origin
+# name places the member, by default, in the local mirror group of
+# their home site when the group explicitly accepts passport members:
+# the customer lists show [home site] + name, and the delivery board
+# follows the group. The origin label never drifts with the hops of
+# the member: his mirror group names his home, and coming back home
+# attaches nothing.
+
+from django.conf import settings as django_settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth import login as auth_login
+from django.core import signing
+from django.utils import timezone
+
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING
+
+passport_logger = logging.getLogger("repanier.passport")
+
+PASSPORT_COOKIE = "repanier_passport"
+PASSPORT_DOMAIN = ".repanier.be"
+PASSPORT_MAX_AGE = 30 * 24 * 60 * 60  # seconds, a sliding month
+PASSPORT_SALT = "repanier/1905/passport"
+
+
+def get_passport_signer():
+    """Every site of the family signs with the same key, configured by
+    REPANIER_SETTINGS_PASSPORT_SIGNING_KEY (same value in the ini of
+    each site). Without it the site falls back on its own SECRET_KEY:
+    the passport keeps working for the site alone, nothing breaks."""
+    return signing.TimestampSigner(
+        key=(
+            getattr(
+                django_settings, "REPANIER_SETTINGS_PASSPORT_SIGNING_KEY", EMPTY_STRING
+            )
+            or django_settings.SECRET_KEY
+        ),
+        salt=PASSPORT_SALT,
+    )
+
+
+def _is_passport_host(request):
+    # Only the repanier.be family carries the passport: the sites on
+    # their own domain (colibera.be, ...) keep the classical sign in,
+    # their cookies never cross anyway.
+    host = request.get_host().split(":", 1)[0].lower()
+    return host.endswith(PASSPORT_DOMAIN)
+
+
+def _passport_user(email):
+    """Find the local account behind a verified passport - the same
+    care as the sign in: the door stays closed for anything but an
+    active member, and the temporary lock applies to the passport
+    exactly as it applies to a password."""
+    # Lazy imports: the models themselves import this module.
+    from repanier.auth_backend import LOGIN_LOCK_MINUTES, RepanierAuthBackend
+    from repanier.models.customer import Customer
+
+    user_model = get_user_model()
+    user = (
+        user_model.objects.filter(email__iexact=email, is_active=True)
+        .order_by("id")
+        .first()
+    )
+    if user is None or user.is_superuser or user.is_staff:
+        # Superusers log in by hand: they carry the CMS toolbar.
+        # Staff accounts go through the roles chooser of the sign
+        # in, they too carry the toolbar.
+        return None
+    customer = Customer.objects.filter(user_id=user.id).first()
+    if customer is None or not customer.is_active or customer.is_group:
+        # Group accounts go through the sign in flow: the
+        # passport only opens member sessions.
+        return None
+    if customer.login_locked_on is not None:
+        locked_until = customer.login_locked_on + timezone.timedelta(
+            minutes=int(LOGIN_LOCK_MINUTES)
+        )
+        if timezone.now() < locked_until:
+            return None
+        # The lock expired: clean slate, as at the sign in.
+        Customer.objects.filter(id=customer.id).update(
+            login_locked_on=None, login_attempt_counter=DECIMAL_ZERO
+        )
+    RepanierAuthBackend.set_user_right(
+        user=user, is_superuser=False, staff=None, customer=customer
+    )
+    return user
+
+
+def _passport_origin(request):
+    """The subdomain prefix this site lives on (gasath for
+    gasath.repanier.be): the name every other site of the family can
+    discover in its own browser, without reading anybody's ini. It
+    travels in every issued passport so the next site knows where
+    the member comes from."""
+    host = request.get_host().split(":", 1)[0].lower()
+    if not host.endswith(PASSPORT_DOMAIN):
+        return EMPTY_STRING
+    return host[: -len(PASSPORT_DOMAIN)]
+
+
+def _passport_home(request, user):
+    """The home of the member, stamped in every issued passport. The
+    emitting site derives it, in this order:
+
+    1. a member placed in a mirror group which accepts the passport
+       arrivals belongs to the home site that mirror wears;
+    2. otherwise, the home of the passport the member arrived with -
+       his own, since it must carry his e-mail - so that a member of
+       gasath passing through a site without a gasath mirror keeps
+       travelling as gasath;
+    3. otherwise the subdomain of the site emitting the passport -
+       his home, or the site the coordination treats him as coming
+       from.
+
+    Whatever the hops of the member, his home never drifts with the
+    last visited site."""
+    try:
+        from repanier.models.customer import Customer
+
+        customer = Customer.objects.select_related("group").filter(
+            user_id=user.id
+        ).first()
+        if (
+            customer is not None
+            and customer.group_id is not None
+            and customer.group.accepts_passport_members
+        ):
+            return customer.group.short_basket_name.strip()
+        passport = request.COOKIES.get(PASSPORT_COOKIE)
+        if passport:
+            try:
+                passport_value = get_passport_signer().unsign(
+                    passport, max_age=PASSPORT_MAX_AGE
+                )
+            except signing.BadSignature:
+                passport_value = None
+            if passport_value:
+                email, _separator, origin = passport_value.partition("|")
+                if (
+                    origin.strip()
+                    and email.strip().lower()
+                    == (user.email or EMPTY_STRING).strip().lower()
+                ):
+                    return origin.strip()
+    except Exception as error:
+        passport_logger.error("repanier passport home error : {}".format(error))
+    return _passport_origin(request)
+
+
+def _attach_passport_group(request, user, origin):
+    """A member arriving with a passport mentions the site which last
+    welcomed them. When this site owns a mirror group of that home
+    site - a group wearing its subdomain name, which explicitly
+    accepts the passport arrivals - and the local coordination has
+    never placed the member in another group, the
+    passport places them there by default: the customer lists show
+    [home site] + name and the delivery board follows the group. Never
+    twice, never over a decision of the coordination: a group already
+    set is final, an ambiguous, missing or refusing mirror group
+    changes nothing."""
+    origin = (origin or EMPTY_STRING).strip()
+    if not origin or origin.lower() == _passport_origin(request):
+        # Coming home attaches nothing.
+        return
+    try:
+        from repanier.models.customer import Customer
+
+        mirror_groups = Customer.objects.filter(
+            is_group=True,
+            is_active=True,
+            short_basket_name__iexact=origin,
+            accepts_passport_members=True,
+        )
+        if mirror_groups.count() != 1:
+            return
+        attached = Customer.objects.filter(
+            user_id=user.id,
+            is_group=False,
+            is_active=True,
+            group__isnull=True,
+        ).update(group=mirror_groups.first())
+        if attached:
+            passport_logger.info(
+                "repanier passport : {} attached to the group [{}]".format(
+                    user.email, origin
+                )
+            )
+    except Exception as error:
+        # An attach problem never blocks the session.
+        passport_logger.error("repanier passport group attach error : {}".format(error))
+
+
+def repanier_passport_middleware(get_response):
+    def middleware(request):
+        # The passport opens the door of this site for a member
+        # already signed in on another site of the family. It runs
+        # before any view: the member arrives signed in wherever the
+        # local account exists.
+        was_authenticated = request.user.is_authenticated
+        try:
+            if not request.user.is_authenticated:
+                passport = request.COOKIES.get(PASSPORT_COOKIE)
+                if passport and _is_passport_host(request):
+                    try:
+                        passport_value = get_passport_signer().unsign(
+                            passport, max_age=PASSPORT_MAX_AGE
+                        )
+                    except signing.BadSignature:
+                        passport_value = None
+                    if passport_value:
+                        email, _separator, origin = passport_value.partition("|")
+                        user = _passport_user(email.strip().lower())
+                        if user is not None:
+                            user.backend = "repanier.auth_backend.RepanierAuthBackend"
+                            auth_login(request, user)
+                            _attach_passport_group(request, user, origin)
+                            request.user = user
+        except Exception as error:
+            # A passport problem never blocks a page: the member falls
+            # back on the classical sign in.
+            passport_logger.error("repanier passport error : {}".format(error))
+
+        response = get_response(request)
+
+        try:
+            if (
+                request.user.is_authenticated
+                and not was_authenticated
+                and _is_passport_host(request)
+                and not request.user.is_superuser
+                and not request.user.is_staff
+            ):
+                # The member just signed in on this site by hand. When
+                # his browser still carries a valid passport of a home
+                # site of the family, the same guarded attach repairs
+                # his local account - an account already registered
+                # here for years gets its group exactly like a fresh
+                # passport arrival. The e-mail must match: a stray
+                # passport of somebody else repairs nothing.
+                passport = request.COOKIES.get(PASSPORT_COOKIE)
+                if passport:
+                    try:
+                        passport_value = get_passport_signer().unsign(
+                            passport, max_age=PASSPORT_MAX_AGE
+                        )
+                    except signing.BadSignature:
+                        passport_value = None
+                    if passport_value:
+                        email, _separator, origin = passport_value.partition("|")
+                        if (
+                            email.strip().lower()
+                            == (request.user.email or EMPTY_STRING).strip().lower()
+                        ):
+                            _attach_passport_group(request, request.user, origin)
+
+            if request.user.is_authenticated and _is_passport_host(request):
+                # Refreshed on every visit: one sign in a month is
+                # enough for the whole family. The token carries the
+                # e-mail and the home of the member - his mirror
+                # group when he has one, the subdomain of this site
+                # otherwise: the next site knows where he comes from
+                # and his home never drifts with his hops.
+                # Superusers log in by hand: no passport for them.
+                passport_email = (request.user.email or EMPTY_STRING).strip().lower()
+                if (
+                    not request.user.is_superuser
+                    and passport_email
+                    and "|" not in passport_email
+                ):
+                    response.set_cookie(
+                        PASSPORT_COOKIE,
+                        get_passport_signer().sign(
+                            "{}|{}".format(
+                                passport_email,
+                                _passport_home(request, request.user),
+                            )
+                        ),
+                        max_age=PASSPORT_MAX_AGE,
+                        domain=PASSPORT_DOMAIN,
+                        secure=True,
+                        httponly=True,
+                        samesite="Lax",
+                    )
+        except Exception as error:
+            # A passport problem never blocks the response.
+            passport_logger.error("repanier passport cookie error : {}".format(error))
         return response
 
     return middleware

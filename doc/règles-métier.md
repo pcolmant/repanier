@@ -38,6 +38,64 @@ tests indiquent où elle est vérifiée.
   Tests : `test_login_view.py` (LoginTemporaryLockTest,
   EmailOnlySignInTest).
 
+### Le passeport Repanier
+
+Une connexion sur un site de la famille `repanier.be` ouvre les
+sessions du membre sur tous les autres sites de la famille où il
+possède un compte, sans rien redemander
+(`repanier.middleware.repanier_passport_middleware`) :
+
+- la connexion plante un **cookie signé sur le domaine parent**
+  `.repanier.be` (HttpOnly, Secure, SameSite Lax, trente jours
+  glissants), rafraîchi à chaque visite : une connexion par mois
+  couvre toute la famille ;
+- le cookie transporte **l'adresse email et le sous-domaine du site
+  qui a accueilli le membre en dernier** (gasath pour
+  gasath.repanier.be), signés avec
+  `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` — la même valeur sur tous
+  les sites de la famille ; aucun compte central n'existe et aucune
+  donnée personnelle ne traverse les bases de données ;
+- arrivant sur un autre site, un passeport vérifié ouvre une
+  **session locale** pour le compte local de cette adresse email —
+  uniquement pour un **membre actif** : le verrou temporaire des
+  tentatives échouées ferme le passeport comme il ferme le mot de
+  passe, les superutilisateurs, les staffs et les comptes de groupe
+  passent par la connexion classique ;
+- la même arrivée installe le membre, **par défaut, dans le groupe
+  miroir de son site d'origine**, quand ce groupe **accepte
+  explicitement les membres du passeport**
+  (`accepts_passport_members`, validé par la coordination locale dans
+  l'admin des groupes) — une attache gardée de tous côtés :
+  uniquement quand la coordination locale n'a jamais placé le
+  membre dans un groupe (un groupe déjà posé est définitif),
+  uniquement quand un seul groupe local porte le sous-domaine du
+  site d'origine (un nom que chaque site de la famille découvre dans
+  son navigateur) et accepte les arrivées, jamais pour un membre
+  revenant chez lui. Les listes de clients affichent alors
+  `[gasath] + nom`, le tableau de livraison suit le groupe ; la
+  facturation suit la configuration du groupe lui-même. Décocher le
+  drapeau arrête les arrivées futures, sans toucher les membres déjà
+  placés. Un compte déjà enregistré sur le site est réparé à la
+  prochaine connexion — par passeport ou classique, quand le
+  navigateur porte encore un passeport correspondant ;
+- l'origine **ne dérive jamais avec les sauts du membre** : un
+  passeport émis alors qu'il appartient à un groupe miroir qui
+  l'accepte voyage sous le domicile que ce miroir porte — et quand
+  aucun miroir n'existe sur le site visité, sous le domicile du
+  passeport avec lequel il est arrivé. Un membre de gasath qui
+  rebondit de site en site continue de voyager comme gasath et ne
+  devient jamais, à force de visites, membre de l'endroit qu'il a
+  simplement visité ;
+- les sites vivant sur leur propre domaine (colibera.be,
+  commande.lebuisson.be, commande.coopeco-supermarche.be) ne portent
+  pas de passeport : leurs membres se connectent site par site ;
+- quitter un site (déconnexion) supprime le cookie de famille : le
+  membre quitte tous les sites à la fois. La clé de signature vient
+  de `./manage.py generate_passport_signing_key` — la même valeur
+  dans l'ini de chaque site de la famille, vide sur les sites à
+  domaine propre.
+  Tests : `test_repanier_passport.py`.
+
 ### Chaîne d'achat
 
 Un achat (Purchase) relie **une facture client** (CustomerInvoice), **une

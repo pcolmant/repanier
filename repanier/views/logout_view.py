@@ -8,6 +8,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
 from repanier.auth_backend import RepanierAuthBackend
+from repanier.middleware import PASSPORT_COOKIE, PASSPORT_DOMAIN
 
 
 @login_required()
@@ -21,7 +22,11 @@ def logout_view(request):
     # pages-root is the django cms root page.
     # pages-root may be replaced by login_form to go to the login form instead of the home page
     # The reverse may be replaced by "/" to also go to the home page
-    return HttpResponseRedirect(reverse("pages-root"))
+    response = HttpResponseRedirect(reverse("pages-root"))
+    # Leaving one site of the family leaves them all: without the
+    # passport, no other site opens a session anymore.
+    response.delete_cookie(PASSPORT_COOKIE, domain=PASSPORT_DOMAIN)
+    return response
 
 
 @receiver(user_logged_out)
