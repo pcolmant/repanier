@@ -124,6 +124,39 @@ class AuditScratchedJournalTest(AuditAccountingTestCaseMixin, TestCase):
         # The whole round drifts with it.
         self.assertEqual(self.codes(self.run_audit(audit_permanence_totals)), ["D1"])
 
+    def test_a_drifted_customer_vat_only_is_reported_as_benign(self):
+        alice_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.permanence.id, customer_id=self.alice.id
+        )
+        CustomerInvoice.objects.filter(id=alice_invoice.id).update(
+            total_vat=D("0.0400")
+        )
+        findings = self.run_audit(audit_invoice_purchase_totals)
+        self.assertEqual(self.codes(findings), ["C4"])
+        self.assertIn("no money moved", findings[0].suggestion)
+
+    def test_a_scratched_book_with_its_vat_keeps_the_money_code(self):
+        alice_invoice = CustomerInvoice.objects.get(
+            permanence_id=self.permanence.id, customer_id=self.alice.id
+        )
+        CustomerInvoice.objects.filter(id=alice_invoice.id).update(
+            total_price_with_tax=D("9.10"), total_vat=D("0.0400")
+        )
+        findings = self.run_audit(audit_invoice_purchase_totals)
+        self.assertEqual(self.codes(findings), ["C1"])
+        self.assertIn("vat 0.0400", findings[0].message)
+
+    def test_a_drifted_producer_vat_only_is_reported_as_benign(self):
+        legumes_invoice = ProducerInvoice.objects.get(
+            permanence_id=self.permanence.id, producer_id=self.legumes.id
+        )
+        ProducerInvoice.objects.filter(id=legumes_invoice.id).update(
+            total_vat=D("0.0400")
+        )
+        findings = self.run_audit(audit_invoice_purchase_totals)
+        self.assertEqual(self.codes(findings), ["C4"])
+        self.assertIn("no money moved", findings[0].suggestion)
+
     def test_a_scratched_producer_book_is_caught(self):
         legumes_invoice = ProducerInvoice.objects.get(
             permanence_id=self.permanence.id, producer_id=self.legumes.id

@@ -37,7 +37,11 @@ C. Invoice totals: the totals of every invoiced book are recomputed
    from its purchases (selling price for the customers, purchase
    price for the producers), including transport and the Belgian
    rounding, and compared with the stored amounts; the
-   customer-producer cross books are recomputed the same way.
+   customer-producer cross books are recomputed the same way. A
+   book whose money columns all match but whose stored VAT does
+   not is reported under C4 instead of C1/C2: no money moved, the
+   drift of an old formula or a post-invoicing edit - documenting
+   it is safer than repairing history.
 D. Permanence totals: for every invoiced permanence, the amount
    charged to the customers equals the amount booked on the
    producers - the group keeps an equal share of both sides.
@@ -399,32 +403,52 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
             delta_price,
             delta_transport,
         ) = replay_customer_invoice(invoice)
-        store = [
-            (
-                cents(invoice.total_price_with_tax.amount),
-                total_price,
-                "total",
-            ),
-            (cents(invoice.delta_price_with_tax.amount), delta_price, "delta"),
-            (cents(invoice.delta_transport.amount), delta_transport, "transport"),
-            (cents(invoice.total_deposit.amount), total_deposit, "deposit"),
-            (cents(invoice.total_vat.amount), total_vat, "vat"),
-        ]
-        mismatches = [
+        reference = "customer invoice {} of {}".format(
+            invoice.id, invoice.permanence
+        )
+        stored_vat = cents(invoice.total_vat.amount)
+        money_mismatches = [
             "{} {} instead of {}".format(label, stored, expected)
-            for stored, expected, label in store
+            for stored, expected, label in (
+                (
+                    cents(invoice.total_price_with_tax.amount),
+                    total_price,
+                    "total",
+                ),
+                (cents(invoice.delta_price_with_tax.amount), delta_price, "delta"),
+                (cents(invoice.delta_transport.amount), delta_transport, "transport"),
+                (cents(invoice.total_deposit.amount), total_deposit, "deposit"),
+            )
             if stored != expected
         ]
-        if mismatches:
+        vat_drifted = stored_vat != total_vat
+        if money_mismatches:
+            if vat_drifted:
+                money_mismatches.append(
+                    "vat {} instead of {}".format(stored_vat, total_vat)
+                )
             findings.append(
                 Finding(
                     "C1",
-                    "customer invoice {} of {}".format(
-                        invoice.id, invoice.permanence
-                    ),
-                    "; ".join(mismatches) + " (recomputed from the purchases).",
+                    reference,
+                    "; ".join(money_mismatches) + " (recomputed from the purchases).",
                     "check the purchases of this book; the stored amounts no"
                     " longer match what the purchases add up to.",
+                )
+            )
+        elif vat_drifted:
+            findings.append(
+                Finding(
+                    "C4",
+                    reference,
+                    "vat {} instead of {} (recomputed from the purchase"
+                    " lines); every money column matches.".format(
+                        stored_vat, total_vat
+                    ),
+                    "no money moved: the stored VAT no longer matches the"
+                    " vat of the purchase lines - an older formula or a"
+                    " post-invoicing edit. Document it, repairing history"
+                    " is riskier than the drift.",
                 )
             )
 
@@ -464,19 +488,32 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
             producer_vat=Sum("producer_vat", output_field=VAT),
             deposit=Sum("deposit", output_field=MONEY),
         )
-        store = [
-            (
-                cents(invoice.total_price_with_tax.amount),
-                cents(result["purchase_price"]),
-                "total",
-            ),
-            (
-                cents(invoice.total_deposit.amount),
-                cents(result["deposit"]),
-                "deposit",
-            ),
-            (cents(invoice.total_vat.amount), cents(result["producer_vat"]), "vat"),
+        reference = "producer invoice {} of {}".format(
+            invoice.id, invoice.permanence
+        )
+        money_mismatches = [
+            "{} {} instead of {}".format(label, stored, expected)
+            for stored, expected, label in (
+                (
+                    cents(invoice.total_price_with_tax.amount),
+                    cents(result["purchase_price"]),
+                    "total",
+                ),
+                (
+                    cents(invoice.total_deposit.amount),
+                    cents(result["deposit"]),
+                    "deposit",
+                ),
+            )
+            if stored != expected
         ]
+        vat_mismatches = []
+        if cents(invoice.total_vat.amount) != cents(result["producer_vat"]):
+            vat_mismatches.append(
+                "vat {} instead of {}".format(
+                    cents(invoice.total_vat.amount), cents(result["producer_vat"])
+                )
+            )
         if invoice.producer.represent_this_buyinggroup:
             # The site producer book carries the customer deltas of the
             # round: the group keeps the transport and the corrections.
@@ -487,38 +524,51 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
                 delta_transport=Sum("delta_transport", output_field=MONEY),
                 delta_vat=Sum("delta_vat", output_field=VAT),
             )
-            store += [
-                (
-                    cents(invoice.delta_price_with_tax.amount),
-                    cents(deltas["delta_price"]),
-                    "delta",
-                ),
-                (
-                    cents(invoice.delta_transport.amount),
-                    cents(deltas["delta_transport"]),
-                    "transport",
-                ),
-                (
-                    cents(invoice.delta_vat.amount),
-                    cents(deltas["delta_vat"]),
-                    "vat to add",
-                ),
+            money_mismatches += [
+                "{} {} instead of {}".format(label, stored, expected)
+                for stored, expected, label in (
+                    (
+                        cents(invoice.delta_price_with_tax.amount),
+                        cents(deltas["delta_price"]),
+                        "delta",
+                    ),
+                    (
+                        cents(invoice.delta_transport.amount),
+                        cents(deltas["delta_transport"]),
+                        "transport",
+                    ),
+                )
+                if stored != expected
             ]
-        mismatches = [
-            "{} {} instead of {}".format(label, stored, expected)
-            for stored, expected, label in store
-            if stored != expected
-        ]
-        if mismatches:
+            if cents(invoice.delta_vat.amount) != cents(deltas["delta_vat"]):
+                vat_mismatches.append(
+                    "vat to add {} instead of {}".format(
+                        cents(invoice.delta_vat.amount), cents(deltas["delta_vat"])
+                    )
+                )
+        if money_mismatches:
             findings.append(
                 Finding(
                     "C2",
-                    "producer invoice {} of {}".format(
-                        invoice.id, invoice.permanence
-                    ),
-                    "; ".join(mismatches) + " (recomputed from the purchases).",
+                    reference,
+                    "; ".join(money_mismatches + vat_mismatches)
+                    + " (recomputed from the purchases).",
                     "check the purchases of this book; the stored amounts no"
                     " longer match what the purchases add up to.",
+                )
+            )
+        elif vat_mismatches:
+            findings.append(
+                Finding(
+                    "C4",
+                    reference,
+                    "; ".join(vat_mismatches)
+                    + " (recomputed from the purchase lines); every money"
+                    " column matches.",
+                    "no money moved: the stored VAT no longer matches the"
+                    " vat of the purchase lines - an older formula or a"
+                    " post-invoicing edit. Document it, repairing history"
+                    " is riskier than the drift.",
                 )
             )
 
