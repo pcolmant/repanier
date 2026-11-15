@@ -49,7 +49,9 @@ possède un compte, sans rien redemander
   `.repanier.be` (HttpOnly, Secure, SameSite Lax, trente jours
   glissants), rafraîchi à chaque visite : une connexion par mois
   couvre toute la famille ;
-- le cookie ne transporte que **l'adresse email**, signée avec
+- le cookie transporte **l'adresse email et le nom du site qui a
+  accueilli le membre en dernier** (`REPANIER_SETTINGS_GROUP_NAME` du
+  site émetteur), signés avec
   `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` — la même valeur sur tous
   les sites de la famille ; aucun compte central n'existe et aucune
   donnée personnelle ne traverse les bases de données ;
@@ -59,6 +61,17 @@ possède un compte, sans rien redemander
   tentatives échouées ferme le passeport comme il ferme le mot de
   passe, les superutilisateurs et les comptes de groupe passent par
   la connexion classique ;
+- la même arrivée installe le membre, **par défaut, dans le groupe
+  miroir de son site d'origine** — une attache gardée de tous
+  côtés : uniquement quand la coordination locale n'a jamais placé
+  le membre dans un groupe (un groupe déjà posé est définitif),
+  uniquement quand un seul groupe local porte le nom du site
+  d'origine, jamais pour un membre revenant chez lui. Les listes de
+  clients affichent alors `[Site d'origine] + nom`, le tableau de
+  livraison suit le groupe ; la facturation suit la configuration du
+  groupe lui-même. Un compte déjà enregistré sur le site est réparé
+  à la prochaine connexion — par passeport ou classique, quand le
+  navigateur porte encore un passeport correspondant ;
 - les sites vivant sur leur propre domaine (colibera.be,
   commande.lebuisson.be, commande.coopeco-supermarche.be) ne portent
   pas de passeport : leurs membres se connectent site par site ;

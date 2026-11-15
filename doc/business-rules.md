@@ -48,7 +48,9 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   `.repanier.be` (HttpOnly, Secure, SameSite Lax, a sliding thirty
   days), refreshed on every visit: one sign in a month covers the
   whole family;
-- the cookie carries the **e-mail address alone**, signed with
+- the cookie carries the **e-mail address and the name of the site
+  which last welcomed the member** (`REPANIER_SETTINGS_GROUP_NAME` of
+  the emitting site), signed with
   `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` - the same value in every
   site of the family; no central account exists and no personal data
   ever crosses the databases;
@@ -57,6 +59,16 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   an **active member**: the temporary lock of the failed attempts
   closes the passport as it closes the password, the superusers and
   the group accounts go through the classical sign in;
+- the same arrival places the member, **by default, in the mirror
+  group of his home site** - an attach guarded on every side: only
+  when the local coordination has never placed the member in any
+  group (a group already set is final), only when exactly one local
+  group wears the name of the home site, never for a member coming
+  back home. The customer lists then show `[HomeSite] + name` and
+  the delivery board follows the group; the invoicing follows the
+  configuration of the group itself. An account already registered
+  on the site is repaired at the next sign in - by passport or by
+  hand, when the browser still carries a matching passport;
 - the sites living on their own domain (colibera.be,
   commande.lebuisson.be, commande.coopeco-supermarche.be) carry no
   passport: their members sign in on each site;
