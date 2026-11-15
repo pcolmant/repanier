@@ -31,8 +31,10 @@ B. Producer accounts: the balance of every producer equals its
    profit corrections kept by the group (a claimed amount below the
    calculated amount), plus the bank movements attached to its
    invoices. A fully settled producer returns to zero. The
-   corrections the books imply must also be the corrections the
-   invoicing booked on the site consumer account.
+   corrections the books imply, plus the resale margin and the share
+   the buying group's own books keep, must also be the corrections
+   the invoicing booked on the site consumer account: a share which
+   never got booked stayed in the bank.
 C. Invoice totals: the totals of every invoiced book are recomputed
    from its purchases (selling price for the customers, purchase
    price for the producers), including transport and the Belgian
@@ -44,7 +46,9 @@ C. Invoice totals: the totals of every invoiced book are recomputed
    it is safer than repairing history.
 D. Permanence totals: for every invoiced permanence, the amount
    charged to the customers equals the amount booked on the
-   producers - the group keeps an equal share of both sides.
+   producers plus the resale margin of the round - the sites that
+   resell above the purchase price keep the difference, the group
+   keeps an equal share of both sides.
 E. Closure: every invoice, purchase and anchor of an invoiced
    permanence carries the status and the anchor stamp of the round;
    a partially closed round leaks money.
@@ -58,6 +62,11 @@ The audit reads the balances and the totals as they are stored: when
 a book keeps a wrong previous_balance, the replay inherits it. It
 still catches the drift this book introduces at its own round.
 
+On a site which tracks orders only (REPANIER_SETTINGS_MANAGE_ACCOUNTING
+off) the classes A, B, E and F are skipped: Repanier manages no money
+there, those identities would fire on every account. The books (C) and
+the round parity (D) still mean something there.
+
 Exit: 0 when every invariant holds, 1 when something needs a look.
 """
 import datetime
@@ -67,7 +76,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import DecimalField, F, Q, Sum
 
-from repanier.const import BankMovement, DECIMAL_ZERO, SaleStatus
+from repanier.const import BankMovement, DECIMAL_ZERO, RoundUpTo, SaleStatus
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.invoice import (
@@ -103,9 +112,25 @@ class Finding:
 
 
 def cents(amount):
-    """The audit compares stored money: a null sum is an empty account."""
+    """The audit compares stored money: a null sum is an empty account.
+
+    SQLite computes the decimal expressions into floats with their
+    drift (0.299999...): quantize everything, so the sqlite test
+    database sees the money the production PostgreSQL sees.
+    """
     if amount is None:
         return DECIMAL_ZERO
+    return Decimal(amount).quantize(RoundUpTo.TWO_DECIMALS)
+
+
+def vat_cents(amount):
+    """The same, on the four decimals the VAT carries."""
+    if amount is None:
+        return DECIMAL_ZERO
+    if isinstance(amount, float):
+        amount = Decimal(repr(amount)).quantize(
+            Decimal("0.0001")
+        )
     return Decimal(amount)
 
 
@@ -124,6 +149,26 @@ def charged_expression():
     return F("total_price_with_tax") + F("delta_price_with_tax") + F(
         "delta_transport"
     )
+
+
+def round_margins():
+    """The resale margin the purchases of each round carry.
+
+    The sites that resell above the purchase price (a producer with a
+    price_list_multiplier, a wholesaler bought once) keep the
+    difference: the customers pay the selling price, the producers
+    get the purchase price. On the sites which never resell, every
+    round carries a null margin and the identities below behave as
+    if the margin did not exist.
+    """
+    margins = {}
+    for row in PurchaseWoReceiver.objects.values("permanence_id").annotate(
+        margin=Sum(
+            F("selling_price") - F("purchase_price"), output_field=MONEY
+        )
+    ):
+        margins[row["permanence_id"]] = cents(row["margin"])
+    return margins
 
 
 # ----------------------------------------------------------------- A
@@ -188,11 +233,15 @@ def audit_producer_accounts(producer_id=None, since=None):
     The profit correction of a round (claimed amount below the
     calculated amount) reduces what the group owes: the books carry
     the calculated total, the correction moves both the producer
-    balance and the site consumer account.
+    balance and the site consumer account. The books of the buying
+    group itself follow the same rule, with an empty claim: what its
+    own books keep is booked back on the site consumer account, and
+    the resale margin of the round rides along.
     """
     findings = []
     profit_delta = {}
     profit_by_round = {}
+    site_kept_by_round = {}
     invoiced_books = ProducerInvoice.objects.filter(
         status__in=INVOICED_STATUSES
     )
@@ -226,6 +275,21 @@ def audit_producer_accounts(producer_id=None, since=None):
                 )
                 profit_by_round[invoice.permanence_id] = (
                     profit_by_round.get(invoice.permanence_id, DECIMAL_ZERO) + delta
+                )
+        elif invoice.to_be_paid and invoice.producer.represent_this_buyinggroup:
+            # The buying group itself sells to the members (a site
+            # product, the corrections and the transport): its book
+            # never gets a claimed amount, the invoicing books what it
+            # keeps as a compensation on the site consumer account.
+            site_kept = (
+                cents(invoice.previous_balance.amount)
+                + total
+                - cents(invoice.to_be_invoiced_balance.amount)
+            )
+            if site_kept != DECIMAL_ZERO:
+                site_kept_by_round[invoice.permanence_id] = (
+                    site_kept_by_round.get(invoice.permanence_id, DECIMAL_ZERO)
+                    + site_kept
                 )
     invoiced_total = {
         row["producer_id"]: cents(row["total"])
@@ -269,10 +333,12 @@ def audit_producer_accounts(producer_id=None, since=None):
                     " this producer in the admin.",
                 )
             )
-    # The corrections the books imply must be the corrections the
-    # invoicing booked on the site consumer account: when a claimed
-    # amount no longer matches the books, the PROFIT row lies.
+    # The corrections the books imply, plus the resale margin of the
+    # round, must be the corrections the invoicing booked on the site
+    # consumer account: when a claimed amount no longer matches the
+    # books, the PROFIT row lies.
     if producer_id is None:
+        margins = round_margins()
         booked_by_round = {
             row["permanence_id"]: net(row["bank_in"], row["bank_out"])
             for row in BankAccount.objects.filter(
@@ -288,7 +354,11 @@ def audit_producer_accounts(producer_id=None, since=None):
                     "id", flat=True
                 )
             )
-        rounds_to_check = set(booked_by_round) | set(profit_by_round)
+        rounds_to_check = (
+            set(booked_by_round)
+            | set(profit_by_round)
+            | set(site_kept_by_round)
+        )
         if since is not None:
             rounds_to_check &= era_rounds
         for permanence_id in sorted(rounds_to_check):
@@ -299,18 +369,42 @@ def audit_producer_accounts(producer_id=None, since=None):
             )
             booked = booked_by_round.get(permanence_id, DECIMAL_ZERO)
             implied = profit_by_round.get(permanence_id, DECIMAL_ZERO)
-            if booked != implied:
+            margin = margins.get(permanence_id, DECIMAL_ZERO)
+            site_kept = site_kept_by_round.get(permanence_id, DECIMAL_ZERO)
+            expected = implied + margin + site_kept
+            if booked > expected:
                 findings.append(
                     Finding(
                         "B2",
                         "permanence {} (id {})".format(permanence, permanence_id),
-                        "the books imply a correction of {}, the invoicing"
-                        " booked {} on the site consumer account.".format(
-                            implied, booked
+                        "the books imply a correction of {}, the round carries"
+                        " a resale margin of {} and the buying group keeps"
+                        " {}, but the invoicing booked {} on the site"
+                        " consumer account: the excess {} has no"
+                        " basis.".format(
+                            implied, margin, site_kept, booked, booked - expected
                         ),
-                        "a claimed amount or a book total was edited after the"
-                        " invoicing: compare them with the bank correction"
-                        " line of this round.",
+                        "a claimed amount or a book total was edited after"
+                        " the invoicing: compare them with the bank"
+                        " correction line of this round.",
+                    )
+                )
+            elif booked < expected:
+                findings.append(
+                    Finding(
+                        "B2",
+                        "permanence {} (id {})".format(permanence, permanence_id),
+                        "the books imply a correction of {}, the round"
+                        " carries a resale margin of {} and the buying"
+                        " group keeps {}, but the invoicing booked only {}"
+                        " on the site consumer account."
+                        "".format(
+                            implied, margin, site_kept, booked
+                        ),
+                        "a share of what the group should keep never"
+                        " reached the site account books: it stayed in the"
+                        " bank. Document it, or book the missing"
+                        " compensation.",
                     )
                 )
     return findings
@@ -341,7 +435,7 @@ def replay_customer_invoice(invoice):
         deposit=Sum("deposit", output_field=MONEY),
     )
     total_price = cents(result["selling_price"])
-    total_vat = cents(result["customer_vat"])
+    total_vat = vat_cents(result["customer_vat"])
     total_deposit = cents(result["deposit"])
     delta_price = DECIMAL_ZERO
     delta_transport = DECIMAL_ZERO
@@ -406,7 +500,7 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
         reference = "customer invoice {} of {}".format(
             invoice.id, invoice.permanence
         )
-        stored_vat = cents(invoice.total_vat.amount)
+        stored_vat = vat_cents(invoice.total_vat.amount)
         money_mismatches = [
             "{} {} instead of {}".format(label, stored, expected)
             for stored, expected, label in (
@@ -508,10 +602,11 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
             if stored != expected
         ]
         vat_mismatches = []
-        if cents(invoice.total_vat.amount) != cents(result["producer_vat"]):
+        if vat_cents(invoice.total_vat.amount) != vat_cents(result["producer_vat"]):
             vat_mismatches.append(
                 "vat {} instead of {}".format(
-                    cents(invoice.total_vat.amount), cents(result["producer_vat"])
+                    vat_cents(invoice.total_vat.amount),
+                    vat_cents(result["producer_vat"]),
                 )
             )
         if invoice.producer.represent_this_buyinggroup:
@@ -540,10 +635,11 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
                 )
                 if stored != expected
             ]
-            if cents(invoice.delta_vat.amount) != cents(deltas["delta_vat"]):
+            if vat_cents(invoice.delta_vat.amount) != vat_cents(deltas["delta_vat"]):
                 vat_mismatches.append(
                     "vat to add {} instead of {}".format(
-                        cents(invoice.delta_vat.amount), cents(deltas["delta_vat"])
+                        vat_cents(invoice.delta_vat.amount),
+                        vat_cents(deltas["delta_vat"]),
                     )
                 )
         if money_mismatches:
@@ -633,8 +729,14 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
 
 
 def audit_permanence_totals(permanence_id=None, since=None):
-    """Charged to the customers == booked on the producers."""
+    """Charged to the customers == booked on the producers, margin apart.
+
+    The resale margin of the round (selling - purchase) stays with the
+    group: on the sites which resell, the difference between the two
+    sides is the margin, not an anomaly.
+    """
     findings = []
+    margins = round_margins()
     invoiced = Permanence.objects.filter(status__in=INVOICED_STATUSES).order_by(
         "permanence_date", "id"
     )
@@ -661,15 +763,16 @@ def audit_permanence_totals(permanence_id=None, since=None):
             charged_expression(),
             MONEY,
         )
-        if charged != booked:
+        margin = margins.get(permanence.id, DECIMAL_ZERO)
+        difference = charged - booked - margin
+        if difference != DECIMAL_ZERO:
             findings.append(
                 Finding(
                     "D1",
                     "permanence {} (id {})".format(permanence, permanence.id),
-                    "charged to the customers {}, booked on the producers {};"
-                    " the difference {} has no explanation.".format(
-                        charged, booked, charged - booked
-                    ),
+                    "charged to the customers {}, booked on the producers"
+                    " {}, resale margin {}: the difference {} has no"
+                    " explanation.".format(charged, booked, margin, difference),
                     "compare the invoices of this round: one side carries an"
                     " amount the other side does not.",
                 )
@@ -973,7 +1076,7 @@ def drill_down_invoice(kind, invoice_id):
             if (total_price, total_vat, total_deposit, delta_price, delta_transport)
             == (
                 cents(invoice.total_price_with_tax.amount),
-                cents(invoice.total_vat.amount),
+                vat_cents(invoice.total_vat.amount),
                 cents(invoice.total_deposit.amount),
                 cents(invoice.delta_price_with_tax.amount),
                 cents(invoice.delta_transport.amount),
@@ -985,7 +1088,7 @@ def drill_down_invoice(kind, invoice_id):
             " replayed total {}, vat {}, deposit {}, delta {}, transport {} - {}."
             "".format(
                 cents(invoice.total_price_with_tax.amount),
-                cents(invoice.total_vat.amount),
+                vat_cents(invoice.total_vat.amount),
                 cents(invoice.total_deposit.amount),
                 cents(invoice.delta_price_with_tax.amount),
                 cents(invoice.delta_transport.amount),
@@ -1049,7 +1152,7 @@ def drill_down_invoice(kind, invoice_id):
             deposit=Sum("deposit", output_field=MONEY),
         )
         total_price = cents(result["purchase_price"])
-        total_vat = cents(result["producer_vat"])
+        total_vat = vat_cents(result["producer_vat"])
         total_deposit = cents(result["deposit"])
         lines.append(
             "producer invoice {} of {} (producer {})".format(
@@ -1063,7 +1166,7 @@ def drill_down_invoice(kind, invoice_id):
             if (total_price, total_vat, total_deposit)
             == (
                 cents(invoice.total_price_with_tax.amount),
-                cents(invoice.total_vat.amount),
+                vat_cents(invoice.total_vat.amount),
                 cents(invoice.total_deposit.amount),
             )
             else "MISMATCH - the purchases no longer add up to the stored totals"
@@ -1072,7 +1175,7 @@ def drill_down_invoice(kind, invoice_id):
             "  stored total {}, vat {}, deposit {}; replayed total {}, vat {},"
             " deposit {} - {}.".format(
                 cents(invoice.total_price_with_tax.amount),
-                cents(invoice.total_vat.amount),
+                vat_cents(invoice.total_vat.amount),
                 cents(invoice.total_deposit.amount),
                 total_price,
                 total_vat,
@@ -1217,6 +1320,17 @@ class Command(BaseCommand):
             ),
             ("F. The bank anchor chain", lambda: audit_bank(since=since)),
         ]
+        if not settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            # This site tracks orders only: Repanier does not manage
+            # the money here - no balances, no bank anchor chain, no
+            # stamps. The identities of A, B, E and F would fire on
+            # every account: only the books (C) and the round parity
+            # (D) mean something.
+            audits = [
+                audit_entry
+                for audit_entry in audits
+                if audit_entry[0].startswith(("C.", "D."))
+            ]
         finding_count = 0
         for title, audit in audits:
             self.stdout.write(title)
