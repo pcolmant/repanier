@@ -416,6 +416,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "long_basket_name",
                 "email",
                 "subscribe_to_email",
+                "language",
                 "may_order",
                 "zero_waste",
                 "phone1",

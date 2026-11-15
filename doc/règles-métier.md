@@ -225,6 +225,13 @@ français quel que soit son profil. La confirmation de commande —
 planifiée, confirmée à la main ou annulée — est construite et envoyée
 dans **la langue du membre** (`Customer.language`) : sujet, corps et
 pièce jointe (`in_customer_language`, `export_order_2_1_customer`).
+La langue se règle sur l'écran consommateur de l'admin, à côté de
+l'abonnement aux mails — la coordination peut la voir et la corriger
+— **et sur l'écran « Mes données » du membre, qui la choisit
+lui-même**. Sur cet écran, l'**adresse email de connexion s'affiche
+pour mémoire, en lecture seule** : un membre qui la toucherait
+pourrait se verrouiller hors de son propre compte, elle ne bouge
+donc que de la main de la coordination.
 Test : `test_customer_language.py`.
 
 ---

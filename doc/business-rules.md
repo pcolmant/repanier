@@ -215,6 +215,12 @@ in French whatever his profile says. The order confirmation -
 scheduled, confirmed by hand or cancelled - is built and sent under
 the **language of the member** (`Customer.language`): subject, body
 and attachment (`in_customer_language`, `export_order_2_1_customer`).
+The language sits on the customer screen of the admin, next to the
+subscription to the mails - the coordination can see it and correct
+it - **and on the "My data" screen of the member, who chooses it
+himself**. On that screen the **sign in e-mail shows for memory
+only**, read-only: a member touching it could lock himself out of
+his own account, so it moves only by the hand of the coordination.
 Test: `test_customer_language.py`.
 
 ---
