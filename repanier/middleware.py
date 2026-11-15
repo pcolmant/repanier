@@ -119,11 +119,12 @@ def admin_filter_middleware(get_response):
 # without asking anything again. A signed cookie travels on the parent
 # domain; each site verifies it and opens its own local session - no
 # central account, no personal data crossing the databases, only the
-# e-mail address and the name of the site which last welcomed the
-# member inside a signed token the family can verify. That origin name
-# places the member, by default, in the local mirror group of their
-# home site: the customer lists show [HomeSite] + name, and the
-# delivery board follows the group.
+# e-mail address and the subdomain of the site which last welcomed
+# the member inside a signed token the family can verify. That origin
+# name places the member, by default, in the local mirror group of
+# their home site when the group explicitly accepts passport members:
+# the customer lists show [home site] + name, and the delivery board
+# follows the group.
 
 from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model
@@ -200,33 +201,40 @@ def _passport_user(email):
     return user
 
 
-def _passport_origin():
-    """The name this site displays for itself, REPANIER_SETTINGS_GROUP_NAME
-    from the ini. It travels in every issued passport so the next site
-    of the family knows where the member comes from."""
-    return (
-        getattr(django_settings, "REPANIER_SETTINGS_GROUP_NAME", EMPTY_STRING) or ""
-    ).strip()
+def _passport_origin(request):
+    """The subdomain prefix this site lives on (gasath for
+    gasath.repanier.be): the name every other site of the family can
+    discover in its own browser, without reading anybody's ini. It
+    travels in every issued passport so the next site knows where
+    the member comes from."""
+    host = request.get_host().split(":", 1)[0].lower()
+    if not host.endswith(PASSPORT_DOMAIN):
+        return EMPTY_STRING
+    return host[: -len(PASSPORT_DOMAIN)]
 
 
-def _attach_passport_group(user, origin):
+def _attach_passport_group(request, user, origin):
     """A member arriving with a passport mentions the site which last
     welcomed them. When this site owns a mirror group of that home
-    site - a group wearing its name - and the local coordination has
-    never placed the member in another group, the passport places
-    them there by default: the customer lists show [HomeSite] + name
-    and the delivery board follows the group. Never twice, never over
-    a decision of the coordination: a group already set is final, an
-    ambiguous or missing mirror group changes nothing."""
+    site - a group wearing its subdomain name, which explicitly
+    accepts the passport arrivals - and the local coordination has
+    never placed the member in another group, the
+    passport places them there by default: the customer lists show
+    [home site] + name and the delivery board follows the group. Never
+    twice, never over a decision of the coordination: a group already
+    set is final, an ambiguous, missing or refusing mirror group
+    changes nothing."""
     origin = (origin or EMPTY_STRING).strip()
-    if not origin or origin.lower() == _passport_origin().lower():
+    if not origin or origin == _passport_origin(request):
         # Coming home attaches nothing.
         return
     try:
         from repanier.models.customer import Customer
 
         mirror_groups = Customer.objects.filter(
-            is_group=True, short_basket_name__iexact=origin
+            is_group=True,
+            short_basket_name__iexact=origin,
+            accepts_passport_members=True,
         )
         if mirror_groups.count() != 1:
             return
@@ -270,7 +278,7 @@ def repanier_passport_middleware(get_response):
                         if user is not None:
                             user.backend = "repanier.auth_backend.RepanierAuthBackend"
                             auth_login(request, user)
-                            _attach_passport_group(user, origin)
+                            _attach_passport_group(request, user, origin)
                             request.user = user
         except Exception as error:
             # A passport problem never blocks a page: the member falls
@@ -307,19 +315,19 @@ def repanier_passport_middleware(get_response):
                             email.strip().lower()
                             == (request.user.email or EMPTY_STRING).strip().lower()
                         ):
-                            _attach_passport_group(request.user, origin)
+                            _attach_passport_group(request, request.user, origin)
 
             if request.user.is_authenticated and _is_passport_host(request):
                 # Refreshed on every visit: one sign in a month is
                 # enough for the whole family. The token carries the
-                # e-mail and this site's name: the next site knows
-                # where the member comes from.
+                # e-mail and the subdomain of this site: the next
+                # site knows where the member comes from.
                 response.set_cookie(
                     PASSPORT_COOKIE,
                     get_passport_signer().sign(
                         "{}|{}".format(
                             (request.user.email or EMPTY_STRING).strip().lower(),
-                            _passport_origin(),
+                            _passport_origin(request),
                         )
                     ),
                     max_age=PASSPORT_MAX_AGE,

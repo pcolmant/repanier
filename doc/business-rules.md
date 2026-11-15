@@ -48,9 +48,9 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   `.repanier.be` (HttpOnly, Secure, SameSite Lax, a sliding thirty
   days), refreshed on every visit: one sign in a month covers the
   whole family;
-- the cookie carries the **e-mail address and the name of the site
-  which last welcomed the member** (`REPANIER_SETTINGS_GROUP_NAME` of
-  the emitting site), signed with
+- the cookie carries the **e-mail address and the subdomain of the
+  site which last welcomed the member** (gasath for
+  gasath.repanier.be), signed with
   `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` - the same value in every
   site of the family; no central account exists and no personal data
   ever crosses the databases;
@@ -60,13 +60,18 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   closes the passport as it closes the password, the superusers and
   the group accounts go through the classical sign in;
 - the same arrival places the member, **by default, in the mirror
-  group of his home site** - an attach guarded on every side: only
-  when the local coordination has never placed the member in any
-  group (a group already set is final), only when exactly one local
-  group wears the name of the home site, never for a member coming
-  back home. The customer lists then show `[HomeSite] + name` and
-  the delivery board follows the group; the invoicing follows the
-  configuration of the group itself. An account already registered
+  group of his home site**, when that group **explicitly accepts the
+  passport members** (`accepts_passport_members`, validated by the
+  local coordination in the group admin) - an attach guarded on every
+  side: only when the local coordination has never placed the member
+  in any group (a group already set is final), only when exactly one
+  local group wears the subdomain of the home site (a name any site
+  of the family can discover in its browser) and accepts the
+  arrivals, never for a member coming back home. The customer lists
+  then show `[gasath] + name` and the delivery board follows the
+  group; the invoicing follows the configuration of the group
+  itself. Turning the flag off stops the future arrivals, without
+  touching the members already placed. An account already registered
   on the site is repaired at the next sign in - by passport or by
   hand, when the browser still carries a matching passport;
 - the sites living on their own domain (colibera.be,

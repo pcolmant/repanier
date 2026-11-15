@@ -125,6 +125,14 @@ class Customer(models.Model):
     represent_this_buyinggroup = models.BooleanField(
         _("Represent_this_buyinggroup"), default=False
     )
+    accepts_passport_members = models.BooleanField(
+        _("Accept the members arriving with the Repanier passport"),
+        help_text=_(
+            "Only a group which accepts them sees its members arriving "
+            "from another site of the family placed here by the passport."
+        ),
+        default=False,
+    )
     group = models.ForeignKey(
         "Group",
         verbose_name=_("Group"),

@@ -289,6 +289,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             "price_list_multiplier",
             ("transport", "min_transport"),
             "inform_customer_responsible",
+            "accepts_passport_members",
             "customers",
             "is_active",
             "bank_account1",

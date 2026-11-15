@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
@@ -56,11 +55,11 @@ class RepanierPassportTest(TestCase):
         self.assertEqual(morsel["domain"], PASSPORT_DOMAIN)
         self.assertTrue(morsel["secure"])
         self.assertTrue(morsel["httponly"])
-        # The token carries the e-mail address and the name of the
-        # site which welcomed the member, nothing else
+        # The token carries the e-mail address and the subdomain of
+        # the site which welcomed the member, nothing else
         self.assertEqual(
             get_passport_signer().unsign(morsel.value, max_age=None),
-            "carine@example.com|{}".format(settings.REPANIER_SETTINGS_GROUP_NAME),
+            "carine@example.com|gasath",
         )
 
     def test_a_login_outside_the_family_sets_no_passport(self):
@@ -103,14 +102,17 @@ class RepanierPassportTest(TestCase):
         self.client.get("/dummy/", HTTP_HOST="courtcircuit.repanier.be")
         self.assertNotIn("_auth_user_id", self.client.session)
 
-    def _group(self, short_basket_name):
+    def _group(self, short_basket_name, accepts_passport_members=False):
         group_user = User.objects.create_user(
             username="group-{}".format(short_basket_name),
             email="group-{}@example.com".format(short_basket_name),
             password="x",
         )
         return Customer.objects.create(
-            user=group_user, short_basket_name=short_basket_name, is_group=True
+            user=group_user,
+            short_basket_name=short_basket_name,
+            is_group=True,
+            accepts_passport_members=accepts_passport_members,
         )
 
     def _arrive_from(self, origin):
@@ -123,44 +125,48 @@ class RepanierPassportTest(TestCase):
         return Customer.objects.get(id=self.customer.id)
 
     def test_an_arrival_attaches_the_mirror_group_of_the_home_site(self):
-        group = self._group("GasAth")
-        self._arrive_from("GasAth")
+        group = self._group("GasAth", accepts_passport_members=True)
+        self._arrive_from("gasath")
         # Placed in the mirror group: the local coordination never
         # placed the member anywhere, the passport does it by default
+        # - the group may wear any case, the subdomain matches anyway
         self.assertEqual(self._refresh_customer().group_id, group.id)
 
-    def test_the_attach_respects_the_case_of_the_home_site_name(self):
-        group = self._group("GasAth")
+    def test_an_arrival_attaches_nothing_to_a_group_which_does_not_accept(self):
+        # The mirror group exists but the coordination never opened
+        # the door: the passport respects the validation
+        self._group("GasAth", accepts_passport_members=False)
         self._arrive_from("gasath")
-        self.assertEqual(self._refresh_customer().group_id, group.id)
+        self.assertIsNone(self._refresh_customer().group)
 
     def test_an_arrival_never_overwrites_a_group_set_by_the_coordination(self):
-        self._group("GasAth")
+        self._group("GasAth", accepts_passport_members=True)
         other = self._group("Other Group")
         Customer.objects.filter(id=self.customer.id).update(group=other)
-        self._arrive_from("GasAth")
+        self._arrive_from("gasath")
         # The coordination already decided: the passport does not touch it
         self.assertEqual(self._refresh_customer().group_id, other.id)
 
     def test_an_arrival_without_mirror_group_attaches_nothing(self):
         self._group("Another Group")
-        self._arrive_from("GasAth")
+        self._arrive_from("gasath")
         self.assertIsNone(self._refresh_customer().group)
 
     def test_an_ambiguous_mirror_group_attaches_nothing(self):
-        self._group("GasAth")
-        self._group("gasath")
-        self._arrive_from("GasAth")
+        self._group("GasAth", accepts_passport_members=True)
+        self._group("gasath", accepts_passport_members=True)
+        self._arrive_from("gasath")
         self.assertIsNone(self._refresh_customer().group)
 
     def test_coming_home_attaches_nothing(self):
-        self._group("GasAth")
-        # The origin carries the name of this site itself
-        self._arrive_from(settings.REPANIER_SETTINGS_GROUP_NAME)
+        self._group("Courtcircuit")
+        # The origin carries the subdomain of this site itself: even
+        # with a mirror group wearing it, coming home attaches nothing
+        self._arrive_from("courtcircuit")
         self.assertIsNone(self._refresh_customer().group)
 
     def test_a_passport_without_origin_opens_the_session_and_attaches_nothing(self):
-        self._group("GasAth")
+        self._group("GasAth", accepts_passport_members=True)
         self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
             "carine@example.com"
         )
@@ -171,20 +177,20 @@ class RepanierPassportTest(TestCase):
         self.assertIsNone(self._refresh_customer().group)
 
     def test_a_classic_sign_in_with_a_valid_passport_repairs_the_account(self):
-        group = self._group("GasAth")
+        group = self._group("GasAth", accepts_passport_members=True)
         # A member registered on this site for years, signed in by
         # hand while his browser carries his passport: the account is
         # repaired like a fresh passport arrival
         self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
-            "carine@example.com|GasAth"
+            "carine@example.com|gasath"
         )
         self._sign_in_on("courtcircuit.repanier.be")
         self.assertEqual(self._refresh_customer().group_id, group.id)
 
     def test_a_classic_sign_in_with_somebody_elses_passport_repairs_nothing(self):
-        self._group("GasAth")
+        self._group("GasAth", accepts_passport_members=True)
         self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
-            "somebodyelse@example.com|GasAth"
+            "somebodyelse@example.com|gasath"
         )
         self._sign_in_on("courtcircuit.repanier.be")
         self.assertIsNone(self._refresh_customer().group)
