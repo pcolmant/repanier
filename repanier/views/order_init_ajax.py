@@ -61,6 +61,13 @@ def order_init_ajax(request):
             customer_id=customer.id,
             status=permanence.status,
             customer_charged_id=customer.id,
+            # The invoicing stamps the books of the round with its bank
+            # anchor.  When the round is already invoiced this book is
+            # born after the stamping: carry the round stamp right away,
+            # the closure of the round must not depend on who re-opens
+            # the order page.  While the round sells, the stamp is
+            # still null - the invoicing will set it.
+            invoice_sort_order=permanence.invoice_sort_order,
         )
         customer_invoice.set_order_delivery(delivery=None)
         customer_invoice.calculate_order_amount()
