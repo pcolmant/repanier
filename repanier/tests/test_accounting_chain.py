@@ -339,6 +339,56 @@ class SquareBankTest(AccountingJourneyMixin, TestCase):
         self.assertEqual(self.permanence.invoice_sort_order, latest_total.id)
 
 
+class ArchiveStampTest(TestCase):
+    """A round archived without accounting still stamps its books.
+
+    Permanence.archive is the closing of an order-only round: no bank
+    movement, no balance update. The books nevertheless leave with the
+    anchor of their round, exactly like the books of a fully invoiced
+    round, or the history screens order them wrong and the audit
+    reports every one of them as never stamped.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        cls.anchor = BankAccount.objects.create(
+            operation_status=BankMovement.LATEST_TOTAL,
+            operation_date=datetime.date.today() - datetime.timedelta(days=1),
+            operation_comment="Account opening",
+        )
+        cls.permanence = Permanence.objects.create(
+            permanence_date=datetime.date.today(),
+            status=SaleStatus.SEND,
+        )
+        cls.customer_book = CustomerInvoice.objects.create(
+            permanence=cls.permanence,
+            customer=Customer.get_or_create_group(),
+            status=SaleStatus.SEND,
+        )
+        cls.producer_book = ProducerInvoice.objects.create(
+            permanence=cls.permanence,
+            producer=Producer.get_or_create_group(),
+            status=SaleStatus.SEND,
+        )
+
+    def test_an_archived_round_stamps_its_books_with_the_closest_anchor(self):
+        self.permanence.archive()
+        self.permanence.refresh_from_db()
+        self.assertEqual(self.permanence.status, SaleStatus.ARCHIVED)
+        self.assertEqual(self.permanence.invoice_sort_order, self.anchor.id)
+        cls = type(self)
+        for book in (cls.customer_book, cls.producer_book):
+            book.refresh_from_db()
+            self.assertEqual(book.status, SaleStatus.ARCHIVED)
+            self.assertEqual(book.invoice_sort_order, self.anchor.id)
+
+
 class SiteAccountsTest(TestCase):
     """The site consumer / producer accounts and the membership fee."""
 

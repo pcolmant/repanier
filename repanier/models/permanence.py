@@ -1303,6 +1303,16 @@ class Permanence(models.Model):
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
             self.save(update_fields=["invoice_sort_order"])
+            # The books of a round archived without accounting carry the
+            # anchor of their round too, exactly like the books of an
+            # invoiced round. An invoice_sort_order left null ends the
+            # book outside the bank anchor chain.
+            CustomerInvoice.objects.filter(
+                permanence_id=self.id, invoice_sort_order__isnull=True
+            ).update(invoice_sort_order=bank_account.id)
+            ProducerInvoice.objects.filter(
+                permanence_id=self.id, invoice_sort_order__isnull=True
+            ).update(invoice_sort_order=bank_account.id)
 
     def duplicate(self, dates):
         creation_counter = 0
