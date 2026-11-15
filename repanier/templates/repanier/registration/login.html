@@ -68,6 +68,12 @@
                                         </div>
                                     {% endif %}
                                 {% endif %}
+                                {% if passport_request_url %}
+                                    <div class="mt-3 small">
+                                        <a href="{{ passport_request_url }}" class="text-decoration-none">
+                                            {% translate "Sign in with your Repanier passport" %}</a>
+                                    </div>
+                                {% endif %}
                                 <input type="hidden" name="this_is_the_login_form" value="1"/>
                                 <input type="hidden" name="next" value="{{ next }}"/>
                             </div>

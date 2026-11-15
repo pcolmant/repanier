@@ -4194,6 +4194,22 @@ msgstr "Wenn diese Versuche nicht von Ihnen kamen, versucht wahrscheinlich jeman
 msgid "Ask for a new password"
 msgstr "Ein neues Passwort anfordern"
 
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Sign in with your Repanier passport"
+msgstr "Melde dich mit deinem Repanier-Pass an"
+
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Your home site"
+msgstr "Deine Ursprungsseite"
+
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: repanier/templates/repanier/registration/passport_login.html
+msgid "The passport asks for your password"
+msgstr "Der Pass fragt nach deinem Passwort"
+
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "You receive the mails of the group again."
 msgstr "Sie erhalten die E-Mails der Gruppe wieder."

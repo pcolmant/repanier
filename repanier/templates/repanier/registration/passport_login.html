@@ -1,0 +1,60 @@
+{% extends "base.html" %}{% load i18n %}
+{% block base_content %}
+    <div id="content-main" class="container-repanier py-4">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5>{% translate "The passport asks for your password" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-4">
+                                {% translate "A site of the Repanier family asks you to sign in on your home site: enter the password of your account here, and you will go straight back to it." %}
+                            </p>
+                            <form role="form" method="post" accept-charset="UTF-8"
+                                  id="passport-login-form">{% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="id_username" class="form-label">{% translate "E-mail address" %}</label>
+                                    {% if form.username.errors %}
+                                        <div class="text-danger small mb-1">
+                                            {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <input type="text" class="form-control" id="id_username"
+                                           placeholder="{% translate "E-mail address" %}" name="username" autofocus
+                                           value="{{ username_initial }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="id_password" class="form-label">{% translate "Password" %}</label>
+                                    {% if form.password.errors %}
+                                        <div class="text-danger small mb-1">
+                                            {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <input type="password" class="form-control" id="id_password"
+                                           placeholder="{% translate "Password" %}" name="password">
+                                </div>
+                                {% if form.non_field_errors %}
+                                    <div class="text-danger small mb-3">
+                                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <input type="hidden" name="next" value="{{ next }}">
+                                <input type="hidden" name="this_is_the_login_form" value="1"/>
+                            </form>
+                        </div>
+                        <div class="card-footer bg-light py-3">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                                <button class="btn btn-success text-white" type="submit" form="passport-login-form">
+                                    {% translate "Sign in" %}</button>
+                                <a href="{% url "repanier:password_reset" %}"
+                                   class="btn btn-link text-decoration-none">{% translate "Password reset" %}</a>
+                            </div>
+                        </div>
+                    </div><!-- /.card -->
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -25,6 +25,11 @@ from django.views.i18n import JavaScriptCatalog
 
 from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
 from repanier.sitemaps import PermamenceSitemap
+from repanier.views.passport_door_view import (
+    passport_arrive_view,
+    passport_login_view,
+    passport_request_view,
+)
 from repanier.views.passport_view import passport_profile_view, passport_verify_view
 
 admin.site.site_header = ""
@@ -59,6 +64,14 @@ urlpatterns += i18n_patterns(
     # locale middleware, and the family caller expects silent 404s.
     path("passport/profile/", passport_profile_view),
     path("passport/verify/", passport_verify_view),
+    # The login door of the passport: a member logged out everywhere
+    # still owns his password on his home site. The target sends the
+    # browser to the home site, the home site vouches with a one
+    # minute signed token, the target opens the door like a passport
+    # arrival. The password never leaves the home site.
+    path("passport/request/", passport_request_view, name="passport_request"),
+    path("passport/login/", passport_login_view, name="passport_login"),
+    path("passport/arrive/", passport_arrive_view, name="passport_arrive"),
     path("repanier/", include("repanier.urls", namespace="repanier")),
     path("coordi/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls")),
