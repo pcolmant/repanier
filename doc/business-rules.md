@@ -118,6 +118,17 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   including a disabled or broken one - is never written over, and a
   broken enrolment (a user without a customer) is repaired on the
   next arrival of an active account;
+- the group of a passport member guards his orders **only on the
+  permanences with delivery points**: there he orders at the
+  delivery points of his group - or of no group - and a permanence
+  which offers him none closes the door on him (`No delivery point
+  is open for you`). On a permanence **without delivery point**
+  (`with_delivery_point=False`, the central distribution), the
+  delivery selection is skipped entirely: the passport member
+  orders there like any local member, the group plays no role. A
+  site which wants its visiting members to stay on their own
+  distribution never runs a permanence without delivery points; a
+  site which wants them in the central flow runs only those;
 - the origin **never drifts with the hops of the member**: a passport
   issued while he belongs to a mirror group which accepts him
   travels under the home that mirror wears - and when no mirror
@@ -125,6 +136,15 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   arrived with. A member of gasath bouncing from site to site keeps
   travelling as gasath and never becomes, by sheer visiting, a
   member of the place he merely visited;
+- the family routine - the **passport audit**: a nightly cron
+  (`./manage.py passport_audit`) asks every home site, server to
+  server and signed with the family key, whether each member
+  placed here still belongs to it. **Read only, forever**: the
+  findings - "his home site does not know him anymore", "his home
+  site stayed silent" - reach the coordination by mail, and the
+  coordination decides; the audit never touches an account.
+  Silence is never a departure: a network failure, a deployment
+  lag and a wrong key all answer the same None;
 - the sites living on their own domain (colibera.be,
   commande.lebuisson.be, commande.coopeco-supermarche.be) carry no
   passport: their members sign in on each site;
@@ -132,11 +152,13 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   leaves every site at once. The signing key comes from
   `./manage.py generate_passport_signing_key` - the same value in
   every family site ini, empty on the own-domain sites.
-  The profile endpoint of a site lives at `/fr/passport/profile/`:
-  only a site holding the key can ask, everything it refuses answers
-  the same silent 404 (a GET answers 405 - the endpoint speaks POST
-  only).
-  Tests: `test_repanier_passport.py`, `test_passport_enrolment.py`.
+  The profile endpoint of a site lives at `/fr/passport/profile/`
+  and the routine asks at `/fr/passport/verify/`: only a site
+  holding the key can ask, everything either endpoint refuses
+  answers the same silent 404 (a GET answers 405 - the endpoints
+  speak POST only).
+  Tests: `test_repanier_passport.py`, `test_passport_enrolment.py`,
+  `test_passport_verify.py`.
 
 ### The purchase chain
 
