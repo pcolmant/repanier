@@ -9,6 +9,16 @@ suggests repairs, and stays safe to run anywhere, anytime:
     ./manage.py audit_accounting
     ./manage.py audit_accounting --permanence 1736
     ./manage.py audit_accounting --customer alice@example.com
+    ./manage.py audit_accounting --since 2018-01-01
+    ./manage.py audit_accounting --invoice c:4785
+
+--since compares the books of an era only (the rounds, their books,
+the closure stamps, the profit corrections and the anchors of the
+period): the customer and producer balance chains are identities
+over the whole history, they never filter. --invoice replaces the
+audit with the drill down of one book: the stored totals, every
+purchase line, the recomputed sums (c: for a customer invoice,
+p: for a producer one).
 
 Six classes of invariants:
 
@@ -46,6 +56,7 @@ still catches the drift this book introduces at its own round.
 
 Exit: 0 when every invariant holds, 1 when something needs a look.
 """
+import datetime
 from decimal import Decimal
 
 from django.conf import settings
@@ -167,7 +178,7 @@ def audit_customer_accounts(customer_id=None):
 # ----------------------------------------------------------------- B
 
 
-def audit_producer_accounts(producer_id=None):
+def audit_producer_accounts(producer_id=None, since=None):
     """Every producer balance, replayed from its books and payments.
 
     The profit correction of a round (claimed amount below the
@@ -267,9 +278,16 @@ def audit_producer_accounts(producer_id=None):
             .annotate(bank_in=Sum("bank_amount_in", output_field=MONEY))
             .annotate(bank_out=Sum("bank_amount_out", output_field=MONEY))
         }
-        for permanence_id in sorted(
-            set(booked_by_round) | set(profit_by_round)
-        ):
+        if since is not None:
+            era_rounds = set(
+                Permanence.objects.filter(permanence_date__gte=since).values_list(
+                    "id", flat=True
+                )
+            )
+        rounds_to_check = set(booked_by_round) | set(profit_by_round)
+        if since is not None:
+            rounds_to_check &= era_rounds
+        for permanence_id in sorted(rounds_to_check):
             permanence = (
                 Permanence.objects.filter(id=permanence_id)
                 .only("id", "permanence_date", "short_name_v2")
@@ -343,12 +361,16 @@ def replay_customer_invoice(invoice):
     return total_price, total_vat, total_deposit, delta_price, delta_transport
 
 
-def audit_invoice_purchase_totals(permanence_id=None):
+def audit_invoice_purchase_totals(permanence_id=None, since=None):
     """Every invoiced book, recomputed from the purchases."""
     findings = []
     customer_invoices = CustomerInvoice.objects.filter(
         permanence__status__in=INVOICED_STATUSES
     )
+    if since is not None:
+        customer_invoices = customer_invoices.filter(
+            permanence__permanence_date__gte=since
+        )
     if permanence_id is not None:
         customer_invoices = customer_invoices.filter(
             permanence_id=permanence_id
@@ -409,6 +431,10 @@ def audit_invoice_purchase_totals(permanence_id=None):
     producer_invoices = ProducerInvoice.objects.filter(
         permanence__status__in=INVOICED_STATUSES
     )
+    if since is not None:
+        producer_invoices = producer_invoices.filter(
+            permanence__permanence_date__gte=since
+        )
     if permanence_id is not None:
         producer_invoices = producer_invoices.filter(
             permanence_id=permanence_id
@@ -499,6 +525,10 @@ def audit_invoice_purchase_totals(permanence_id=None):
     cross_invoices = CustomerProducerInvoice.objects.filter(
         permanence__status__in=INVOICED_STATUSES
     )
+    if since is not None:
+        cross_invoices = cross_invoices.filter(
+            permanence__permanence_date__gte=since
+        )
     if permanence_id is not None:
         cross_invoices = cross_invoices.filter(permanence_id=permanence_id)
     for invoice in cross_invoices.select_related("permanence").only(
@@ -552,12 +582,14 @@ def audit_invoice_purchase_totals(permanence_id=None):
 # ----------------------------------------------------------------- D
 
 
-def audit_permanence_totals(permanence_id=None):
+def audit_permanence_totals(permanence_id=None, since=None):
     """Charged to the customers == booked on the producers."""
     findings = []
     invoiced = Permanence.objects.filter(status__in=INVOICED_STATUSES).order_by(
         "permanence_date", "id"
     )
+    if since is not None:
+        invoiced = invoiced.filter(permanence_date__gte=since)
     if permanence_id is not None:
         invoiced = invoiced.filter(id=permanence_id)
     for permanence in invoiced.only(
@@ -598,7 +630,7 @@ def audit_permanence_totals(permanence_id=None):
 # ----------------------------------------------------------------- E
 
 
-def audit_permanence_closure(permanence_id=None):
+def audit_permanence_closure(permanence_id=None, since=None):
     """A round is fully closed or leaks money."""
     findings = []
 
@@ -635,6 +667,8 @@ def audit_permanence_closure(permanence_id=None):
     invoiced = Permanence.objects.filter(status__in=INVOICED_STATUSES).order_by(
         "permanence_date", "id"
     )
+    if since is not None:
+        invoiced = invoiced.filter(permanence_date__gte=since)
     if permanence_id is not None:
         invoiced = invoiced.filter(id=permanence_id)
     for permanence in invoiced.only(
@@ -685,8 +719,13 @@ def audit_permanence_closure(permanence_id=None):
 # ----------------------------------------------------------------- F
 
 
-def audit_bank():
-    """The anchor chain and the attached payments."""
+def audit_bank(since=None):
+    """The anchor chain and the attached payments.
+
+    With --since, the chain compares the anchors of the era only:
+    the first anchor of the era opens it and is never compared -
+    the eras before it are the business of another run.
+    """
     findings = []
     latest_count = BankAccount.objects.filter(
         operation_status=BankMovement.LATEST_TOTAL
@@ -716,13 +755,23 @@ def audit_bank():
             "bank_amount_out",
         )
     )
+    if since is not None:
+        # The eras are the business of their own run: the first
+        # anchor of the era opens it and is never compared.
+        anchors = [
+            anchor for anchor in anchors if anchor.operation_date >= since
+        ]
     if not anchors:
         return findings
-    previous_net = DECIMAL_ZERO
+    # None until the era has a baseline anchor: the first invoiced
+    # anchor of the run carries no comparison.
+    previous_net = None
     for anchor in anchors:
         anchor_net = net(anchor.bank_amount_in.amount, anchor.bank_amount_out.amount)
         if anchor.permanence_id is None:
-            # The opening anchor carries no chain.
+            # The opening anchor carries no chain - but it balances
+            # the era which starts from it.
+            previous_net = anchor_net
             continue
         permanence = (
             Permanence.objects.filter(id=anchor.permanence_id)
@@ -748,32 +797,34 @@ def audit_bank():
             F("bank_amount_in") - F("bank_amount_out"),
             MONEY,
         )
-        expected = previous_net + attached
-        if anchor_net != expected:
-            findings.append(
-                Finding(
-                    "F2",
-                    "bank anchor {} of permanence {} (id {})".format(
-                        anchor.id, permanence, permanence.id
-                    ),
-                    "net {}, the chain replays {} (previous anchor {},"
-                    " movements attached during the round {}).".format(
-                        anchor_net, expected, previous_net, attached
-                    ),
-                    "a bank movement of this round escaped the count:"
-                    " compare the round with its bank lines.",
+        if previous_net is not None:
+            expected = previous_net + attached
+            if anchor_net != expected:
+                findings.append(
+                    Finding(
+                        "F2",
+                        "bank anchor {} of permanence {} (id {})".format(
+                            anchor.id, permanence, permanence.id
+                        ),
+                        "net {}, the chain replays {} (previous anchor {},"
+                        " movements attached during the round {}).".format(
+                            anchor_net, expected, previous_net, attached
+                        ),
+                        "a bank movement of this round escaped the count:"
+                        " compare the round with its bank lines.",
+                    )
                 )
-            )
         previous_net = anchor_net
     latest_date = anchors[-1].operation_date
-    # A payment dated before the latest anchor must have been attached
-    # during a round - unless its permanence still waits below invoiced
-    # (a cancelled round re-invoices everything later).
+    # A payment dated strictly before the latest anchor must have been
+    # attached during a round - unless its permanence still waits below
+    # invoiced (a cancelled round re-invoices everything later).  The
+    # rows dated on the latest anchor day wait for the next round.
     lost = (
         BankAccount.objects.filter(
             customer_invoice__isnull=True,
             producer_invoice__isnull=True,
-            operation_date__lte=latest_date,
+            operation_date__lt=latest_date,
         )
         .filter(Q(customer__isnull=False) | Q(producer__isnull=False))
         .exclude(operation_status__in=NOT_BANK_ENTRIES)
@@ -783,6 +834,9 @@ def audit_bank():
             | Q(permanence__status=SaleStatus.CANCELLED)
         )
     )
+    if since is not None:
+        # The rows lost before the era are the business of another run.
+        lost = lost.filter(operation_date__gte=since)
     if lost.exists():
         sample = list(
             lost.order_by("operation_date", "id")
@@ -814,6 +868,200 @@ def audit_bank():
 # -----------------------------------------------------------------
 
 
+def drill_down_invoice(kind, invoice_id):
+    """One book, line by line: stored totals vs the purchases.
+
+    Returns the lines to print; raises CommandError when the book
+    does not exist. Pure analysis: nothing is written.
+    """
+    lines = []
+    if kind == "c":
+        invoice = (
+            CustomerInvoice.objects.select_related("permanence")
+            .only(
+                "id",
+                "permanence_id",
+                "customer_id",
+                "customer_charged_id",
+                "is_group",
+                "total_price_with_tax",
+                "total_vat",
+                "total_deposit",
+                "delta_price_with_tax",
+                "delta_transport",
+                "transport",
+                "min_transport",
+                "permanence__id",
+                "permanence__permanence_date",
+                "permanence__short_name_v2",
+            )
+            .filter(id=invoice_id)
+            .first()
+        )
+        if invoice is None:
+            raise CommandError("no customer invoice with id {}".format(invoice_id))
+        if invoice.is_group:
+            purchases = PurchaseWoReceiver.objects.filter(
+                permanence_id=invoice.permanence_id,
+                customer_invoice__customer_charged_id=invoice.customer_id,
+            )
+        else:
+            purchases = PurchaseWoReceiver.objects.filter(
+                permanence_id=invoice.permanence_id,
+                customer_id=invoice.customer_id,
+            )
+        total_price, total_vat, total_deposit, delta_price, delta_transport = (
+            replay_customer_invoice(invoice)
+        )
+        lines.append(
+            "customer invoice {} of {} (customer {})".format(
+                invoice.id, invoice.permanence, invoice.customer_id
+            )
+        )
+        verdict = (
+            "OK - the purchases add up to the stored totals"
+            if (total_price, total_vat, total_deposit, delta_price, delta_transport)
+            == (
+                cents(invoice.total_price_with_tax.amount),
+                cents(invoice.total_vat.amount),
+                cents(invoice.total_deposit.amount),
+                cents(invoice.delta_price_with_tax.amount),
+                cents(invoice.delta_transport.amount),
+            )
+            else "MISMATCH - the purchases no longer add up to the stored totals"
+        )
+        lines.append(
+            "  stored total {}, vat {}, deposit {}, delta {}, transport {};"
+            " replayed total {}, vat {}, deposit {}, delta {}, transport {} - {}."
+            "".format(
+                cents(invoice.total_price_with_tax.amount),
+                cents(invoice.total_vat.amount),
+                cents(invoice.total_deposit.amount),
+                cents(invoice.delta_price_with_tax.amount),
+                cents(invoice.delta_transport.amount),
+                total_price,
+                total_vat,
+                total_deposit,
+                delta_price,
+                delta_transport,
+                verdict,
+            )
+        )
+        for purchase in purchases.select_related("offer_item").only(
+            "id",
+            "offer_item_id",
+            "quantity_invoiced",
+            "selling_price",
+            "customer_vat",
+            "deposit",
+            "offer_item__long_name_v2",
+        ).order_by("id"):
+            lines.append(
+                "  purchase #{} - {} - qty {}, selling {}, vat {}, deposit {}"
+                "".format(
+                    purchase.id,
+                    purchase.offer_item.long_name_v2,
+                    purchase.quantity_invoiced,
+                    purchase.selling_price,
+                    purchase.customer_vat,
+                    purchase.deposit,
+                )
+            )
+    else:
+        invoice = (
+            ProducerInvoice.objects.select_related("permanence", "producer")
+            .only(
+                "id",
+                "permanence_id",
+                "producer_id",
+                "total_price_with_tax",
+                "total_vat",
+                "total_deposit",
+                "delta_price_with_tax",
+                "delta_transport",
+                "producer__short_profile_name",
+                "producer__represent_this_buyinggroup",
+                "permanence__id",
+                "permanence__permanence_date",
+                "permanence__short_name_v2",
+            )
+            .filter(id=invoice_id)
+            .first()
+        )
+        if invoice is None:
+            raise CommandError("no producer invoice with id {}".format(invoice_id))
+        purchases = PurchaseWoReceiver.objects.filter(
+            permanence_id=invoice.permanence_id, producer_id=invoice.producer_id
+        )
+        result = purchases.aggregate(
+            purchase_price=Sum("purchase_price", output_field=MONEY),
+            producer_vat=Sum("producer_vat", output_field=VAT),
+            deposit=Sum("deposit", output_field=MONEY),
+        )
+        total_price = cents(result["purchase_price"])
+        total_vat = cents(result["producer_vat"])
+        total_deposit = cents(result["deposit"])
+        lines.append(
+            "producer invoice {} of {} (producer {})".format(
+                invoice.id,
+                invoice.permanence,
+                invoice.producer.short_profile_name,
+            )
+        )
+        verdict = (
+            "OK - the purchases add up to the stored totals"
+            if (total_price, total_vat, total_deposit)
+            == (
+                cents(invoice.total_price_with_tax.amount),
+                cents(invoice.total_vat.amount),
+                cents(invoice.total_deposit.amount),
+            )
+            else "MISMATCH - the purchases no longer add up to the stored totals"
+        )
+        lines.append(
+            "  stored total {}, vat {}, deposit {}; replayed total {}, vat {},"
+            " deposit {} - {}.".format(
+                cents(invoice.total_price_with_tax.amount),
+                cents(invoice.total_vat.amount),
+                cents(invoice.total_deposit.amount),
+                total_price,
+                total_vat,
+                total_deposit,
+                verdict,
+            )
+        )
+        lines.append(
+            "  site producer book: the customer deltas of the round ride"
+            " on the customer books - compare them in the admin."
+            if invoice.producer.represent_this_buyinggroup
+            else "  the delta price ({}) and transport ({}) stay on this"
+            " book.".format(
+                invoice.delta_price_with_tax, invoice.delta_transport
+            )
+        )
+        for purchase in purchases.select_related("offer_item").only(
+            "id",
+            "offer_item_id",
+            "quantity_invoiced",
+            "purchase_price",
+            "producer_vat",
+            "deposit",
+            "offer_item__long_name_v2",
+        ).order_by("id"):
+            lines.append(
+                "  purchase #{} - {} - qty {}, purchase {}, vat {}, deposit {}"
+                "".format(
+                    purchase.id,
+                    purchase.offer_item.long_name_v2,
+                    purchase.quantity_invoiced,
+                    purchase.purchase_price,
+                    purchase.producer_vat,
+                    purchase.deposit,
+                )
+            )
+    return lines
+
+
 class Command(BaseCommand):
     help = (
         "Replay the accounting of the site over all its history. Read only:"
@@ -830,8 +1078,54 @@ class Command(BaseCommand):
             "--customer",
             help="Audit only this customer (email of the login or id).",
         )
+        parser.add_argument(
+            "--since",
+            help=(
+                "Audit the era starting at this invoicing date (YYYY-MM-DD):"
+                " books, round totals, closures and bank anchors of that"
+                " era only. The balance identities (A, B1) stay lifetime."
+            ),
+        )
+        parser.add_argument(
+            "--invoice",
+            help=(
+                "Print one book line by line instead of auditing:"
+                " c:<id> for a customer invoice, p:<id> for a producer"
+                " one (the default is customer)."
+            ),
+        )
 
     def handle(self, *args, **options):
+        if options["invoice"]:
+            invoice_filter = options["invoice"]
+            if invoice_filter.startswith("p:"):
+                kind = "p"
+                invoice_id = invoice_filter[2:]
+            elif invoice_filter.startswith("c:"):
+                kind = "c"
+                invoice_id = invoice_filter[2:]
+            else:
+                kind = "c"
+                invoice_id = invoice_filter
+            if not invoice_id:
+                raise CommandError("--invoice needs an invoice id")
+            try:
+                invoice_id = int(invoice_id)
+            except ValueError:
+                raise CommandError("--invoice needs a numeric invoice id")
+            for line in drill_down_invoice(kind, invoice_id):
+                self.stdout.write(line)
+            return
+        since = None
+        if options["since"]:
+            try:
+                since = datetime.date.fromisoformat(options["since"])
+            except ValueError:
+                raise CommandError(
+                    "--since expects a date like 2024-01-31, not {}".format(
+                        options["since"]
+                    )
+                )
         permanence_id = options["permanence"]
         customer_id = None
         if options["customer"]:
@@ -855,20 +1149,23 @@ class Command(BaseCommand):
                 customer_id = Customer.objects.get(user_id=user.id).id
         audits = [
             ("A. Customer accounts", lambda: audit_customer_accounts(customer_id)),
-            ("B. Producer accounts", audit_producer_accounts),
+            (
+                "B. Producer accounts",
+                lambda: audit_producer_accounts(since=since),
+            ),
             (
                 "C. Book totals recomputed from the purchases",
-                lambda: audit_invoice_purchase_totals(permanence_id),
+                lambda: audit_invoice_purchase_totals(permanence_id, since=since),
             ),
             (
                 "D. Round totals customers vs producers",
-                lambda: audit_permanence_totals(permanence_id),
+                lambda: audit_permanence_totals(permanence_id, since=since),
             ),
             (
                 "E. Closure of the invoiced rounds",
-                lambda: audit_permanence_closure(permanence_id),
+                lambda: audit_permanence_closure(permanence_id, since=since),
             ),
-            ("F. The bank anchor chain", audit_bank),
+            ("F. The bank anchor chain", lambda: audit_bank(since=since)),
         ]
         finding_count = 0
         for title, audit in audits:
