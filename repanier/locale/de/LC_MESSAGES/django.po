@@ -4198,3 +4198,11 @@ msgstr "Ein neues Passwort anfordern"
 msgid "You receive the mails of the group again."
 msgstr "Sie erhalten die E-Mails der Gruppe wieder."
 
+#: repanier/admin/group.py
+msgid "Passeport"
+msgstr "Pass"
+
+#: repanier/admin/group.py
+msgid "# passeports"
+msgstr "# Pässe"
+

@@ -4178,3 +4178,11 @@ msgstr "Een nieuw wachtwoord aanvragen"
 msgid "You receive the mails of the group again."
 msgstr "Je ontvangt de e-mails van de groep opnieuw."
 
+#: repanier/admin/group.py
+msgid "Passeport"
+msgstr "Paspoort"
+
+#: repanier/admin/group.py
+msgid "# passeports"
+msgstr "# paspoorten"
+
