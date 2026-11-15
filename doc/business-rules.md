@@ -157,8 +157,40 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   holding the key can ask, everything either endpoint refuses
   answers the same silent 404 (a GET answers 405 - the endpoints
   speak POST only).
+- the passport also covers a member **logged out everywhere**: he
+  still owns his password on his home site, and the login door asks
+  that home site to vouch for him (`/fr/passport/request/`,
+  `/fr/passport/login/`, `/fr/passport/arrive/`). On the target site,
+  the member picks his home among the mirror groups which accept
+  the arrivals - the login screen offers the door only then, only
+  on the repanier.be family. The browser lands on the home site
+  login page with a family return URL; the home site signs him in -
+  or reuses the session he still owns there - and stamps a **one
+  minute signed token** (his authenticated e-mail and its own
+  subdomain, own salt `repanier/1905/passport-login`). The browser
+  returns, the target verifies the token with the shared key and
+  opens the door exactly like a passport arrival: the local session
+  of an existing account - the login lock of the failed attempts
+  applies to the dance as it applies to the password - or the family
+  enrolment. **The password never leaves the home site and never
+  travels through a browser**; a return target outside the family
+  goes nowhere, a token of another salt or of another site opens
+  nothing, coming home refuses the dance (the cookie alone opens
+  the door), and every refusal stays silent: the member falls back
+  on the classical sign in.
+- the passport login door never travels the member's language:
+  nothing crosses the sites for it. Every opening of a member
+  session - a sign in by hand, a passport arrival, the login door -
+  plants his `Customer.language` as a **host only** language cookie,
+  when this site runs that language ("fr" on a fr site, "nl" on a
+  fr-nl site). A language the site does not run never crosses into
+  the cookie - the CMS keeps planting the language of the pages it
+  renders, and the fallback of the site applies. A member registered
+  by the family enrolment starts with the language copied from his
+  home site, and changes it per site on his own screen.
   Tests: `test_repanier_passport.py`, `test_passport_enrolment.py`,
-  `test_passport_verify.py`.
+  `test_passport_verify.py`, `test_passport_login.py`,
+  `test_customer_language.py` (SessionLanguageCookieTest).
 
 ### The purchase chain
 

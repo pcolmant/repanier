@@ -1,0 +1,60 @@
+{% extends "base.html" %}{% load i18n %}
+{% block base_content %}
+    <div id="content-main" class="container-repanier py-4">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5>{% translate "Sign in with your Repanier passport" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-4">
+                                {% translate "You are a member of another Repanier site: sign in here with the e-mail of your home account, choose your home site, and your password there opens this one." %}
+                            </p>
+                            <form role="form" method="post" accept-charset="UTF-8"
+                                  id="passport-request-form">{% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="id_email" class="form-label">{% translate "E-mail address" %}</label>
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small mb-1">
+                                            {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <input type="email" class="form-control" id="id_email"
+                                           placeholder="{% translate "E-mail address" %}" name="email" autofocus
+                                           value="{{ form.email.value|default:'' }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="id_home" class="form-label">{% translate "Your home site" %}</label>
+                                    {% if form.home.errors %}
+                                        <div class="text-danger small mb-1">
+                                            {% for error in form.home.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <select class="form-select" id="id_home" name="home">
+                                        {% for choice_value, choice_label in form.home.field.choices %}
+                                            <option value="{{ choice_value }}"
+                                                {% if form.home.value == choice_value %}selected{% endif %}>
+                                                {{ choice_label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <input type="hidden" name="next" value="{{ next }}">
+                            </form>
+                        </div>
+                        <div class="card-footer bg-light py-3">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                                <button class="btn btn-success text-white" type="submit" form="passport-request-form">
+                                    {% translate "Sign in" %}</button>
+                                <a href="{% url "repanier:login_form" %}"
+                                   class="btn btn-link text-decoration-none">{% translate "Cancel" %}</a>
+                            </div>
+                        </div>
+                    </div><!-- /.card -->
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

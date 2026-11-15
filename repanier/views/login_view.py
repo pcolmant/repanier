@@ -6,6 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -83,6 +84,7 @@ def login_view(
 
     staff_responsibilities = None
     user = request.user
+    passport_request_url = EMPTY_STRING
 
     if request.method == "POST":
         form = authentication_form(request, data=request.POST)
@@ -133,6 +135,14 @@ def login_view(
         from repanier.apps import REPANIER_SETTINGS_CONFIG
 
         how_to_register = REPANIER_SETTINGS_CONFIG.how_to_register_v2
+        # The passport door: a member of another family site signs in
+        # here with his home password, when this site accepts the
+        # passport members somewhere.
+        from repanier.middleware import _is_passport_host
+        from repanier.views.passport_door_view import _mirror_choices
+
+        if _is_passport_host(request) and _mirror_choices(request):
+            passport_request_url = reverse("passport_request")
     else:
         how_to_register = EMPTY_STRING
 
@@ -141,6 +151,7 @@ def login_view(
         redirect_field_name: redirect_to,
         "how_to_register": how_to_register,
         "staff_responsibilities": staff_responsibilities,
+        "passport_request_url": passport_request_url,
     }
     if extra_context is not None:
         context.update(extra_context)

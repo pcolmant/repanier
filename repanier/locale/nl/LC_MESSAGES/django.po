@@ -4174,6 +4174,22 @@ msgstr "Als die pogingen niet van jou kwamen, probeert iemand waarschijnlijk toe
 msgid "Ask for a new password"
 msgstr "Een nieuw wachtwoord aanvragen"
 
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Sign in with your Repanier passport"
+msgstr "Meld je aan met je Repanier-paspoort"
+
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Your home site"
+msgstr "Je oorspronkelijke site"
+
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Cancel"
+msgstr "Annuleren"
+
+#: repanier/templates/repanier/registration/passport_login.html
+msgid "The passport asks for your password"
+msgstr "Het paspoort vraagt je wachtwoord"
+
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "You receive the mails of the group again."
 msgstr "Je ontvangt de e-mails van de groep opnieuw."

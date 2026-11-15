@@ -524,6 +524,40 @@ def repanier_passport_middleware(get_response):
             if (
                 request.user.is_authenticated
                 and not was_authenticated
+                and not request.user.is_superuser
+                and not request.user.is_staff
+            ):
+                # The site speaks the language of the member it just
+                # welcomed, when it knows it: a sign in by hand, a
+                # passport arrival, the passport login door - every
+                # opening of a member session plants his language as
+                # a host only cookie: each site keeps its own, and a
+                # member registered by the family enrolment keeps the
+                # language copied from his home site. A language this
+                # site does not run changes nothing: the CMS and the
+                # browser stay in charge, the fallback of the site
+                # applies.
+                from repanier.models.customer import Customer
+
+                customer = (
+                    Customer.objects.filter(
+                        user_id=request.user.id, is_group=False, is_active=True
+                    )
+                    .only("language")
+                    .first()
+                )
+                if customer is not None:
+                    language = (customer.language or EMPTY_STRING).strip()
+                    if language and language in dict(django_settings.LANGUAGES):
+                        response.set_cookie(
+                            django_settings.LANGUAGE_COOKIE_NAME,
+                            language,
+                            max_age=10 * 365 * 24 * 60 * 60,
+                        )
+
+            if (
+                request.user.is_authenticated
+                and not was_authenticated
                 and _is_passport_host(request)
                 and not request.user.is_superuser
                 and not request.user.is_staff

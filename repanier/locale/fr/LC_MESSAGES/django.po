@@ -4282,6 +4282,45 @@ msgstr "Si ces tentatives ne venaient pas de vous, quelqu'un essaie probablement
 msgid "Ask for a new password"
 msgstr "Demander un nouveau mot de passe"
 
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Sign in with your Repanier passport"
+msgstr "Connectez-vous avec votre passeport Repanier"
+
+#: repanier/templates/repanier/registration/passport_request.html
+msgid ""
+"You are a member of another Repanier site: sign in here with the e-mail of "
+"your home account, choose your home site, and your password there opens this "
+"one."
+msgstr ""
+"Vous êtes membre d'un autre site Repanier : connectez-vous ici avec l'e-mail "
+"de votre compte de votre site d'origine, choisissez votre site d'origine, et "
+"votre mot de passe là-bas ouvre celui-ci."
+
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Your home site"
+msgstr "Votre site d'origine"
+
+#: repanier/templates/repanier/registration/passport_request.html
+msgid "Cancel"
+msgstr "Annuler"
+
+#: repanier/views/passport_door_view.py
+msgid "Choose your home site in the list."
+msgstr "Choisissez votre site d'origine dans la liste."
+
+#: repanier/templates/repanier/registration/passport_login.html
+msgid "The passport asks for your password"
+msgstr "Le passeport demande votre mot de passe"
+
+#: repanier/templates/repanier/registration/passport_login.html
+msgid ""
+"A site of the Repanier family asks you to sign in on your home site: enter "
+"the password of your account here, and you will go straight back to it."
+msgstr ""
+"Un site de la famille Repanier vous demande de vous connecter sur votre site "
+"d'origine : entrez ici le mot de passe de votre compte, et vous y "
+"retournerez directement."
+
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "You receive the mails of the group again."
 msgstr "Vous recevez à nouveau les mails du groupe."

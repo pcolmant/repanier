@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.test import RequestFactory, TestCase, override_settings
@@ -153,3 +154,90 @@ class MyProfileLanguageTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.customer.refresh_from_db()
         self.assertNotEqual(self.customer.language, "klingon")
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    SESSION_COOKIE_SECURE=False,
+    CSRF_COOKIE_SECURE=False,
+    ALLOWED_HOSTS=["testserver", "courtcircuit.repanier.be"],
+    REPANIER_SETTINGS_PASSPORT_SIGNING_KEY="shared-family-key",
+    LANGUAGES=[("fr", "Français"), ("nl", "Nederlands")],
+)
+class SessionLanguageCookieTest(TestCase):
+    """The site speaks the language of the member it just welcomed.
+
+    Every opening of a member session - a sign in by hand, a passport
+    arrival, the passport login door - plants his language as a host
+    only cookie: each site keeps its own, the future visits follow
+    him. A language this site does not run changes nothing: the CMS
+    and the browser stay in charge, the fallback of the site applies.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        from repanier.models.configuration import Configuration
+
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        cls.member_user = User.objects.create_user(
+            username="melanie@example.com",
+            email="melanie@example.com",
+            password="le-mot-de-passe-de-melanie",
+        )
+        cls.customer = Customer.objects.create(
+            user=cls.member_user,
+            short_basket_name="Mélanie",
+            may_order=True,
+            language="fr",
+        )
+    def _sign_in_by_hand(self):
+        return self.client.post(
+            "/fr/repanier/go_repanier/",
+            {
+                "username": "melanie@example.com",
+                "password": "le-mot-de-passe-de-melanie",
+                "this_is_the_login_form": "1",
+                "next": "/",
+            },
+        )
+
+    def test_the_sign_in_plants_the_language_of_the_member(self):
+        response = self._sign_in_by_hand()
+        self.assertEqual(response.status_code, 302)
+        cookie = response.cookies[settings.LANGUAGE_COOKIE_NAME]
+        self.assertEqual(cookie.value, "fr")
+
+    def test_an_unknown_language_here_keeps_the_cms_in_charge(self):
+        # A member arriving from a multilingual home keeps a language
+        # this site does not run (a restored dump may carry
+        # anything): the sign in never copies it - the CMS keeps
+        # planting the language of the pages it renders.
+        Customer.objects.filter(id=self.customer.id).update(language="sv")
+        response = self._sign_in_by_hand()
+        self.assertEqual(response.status_code, 302)
+        cookie = response.cookies.get(settings.LANGUAGE_COOKIE_NAME)
+        self.assertNotEqual((cookie.value if cookie else None), "sv")
+
+    def test_a_passport_arrival_plants_the_language_too(self):
+        # The same block runs for every opening of a member session:
+        # here, the passport of the family opens the door - on a real
+        # page, because an unprefixed 404 is swapped into a redirect
+        # by the locale middleware, cookies and all.
+        Customer.objects.filter(id=self.customer.id).update(language="nl")
+        from repanier.middleware import PASSPORT_COOKIE, get_passport_signer
+
+        self.client.cookies[PASSPORT_COOKIE] = get_passport_signer().sign(
+            "melanie@example.com|gasath"
+        )
+        response = self.client.get(
+            "/fr/repanier/go_repanier/", HTTP_HOST="courtcircuit.repanier.be"
+        )
+        self.assertIn(settings.LANGUAGE_COOKIE_NAME, response.cookies)
+        self.assertEqual(
+            response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "nl"
+        )

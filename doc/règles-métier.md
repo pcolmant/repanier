@@ -169,9 +169,48 @@ possède un compte, sans rien redemander
   `/fr/passport/verify/` : seul un site qui tient la clé peut
   interroger, tout ce qu'un endpoint refuse répond le même 404
   silencieux (un GET répond 405 — les endpoints ne parlent qu'en
-  POST).
+  POST) ;
+- le passeport couvre aussi un membre **déconnecté partout** : il
+  lui reste son mot de passe sur son site d'origine, et la porte de
+  login demande à ce site de se porter garant pour lui
+  (`/fr/passport/request/`, `/fr/passport/login/`,
+  `/fr/passport/arrive/`). Sur le site cible, le membre choisit son
+  site d'origine parmi les groupes miroirs qui acceptent les
+  arrivées — l'écran de connexion ne propose la porte qu'alors, et
+  seulement sur la famille repanier.be. Le navigateur atterrit sur
+  la page de connexion du site d'origine avec une URL de retour de
+  la famille ; le site d'origine le connecte — ou réutilise la
+  session qu'il y possède encore — et tamponne un **jeton signé
+  d'une minute** (l'e-mail authentifié et son propre sous-domaine,
+  sel dédié `repanier/1905/passport-login`). Le navigateur revient,
+  le site cible vérifie le jeton avec la clé de la famille et ouvre
+  la porte exactement comme une arrivée de passeport : la session
+  locale d'un compte existant — le verrou des tentatives échouées
+  s'applique à la danse comme il s'applique au mot de passe — ou
+  l'inscription de la famille. **Le mot de passe ne quitte jamais
+  le site d'origine et ne circule jamais dans un navigateur** ; une
+  cible de retour hors de la famille ne mène nulle part, un jeton
+  d'un autre sel ou d'un autre site n'ouvre rien, rentrer chez soi
+  refuse la danse (le cookie seul ouvre la porte), et tout refus
+  reste silencieux : le membre retombe sur la connexion classique.
   Tests : `test_repanier_passport.py`, `test_passport_enrolment.py`,
-  `test_passport_verify.py`.
+  `test_passport_verify.py`, `test_passport_login.py`,
+  `test_customer_language.py` (SessionLanguageCookieTest).
+
+- la langue du membre **ne circule jamais entre les sites** : rien
+  ne les traverse pour elle. Chaque ouverture de session de membre -
+  une connexion à la main, une arrivée de passeport, la porte de
+  login - plante son `Customer.language` comme un cookie de langue
+  **lié à ce seul site**, quand ce site pratique cette langue (« fr »
+  sur un site fr, « nl » sur un site fr-nl). Une langue que le site
+  ne pratique ne traverse jamais vers le cookie - le CMS continue de
+  planter la langue des pages qu'il rend, et le repli du site
+  s'applique. Un membre inscrit par l'inscription de la famille
+  démarre avec la langue copiée de son site d'origine, et la change
+  site par site sur son propre écran.
+  Tests : `test_repanier_passport.py`, `test_passport_enrolment.py`,
+  `test_passport_verify.py`, `test_passport_login.py`,
+  `test_customer_language.py` (SessionLanguageCookieTest).
 
 ### Chaîne d'achat
 
