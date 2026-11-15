@@ -3809,9 +3809,21 @@ msgstr "Famille zéro déchet"
 msgid "I agree to receive mails from this site"
 msgstr "J'accepte de recevoir de mails provenant de ce site"
 
+#: views/my_profile_view.py:23
+msgid "My language"
+msgstr "Ma langue"
+
+#: views/my_profile_view.py:24
+msgid "The mails of my orders speak this language."
+msgstr "Les mails de mes commandes parlent cette langue."
+
 #: views/my_profile_view.py:34
 msgid "E-mail address used to sign in to the site"
 msgstr "Adresse e-mail utilisée pour se connecter au site"
+
+#: views/my_profile_view.py:42
+msgid "For memory only. Ask the coordination of the site to change it."
+msgstr "Pour mémoire uniquement. Demandez à la coordination du site pour la changer."
 
 #: views/my_profile_view.py:36
 msgid "My main phone number"

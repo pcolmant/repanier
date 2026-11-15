@@ -1,6 +1,6 @@
 from os import sep as os_sep
 
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.forms import widgets, forms, fields
 from django.http import Http404
@@ -19,6 +19,10 @@ from repanier.widget.picture import RepanierPictureWidget
 
 class CustomerForm(forms.Form):
     long_basket_name = fields.CharField(label=_("My name is"), max_length=100)
+    language = fields.ChoiceField(
+        label=_("My language"),
+        help_text=_("The mails of my orders speak this language."),
+    )
     zero_waste = fields.BooleanField(
         label=EMPTY_STRING,
         required=False,
@@ -31,7 +35,17 @@ class CustomerForm(forms.Form):
             label=_("I agree to receive mails from this site")
         ),
     )
-    email1 = fields.EmailField(label=_("E-mail address used to sign in to the site"))
+    # The sign in e-mail is on the screen for memory, never for
+    # editing: a member touching it could lock himself out of the
+    # sites of the family - and of his own account. The coordination
+    # of the site remains the only one to move it.
+    email1 = fields.EmailField(
+        label=_("E-mail address used to sign in to the site"),
+        disabled=True,
+        help_text=_(
+            "For memory only. Ask the coordination of the site to change it."
+        ),
+    )
 
     phone1 = fields.CharField(label=_("My main phone number"), max_length=25)
     phone2 = fields.CharField(
@@ -55,24 +69,15 @@ class CustomerForm(forms.Form):
         required=False,
     )
 
-    def clean_email1(self):
-        email1 = self.cleaned_data["email1"]
-        user_model = get_user_model()
-        qs = user_model.objects.filter(email=email1, is_staff=False).exclude(
-            id=self.request.user.id
-        )
-        if qs.exists():
-            self.add_error(
-                "email1",
-                _("The email address {} is already used by another user.").format(
-                    email1
-                ),
-            )
-        return email1
-
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
+        # The languages of this site, read at the request - never
+        # frozen at the boot of the project.
+        self.fields["language"].choices = settings.LANGUAGES
+        user = getattr(self.request, "user", None) if self.request else None
+        if user is not None and user.is_authenticated:
+            self.fields["email1"].initial = user.email
 
 
 @login_required()
@@ -102,6 +107,7 @@ def my_profile_view(request):
             # ...
             if customer is not None:
                 customer.long_basket_name = form.cleaned_data.get("long_basket_name")
+                customer.language = form.cleaned_data.get("language")
                 customer.phone1 = form.cleaned_data.get("phone1")
                 customer.phone2 = form.cleaned_data.get("phone2")
                 customer.subscribe_to_email = form.cleaned_data.get(
@@ -113,20 +119,6 @@ def my_profile_view(request):
                 customer.about_me = form.cleaned_data.get("about_me")
                 customer.zero_waste = form.cleaned_data.get("zero_waste")
                 customer.save()
-                # Important : place this code after because form = CustomerForm(data, request=request) delete form.cleaned_data
-                email = form.cleaned_data.get("email1")
-                user_model = get_user_model()
-                user = user_model.objects.filter(email=email).first()
-                if user is None or user.email != email:
-                    # user.email != email for case unsensitive SQL query
-                    customer.user.username = customer.user.email = email.lower()
-                    # customer.user.first_name = EMPTY_STRING
-                    # customer.user.last_name = customer.short_basket_name
-                    customer.user.save()
-                # User feed back : Display email in lower case.
-                data = form.data.copy()
-                data["email1"] = customer.user.email
-                form = CustomerForm(data, request=request)
             return render(
                 request,
                 template_name,
@@ -148,15 +140,15 @@ def my_profile_view(request):
             },
         )
     else:
-        form = CustomerForm()  # An unbound form
+        form = CustomerForm(request=request)  # An unbound form
         field = form.fields["long_basket_name"]
         field.initial = customer.long_basket_name
+        field = form.fields["language"]
+        field.initial = customer.language
         field = form.fields["phone1"]
         field.initial = customer.phone1
         field = form.fields["phone2"]
         field.initial = customer.phone2
-        field = form.fields["email1"]
-        field.initial = request.user.email
         field = form.fields["subscribe_to_email"]
         field.initial = customer.subscribe_to_email
         field = form.fields["city"]
