@@ -118,15 +118,20 @@ def admin_filter_middleware(get_response):
 # opens the door of the other sites where the member owns an account,
 # without asking anything again. A signed cookie travels on the parent
 # domain; each site verifies it and opens its own local session - no
-# central account, no personal data crossing the databases, only the
-# e-mail address and the subdomain of the site which last welcomed
-# the member inside a signed token the family can verify. That origin
-# name places the member, by default, in the local mirror group of
-# their home site when the group explicitly accepts passport members:
-# the customer lists show [home site] + name, and the delivery board
-# follows the group. The origin label never drifts with the hops of
-# the member: his mirror group names his home, and coming back home
-# attaches nothing.
+# central account, only the e-mail address and the subdomain of the
+# site which last welcomed the member inside a signed token the
+# family can verify. That origin name places the member, by default,
+# in the local mirror group of their home site when the group
+# explicitly accepts passport members: the customer lists show
+# [home site] + name, and the delivery board follows the group. The
+# origin label never drifts with the hops of the member: his mirror
+# group names his home, and coming back home attaches nothing. On a
+# site where the member owns no account yet, that mirror group
+# welcoming him also means the site can register him on the spot:
+# it asks his home site for his profile - server to server, signed
+# with the shared family key, never in a browser - and creates the
+# local account. The cookie itself never carries any personal data
+# beyond the sign in e-mail.
 
 from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model
@@ -135,6 +140,7 @@ from django.core import signing
 from django.utils import timezone
 
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
+from repanier.passport_network import fetch_passport_profile
 
 passport_logger = logging.getLogger("repanier.passport")
 
@@ -288,20 +294,15 @@ def _attach_passport_group(request, user, origin):
     try:
         from repanier.models.customer import Customer
 
-        mirror_groups = Customer.objects.filter(
-            is_group=True,
-            is_active=True,
-            short_basket_name__iexact=origin,
-            accepts_passport_members=True,
-        )
-        if mirror_groups.count() != 1:
+        mirror_group = _passport_mirror_group(request, origin)
+        if mirror_group is None:
             return
         attached = Customer.objects.filter(
             user_id=user.id,
             is_group=False,
             is_active=True,
             group__isnull=True,
-        ).update(group=mirror_groups.first())
+        ).update(group=mirror_group)
         if attached:
             passport_logger.info(
                 "repanier passport : {} attached to the group [{}]".format(
@@ -311,6 +312,166 @@ def _attach_passport_group(request, user, origin):
     except Exception as error:
         # An attach problem never blocks the session.
         passport_logger.error("repanier passport group attach error : {}".format(error))
+
+
+def _passport_mirror_group(request, origin):
+    """The mirror group of a home site on this site: a group wearing
+    its subdomain name, active, which explicitly accepts the
+    passport arrivals. Ambiguous or missing: no mirror group, the
+    passport keeps its classical behaviour."""
+    origin = (origin or EMPTY_STRING).strip()
+    if not origin or origin.lower() == _passport_origin(request):
+        # Coming home enrols nobody.
+        return None
+    try:
+        from repanier.models.customer import Customer
+
+        mirror_groups = Customer.objects.filter(
+            is_group=True,
+            is_active=True,
+            short_basket_name__iexact=origin,
+            accepts_passport_members=True,
+        )
+        if mirror_groups.count() != 1:
+            return None
+        return mirror_groups.first()
+    except Exception as error:
+        passport_logger.error("repanier passport mirror group error : {}".format(error))
+        return None
+
+
+def _unique_short_basket_name(email, origin, short_basket_name):
+    """The short name is unique on a site: an arriving member may
+    collide with a local namesake. The members of the family unfold
+    candidates - the short name of the home site, the name wearing
+    his home between brackets, then numbered twins - and take the
+    first free one. The customer lists prefix the group anyway:
+    [gasath] Michel stays readable in every case."""
+    from repanier.models.customer import Customer
+
+    base = (
+        (short_basket_name or EMPTY_STRING).strip()
+        or (email or EMPTY_STRING).split("@", 1)[0].strip()
+        or "member"
+    )[:25]
+    candidates = [base]
+    with_home = "{} ({})".format(base, origin)[:25]
+    candidates.append(with_home)
+    for number in range(2, 99):
+        candidates.append("{} {}".format(base, number)[:25])
+    for candidate in candidates:
+        if not Customer.objects.filter(short_basket_name__iexact=candidate).exists():
+            return candidate
+    return None
+
+
+def _enrol_passport_member(request, email, origin):
+    """The family enrolment: a member arrives with a valid passport
+    on a site where he owns no account yet. When this site runs a
+    mirror group of his home site which accepts the passport
+    members, the site asks his home site for his profile - a
+    server-to-server call signed with the family key, not a sign in,
+    nobody reconnects anywhere - and registers the local account :
+    short and long names, phones, address, city, bank accounts, the
+    language of his mails and the may-order trust of the home site.
+    The arriving member lands directly in his mirror group, which
+    keeps his home stable across all his hops. Any problem - no
+    mirror group, the home site unreachable, a signature gone, a
+    local account appearing in between - leaves the site just as it
+    was: the passport never blocks a page."""
+    from django.db.utils import IntegrityError
+
+    email = (email or EMPTY_STRING).strip().lower()
+    if not email or "|" in email:
+        return None
+    user_model = get_user_model()
+    try:
+        from repanier.models.customer import Customer
+
+        # The enrolment never writes over an account: it runs only
+        # when nothing local answers this e-mail, or when a previous
+        # enrolment broke in between creating the user and creating
+        # the customer - a user without a customer is repaired, a
+        # staff or superuser account never is.
+        user = (
+            user_model.objects.filter(email__iexact=email).order_by("id").first()
+        )
+        if user is not None:
+            if user.is_superuser or user.is_staff:
+                return None
+            if Customer.objects.filter(user_id=user.id).exists():
+                # An existing member refused by _passport_user stays
+                # refused: locked, inactive, group sessions never open
+                # through the enrolment.
+                return None
+        mirror_group = _passport_mirror_group(request, origin)
+        if mirror_group is None:
+            return None
+        profile = fetch_passport_profile(
+            mirror_group.short_basket_name.strip().lower(), email
+        )
+        if profile is None:
+            return None
+        if (profile.get("email") or EMPTY_STRING).strip().lower() != email:
+            return None
+        short_basket_name = _unique_short_basket_name(
+            email, origin, profile.get("short_basket_name")
+        )
+        if short_basket_name is None:
+            return None
+        if user is None:
+            try:
+                user = user_model.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=None,
+                    first_name=EMPTY_STRING,
+                    last_name=short_basket_name,
+                )
+            except IntegrityError:
+                # A parallel arrival created it first: the enrolment
+                # picks up where it stands and goes on.
+                user = (
+                    user_model.objects.filter(email__iexact=email)
+                    .order_by("id")
+                    .first()
+                )
+                if user is None:
+                    return None
+        valid_languages = [code for code, _label in django_settings.LANGUAGES]
+        profile_language = profile.get("language")
+        customer = Customer.objects.create(
+            user=user,
+            short_basket_name=short_basket_name,
+            long_basket_name=(profile.get("long_basket_name") or EMPTY_STRING)[:100],
+            language=profile_language
+            if profile_language in valid_languages
+            else django_settings.LANGUAGE_CODE,
+            phone1=(profile.get("phone1") or EMPTY_STRING)[:25],
+            phone2=(profile.get("phone2") or EMPTY_STRING)[:25],
+            bank_account1=(profile.get("bank_account1") or EMPTY_STRING)[:100],
+            bank_account2=(profile.get("bank_account2") or EMPTY_STRING)[:100],
+            address=profile.get("address") or EMPTY_STRING,
+            city=(profile.get("city") or EMPTY_STRING)[:50],
+            may_order=bool(profile.get("may_order")),
+            group=mirror_group,
+        )
+        from repanier.auth_backend import RepanierAuthBackend
+
+        RepanierAuthBackend.set_user_right(
+            user=user, is_superuser=False, staff=None, customer=customer
+        )
+        passport_logger.info(
+            "repanier passport : {} enrolled by [{}] in [{}]".format(
+                email, origin, customer.short_basket_name
+            )
+        )
+        return user
+    except Exception as error:
+        # An enrolment problem never blocks the page: the member
+        # falls back on the classical sign in.
+        passport_logger.error("repanier passport enrolment error : {}".format(error))
+        return None
 
 
 def repanier_passport_middleware(get_response):
@@ -333,6 +494,16 @@ def repanier_passport_middleware(get_response):
                     if passport_value:
                         email, _separator, origin = passport_value.partition("|")
                         user = _passport_user(email.strip().lower())
+                        if user is None:
+                            # No local account opens for this passport,
+                            # or the account refuses it. When the site
+                            # runs a mirror group of the home site which
+                            # welcomes him, the family enrolment may
+                            # register him from the profile of his home
+                            # site before opening the session.
+                            user = _enrol_passport_member(
+                                request, email.strip().lower(), origin
+                            )
                         if user is not None:
                             user.backend = "repanier.auth_backend.RepanierAuthBackend"
                             auth_login(request, user)

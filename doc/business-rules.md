@@ -64,8 +64,8 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   site which last welcomed the member** (gasath for
   gasath.repanier.be), signed with
   `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` - the same value in every
-  site of the family; no central account exists and no personal data
-  ever crosses the databases;
+  site of the family; no central account exists and the cookie
+  itself never carries any personal data beyond the sign in e-mail;
 - arriving on another site, a verified passport opens a **local
   session** for the local account of that e-mail address - only for
   an **active member**: the temporary lock of the failed attempts
@@ -86,6 +86,26 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   touching the members already placed. An account already registered
   on the site is repaired at the next sign in - by passport or by
   hand, when the browser still carries a matching passport;
+- the same arrival may also **register the member on the spot** -
+  the family enrolment. When the member owns **no account yet** on
+  the visited site and that site runs a mirror group of his home
+  which accepts the passport members, the site asks his home site for
+  his profile and creates the local account from it: short and long
+  names, phones, postal address, city, bank accounts, the language
+  of his mails and the may-order trust of the home site. The profile
+  crosses **only between the servers of the family** - a call signed
+  with the shared key, over HTTPS, never through a browser - at the
+  enrolment only: the cookie stays as small as before. The member
+  lands directly in his mirror group, which keeps his home stable,
+  and nothing reconnects anybody anywhere: the call authenticates
+  with the key, not with a sign in. Any failure - the home site
+  unreachable, no mirror group, a local account appearing in
+  between - enrols nobody and never blocks the page: the member
+  falls back on the classical sign in. A short name already taken
+  on the visited site unfolds (`Carine (gasath)`); an account which
+  exists - in any state - is never written over, and a broken
+  enrolment (a user without a customer) is repaired on the next
+  arrival;
 - the origin **never drifts with the hops of the member**: a passport
   issued while he belongs to a mirror group which accepts him
   travels under the home that mirror wears - and when no mirror
@@ -100,7 +120,10 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   leaves every site at once. The signing key comes from
   `./manage.py generate_passport_signing_key` - the same value in
   every family site ini, empty on the own-domain sites.
-  Tests: `test_repanier_passport.py`.
+  The profile endpoint of a site lives at `/fr/passport/profile/`:
+  only a site holding the key can ask, and everything it refuses
+  answers the same silent 404.
+  Tests: `test_repanier_passport.py`, `test_passport_enrolment.py`.
 
 ### The purchase chain
 

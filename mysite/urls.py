@@ -25,6 +25,7 @@ from django.views.i18n import JavaScriptCatalog
 
 from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
 from repanier.sitemaps import PermamenceSitemap
+from repanier.views.passport_view import passport_profile_view
 
 admin.site.site_header = ""
 admin.site.site_title = ""
@@ -50,6 +51,12 @@ urlpatterns = [
 
 # i18n URLs
 urlpatterns += i18n_patterns(
+    # Server to server: the home site of a passport member answers
+    # the profile the other family sites need to register him. It
+    # lives on the language prefixed side: a plain 404 without a
+    # language prefix is redirected by the locale middleware, and the
+    # family caller expects silent 404s.
+    path("passport/profile/", passport_profile_view),
     path("repanier/", include("repanier.urls", namespace="repanier")),
     path("coordi/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls")),

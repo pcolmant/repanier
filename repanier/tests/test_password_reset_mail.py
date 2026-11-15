@@ -109,8 +109,8 @@ class PasswordResetMailTest(TestCase):
         self.client.post(
             set_password_url,
             data={
-                "new_password1": "S0me-sturdy-pass!",
-                "new_password2": "S0me-sturdy-pass!",
+                "new_password1": "dummy-pass-not-a-secret",
+                "new_password2": "dummy-pass-not-a-secret",
             },
         )
         # The lock is gone and the door opens immediately
@@ -119,7 +119,7 @@ class PasswordResetMailTest(TestCase):
         self.assertEqual(self.customer.login_attempt_counter, 0)
         self.client.post(
             "/fr/repanier/go_repanier/",
-            data={"username": "locked@example.com", "password": "S0me-sturdy-pass!"},
+            data={"username": "locked@example.com", "password": "dummy-pass-not-a-secret"},
             follow=True,
         )
         self.assertIn("_auth_user_id", self.client.session)
@@ -135,8 +135,8 @@ class PasswordResetMailTest(TestCase):
         response = self.client.post(
             set_password_url,
             data={
-                "new_password1": "S0me-sturdy-pass!",
-                "new_password2": "S0me-sturdy-pass!",
+                "new_password1": "dummy-pass-not-a-secret",
+                "new_password2": "dummy-pass-not-a-secret",
             },
         )
         self.assertIn(response.status_code, (301, 302))
