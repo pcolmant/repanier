@@ -1471,6 +1471,18 @@ msgstr "Compte bancaire secondaire"
 msgid "Address"
 msgstr "Adresse"
 
+#: signals/auth.py
+msgid "A superuser signed in"
+msgstr "Connexion d'un superutilisateur"
+
+#: signals/auth.py
+msgid "Account"
+msgstr "Compte"
+
+#: signals/auth.py
+msgid "Timestamp"
+msgstr "Heure"
+
 #: models/customer.py:79 models/producer.py:76
 msgid "City"
 msgstr "Localité"

@@ -15,6 +15,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext, override
 
 from repanier.models.customer import Customer
+from repanier.models.configuration import Configuration
 
 # The site of the tests runs with the French catalog; the mails render
 # in the language of the request path.
@@ -80,6 +81,48 @@ class PasswordResetMailTest(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         # Transactional mail: no unsubscribe machinery on the reset mail.
         self.assertNotIn("List-Unsubscribe", mail.outbox[0].extra_headers)
+
+    def test_the_reset_lifts_the_temporary_lock(self):
+        # The lock mail promises a way back "right now" through a new
+        # password: the reset proves the identity of the asker, it
+        # must lift the lock instead of letting him wait the quarter
+        # of an hour
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        for wrong_password in ("wrong-1", "wrong-2", "wrong-3"):
+            self.client.post(
+                "/fr/repanier/go_repanier/",
+                data={"username": "locked@example.com", "password": wrong_password},
+                follow=True,
+            )
+        self.customer.refresh_from_db()
+        self.assertIsNotNone(self.customer.login_locked_on)
+        # The member follows the reset link from the mail and sets a
+        # new password right away
+        self.client.get(self._reset_link())
+        uid = urlsafe_base64_encode(str(self.user.pk).encode())
+        set_password_url = "/fr/repanier/password_reset/{}/set-password/".format(uid)
+        self.client.post(
+            set_password_url,
+            data={
+                "new_password1": "S0me-sturdy-pass!",
+                "new_password2": "S0me-sturdy-pass!",
+            },
+        )
+        # The lock is gone and the door opens immediately
+        self.customer.refresh_from_db()
+        self.assertIsNone(self.customer.login_locked_on)
+        self.assertEqual(self.customer.login_attempt_counter, 0)
+        self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "locked@example.com", "password": "S0me-sturdy-pass!"},
+            follow=True,
+        )
+        self.assertIn("_auth_user_id", self.client.session)
 
     def test_the_confirmation_mail_after_reset_mentions_the_group(self):
         # The stock confirm view answers the reset link with a redirect

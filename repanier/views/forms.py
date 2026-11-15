@@ -96,9 +96,14 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
         super().save(commit)
         if commit:
             now = timezone.now()
+            # The lock mail promises a way back "right now" through a
+            # new password: the reset proves the identity of the asker,
+            # it lifts the lock as a correct password does.
             if self.user.is_superuser:
                 Configuration.objects.filter(id=DECIMAL_ONE).update(
-                    login_attempt_counter=DECIMAL_ZERO, password_reset_on=now
+                    login_attempt_counter=DECIMAL_ZERO,
+                    login_locked_on=None,
+                    password_reset_on=now,
                 )
             else:
                 customer = Customer.objects.filter(
@@ -106,7 +111,9 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
                 ).first()
                 if customer is not None:
                     Customer.objects.filter(id=customer.id).update(
-                        login_attempt_counter=DECIMAL_ZERO, password_reset_on=now
+                        login_attempt_counter=DECIMAL_ZERO,
+                        login_locked_on=None,
+                        password_reset_on=now,
                     )
             current_site = get_current_site(request)
             site_name = current_site.name

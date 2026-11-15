@@ -13,6 +13,7 @@ from django.utils.translation import gettext, override
 
 from unittest.mock import patch
 
+from repanier.const import DECIMAL_ONE
 from repanier.models.customer import Customer
 from repanier.models.configuration import Configuration
 
@@ -263,6 +264,17 @@ class LoginTemporaryLockTest(TestCase):
         # Transactional: an unsubscribed member is warned too
         Customer.objects.filter(id=self.customer.id).update(subscribe_to_email=False)
         mail.outbox.clear()
+        # A fresh lock episode with the member now unsubscribed: the
+        # warning leaves anyway - it is a security mail, not an
+        # announcement
+        Customer.objects.filter(id=self.customer.id).update(
+            login_locked_on=None, login_attempt_counter=0
+        )
+        self._post_login("wrong-1")
+        self._post_login("wrong-2")
+        self._post_login("wrong-3")
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIsNotNone(self._mail_to("toto@example.com"))
 
     def test_during_the_lock_even_the_correct_password_waits(self):
         self._post_login("wrong-1")
@@ -390,6 +402,121 @@ class EmailOnlySignInTest(TestCase):
         # Nobody entered: the session carries no user
         self.assertNotIn("_auth_user_id", self.client.session)
 
+    def test_the_short_name_is_not_a_login_either(self):
+        # The shape inherited from the CSV import: the username still
+        # carries the short name. Falling back on the username at the
+        # sign in would open his door through the name displayed in
+        # his basket - the e-mail address stays the only key.
+        imported = User.objects.create_user(
+            username="Titi", email="titi@example.com", password="right-password"
+        )
+        Customer.objects.create(
+            user=imported, short_basket_name="Titi", may_order=True
+        )
+        self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "Titi", "password": "right-password"},
+            follow=True,
+        )
+        self.assertNotIn("_auth_user_id", self.client.session)
+        # ... while his e-mail opens his door normally
+        self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "titi@example.com", "password": "right-password"},
+            follow=True,
+        )
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_the_superuser_opens_with_his_private_username(self):
+        # The accounts without a customer profile - in practice the
+        # superusers - keep a private door: their username, an
+        # identifier never displayed anywhere. Their public e-mail
+        # address provokes no guessing at the sign in screen.
+        superuser = User.objects.create_user(
+            username="pi", email="public-contact@example.com", password="right-password"
+        )
+        User.objects.filter(id=superuser.id).update(is_superuser=True)
+        self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "pi", "password": "right-password"},
+            follow=True,
+        )
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_a_wrong_password_on_the_private_door_locks_the_configuration(self):
+        # The private door leans on the same lock and counter machinery
+        # as the public one - the Configuration row for the accounts
+        # without a customer profile
+        superuser = User.objects.create_user(
+            username="pi", email="public-contact@example.com", password="right-password"
+        )
+        User.objects.filter(id=superuser.id).update(is_superuser=True)
+        self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": "pi", "password": "wrong-password"},
+            follow=True,
+        )
+        self.assertNotIn("_auth_user_id", self.client.session)
+        configuration = Configuration.objects.filter(id=DECIMAL_ONE).first()
+        self.assertEqual(configuration.login_attempt_counter, 1)
+        self.assertIsNone(configuration.login_locked_on)
+
     def test_the_email_address_stays_the_only_key(self):
         self._post_login("dupont@example.com")
         self.assertIn("_auth_user_id", self.client.session)
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False
+)
+class AdminSignInNotificationTest(TestCase):
+    """Every opening of a superuser session - whatever the door, the
+    sign in form or /admin/ - leaves a short mail to the admins: the
+    site, the account, the visible address, the moment. A connection
+    of the admin is rare and sensitive: an odd hour warning is an
+    alarm he can act on. A member connection leaves no admin mail.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        Configuration.objects.create(
+            group_name="Test Group",
+            name="100",
+            bank_account="BE99 9999 9999 9999",
+            currency="100",
+        )
+        cls.superuser = User.objects.create_user(
+            username="pi", email="private-box@example.com", password="right-password"
+        )
+        User.objects.filter(id=cls.superuser.id).update(is_superuser=True)
+        cls.member = User.objects.create_user(
+            username="member@example.com",
+            email="member@example.com",
+            password="right-password",
+        )
+        Customer.objects.create(
+            user=cls.member, short_basket_name="Membre", may_order=True
+        )
+
+    def _sign_in(self, username):
+        return self.client.post(
+            "/fr/repanier/go_repanier/",
+            data={"username": username, "password": "right-password"},
+            follow=True,
+        )
+
+    def test_each_superuser_sign_in_reaches_the_admins(self):
+        self._sign_in("pi")
+        admin_mails = [
+            m for m in mail.outbox if settings.ADMIN_EMAIL in m.to
+        ]
+        self.assertEqual(len(admin_mails), 1)
+        # The account and the site travel in the mail, so the admin
+        # knows which door opened without asking anybody
+        self.assertIn("pi", admin_mails[0].subject + admin_mails[0].body)
+
+    def test_a_member_sign_in_leaves_no_admin_mail(self):
+        self._sign_in("member@example.com")
+        self.assertFalse(
+            [m for m in mail.outbox if settings.ADMIN_EMAIL in m.to]
+        )
