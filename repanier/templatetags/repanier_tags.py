@@ -48,6 +48,7 @@ def repanier_user(context, *args, **kwargs):
         "repanier/user_menu.html",
         {
             "user": user,
+            "user_label": user_display_name(user),
             "permanence_id": p_permanence_id,
             "display_who_is_who": REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
             # Same query as before: only customers see their balance in the menu
@@ -59,6 +60,37 @@ def repanier_user(context, *args, **kwargs):
         },
         request=request,
     )
+
+
+def user_display_name(user) -> str:
+    """The label of the user menu toggle: the navbar stays short.
+
+    The display identity of a member is his short name, but some
+    members pick a "short" name longer than their e-mail address -
+    the shorter label wins. A staff connected under one of his
+    responsibilities always carries his name: the roles identify by
+    name, whoever long it is. Without a customer account, the label
+    falls back on the e-mail address, keeping only the part before
+    the @: the domain buys nothing in a navbar.
+
+    Attached by RepanierAuthBackend on every authenticated user,
+    customer_id is None for a staff without customer account.
+    """
+    if not user.is_authenticated:
+        return EMPTY_STRING
+    username = user.username or EMPTY_STRING
+    customer = None
+    if user.customer_id:
+        customer = user.customer
+    if customer is not None:
+        short_basket_name = customer.short_basket_name
+        if short_basket_name and (
+            user.is_staff or not username or len(short_basket_name) < len(username)
+        ):
+            return short_basket_name
+    if not username:
+        return EMPTY_STRING
+    return username.split("@", 1)[0] or username
 
 
 def history_label(request) -> str:
