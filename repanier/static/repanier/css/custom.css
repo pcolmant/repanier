@@ -91,6 +91,23 @@ code {
     box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
+/* Bootstrap 5.3 applies every dropdown anchoring rule through the
+   [data-bs-popper] attribute, which only arrives when Popper
+   positions the menu. The navbar dropdowns run without Popper: the
+   attribute never comes, dropdown-menu-end never applies, and the
+   right sided menus (user, language) open past the right edge of
+   the screen. The rules below mirror what Bootstrap would do with
+   the attribute present, whatever Popper decided. */
+.navbar-custom .dropdown-menu {
+    top: 100%;
+    margin-top: var(--bs-dropdown-spacer);
+}
+
+.navbar-custom .dropdown-menu.dropdown-menu-end {
+    right: 0;
+    left: auto;
+}
+
 .navbar-custom .dropdown-menu .dropdown-item {
     color: var(--bs-primary) !important;
 }
