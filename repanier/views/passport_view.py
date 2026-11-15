@@ -7,6 +7,7 @@
 # account exists.
 
 import json
+import logging
 
 from django.core import signing
 from django.http import HttpResponse, JsonResponse
@@ -19,6 +20,8 @@ from repanier.passport_network import (
     PASSPORT_NETWORK_MAX_AGE,
     get_network_signer,
 )
+
+passport_logger = logging.getLogger("repanier.passport")
 
 PROFILE_FIELDS = [
     "short_basket_name",
@@ -58,13 +61,19 @@ def passport_profile_view(request):
         value = get_network_signer().unsign(token, max_age=PASSPORT_NETWORK_MAX_AGE)
     except signing.BadSignature:
         return _profile_not_found()
-    email, _separator, _caller = value.partition("|")
+    email, _separator, caller = value.partition("|")
     email = email.strip().lower()
+    # The caller segment of the token is information, not
+    # authentication: the family key is the authority. But personal
+    # data leaving the site deserves a trail - who asked for whose
+    # profile, and when.
+    caller = caller.strip() or "unknown"
     user = _passport_user(email)
     if user is None:
         # The account does not exist, or the passport may not open it
-        # (group, staff, superuser, lock, inactive): the endpoint
-        # tells nothing, it only answers the profiles it may answer.
+        # (group, staff, superuser, lock, inactive, anonymized): the
+        # endpoint tells nothing, it only answers the profiles it may
+        # answer.
         return _profile_not_found()
     from repanier.models.customer import Customer
 
@@ -72,6 +81,9 @@ def passport_profile_view(request):
     if customer is None:
         return _profile_not_found()
     profile = _profile_of(customer)
+    passport_logger.info(
+        "repanier passport : profile of {} exported to [{}]".format(email, caller)
+    )
     return JsonResponse(
         {"passport_profile": get_network_signer().sign(json.dumps(profile))}
     )

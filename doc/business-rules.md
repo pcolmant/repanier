@@ -92,20 +92,32 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   which accepts the passport members, the site asks his home site for
   his profile and creates the local account from it: short and long
   names, phones, postal address, city, bank accounts, the language
-  of his mails and the may-order trust of the home site. The profile
-  crosses **only between the servers of the family** - a call signed
-  with the shared key, over HTTPS, never through a browser - at the
+  of his mails and the may-order trust of the home site, **copied
+  as is** - a member the home site does not let order does not
+  order either on the site which welcomes him, until the local
+  coordination decides otherwise. The profile crosses **only
+  between the servers of the family** - a call signed with the
+  shared key, over HTTPS, never through a browser - at the
   enrolment only: the cookie stays as small as before. The member
   lands directly in his mirror group, which keeps his home stable,
   and nothing reconnects anybody anywhere: the call authenticates
-  with the key, not with a sign in. Any failure - the home site
-  unreachable, no mirror group, a local account appearing in
-  between - enrols nobody and never blocks the page: the member
-  falls back on the classical sign in. A short name already taken
-  on the visited site unfolds (`Carine (gasath)`); an account which
-  exists - in any state - is never written over, and a broken
-  enrolment (a user without a customer) is repaired on the next
-  arrival;
+  with the key, not with a sign in. The key is the authority: every
+  site of the family holding it may ask, and every profile leaving
+  a site leaves a trail in the passport log - who asked for whose
+  profile. On this deployment the family sites answer in French
+  (`/fr/passport/profile/`): the French language must be enabled on
+  every site of the family for the enrolment to reach them. Any
+  failure - the home site unreachable, no mirror group, a local
+  account appearing in between - enrols nobody and never blocks the
+  page: the member falls back on the classical sign in. A short
+  name already taken on the visited site unfolds (`Carine
+  (gasath)`); a bank account already carried by another local
+  customer is left empty by the enrolment - the data integrity
+  guard of the site applies to the arriving member exactly as to
+  everybody else; an account which exists - in any state,
+  including a disabled or broken one - is never written over, and a
+  broken enrolment (a user without a customer) is repaired on the
+  next arrival of an active account;
 - the origin **never drifts with the hops of the member**: a passport
   issued while he belongs to a mirror group which accepts him
   travels under the home that mirror wears - and when no mirror
@@ -121,8 +133,9 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   `./manage.py generate_passport_signing_key` - the same value in
   every family site ini, empty on the own-domain sites.
   The profile endpoint of a site lives at `/fr/passport/profile/`:
-  only a site holding the key can ask, and everything it refuses
-  answers the same silent 404.
+  only a site holding the key can ask, everything it refuses answers
+  the same silent 404 (a GET answers 405 - the endpoint speaks POST
+  only).
   Tests: `test_repanier_passport.py`, `test_passport_enrolment.py`.
 
 ### The purchase chain

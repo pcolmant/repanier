@@ -191,6 +191,128 @@ class PassportEnrolmentTest(TestCase):
         self.assertEqual(customer.group_id, self.mirror_group.id)
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.id)
 
+    def test_a_disabled_user_without_customer_never_reopens(self):
+        # The coordination disabled this leftover account: the
+        # enrolment is the last door which may reopen it - and it
+        # stays closed.
+        User.objects.create_user(
+            username="damien@example.com",
+            email="damien@example.com",
+            password="x",
+            is_active=False,
+        )
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            self._arrive_with_a_passport_from("gasath", "damien@example.com")
+            self.assertEqual(fetch.call_count, 0)
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertFalse(
+            Customer.objects.filter(user__email="damien@example.com").exists()
+        )
+
+    def test_an_active_member_arrives_without_a_word_to_the_network(self):
+        # A member who owns his account here travels with the
+        # classical passport: the enrolment never even wakes up.
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            self._arrive_with_a_passport_from("gasath", "local-carine@example.com")
+            self.assertEqual(fetch.call_count, 0)
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]), self.local_user.id
+        )
+
+    def test_a_locked_member_is_never_asked_nor_rewritten(self):
+        from django.utils import timezone
+
+        Customer.objects.filter(user_id=self.local_user.id).update(
+            login_locked_on=timezone.now()
+        )
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            self._arrive_with_a_passport_from("gasath", "local-carine@example.com")
+            self.assertEqual(fetch.call_count, 0)
+        self.assertNotIn("_auth_user_id", self.client.session)
+        customer = Customer.objects.get(user_id=self.local_user.id)
+        self.assertEqual(customer.short_basket_name, "Carine")
+
+    def test_coming_home_never_enrols_anybody(self):
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            self._arrive_with_a_passport_from(
+                "courtcircuit", "damien@example.com"
+            )
+            self.assertEqual(fetch.call_count, 0)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_a_mirror_wearing_a_disguise_enrols_nobody(self):
+        # Two groups claim the same home site: the coordination unties
+        # the knot by hand, the passport keeps out of it.
+        twin_user = User.objects.create_user(
+            username="group-gasath-twin", email="twin@example.com", password="x"
+        )
+        Customer.objects.create(
+            user=twin_user,
+            short_basket_name="GasAth",
+            is_group=True,
+            accepts_passport_members=True,
+        )
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            self._arrive_with_a_passport_from("gasath", "damien@example.com")
+            self.assertEqual(fetch.call_count, 0)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_a_suspended_mirror_enrols_nobody(self):
+        Customer.objects.filter(id=self.mirror_group.id).update(is_active=False)
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            self._arrive_with_a_passport_from("gasath", "damien@example.com")
+            self.assertEqual(fetch.call_count, 0)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_short_name_twins_unfold_until_they_are_unique(self):
+        profile = dict(MOCK_PROFILE)
+        profile["email"] = "carine@example.com"
+        profile["short_basket_name"] = "Carine"
+        wife_user = User.objects.create_user(
+            username="wife@example.com", email="wife@example.com", password="x"
+        )
+        Customer.objects.create(
+            user=wife_user, short_basket_name="Carine (gasath)"
+        )
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            fetch.return_value = profile
+            self._arrive_with_a_passport_from("gasath", "carine@example.com")
+        customer = Customer.objects.get(user__email="carine@example.com")
+        self.assertEqual(customer.short_basket_name, "Carine 2")
+
+    def test_may_order_travels_in_both_states(self):
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            fetch.return_value = dict(MOCK_PROFILE)
+            self._arrive_with_a_passport_from("gasath", "damien@example.com")
+        customer = Customer.objects.get(user__email="damien@example.com")
+        self.assertFalse(customer.may_order)
+        # A fresh browser for the second traveller: the enrolment
+        # only reads arrivals of the not yet signed in.
+        self.client.logout()
+        profile = dict(MOCK_PROFILE)
+        profile["may_order"] = True
+        profile["email"] = "melanie@example.com"
+        profile["short_basket_name"] = "Mélanie"
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            fetch.return_value = profile
+            self._arrive_with_a_passport_from("gasath", "melanie@example.com")
+        customer = Customer.objects.get(user__email="melanie@example.com")
+        self.assertTrue(customer.may_order)
+
+    def test_a_bank_account_already_carried_here_stays_empty(self):
+        # The data integrity guard of the site applies to the
+        # arriving member: the account number of his spouse stays
+        # with his spouse.
+        Customer.objects.filter(user_id=self.local_user.id).update(
+            bank_account1="BE12 3456 7890 1234"
+        )
+        with patch("repanier.middleware.fetch_passport_profile") as fetch:
+            fetch.return_value = dict(MOCK_PROFILE)
+            self._arrive_with_a_passport_from("gasath", "damien@example.com")
+        customer = Customer.objects.get(user__email="damien@example.com")
+        self.assertEqual(customer.bank_account1, "")
+        self.assertEqual(customer.bank_account2, "BE98 7654 3210 9876")
+
 
 @override_settings(
     SECURE_SSL_REDIRECT=False,
@@ -289,3 +411,124 @@ class PassportProfileEndpointTest(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 404)
+        # A token older than the network window
+        import time as time_module
+
+        with patch(
+            "django.core.signing.time.time",
+            return_value=time_module.time() - 120,
+        ):
+            ancient = get_network_signer().sign("melanie@example.com|courtcircuit")
+        response = self.client.post(
+            "/fr/passport/profile/",
+            data='{"token": "%s"}' % ancient,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 404)
+        # An anonymized account stays mute: the GDPR erasure holds
+        # even when somebody asks for the profile by hand.
+        Customer.objects.filter(id=self.customer.id).update(
+            is_anonymized=True,
+        )
+        User.objects.filter(id=self.user.id).update(is_active=False)
+        self.assertEqual(self._ask("melanie@example.com").status_code, 404)
+
+    def test_the_export_leaves_a_trail(self):
+        with self.assertLogs("repanier.passport", level="INFO") as logs:
+            self._ask("melanie@example.com")
+        self.assertTrue(
+            any(
+                "exported" in message and "melanie@example.com" in message
+                for message in logs.output
+            ),
+            logs.output,
+        )
+
+
+class PassportFetchTest(TestCase):
+    """The network client answers a clean None to every branch of
+    the crossed network - the enrolment then falls back on the
+    classical sign in without a scratch. Nobody swallows an
+    exception either: the local except covers every malformed
+    answer a family site may send by accident."""
+
+    class _FakeResponse:
+        def __init__(self, body):
+            self._body = body.encode("utf-8") if isinstance(body, str) else body
+
+        def read(self):
+            return self._body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    def _answer(self, payload):
+        from unittest.mock import patch
+
+        return patch(
+            "repanier.passport_network.urllib_request.urlopen",
+            return_value=self._FakeResponse(payload),
+        )
+
+    def test_a_subdomain_out_of_the_family_never_reaches_the_network(self):
+        from repanier.passport_network import fetch_passport_profile
+
+        with self._answer("{}") as urlopen:
+            for bad_subdomain in ("Bad_Sub", "a.b", "", "gasath.example.com"):
+                self.assertIsNone(
+                    fetch_passport_profile(bad_subdomain, "member@example.com")
+                )
+            urlopen.assert_not_called()
+
+    def test_a_server_error_answers_none(self):
+        from urllib.error import HTTPError
+
+        from repanier.passport_network import fetch_passport_profile
+
+        with patch(
+            "repanier.passport_network.urllib_request.urlopen",
+            side_effect=HTTPError(
+                "url", 500, "boom", {}, None
+            ),
+        ):
+            self.assertIsNone(
+                fetch_passport_profile("gasath", "member@example.com")
+            )
+
+    def test_a_payload_which_is_not_an_object_answers_none(self):
+        from repanier.passport_network import fetch_passport_profile
+
+        for payload in ("[]", '"a string"', "null", ""):
+            with self._answer(payload):
+                self.assertIsNone(
+                    fetch_passport_profile("gasath", "member@example.com")
+                )
+
+    def test_a_blob_signed_by_a_stranger_answers_none(self):
+        from repanier.passport_network import fetch_passport_profile
+
+        stranger = signing.TimestampSigner(
+            key="not-the-family-key", salt="repanier/1905/passport-network"
+        )
+        payload = json.dumps(
+            {"passport_profile": stranger.sign(json.dumps(MOCK_PROFILE))}
+        )
+        with self._answer(payload):
+            self.assertIsNone(
+                fetch_passport_profile("gasath", "damien@example.com")
+            )
+
+    def test_a_profile_of_another_email_answers_none(self):
+        from repanier.passport_network import fetch_passport_profile
+
+        stranger_profile = dict(MOCK_PROFILE)
+        payload = json.dumps(
+            {"passport_profile": get_network_signer().sign(json.dumps(stranger_profile))}
+        )
+        with self._answer(payload):
+            self.assertIsNone(
+                fetch_passport_profile("gasath", "somebodyelse@example.com")
+            )

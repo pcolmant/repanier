@@ -78,5 +78,20 @@ def fetch_passport_profile(subdomain, email):
         if (profile.get("email") or EMPTY_STRING).strip().lower() != email:
             return None
         return profile
-    except (HTTPError, URLError, TimeoutError, ValueError, signing.BadSignature):
+    except (
+        AttributeError,
+        TypeError,
+        ValueError,
+        HTTPError,
+        URLError,
+        TimeoutError,
+    ):
+        # A payload which is not a plain JSON object (a list, a
+        # string, empty), a broken connection, a timeout, a server
+        # error: every branch of the crossed network answers the
+        # same clean None.
+        return None
+    except Exception:
+        # A bad or expired signature is the only branch left: the
+        # answer did not come from a family site holding the key.
         return None

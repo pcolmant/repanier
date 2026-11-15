@@ -100,20 +100,33 @@ possède un compte, sans rien redemander
   le site demande son profil à son site d'origine et crée le compte
   local à partir de lui : nom abrégé et nom étendu, téléphones,
   adresse postale, localité, comptes bancaires, la langue de ses
-  mails et la confiance de commande du site d'origine. Le profil ne
-  traverse **qu'entre les serveurs de la famille** — un appel signé
-  avec la clé partagée, sur HTTPS, jamais via un navigateur — et
-  seulement à l'inscription : le cookie reste aussi sobre
+  mails et la confiance de commande du site d'origine, **copiée
+  telle quelle** — un membre que son site d'origine ne laisse pas
+  commander ne commande pas non plus sur le site qui l'accueille,
+  jusqu'à décision contraire de la coordination locale. Le profil
+  ne traverse **qu'entre les serveurs de la famille** — un appel
+  signé avec la clé partagée, sur HTTPS, jamais via un navigateur —
+  et seulement à l'inscription : le cookie reste aussi sobre
   qu'avant. Le membre atterrit directement dans son groupe miroir,
   ce qui garde son domicile stable, et personne ne se reconnecte
   nulle part : l'appel s'authentifie par la clé, pas par une
-  connexion. Tout échec — le site d'origine injoignable, pas de
+  connexion. La clé fait autorité : tout site de la famille qui la
+  détient peut interroger, et chaque profil quittant un site laisse
+  une trace dans le journal du passeport — qui a demandé le profil
+  de qui. Sur ce déploiement, les sites de la famille répondent en
+  français (`/fr/passport/profile/`) : le français doit être activé
+  sur chaque site de la famille pour que l'inscription les
+  atteigne. Tout échec — le site d'origine injoignable, pas de
   groupe miroir, un compte local qui surgit entre-temps — n'inscrit
   personne et ne bloque jamais la page : le membre retombe sur la
   connexion classique. Un nom abrégé déjà pris sur le site visité se
-  déplie (`Carine (gasath)`) ; un compte qui existe — dans quelque
-  état que ce soit — n'est jamais réécrit, et une inscription cassée
-  (un utilisateur sans client) se répare à la prochaine arrivée ;
+  déplie (`Carine (gasath)`) ; un compte bancaire déjà porté par un
+  autre client local reste vide à l'inscription — la garde
+  d'intégrité des données du site s'applique au membre arrivant
+  exactement comme à tous les autres ; un compte qui existe — dans
+  quelque état que ce soit, y compris désactivé ou cassé — n'est
+  jamais réécrit, et une inscription cassée (un utilisateur sans
+  client) ne se répare qu'en arrivant sur un compte actif ;
 - l'origine **ne dérive jamais avec les sauts du membre** : un
   passeport émis alors qu'il appartient à un groupe miroir qui
   l'accepte voyage sous le domicile que ce miroir porte — et quand
@@ -131,7 +144,8 @@ possède un compte, sans rien redemander
   dans l'ini de chaque site de la famille, vide sur les sites à
   domaine propre. L'endpoint profil d'un site vit sous
   `/fr/passport/profile/` : seul un site qui tient la clé peut
-  interroger, et tout ce qu'il refuse répond le même 404 silencieux.
+  interroger, tout ce qu'il refuse répond le même 404 silencieux
+  (un GET répond 405 — l'endpoint ne parle qu'en POST).
   Tests : `test_repanier_passport.py`, `test_passport_enrolment.py`.
 
 ### Chaîne d'achat
