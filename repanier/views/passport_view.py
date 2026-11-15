@@ -87,3 +87,32 @@ def passport_profile_view(request):
     return JsonResponse(
         {"passport_profile": get_network_signer().sign(json.dumps(profile))}
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def passport_verify_view(request):
+    """The answer of a home site to the family routine: is this
+    e-mail still an active member here? The question travels signed
+    with the family key, and the answer always comes signed too -
+    even the negative one: a site which answers never says why, and
+    a site which stays silent (network, wrong key, refused token)
+    is never confused with a site which says no."""
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return _profile_not_found()
+    token = (payload.get("token") or EMPTY_STRING).strip()
+    try:
+        value = get_network_signer().unsign(token, max_age=PASSPORT_NETWORK_MAX_AGE)
+    except signing.BadSignature:
+        return _profile_not_found()
+    email, _separator, _caller = value.partition("|")
+    email = email.strip().lower()
+    if not email:
+        return _profile_not_found()
+    user = _passport_user(email)
+    answer = json.dumps({"member": user is not None})
+    return JsonResponse(
+        {"passport_member": get_network_signer().sign(answer)}
+    )

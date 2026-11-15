@@ -126,7 +126,19 @@ possède un compte, sans rien redemander
   exactement comme à tous les autres ; un compte qui existe — dans
   quelque état que ce soit, y compris désactivé ou cassé — n'est
   jamais réécrit, et une inscription cassée (un utilisateur sans
-  client) ne se répare qu'en arrivant sur un compte actif ;
+  client) ne se répare qu'arrivant sur un compte actif ;
+- le groupe d'un membre du passeport garde ses commandes **seulement
+  sur les permanences à points de livraison** : là, il commande
+  aux points de livraison de son groupe — ou sans groupe — et une
+  permanence qui ne lui en offre aucun lui ferme la porte (« No
+  delivery point is open for you »). Sur une permanence **sans
+  point de livraison** (`with_delivery_point=False`, la
+  distribution centrale), la sélection de livraison est purement et
+  simplement sautée : le membre du passeport y commande comme
+  n'importe quel membre local, le groupe ne joue aucun rôle. Un
+  site qui veut garder ses visiteurs sur leur seule distribution
+  ne tient jamais de permanence sans point de livraison ; un site
+  qui veut les intégrer au flux central n'en tient que de celles-là ;
 - l'origine **ne dérive jamais avec les sauts du membre** : un
   passeport émis alors qu'il appartient à un groupe miroir qui
   l'accepte voyage sous le domicile que ce miroir porte — et quand
@@ -135,6 +147,16 @@ possède un compte, sans rien redemander
   rebondit de site en site continue de voyager comme gasath et ne
   devient jamais, à force de visites, membre de l'endroit qu'il a
   simplement visité ;
+- la routine de famille — l'**audit du passeport** : un cron
+  nocturne (`./manage.py passport_audit`) demande à chaque site
+  d'origine, serveur à serveur et signé avec la clé de famille, si
+  chaque membre placé ici lui appartient toujours. **Lecture seule,
+  pour toujours** : les constats — « son site d'origine ne le
+  connaît plus », « son site d'origine n'a pas répondu » — arrivent
+  à la coordination par mail, et la coordination décide ; l'audit
+  ne touche jamais un compte. Le silence n'est jamais un départ :
+  une panne réseau, un retard de déploiement et une mauvaise clé
+  répondent le même None ;
 - les sites vivant sur leur propre domaine (colibera.be,
   commande.lebuisson.be, commande.coopeco-supermarche.be) ne portent
   pas de passeport : leurs membres se connectent site par site ;
@@ -143,10 +165,13 @@ possède un compte, sans rien redemander
   de `./manage.py generate_passport_signing_key` — la même valeur
   dans l'ini de chaque site de la famille, vide sur les sites à
   domaine propre. L'endpoint profil d'un site vit sous
-  `/fr/passport/profile/` : seul un site qui tient la clé peut
-  interroger, tout ce qu'il refuse répond le même 404 silencieux
-  (un GET répond 405 — l'endpoint ne parle qu'en POST).
-  Tests : `test_repanier_passport.py`, `test_passport_enrolment.py`.
+  `/fr/passport/profile/` et la routine interroge sous
+  `/fr/passport/verify/` : seul un site qui tient la clé peut
+  interroger, tout ce qu'un endpoint refuse répond le même 404
+  silencieux (un GET répond 405 — les endpoints ne parlent qu'en
+  POST).
+  Tests : `test_repanier_passport.py`, `test_passport_enrolment.py`,
+  `test_passport_verify.py`.
 
 ### Chaîne d'achat
 
