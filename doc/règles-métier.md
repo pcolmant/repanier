@@ -53,8 +53,9 @@ possède un compte, sans rien redemander
   qui a accueilli le membre en dernier** (gasath pour
   gasath.repanier.be), signés avec
   `REPANIER_SETTINGS_PASSPORT_SIGNING_KEY` — la même valeur sur tous
-  les sites de la famille ; aucun compte central n'existe et aucune
-  donnée personnelle ne traverse les bases de données ;
+  les sites de la famille ; aucun compte central n'existe et le
+  cookie ne transporte jamais d'autre donnée personnelle que
+  l'adresse email de connexion ;
 - arrivant sur un autre site, un passeport vérifié ouvre une
   **session locale** pour le compte local de cette adresse email —
   uniquement pour un **membre actif** : le verrou temporaire des
@@ -78,6 +79,27 @@ possède un compte, sans rien redemander
   placés. Un compte déjà enregistré sur le site est réparé à la
   prochaine connexion — par passeport ou classique, quand le
   navigateur porte encore un passeport correspondant ;
+- la même arrivée peut aussi **inscrire le membre sur le vif** —
+  l'inscription familiale. Quand le membre ne possède **pas encore
+  de compte** sur le site visité et que ce site tient un groupe
+  miroir de son site d'origine qui accepte les membres du passeport,
+  le site demande son profil à son site d'origine et crée le compte
+  local à partir de lui : nom abrégé et nom étendu, téléphones,
+  adresse postale, localité, comptes bancaires, la langue de ses
+  mails et la confiance de commande du site d'origine. Le profil ne
+  traverse **qu'entre les serveurs de la famille** — un appel signé
+  avec la clé partagée, sur HTTPS, jamais via un navigateur — et
+  seulement à l'inscription : le cookie reste aussi sobre
+  qu'avant. Le membre atterrit directement dans son groupe miroir,
+  ce qui garde son domicile stable, et personne ne se reconnecte
+  nulle part : l'appel s'authentifie par la clé, pas par une
+  connexion. Tout échec — le site d'origine injoignable, pas de
+  groupe miroir, un compte local qui surgit entre-temps — n'inscrit
+  personne et ne bloque jamais la page : le membre retombe sur la
+  connexion classique. Un nom abrégé déjà pris sur le site visité se
+  déplie (`Carine (gasath)`) ; un compte qui existe — dans quelque
+  état que ce soit — n'est jamais réécrit, et une inscription cassée
+  (un utilisateur sans client) se répare à la prochaine arrivée ;
 - l'origine **ne dérive jamais avec les sauts du membre** : un
   passeport émis alors qu'il appartient à un groupe miroir qui
   l'accepte voyage sous le domicile que ce miroir porte — et quand
@@ -93,8 +115,10 @@ possède un compte, sans rien redemander
   membre quitte tous les sites à la fois. La clé de signature vient
   de `./manage.py generate_passport_signing_key` — la même valeur
   dans l'ini de chaque site de la famille, vide sur les sites à
-  domaine propre.
-  Tests : `test_repanier_passport.py`.
+  domaine propre. L'endpoint profil d'un site vit sous
+  `/fr/passport/profile/` : seul un site qui tient la clé peut
+  interroger, et tout ce qu'il refuse répond le même 404 silencieux.
+  Tests : `test_repanier_passport.py`, `test_passport_enrolment.py`.
 
 ### Chaîne d'achat
 
