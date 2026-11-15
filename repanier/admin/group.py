@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.forms import Textarea, TextInput
 from django.http import HttpResponse
 from django.utils import timezone
@@ -228,6 +228,8 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         "phone1",
         "get_email",
         "is_active",
+        "get_passport",
+        "get_passport_members",
     )
     search_fields = (
         "short_basket_name",
@@ -338,7 +340,27 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = qs.filter(is_group=True)
+        # The member counter of the column, without one query per row.
+        qs = qs.annotate(member_counter=Count("customer"))
         return qs
+
+    def get_passport(self, group):
+        # The passport state of the mirror group: does it accept the
+        # members arriving from the other sites of the family?
+        return group.accepts_passport_members
+
+    get_passport.short_description = _("Passeport")
+    get_passport.boolean = True
+    get_passport.admin_order_field = "accepts_passport_members"
+
+    def get_passport_members(self, group):
+        # How many members the group counts today (mirrors: the ones
+        # the passport placed here). An empty cell when there is none.
+        counter = getattr(group, "member_counter", 0) or 0
+        return str(counter) if counter else EMPTY_STRING
+
+    get_passport_members.short_description = _("# passeports")
+    get_passport_members.admin_order_field = "member_counter"
 
     def save_model(self, request, group, form, change):
         group.user = form.user

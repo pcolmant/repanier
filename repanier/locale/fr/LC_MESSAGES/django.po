@@ -4286,6 +4286,14 @@ msgstr "Demander un nouveau mot de passe"
 msgid "You receive the mails of the group again."
 msgstr "Vous recevez à nouveau les mails du groupe."
 
+#: repanier/admin/group.py
+msgid "Passeport"
+msgstr "Passeport"
+
+#: repanier/admin/group.py
+msgid "# passeports"
+msgstr "# passeports"
+
 
 #~ msgid "My balance"
 #~ msgstr "Mon solde"
