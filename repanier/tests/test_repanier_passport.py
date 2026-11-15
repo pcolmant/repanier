@@ -397,6 +397,30 @@ class RepanierPassportTest(TestCase):
         # passport at all
         self.assertIsNone(self.client.cookies.get(PASSPORT_COOKIE))
 
+    def test_the_signing_key_command_prints_a_strong_key(self):
+        from django.core.management import call_command
+
+        import io
+        from contextlib import redirect_stdout
+
+        def generate():
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                call_command("generate_passport_signing_key")
+            return buffer.getvalue()
+
+        first, second = generate(), generate()
+        key_line = first.splitlines()[0]
+        self.assertTrue(
+            key_line.startswith("REPANIER_SETTINGS_PASSPORT_SIGNING_KEY=")
+        )
+        key = key_line.split("=", 1)[1]
+        # A url-safe token of at least 60 characters: no human
+        # invention, no reused password
+        self.assertGreaterEqual(len(key), 60)
+        # Two runs never collide
+        self.assertNotEqual(key, second.splitlines()[0].split("=", 1)[1])
+
     def test_the_logout_closes_the_whole_family(self):
         self._sign_in_on("gasath.repanier.be")
         self.client.cookies.pop(PASSPORT_COOKIE, None)

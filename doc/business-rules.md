@@ -85,7 +85,9 @@ without asking anything again (`repanier.middleware.repanier_passport_middleware
   commande.lebuisson.be, commande.coopeco-supermarche.be) carry no
   passport: their members sign in on each site;
 - leaving one site (logout) deletes the family cookie: the member
-  leaves every site at once.
+  leaves every site at once. The signing key comes from
+  `./manage.py generate_passport_signing_key` - the same value in
+  every family site ini, empty on the own-domain sites.
   Tests: `test_repanier_passport.py`.
 
 ### The purchase chain

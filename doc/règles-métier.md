@@ -90,7 +90,10 @@ possède un compte, sans rien redemander
   commande.lebuisson.be, commande.coopeco-supermarche.be) ne portent
   pas de passeport : leurs membres se connectent site par site ;
 - quitter un site (déconnexion) supprime le cookie de famille : le
-  membre quitte tous les sites à la fois.
+  membre quitte tous les sites à la fois. La clé de signature vient
+  de `./manage.py generate_passport_signing_key` — la même valeur
+  dans l'ini de chaque site de la famille, vide sur les sites à
+  domaine propre.
   Tests : `test_repanier_passport.py`.
 
 ### Chaîne d'achat
