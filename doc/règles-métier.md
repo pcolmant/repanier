@@ -463,6 +463,34 @@ tard, jusqu'au paiement du dernier (`Permanence.invoice`,
   CancelTheWholeChainFromTheNewestTest,
   CancelTheParentWhileTheChildIsStillOpenTest).
 
+### L'audit comptable (`audit_accounting`)
+
+- une commande en lecture seule rejoue tout l'historique d'un site et
+  compare ce que l'algèbre de la facturation recalcule avec ce que
+  la base stocke (`./manage.py audit_accounting`, avec
+  `--permanence` et `--customer` pour cibler) ;
+- six classes d'invariants : les soldes clients (solde initial +
+  banque attachée − livres facturés), les soldes producteurs (idem,
+  moins les corrections PROFIT, qui doivent aussi correspondre à ce
+  que la facturation a réellement booké sur le compte consommateur
+  du site), les totaux des livres recalculés depuis les achats
+  (transport et arrondi belge compris), les totaux des sessions
+  (facturé aux clients == booké aux producteurs), les tampons de
+  clôture d'une session (statut et ancre bancaire sur chaque livre
+  et chaque achat), et la chaîne des ancres bancaires (une seule
+  LATEST_TOTAL, chaque ancre équilibre les mouvements attachés
+  pendant sa session, aucun paiement plus ancien que la dernière
+  ancre ne reste détaché) ;
+- l'audit **ne répare jamais rien** : chaque constat porte le
+  rejeu, les valeurs stockées et une réparation suggérée ; le code
+  de sortie vaut 1 exactement quand un constat existe. Un
+  `previous_balance` faux est hérité par le rejeu (angle mort
+  documenté), la dérive qu'il introduit à sa propre session est
+  néanmoins détectée.
+  Tests : `test_audit_accounting.py` (le journal sain reste muet,
+  une rayure par classe est attrapée, et chaque audit prouve son
+  caractère lecture seule par un instantané avant/après).
+
 ---
 
 *Document entretenu en parallèle de la suite de tests `repanier/tests/` ;

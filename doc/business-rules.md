@@ -446,6 +446,32 @@ paid (`Permanence.invoice`, `create_child`). Locked rules
   CancelTheWholeChainFromTheNewestTest,
   CancelTheParentWhileTheChildIsStillOpenTest).
 
+### The accounting audit (`audit_accounting`)
+
+- a read-only command replays the whole history of a site and
+  compares what the algebra of the invoicing recomputes with what
+  the database stores (`./manage.py audit_accounting`,
+  `--permanence` and `--customer` to scope it);
+- six classes of invariants: the customer balances (initial balance
+  + bank attached - invoiced books), the producer balances (the same,
+  minus the PROFIT corrections, which must also match what the
+  invoicing really booked on the site consumer account), the book
+  totals recomputed from the purchases (transport and Belgian
+  rounding included), the round totals (charged to the customers ==
+  booked on the producers), the closure stamps of a round (status and
+  bank anchor on every book and purchase), and the bank anchor chain
+  (one LATEST_TOTAL, each anchor nets the movements attached during
+  its round, no payment older than the latest anchor left
+  unattached);
+- the audit **never repairs anything**: every finding carries the
+  replay, the stored values and a suggested repair; the exit code is
+  1 exactly when findings exist. A wrong `previous_balance` is
+  inherited by the replay (documented blind spot), the drift it
+  introduces at its own round is still caught.
+  Tests: `test_audit_accounting.py` (the clean journal stays silent,
+  one scratch per class is caught, and each audit is proven read
+  only by a before/after snapshot).
+
 ---
 
 *Maintained in parallel with the `repanier/tests/` suite: every
