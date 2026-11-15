@@ -391,13 +391,17 @@ def _enrol_passport_member(request, email, origin):
         # The enrolment never writes over an account: it runs only
         # when nothing local answers this e-mail, or when a previous
         # enrolment broke in between creating the user and creating
-        # the customer - a user without a customer is repaired, a
-        # staff or superuser account never is.
+        # the customer - an active user without a customer is
+        # repaired; a staff, superuser or disabled account never is.
         user = (
             user_model.objects.filter(email__iexact=email).order_by("id").first()
         )
         if user is not None:
-            if user.is_superuser or user.is_staff:
+            if user.is_superuser or user.is_staff or not user.is_active:
+                # A disabled account stays disabled - the coordination
+                # closed that door, the enrolment never reopens it - and
+                # the staff and superuser accounts keep their classical
+                # sign in.
                 return None
             if Customer.objects.filter(user_id=user.id).exists():
                 # An existing member refused by _passport_user stays
