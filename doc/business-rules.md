@@ -18,7 +18,10 @@ verified.
 - Members sign in **with their e-mail address only**: the long name
   is a display identity and the short name an identifier for the
   preparation lists - neither of them ever opens a session
-  (`RepanierAuthBackend.authenticate`).
+  (`RepanierAuthBackend.authenticate`). The accounts without a
+  customer profile - in practice the superusers - keep one private
+  door: their username, an identifier never displayed anywhere,
+  so their public e-mail address provokes no guessing.
 - Three failed passwords **lock the account for 15 minutes**:
   during the lock, every password bounces - the correct one included -
   and the screen announces when the door reopens. A correct password
@@ -30,13 +33,22 @@ verified.
   unsubscribed members, without the unsubscribe footer) invites the
   member to check his caps lock and his num lock, warns him that
   somebody else may be trying his account, and links to the password
-  reset flow. The body of the mail names the concerned account; the
+  reset flow. Completing the reset **lifts the lock immediately** -
+  the new password proves the identity of the asker. The body of the
+  mail names the concerned account; the
   site coordinator receives a copy, so a dormant account asking for
   help or a complaining member arrives with the context. When the mail
   itself fails, an error report reaches the admins
   (`RepanierEmail._send_error`).
+- Every **superuser sign in leaves a short mail to the admins**
+  (`ADMIN_EMAIL`): the site, the account, the visible address of the
+  machine, the moment. Whatever the door - the sign in form, /admin/,
+  the private username door - a connection of the admin is a rare and
+  sensitive event: a mail at an odd hour is an alarm he can act on.
+  A mail problem never blocks the session
+  (`repanier.signals.auth.notify_admin_sign_in`).
   Tests: `test_login_view.py` (LoginTemporaryLockTest,
-  EmailOnlySignInTest).
+  EmailOnlySignInTest, AdminSignInNotificationTest).
 
 ### The Repanier passport
 
@@ -180,6 +192,17 @@ Tests: `test_status_flow.py`, `test_order_journey.py`.
 
 A permanence flagged `automatically_closed` is closed (and its orders
 sent) by the cron without any manual action.
+
+### The language of the member mails
+
+The site is multilingual (the languages live in the ini,
+`DJANGO_SETTINGS_LANGUAGE`), but the sending process runs in the
+language of the site: without care, every member receives his mails
+in French whatever his profile says. The order confirmation -
+scheduled, confirmed by hand or cancelled - is built and sent under
+the **language of the member** (`Customer.language`): subject, body
+and attachment (`in_customer_language`, `export_order_2_1_customer`).
+Test: `test_customer_language.py`.
 
 ---
 

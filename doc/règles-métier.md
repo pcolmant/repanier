@@ -18,7 +18,11 @@ tests indiquent où elle est vérifiée.
 - Le membre se connecte **uniquement par son adresse email** : le nom
   long est une identité d'affichage et le nom court un identifiant
   pour les listes de préparation — aucun des deux n'ouvre de session
-  (`RepanierAuthBackend.authenticate`).
+  (`RepanierAuthBackend.authenticate`). Les comptes sans profil
+  client — en pratique les superutilisateurs — gardent une porte
+  privée : leur username, un identifiant jamais affiché nulle part,
+  pour que leur adresse email publique ne provoque aucun essai de
+  connexion.
 - Trois mots de passe erronés **verrouillent le compte pendant 15
   minutes** : pendant le verrou, tout mot de passe est refusé — le bon
   compris — et l'écran annonce quand la porte se rouvre. Un bon mot de
@@ -30,13 +34,23 @@ tests indiquent où elle est vérifiée.
   (envoyé même aux désabonnés, sans pied de désabonnement) invite le
   membre à vérifier son caps lock et son num lock, l'avertit que
   quelqu'un d'autre tente peut-être son compte et le relie au flux de
-  réinitialisation du mot de passe. Le corps du mail nomme le compte
+  réinitialisation du mot de passe. Terminer la réinitialisation
+  **lève le verrou immédiatement** — le nouveau mot de passe prouve
+  l'identité du demandeur. Le corps du mail nomme le compte
   concerné ; le coordinateur du site reçoit une copie, pour qu'un
   compte dormant demandant de l'aide ou un membre se plaignant arrive
   avec le contexte. Quand le mail échoue lui-même, un rapport
   d'erreur parvient aux admins (`RepanierEmail._send_error`).
+- Chaque **connexion d'un superutilateur laisse un court mail aux
+  admins** (`ADMIN_EMAIL`) : le site, le compte, l'adresse visible de
+  la machine, l'heure. Quelle que soit la porte — le formulaire de
+  connexion, /admin/, la porte privée par username — une connexion de
+  l'admin est un événement rare et sensible : un mail à une heure
+  inhabituelle est une alarme sur laquelle il peut agir. Un problème
+  de mail ne bloque jamais la session
+  (`repanier.signals.auth.notify_admin_sign_in`).
   Tests : `test_login_view.py` (LoginTemporaryLockTest,
-  EmailOnlySignInTest).
+  EmailOnlySignInTest, AdminSignInNotificationTest).
 
 ### Le passeport Repanier
 
@@ -187,6 +201,17 @@ Tests : `test_status_flow.py`, `test_order_journey.py`.
 
 Une permanence marquée `automatically_closed` est fermée (et les
 commandes transmises) par le cron sans intervention.
+
+### La langue des mails aux membres
+
+Le site est multilingue (les langues vivent dans l'ini,
+`DJANGO_SETTINGS_LANGUAGE`), mais le processus d'envoi tourne dans la
+langue du site : sans précaution, chaque membre reçoit ses mails en
+français quel que soit son profil. La confirmation de commande —
+planifiée, confirmée à la main ou annulée — est construite et envoyée
+dans **la langue du membre** (`Customer.language`) : sujet, corps et
+pièce jointe (`in_customer_language`, `export_order_2_1_customer`).
+Test : `test_customer_language.py`.
 
 ---
 

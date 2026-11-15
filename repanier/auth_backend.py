@@ -45,26 +45,42 @@ class RepanierAuthBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         # The sign in happens with the e-mail address only: the short
         # and long names display an identity, they never open a door.
-        user_username = UserModel.objects.filter(email__iexact=username).first()
+        user_username = (
+            UserModel.objects.filter(email__iexact=username).order_by("id").first()
+        )
+        if user_username is None:
+            # The credential resolves no e-mail address. One private
+            # door remains: the accounts without a customer profile -
+            # in practice the superusers - may open their session with
+            # their username, an identifier never displayed anywhere
+            # and unknown to the public, unlike their e-mail address.
+            # A member never enters through this door: his account
+            # carries a customer profile, his key stays his e-mail
+            # address - the imported short names stay closed.
+            user_by_name = UserModel.objects.filter(username=username).first()
+            if user_by_name is None or Customer.objects.filter(
+                user_id=user_by_name.id
+            ).exists():
+                return None
+            user_username = user_by_name
         is_superuser = False
         customer = None
         login_attempt_counter = DECIMAL_ZERO
         login_locked_on = None
-        if user_username is not None:
-            username = user_username.username
-            customer = Customer.objects.filter(user_id=user_username.id).first()
-            if customer is None:
-                is_superuser = True
-                configuration = (
-                    Configuration.objects.filter(id=DECIMAL_ONE)
-                    .only("login_attempt_counter", "login_locked_on")
-                    .first()
-                )
-                login_attempt_counter = configuration.login_attempt_counter
-                login_locked_on = configuration.login_locked_on
-            else:
-                login_attempt_counter = customer.login_attempt_counter
-                login_locked_on = customer.login_locked_on
+        username = user_username.username
+        customer = Customer.objects.filter(user_id=user_username.id).first()
+        if customer is None:
+            is_superuser = True
+            configuration = (
+                Configuration.objects.filter(id=DECIMAL_ONE)
+                .only("login_attempt_counter", "login_locked_on")
+                .first()
+            )
+            login_attempt_counter = configuration.login_attempt_counter
+            login_locked_on = configuration.login_locked_on
+        else:
+            login_attempt_counter = customer.login_attempt_counter
+            login_locked_on = customer.login_locked_on
 
         if login_locked_on is not None:
             locked_until = login_locked_on + timezone.timedelta(

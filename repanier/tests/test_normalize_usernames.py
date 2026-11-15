@@ -80,6 +80,15 @@ class NormalizeUsernamesTest(TestCase):
         # The username of Tutu is untouched, Tata stays as imported
         self.assertEqual(self.tata.username, "tata")
 
+    def test_an_account_without_usable_email_is_reported_and_skipped(self):
+        stderr = StringIO()
+        call_command("normalize_usernames", "--apply", stdout=StringIO(), stderr=stderr)
+        # The command says what it skipped and why, so the
+        # coordination can fix the mail address in the CSV
+        self.assertIn("skipped, no usable e-mail", stderr.getvalue())
+        user = User.objects.get(email="")
+        self.assertEqual(user.username, "SansEmail")
+
     def test_the_email_shaped_username_stays(self):
         call_command(
             "normalize_usernames", "--apply", stdout=StringIO(), stderr=StringIO()
