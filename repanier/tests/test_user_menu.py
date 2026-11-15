@@ -39,10 +39,10 @@ class UserMenuTest(TestCase):
     def request_for(self, user, customer_id=None):
         request = RequestFactory().get("/dummy/")
         request.user = user
-        # RepanierAuthBackend.set_user_right attaches customer_id to the
-        # authenticated user: emulate the same state on a RequestFactory user.
-        if customer_id is not None:
-            request.user.customer_id = customer_id
+        # RepanierAuthBackend attaches customer_id to the authenticated
+        # user (None for a staff without customer): emulate the same
+        # state on a RequestFactory user, attribute always present.
+        request.user.customer_id = customer_id
         return request
 
     def test_anonymous_gets_the_sign_in_button(self):
@@ -58,7 +58,11 @@ class UserMenuTest(TestCase):
     def test_authenticated_customer_gets_the_dropdown(self):
         request = self.request_for(self.user, customer_id=self.customer.id)
         html = render_user_menu(request)
-        self.assertIn(self.user.username, html)
+        # The toggle carries the short name of the member, his display
+        # identity - the username (an e-mail address since the e-mail
+        # only sign in) never crowds the navbar
+        self.assertIn(self.customer.short_basket_name, html)
+        self.assertNotIn(self.user.username, html)
         self.assertIn(reverse("repanier:send_mail_to_coordinators_view"), html)
         self.assertIn(reverse("repanier:my_profile_view"), html)
         self.assertIn(
@@ -90,3 +94,41 @@ class UserMenuTest(TestCase):
         with patch("repanier.apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO", False):
             html = render_user_menu(request)
             self.assertNotIn(reverse("repanier:who_is_who_view"), html)
+
+    def test_a_staff_without_customer_keeps_the_username(self):
+        staff = User.objects.create_user(
+            username="boss@example.com", email="boss@example.com", password="x"
+        )
+        html = render_user_menu(self.request_for(staff))
+        # Without a customer account the label falls back on the
+        # e-mail address, keeping only the part before the @
+        self.assertIn("boss", html)
+        self.assertNotIn("boss@example.com", html)
+
+    def test_a_member_with_a_long_short_name_keeps_the_username(self):
+        lacome = User.objects.create_user(
+            username="dupont@dm.be", email="dupont@dm.be", password="x"
+        )
+        customer = Customer.objects.create(
+            user=lacome, short_basket_name="Dupont de la Motte Ruyter", may_order=True
+        )
+        html = render_user_menu(self.request_for(lacome, customer_id=customer.id))
+        # A "short" name longer than the e-mail address buys nothing:
+        # the navbar keeps the shorter label, the part before the @
+        self.assertIn("dupont", html)
+        self.assertNotIn("dupont@dm.be", html)
+        self.assertNotIn("Dupont de la Motte Ruyter", html)
+
+    def test_a_staff_member_always_carries_his_short_name(self):
+        chef = User.objects.create_user(
+            username="a@b.co", email="a@b.co", password="x", is_staff=True
+        )
+        responsibility = Customer.objects.create(
+            user=chef, short_basket_name="Responsable Auxiliaire", may_order=True
+        )
+        request = self.request_for(chef, customer_id=responsibility.id)
+        request.user.is_staff = True
+        html = render_user_menu(request)
+        # The staff roles identify by name, even longer than the e-mail
+        self.assertIn("Responsable Auxiliaire", html)
+        self.assertNotIn("a@b.co", html)
