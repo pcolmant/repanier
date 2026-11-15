@@ -17,11 +17,35 @@ from smtplib import (
 from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives, mail_admins
+from django.utils import translation
 from django.utils.html import strip_tags, format_html
 from django.utils.translation import gettext_lazy as _
 from repanier.const import EMPTY_STRING
 
 logger = logging.getLogger(__name__)
+
+
+def in_customer_language(function):
+    """Speak the language of the customer during the whole build and
+    send of his mail: the subject, the body and every lazy label of
+    the attachments resolve against Customer.language, whatever the
+    language of the site or of the sending process.
+
+        @in_customer_language
+        def email_one_customer(customer, ...):
+            ...
+
+    The first argument of the decorated function must be the
+    customer. Restore the previous language on the way out, whatever
+    happens inside."""
+    from functools import wraps
+
+    @wraps(function)
+    def wrapper(customer, *args, **kwargs):
+        with translation.override(customer.language):
+            return function(customer, *args, **kwargs)
+
+    return wrapper
 
 
 class RepanierEmail(EmailMultiAlternatives):

@@ -4,7 +4,7 @@ from django.template import Template, Context as TemplateContext
 from django.utils.translation import gettext_lazy as _
 
 from repanier.const import EMPTY_STRING
-from repanier.email.email import RepanierEmail
+from repanier.email.email import RepanierEmail, in_customer_language
 from repanier.models import Producer
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
@@ -295,6 +295,7 @@ def export_order_2_1_group(
         email.send_email()
 
 
+@in_customer_language
 def export_order_2_1_customer(
     customer,
     filename,

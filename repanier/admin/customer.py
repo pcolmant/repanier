@@ -198,10 +198,12 @@ class CustomerResource(resources.ModelResource):
         user_model = get_user_model()
         # The sign in matches e-mail addresses case insensitively:
         # store the lowercase spelling and refuse a variant differing
-        # by case only, which would open the same door
+        # by case only, which would open the same door - the staff and
+        # superuser addresses take part in the check, as in the admin
+        # form: one address, one account, whatever the role.
         instance.user.email = instance.user.email.lower()
         user_email_qs = user_model.objects.filter(
-            email__iexact=instance.user.email, is_staff=False
+            email__iexact=instance.user.email
         )
         user_username_qs = user_model.objects.filter(
             username=instance.short_basket_name
@@ -230,7 +232,11 @@ class CustomerResource(resources.ModelResource):
             if instance.id is not None:
                 email = instance.user.email
                 instance.user = user_model.objects.get(id=customer.user_id)
-                instance.user.username = instance.short_basket_name
+                # The username never moves on a re-import: it carries
+                # the e-mail convention of the sign in (and of the
+                # normalize_usernames command) - rewriting it to the
+                # short basket name would quietly reopen the door
+                # closed by the e-mail only sign in.
                 instance.user.first_name = EMPTY_STRING
                 instance.user.last_name = instance.short_basket_name
                 instance.user.email = email
