@@ -12,7 +12,7 @@ from decimal import Decimal
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from repanier.const import BankMovement, SaleStatus
 from repanier.management.commands.audit_accounting import (
@@ -25,8 +25,13 @@ from repanier.management.commands.audit_accounting import (
 )
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
-from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.invoice import (
+    CustomerInvoice,
+    CustomerProducerInvoice,
+    ProducerInvoice,
+)
 from repanier.models.producer import Producer
+from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tests.test_accounting_chain import AccountingJourneyMixin, PAYMENT_DATE
 
 D = Decimal
@@ -387,3 +392,167 @@ class AuditEraAndDrillDownTest(AuditAccountingTestCaseMixin, TestCase):
             call_command("audit_accounting", invoice="p:999999")
         with self.assertRaises(CommandError):
             call_command("audit_accounting", invoice="c:not-an-id")
+
+
+class AuditMarginTest(AuditAccountingTestCaseMixin, TestCase):
+    """The sites which resell above the purchase price keep the
+    difference: the audit must recognize the resale margin, not ring
+    D1 on every round and B2 on every profit line."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.build_invoiced_permanence()
+
+    def inject_margin(self):
+        """Sell every cerise 0.10 above the purchase price, the way a
+        reseller round books it: the purchase lines rise, every book
+        of the round follows - each one on the purchases its replay
+        attributes to it. Returns the margin the round carries."""
+        purchases = list(
+            PurchaseWoReceiver.objects.filter(
+                permanence_id=self.permanence.id, producer_id=self.legumes.id
+            )
+            .select_related("customer_invoice")
+            .only(
+                "id",
+                "customer_id",
+                "selling_price",
+                "customer_invoice__customer_charged_id",
+            )
+        )
+        by_customer = {}
+        by_charged = {}
+        for purchase in purchases:
+            PurchaseWoReceiver.objects.filter(id=purchase.id).update(
+                selling_price=purchase.selling_price.amount + D("0.10")
+            )
+            by_customer[purchase.customer_id] = (
+                by_customer.get(purchase.customer_id, D("0")) + D("0.10")
+            )
+            charged_id = purchase.customer_invoice.customer_charged_id
+            by_charged[charged_id] = (
+                by_charged.get(charged_id, D("0")) + D("0.10")
+            )
+        for book in CustomerInvoice.objects.filter(
+            permanence_id=self.permanence.id
+        ):
+            if book.is_group:
+                extra = by_charged.get(book.customer_id, D("0"))
+            else:
+                extra = by_customer.get(book.customer_id, D("0"))
+            if extra:
+                book.total_price_with_tax.amount += extra
+                book.save(update_fields=["total_price_with_tax"])
+        for cross in CustomerProducerInvoice.objects.filter(
+            permanence_id=self.permanence.id, producer_id=self.legumes.id
+        ):
+            cross.total_selling_with_tax.amount += by_customer.get(
+                cross.customer_id, D("0")
+            )
+            cross.save(update_fields=["total_selling_with_tax"])
+        return D("0.10") * len(purchases)
+
+    def test_the_margin_belongs_to_the_group_and_stays_silent_in_d(self):
+        margin = self.inject_margin()
+        self.assertGreater(margin, D("0"))
+        # The books stay coherent: C recomputes them from the purchases.
+        self.assertEqual(self.run_audit(audit_invoice_purchase_totals), [])
+        # The customers pay the margin, the producers do not book it:
+        # the group keeps it.
+        self.assertEqual(self.run_audit(audit_permanence_totals), [])
+
+    def test_a_margin_never_booked_on_the_site_account_is_reported(self):
+        margin = self.inject_margin()
+        findings = self.run_audit(audit_producer_accounts)
+        self.assertEqual(self.codes(findings), ["B2"])
+        self.assertIn(
+            "resale margin of {}".format(margin), findings[0].message
+        )
+        self.assertIn("never", findings[0].suggestion)
+
+    def test_a_margin_booked_on_the_site_account_stays_silent(self):
+        margin = self.inject_margin()
+        BankAccount.objects.create(
+            permanence_id=self.permanence.id,
+            customer_id=self.site_customer.id,
+            operation_date=PAYMENT_DATE,
+            operation_status=BankMovement.PROFIT,
+            operation_comment="Resale margin",
+            bank_amount_in=margin,
+        )
+        self.assertEqual(self.run_audit(audit_producer_accounts), [])
+
+    def test_a_profit_booked_above_the_margin_keeps_the_finding(self):
+        margin = self.inject_margin()
+        BankAccount.objects.create(
+            permanence_id=self.permanence.id,
+            customer_id=self.site_customer.id,
+            operation_date=PAYMENT_DATE,
+            operation_status=BankMovement.PROFIT,
+            operation_comment="Profit of doubt",
+            bank_amount_in=margin + D("5.00"),
+        )
+        findings = self.run_audit(audit_producer_accounts)
+        self.assertEqual(self.codes(findings), ["B2"])
+        self.assertIn("excess 5.00", findings[0].message)
+
+    def test_an_order_only_site_skips_the_money_identities(self):
+        # The federated order sites: Repanier manages no money there -
+        # the A, B, E and F identities would fire on every account.
+        stdout = io.StringIO()
+        with override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=False):
+            call_command("audit_accounting", stdout=stdout)
+        output = stdout.getvalue()
+        self.assertIn("C. Book totals", output)
+        self.assertIn("D. Round totals", output)
+        self.assertNotIn("A. Customer accounts", output)
+        self.assertNotIn("B. Producer accounts", output)
+        self.assertNotIn("E. Closure", output)
+        self.assertNotIn("F. The bank anchor chain", output)
+        self.assertIn("replays square", output)
+
+    def sell_as_the_buying_group(self):
+        """The buying group sells to the members: its own producer
+        book carries the 5.00, its claim stays empty and the book
+        is marked to be paid - the way the invoicing generates the
+        'Correction <site>' compensation."""
+        site_book = ProducerInvoice.objects.filter(
+            permanence_id=self.permanence.id, producer_id=self.site_producer.id
+        ).first()
+        if site_book is None:
+            # The journey sells nothing as the group: the book appears
+            # only when the group itself sells.
+            site_book = ProducerInvoice.objects.create(
+                permanence_id=self.permanence.id,
+                producer_id=self.site_producer.id,
+                status=SaleStatus.INVOICED,
+            )
+        site_book.total_price_with_tax.amount = D("5.00")
+        site_book.to_be_paid = True
+        site_book.save(
+            update_fields=["total_price_with_tax", "to_be_paid"]
+        )
+        return site_book
+
+    def test_what_the_buying_group_sells_is_compensated_and_stays_silent(self):
+        # The book bump drifts B1 for the site producer (the group owes
+        # itself the 5.00), but the compensation rides the site account:
+        # B2 recognizes the flow and stays silent.
+        self.sell_as_the_buying_group()
+        BankAccount.objects.create(
+            permanence_id=self.permanence.id,
+            customer_id=self.site_customer.id,
+            operation_date=PAYMENT_DATE,
+            operation_status=BankMovement.PROFIT,
+            operation_comment="Correction Court Circuit",
+            bank_amount_in=D("5.00"),
+        )
+        self.assertEqual(self.codes(self.run_audit(audit_producer_accounts)), ["B1"])
+
+    def test_a_site_income_never_compensated_is_reported(self):
+        self.sell_as_the_buying_group()
+        findings = self.run_audit(audit_producer_accounts)
+        self.assertEqual(self.codes(findings), ["B1", "B2"])
+        b2 = [f for f in findings if f.code == "B2"][0]
+        self.assertIn("keeps 5.00", b2.message)
+        self.assertIn("never", b2.suggestion)
