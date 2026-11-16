@@ -85,6 +85,10 @@ class DeliveryPointDropdownTest(TestCase):
         self.assertIn(reverse("repanier:delivery_ajax"), fragment)
         self.assertIn(reverse("repanier:delivery_select_ajax"), fragment)
         self.assertNotIn("<select", fragment)
+        # The menu aligns on the left edge of its button: the right
+        # aligned variant shifted outside a phone screen.
+        self.assertIn("dropdown-menu-start", fragment)
+        self.assertNotIn("dropdown-menu-end", fragment)
 
     def test_order_init_carries_permanence_and_basket_flag(self):
         self._login()

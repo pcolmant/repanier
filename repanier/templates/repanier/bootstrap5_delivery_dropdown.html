@@ -28,7 +28,10 @@ the basket and the order confirmation box.
             {% endif %}>
         {{ label }}
     </button>
-    <ul class="dropdown-menu dropdown-menu-end"
+    {# The menu aligns on the left edge of its button: the right
+       aligned variant shifted outside a phone screen, pushing the
+       readable left side of the menu out of view. #}
+    <ul class="dropdown-menu dropdown-menu-start"
         id="deliveryDropdownMenu"
         aria-labelledby="deliveryBtn">
         {% if has_delivery_points %}
