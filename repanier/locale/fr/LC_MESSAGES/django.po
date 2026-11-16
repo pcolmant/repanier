@@ -20,8 +20,8 @@ msgstr ""
 
 #: admin/admin_filter.py:13 admin/permanence_in_preparation.py:243
 #: admin/purchase.py:62 admin/rule_of_3_per_customer.py:98
-#: admin/rule_of_3_per_product.py:81 cms_toolbar.py:136 models/permanence.py:84
-#: models/producer.py:460
+#: admin/rule_of_3_per_product.py:81 cms_toolbar.py:136
+#: models/permanence.py:84 models/producer.py:460
 #: templates/bs3/admin/repanier/product/change_list.html:13
 #: templates/bs5/admin/repanier/product/change_list.html:13
 #: xlsx/xlsx_order_customer.py:317
@@ -72,8 +72,8 @@ msgstr "Soit un consommateur, soit un producteur doit être renseigné."
 #: admin/bankaccount.py:102 admin/bankaccount.py:117
 msgid "This movement already exists."
 msgstr ""
-"Ce mouvement existe déjà. S'il est nécessaire de l'encoder une seconde fois, "
-"faites le manuellement sans passer par l'importation."
+"Ce mouvement existe déjà. S'il est nécessaire de l'encoder une seconde fois,"
+" faites le manuellement sans passer par l'importation."
 
 #: admin/bankaccount.py:216 admin/purchase.py:276
 #: admin/rule_of_3_per_product.py:128 models/bankaccount.py:27
@@ -151,7 +151,9 @@ msgid "Only one customer or one producer must be given."
 msgstr "Soit un consommateur, soit un producteur doit être renseigné."
 
 #: admin/bankaccount.py:342
-msgid "The operation date must be greater than or equal to the latest total operation date."
+msgid ""
+"The operation date must be greater than or equal to the latest total "
+"operation date."
 msgstr ""
 "La date du mouvement doit être supérieure ou égale à la date du dernier "
 "solde."
@@ -165,8 +167,9 @@ msgid "Name of the group"
 msgstr "Dénomination du groupe"
 
 #: admin/configuration.py:22 admin/customer.py:39 admin/customer.py:42
-#: admin/customer.py:351 admin/group.py:25 admin/group.py:28 admin/group.py:253
-#: models/producer.py:42 templates/bs3/repanier/who_is_who.html:65
+#: admin/customer.py:351 admin/group.py:25 admin/group.py:28
+#: admin/group.py:253 models/producer.py:42
+#: templates/bs3/repanier/who_is_who.html:65
 #: templates/bs5/repanier/who_is_who.html:62 xlsx/xlsx_order_customer.py:73
 #: xlsx/xlsx_order_customer.py:144
 msgid "Email"
@@ -234,7 +237,8 @@ msgstr "Dernière identification"
 #: admin/customer.py:522
 #, python-format
 msgid ""
-" in addition to the %(discount)s%% customer discount rate on to the pricelist"
+" in addition to the %(discount)s%% customer discount rate on to the "
+"pricelist"
 msgstr ""
 " en + de la réduction personnelle de %(discount)s%% accordée sur le tarif"
 
@@ -424,7 +428,8 @@ msgstr "Veuillez confirmer votre demande d'annulation de l'archivage."
 
 #: admin/permanence_done.py:533
 msgid "Please confirm the action: restore the delivery."
-msgstr "Veuillez confirmer votre demande de reprise en compte de la livraison."
+msgstr ""
+"Veuillez confirmer votre demande de reprise en compte de la livraison."
 
 #: admin/permanence_done.py:550 models/permanence.py:144
 #: models/permanence.py:167 models/permanence.py:193 models/permanence.py:337
@@ -435,7 +440,8 @@ msgstr "Veuillez confirmer votre demande de reprise en compte de la livraison."
 msgid "Export"
 msgstr "Exporter"
 
-#: admin/permanence_done.py:554 templates/bs3/admin/import_export/import.html:5
+#: admin/permanence_done.py:554
+#: templates/bs3/admin/import_export/import.html:5
 #: templates/bs5/admin/import_export/import.html:5
 msgid "Import"
 msgstr "Importer"
@@ -520,8 +526,8 @@ msgid ""
 "Please pay a provision of %(payment)s to the bank account %(name)s "
 "%(number)s with communication %(communication)s."
 msgstr ""
-"Veuillez verser une provision de %(payment)s sur le compte bancaire %(name)s "
-"%(number)s avec comme communication \"%(communication)s\"."
+"Veuillez verser une provision de %(payment)s sur le compte bancaire %(name)s"
+" %(number)s avec comme communication \"%(communication)s\"."
 
 #: admin/permanence_in_preparation.py:470 admin/purchase.py:289
 #: models/deliveryboard.py:18 models/invoice.py:497 models/invoice.py:755
@@ -780,8 +786,8 @@ msgstr ""
 msgid ""
 "At least one Repanier administrator must be set within the management team."
 msgstr ""
-"Au moins un/e administrateur/trice doit être renseigné/e au sein de l'équipe "
-"de gestion."
+"Au moins un/e administrateur/trice doit être renseigné/e au sein de l'équipe"
+" de gestion."
 
 #: admin/tools.py:24
 msgid "Action cancelled by the user."
@@ -794,7 +800,8 @@ msgstr "Permanence non trouvée."
 #: admin/tools.py:66
 #, python-brace-format
 msgid ""
-"To perform this action, the status of {permanence} must be '{status.label}.'."
+"To perform this action, the status of {permanence} must be "
+"'{status.label}.'."
 msgstr ""
 "Pour effectuer cette action, le statut de {permanence} doit être "
 "'{status.label}'."
@@ -812,7 +819,9 @@ msgid "Permanence on "
 msgstr "Permanence du "
 
 #: auth_backend.py:63 auth_backend.py:71
-msgid "You must now first reset your password because you tried to log in too many times without success."
+msgid ""
+"You must now first reset your password because you tried to log in too many "
+"times without success."
 msgstr ""
 "Vous devez d'abord réinitialiser votre mot de passe car vous avez effectué "
 "trop de tentatives de connexions sans succès."
@@ -998,10 +1007,12 @@ msgid "Into the basket"
 msgstr "Panier"
 
 #: const.py:84
-msgid "Sold by the piece without further details (not recommended if the weight or the litre is available): bouquet of thyme, ..."
+msgid ""
+"Sold by the piece without further details (not recommended if the weight or "
+"the litre is available): bouquet of thyme, ..."
 msgstr ""
-"Vendu à la pièce sans autre précision (déconseillé si le poids ou le litrage "
-"est disponible) : bouquet de thym, ..."
+"Vendu à la pièce sans autre précision (déconseillé si le poids ou le litrage"
+" est disponible) : bouquet de thym, ..."
 
 #: const.py:87
 msgid ""
@@ -1098,10 +1109,12 @@ msgid "An email has been sent from {} to {}."
 msgstr "Un mail a été envoyé depuis {} à {}."
 
 #: email/email.py:246
-msgid "Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be sent to: {}"
+msgid ""
+"Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be sent "
+"to: {}"
 msgstr ""
-"Mode debug avec REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. Cet email sera envoyé "
-"à : {}"
+"Mode debug avec REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. Cet email sera envoyé à "
+": {}"
 
 #: email/email.py:253
 msgid ""
@@ -1130,7 +1143,9 @@ msgid "No email will be sent."
 msgstr "Aucun mail ne sera envoyé."
 
 #: email/email_order.py:155
-msgid "⚠ Mail not sent to our producer {} because the minimum order value has not been reached."
+msgid ""
+"⚠ Mail not sent to our producer {} because the minimum order value has not "
+"been reached."
 msgstr ""
 "⚠ Mail non transmis au producteur {} car le minimum de commande n'a pas été "
 "atteint."
@@ -1215,7 +1230,8 @@ msgstr "Devise"
 
 #: models/configuration.py:46
 msgid "Alert the customer after this number of weeks without participation"
-msgstr "Alerter le consommateur après ce nombre de semaines sans participation"
+msgstr ""
+"Alerter le consommateur après ce nombre de semaines sans participation"
 
 #: models/configuration.py:47
 msgid "0 means: never display a pop-up."
@@ -1223,7 +1239,8 @@ msgstr "0 signifie : ne jamais alerter."
 
 #: models/configuration.py:54
 msgid "Send each customer an email with the orders of the whole group"
-msgstr "Envoyer à chaque consommateur un e-mail avec les commandes de tout le groupe"
+msgstr ""
+"Envoyer à chaque consommateur un e-mail avec les commandes de tout le groupe"
 
 #: models/configuration.py:57
 msgid "Send an order distribution email to members registered for a task"
@@ -1270,11 +1287,12 @@ msgstr "Message pour expliquer comment créer un compte \"consommateur\""
 msgid ""
 "Contents of the order opening email sent to consumers authorized to order"
 msgstr ""
-"Contenu du mail d'ouverture des commandes envoyé aux consommateurs autorisés "
-"à commander"
+"Contenu du mail d'ouverture des commandes envoyé aux consommateurs autorisés"
+" à commander"
 
 #: models/configuration.py:115
-msgid "Content of the order confirmation email sent to the consumers concerned"
+msgid ""
+"Content of the order confirmation email sent to the consumers concerned"
 msgstr ""
 "Contenu du mail de confirmation de commande envoyé aux consommateurs "
 "concernés"
@@ -1298,7 +1316,8 @@ msgstr ""
 "une tâche"
 
 #: models/configuration.py:140
-msgid "Content of the order confirmation email sent to the producers concerned"
+msgid ""
+"Content of the order confirmation email sent to the producers concerned"
 msgstr ""
 "Contenu du mail de confirmation de commande envoyé aux producteurs concernés"
 
@@ -1555,11 +1574,11 @@ msgstr "Accepte les membres arrivant par le passeport Repanier"
 
 #: models/customer.py:131
 msgid ""
-"Only a group which accepts them sees its members arriving from another "
-"site of the family placed here by the passport"
+"Only a group which accepts them sees its members arriving from another site "
+"of the family placed here by the passport"
 msgstr ""
-"Seul un groupe qui les accepte voit les membres arrivant d'un autre site "
-"de la famille y être placés par le passeport"
+"Seul un groupe qui les accepte voit les membres arrivant d'un autre site de "
+"la famille y être placés par le passeport"
 
 #: models/customer.py:215
 msgid "Date joined"
@@ -1657,7 +1676,8 @@ msgid "VAT to add"
 msgstr "TVA à ajouter"
 
 #: models/invoice.py:60 models/item.py:72 models/purchase.py:113
-#: models/purchase.py:194 templates/bs3/repanier/customer_invoice_form.html:102
+#: models/purchase.py:194
+#: templates/bs3/repanier/customer_invoice_form.html:102
 #: templates/bs3/repanier/customer_invoice_form.html:281
 #: templates/bs5/repanier/customer_invoice_form.html:162
 #: xlsx/xlsx_invoice_export.py:122 xlsx/xlsx_invoice_import.py:89
@@ -1686,8 +1706,8 @@ msgid ""
 "Delivery point coefficient applied to the producer tariff to calculate the "
 "customer tariff"
 msgstr ""
-"Coefficient appliqué au tarif producteur pour calculer le tarif consommateur "
-"pour ce point de livraison"
+"Coefficient appliqué au tarif producteur pour calculer le tarif consommateur"
+" pour ce point de livraison"
 
 #: models/invoice.py:165
 msgid "This is the minimum order amount to avoid shipping cost."
@@ -1722,8 +1742,8 @@ msgstr "Veuillez sélectionner un point de livraison"
 #: models/invoice.py:477 views/delivery_select_ajax.py:74
 msgid "No delivery point is open for you. You cannot place an order."
 msgstr ""
-"Vous ne pouvez pas passer commande car aucun point de livraison n'est ouvert "
-"pour vous."
+"Vous ne pouvez pas passer commande car aucun point de livraison n'est ouvert"
+" pour vous."
 
 #: models/invoice.py:492
 #, python-format
@@ -1746,8 +1766,12 @@ msgstr "Commande annulée"
 msgid "Cancelled accounting entry sort order"
 msgstr "Ordonnancement de l'entrée comptable annulée"
 
-msgid "Yes, I'm sure and I have already encoded the customer's prepayments into the bank account"
-msgstr "Oui, je confirme cette action et j'ai déjà encodé les provisions des clients dans le compte bancaire"
+msgid ""
+"Yes, I'm sure and I have already encoded the customer's prepayments into the"
+" bank account"
+msgstr ""
+"Oui, je confirme cette action et j'ai déjà encodé les provisions des clients"
+" dans le compte bancaire"
 
 #: models/invoice.py:745
 msgid "Qty not confirmed : {}"
@@ -1963,7 +1987,9 @@ msgid "Offer description"
 msgstr "Message accompagnant l'offre"
 
 #: models/permanence.py:58
-msgid "This message is sent by mail to all customers when opening the order or on top."
+msgid ""
+"This message is sent by mail to all customers when opening the order or on "
+"top."
 msgstr ""
 "A l'ouverture des commandes, ce message est envoyé à chaque consommateur du "
 "groupe autorisé à passer commande. Il est aussi affiché en haut de l'écran "
@@ -2123,7 +2149,8 @@ msgid "In the lists sent to the producer, attach the stock"
 msgstr "Dans les listes adressées au producteur, joindre le stock"
 
 #: models/producer.py:106 models/purchase.py:126
-msgid "This multiplier is applied to each price automatically imported/pushed."
+msgid ""
+"This multiplier is applied to each price automatically imported/pushed."
 msgstr ""
 "0,9 signifie -10% sur le prix tarif. 1,06 signifie +6% sur le prix tarif."
 
@@ -2275,7 +2302,9 @@ msgid "Wrong picture size."
 msgstr "Taille d'image non reconnue."
 
 #: picture/views.py:31
-msgid "Please contact the administrator of the web server: there is not enough disk space."
+msgid ""
+"Please contact the administrator of the web server: there is not enough disk"
+" space."
 msgstr ""
 "Il n'y a plus assez d'espace de stockage sur le serveur pour ajouter cette "
 "photo."
@@ -2285,7 +2314,9 @@ msgid "The system does not recognize the format."
 msgstr "Repanier ne reconnaît pas le format du fichier."
 
 #: picture/views.py:56
-msgid "A picture with the same file name already exists. This picture will not replace it."
+msgid ""
+"A picture with the same file name already exists. This picture will not "
+"replace it."
 msgstr "Repanier a repris un photo qui portait déjà le même nom de fichier."
 
 #: picture/views.py:65
@@ -2346,7 +2377,8 @@ msgstr " (COPIE)"
 
 #: templates/bs3/403.html:5 templates/bs5/403.html:5
 msgid "Your role in the group does not allow you to perform this action."
-msgstr "Votre rôle dans le groupe ne vous permet pas d'effectuer cette action."
+msgstr ""
+"Votre rôle dans le groupe ne vous permet pas d'effectuer cette action."
 
 #: templates/bs3/500.html:10 templates/bs5/500.html:10
 msgid "Repanier Internal Error"
@@ -2452,8 +2484,8 @@ msgstr ""
 #: templates/bs5/admin/delete_confirmation.html:28
 #, python-format
 msgid ""
-"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
-"following protected related objects:"
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the"
+" following protected related objects:"
 msgstr ""
 "Supprimer %(object_name)s '%(escaped_object)s' entrainera la suppression "
 "d'objets liés protégés :"
@@ -2511,7 +2543,8 @@ msgid ""
 "Deleting the selected %(objects_name)s would require deleting the following "
 "protected related objects:"
 msgstr ""
-"Supprimer %(objects_name)s entrainera la suppression d'objets liés protégés :"
+"Supprimer %(objects_name)s entrainera la suppression d'objets liés protégés "
+":"
 
 #: templates/bs3/admin/delete_selected_confirmation.html:35
 #: templates/bs5/admin/delete_selected_confirmation.html:35
@@ -2567,7 +2600,8 @@ msgstr " Par %(filter_title)s "
 msgid "Save and continue editing"
 msgstr "Enregistrer et continuer"
 
-#: templates/bs3/admin/search_form.html:7 templates/bs3/cms_order_page.html:100
+#: templates/bs3/admin/search_form.html:7
+#: templates/bs3/cms_order_page.html:100
 #: templates/bs3/cms_order_page_htmx.html:86
 #: templates/bs3/repanier/who_is_who.html:15
 #: templates/bs5/admin/cms/page/tree/base_PCO.html:28
@@ -2592,8 +2626,9 @@ msgid ""
 "The ordering functionality is not activated in your account. <br> If you "
 "wish to order, please contact the managers of your group."
 msgstr ""
-"La fonctionnalité de commande n'est pas activée sur votre compte.<br>Si vous "
-"souhaitez commander, veuillez vous adresser aux responsables de votre groupe."
+"La fonctionnalité de commande n'est pas activée sur votre compte.<br>Si vous"
+" souhaitez commander, veuillez vous adresser aux responsables de votre "
+"groupe."
 
 #: templates/bs3/cms_order_page.html:118
 #: templates/bs3/cms_order_page_htmx.html:104
@@ -2716,7 +2751,8 @@ msgstr "Oui, je confirme cette action mais sans envoyer de mail"
 #: templates/bs3/repanier/admin/confirm_close_order.html:29
 #: templates/bs5/repanier/admin/confirm_close_order.html:29
 msgid "Please indicate the delivery points you wish to close"
-msgstr "Veuillez indiquer les points de livraisons que vous souhaitez clôturer"
+msgstr ""
+"Veuillez indiquer les points de livraisons que vous souhaitez clôturer"
 
 #: templates/bs3/repanier/admin/confirm_close_order.html:37
 #: templates/bs3/repanier/admin/confirm_export_customer_order.html:33
@@ -2739,9 +2775,9 @@ msgstr "Mail récapitulatif de notre commande à chaque producteur"
 #: templates/bs5/repanier/admin/confirm_close_order.html:126
 msgid "Order mail to board"
 msgstr ""
-"Mail récapitulatif des listes de préparations envoyé aux membres de l'équipe "
-"de préparation et aux membres de l'équipe de gestion en charge des commandes "
-"qui peuvent être contactés"
+"Mail récapitulatif des listes de préparations envoyé aux membres de l'équipe"
+" de préparation et aux membres de l'équipe de gestion en charge des "
+"commandes qui peuvent être contactés"
 
 #: templates/bs3/repanier/admin/confirm_duplicate_product.html:13
 #: templates/bs5/repanier/admin/confirm_duplicate_product.html:13
@@ -2758,7 +2794,8 @@ msgstr "Veuillez confirmer votre demande d'exportation des commandes"
 #: templates/bs3/repanier/admin/confirm_export_customer_order.html:25
 #: templates/bs5/repanier/admin/confirm_export_customer_order.html:25
 msgid "Please indicate the delivery points you wish to export"
-msgstr "Veuillez indiquer les points de livraisons que vous souhaitez exporter"
+msgstr ""
+"Veuillez indiquer les points de livraisons que vous souhaitez exporter"
 
 #: templates/bs3/repanier/admin/confirm_generate_permanence.html:30
 #: templates/bs5/repanier/admin/confirm_generate_permanence.html:30
@@ -2780,8 +2817,8 @@ msgid ""
 "Yes, I'm sure and I have already encoded the customer's provisions into the "
 "bank account"
 msgstr ""
-"Oui, je suis sûr ET J'AI déjà encodé les mouvements bancaires correspondants "
-"aux provisions des membres"
+"Oui, je suis sûr ET J'AI déjà encodé les mouvements bancaires correspondants"
+" aux provisions des membres"
 
 #: templates/bs3/repanier/admin/confirm_invoice.html:31
 #: templates/bs5/repanier/admin/confirm_invoice.html:31
@@ -2942,11 +2979,19 @@ msgstr "Paiement centralisé par"
 msgid "Pending prepayment"
 msgstr "Paiement en traitement"
 
-msgid "Please pay a prepayment of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
-msgstr "Veuillez payer une provision de %(payment)s sur le compte bancaire %(name)s %(number)s avec la communication %(communication)s."
+msgid ""
+"Please pay a prepayment of %(payment)s to the bank account %(name)s "
+"%(number)s with communication %(communication)s."
+msgstr ""
+"Veuillez payer une provision de %(payment)s sur le compte bancaire %(name)s "
+"%(number)s avec la communication %(communication)s."
 
-msgid "Please pay a prepayment of {payment} to the bank account {name} {number} with communication {communication}."
-msgstr "Veuillez payer une provision de {payment} sur le compte bancaire {name} {number} avec la communication {communication}."
+msgid ""
+"Please pay a prepayment of {payment} to the bank account {name} {number} "
+"with communication {communication}."
+msgstr ""
+"Veuillez payer une provision de {payment} sur le compte bancaire {name} "
+"{number} avec la communication {communication}."
 
 #: templates/bs3/repanier/customer_history_form.html:64
 #: templates/bs3/repanier/customer_invoice_form.html:62
@@ -3025,8 +3070,8 @@ msgstr "Prix unitaire"
 #: templates/bs3/repanier/producer_invoice_form.html:123
 #: templates/bs5/repanier/customer_invoice_form.html:230
 #: templates/bs5/repanier/customer_invoice_form.html:313
-#: templates/bs5/repanier/producer_invoice_form.html:117 xlsx/xlsx_stock.py:251
-#: xlsx/xlsx_stock.py:275
+#: templates/bs5/repanier/producer_invoice_form.html:117
+#: xlsx/xlsx_stock.py:251 xlsx/xlsx_stock.py:275
 msgid "Total price"
 msgstr "Prix total"
 
@@ -3227,7 +3272,9 @@ msgstr ""
 #: templates/bs3/repanier/registration/password_reset_done_email.html:2
 #: templates/bs5/repanier/registration/password_reset_done_email.html:2
 #, python-format
-msgid "You're receiving this email because you have reset the password of your user account at %(site_name)s."
+msgid ""
+"You're receiving this email because you have reset the password of your user"
+" account at %(site_name)s."
 msgstr ""
 "Le mot de passe de votre compte sur %(site_name)s vient d'être réinitialisé."
 
@@ -3281,8 +3328,8 @@ msgid ""
 "Forgotten your password? Enter your email address below, and we'll email "
 "instructions for setting a new one."
 msgstr ""
-"Mot de passe perdu ? Saisissez votre adresse électronique ci-dessous et nous "
-"vous enverrons les instructions pour en créer un nouveau."
+"Mot de passe perdu ? Saisissez votre adresse électronique ci-dessous et nous"
+" vous enverrons les instructions pour en créer un nouveau."
 
 #: templates/bs3/repanier/registration/password_reset_form.html:21
 #: templates/bs5/repanier/registration/password_reset_form.html:22
@@ -3294,8 +3341,12 @@ msgid "If the button above does not work, open this address:"
 msgstr "Si le bouton ci-dessus ne fonctionne pas, ouvrez cette adresse :"
 
 #: repanier/templates/repanier/registration/password_reset_email.html
-msgid "If you did not ask for a new password, you can ignore this email: your current password keeps working."
-msgstr "Si vous n'avez pas demandé un nouveau mot de passe, vous pouvez ignorer ce mail : votre mot de passe actuel reste valable."
+msgid ""
+"If you did not ask for a new password, you can ignore this email: your "
+"current password keeps working."
+msgstr ""
+"Si vous n'avez pas demandé un nouveau mot de passe, vous pouvez ignorer ce "
+"mail : votre mot de passe actuel reste valable."
 
 #: templates/bs3/repanier/registration/unsubscribe.html:8
 #: templates/bs5/repanier/registration/unsubscribe.html:9
@@ -3305,8 +3356,7 @@ msgstr "Se désinscrire"
 #: templates/bs3/repanier/registration/unsubscribe.html:11
 msgid ""
 "Your unsubscription is registered. You can go right now on the\n"
-"              <a href=\"/repanier/go_repanier/\" class=\"btn btn-info\">sign "
-"in page</a> or on the\n"
+"              <a href=\"/repanier/go_repanier/\" class=\"btn btn-info\">sign in page</a> or on the\n"
 "              <a href=\"/\" class=\"btn btn-info\">home page</a>."
 msgstr ""
 "Vous ne recevrez plus de mail non sollicité provenant de ce site. Vous "
@@ -3591,8 +3641,8 @@ msgstr "Erreur :"
 #: templates/bs5/admin/cms/page/tree/base_PCO.html:198
 #: templates/bs5/admin/cms/page/tree/base_PCO.html:262
 msgid ""
-"This page cannot be copied because an application is attached to it. See the "
-"Page's Advanced settings to manage apphooks."
+"This page cannot be copied because an application is attached to it. See the"
+" Page's Advanced settings to manage apphooks."
 msgstr ""
 "Cette page ne peut pas être copiée parce qu’une application y est jointe. "
 "Consultez les Paramètres avancés de la Page pour gérer les apphooks."
@@ -3634,15 +3684,13 @@ msgid ""
 "\n"
 "                            <em>There is no %(object)s around yet.</em>\n"
 "                            <br>\n"
-"                            <a href=\"%(add_url)s\" class=\"addlink\">Add "
-"%(object)s</a> now.\n"
+"                            <a href=\"%(add_url)s\" class=\"addlink\">Add %(object)s</a> now.\n"
 "                        "
 msgstr ""
 "\n"
 "                            <em>There is no %(object)s around yet.</em>\n"
 "                            <br>\n"
-"                            <a href=\"%(add_url)s\" class=\"addlink\">Add "
-"%(object)s</a> now.\n"
+"                            <a href=\"%(add_url)s\" class=\"addlink\">Add %(object)s</a> now.\n"
 "                        "
 
 #: templates/bs5/base.html:120
@@ -3678,10 +3726,8 @@ msgstr ""
 #: templates/bs5/repanier/registration/unsubscribe.html:12
 msgid ""
 "Your unsubscription is registered. You can go right now on the\n"
-"                <a href=\"/repanier/go_repanier/\" class=\"btn btn-success "
-"btn-sm text-white my-1\">sign in page</a> or on the\n"
-"                <a href=\"/\" class=\"btn btn-success btn-sm text-white "
-"my-1\">home page</a>."
+"                <a href=\"/repanier/go_repanier/\" class=\"btn btn-success btn-sm text-white my-1\">sign in page</a> or on the\n"
+"                <a href=\"/\" class=\"btn btn-success btn-sm text-white my-1\">home page</a>."
 msgstr ""
 "Vous ne recevrez plus de mail non sollicité provenant de ce site. Vous "
 "pouvez vous <a href=\"/repanier/go_repanier/\" class=\"btn btn-"
@@ -3742,7 +3788,8 @@ msgstr "Le montant de votre commande s'élève à {amount}."
 #: tools.py:211
 #, python-brace-format
 msgid "Including this order, your account balance is {balance}."
-msgstr "En incluant cette commande, le solde de votre compte est de {balance}."
+msgstr ""
+"En incluant cette commande, le solde de votre compte est de {balance}."
 
 #: tools.py:219
 #, python-brace-format
@@ -3750,14 +3797,14 @@ msgid ""
 "Invoices for this delivery point are sent to {name} who is responsible for "
 "collecting the payments."
 msgstr ""
-"Vos factures pour ce point de livraison sont envoyées à {name} qui se charge "
-"de centraliser les paiements."
+"Vos factures pour ce point de livraison sont envoyées à {name} qui se charge"
+" de centraliser les paiements."
 
 #: tools.py:227
 #, python-brace-format
 msgid ""
-"Please pay a provision of {payment} to the bank account {name} {number} with "
-"communication {communication}."
+"Please pay a provision of {payment} to the bank account {name} {number} with"
+" communication {communication}."
 msgstr ""
 "Veuillez verser une provision de {payment} sur le compte bancaire {name} "
 "{number} avec comme communication \"{communication}\"."
@@ -3778,8 +3825,8 @@ msgstr "Clôturé"
 #: tools.py:654
 msgid "You can change the order quantities as long as the orders are open."
 msgstr ""
-"Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
-"les commandes sont ouvertes."
+"Vous pouvez modifier les produits et quantités commandés aussi longtemps que"
+" les commandes sont ouvertes."
 
 #: tools.py:662
 msgid "The orders are closed for your delivery point."
@@ -3823,7 +3870,8 @@ msgstr "Adresse e-mail utilisée pour se connecter au site"
 
 #: views/my_profile_view.py:42
 msgid "For memory only. Ask the coordination of the site to change it."
-msgstr "Pour mémoire uniquement. Demandez à la coordination du site pour la changer."
+msgstr ""
+"Pour mémoire uniquement. Demandez à la coordination du site pour la changer."
 
 #: views/my_profile_view.py:36
 msgid "My main phone number"
@@ -3914,11 +3962,11 @@ msgstr "Fichier {} importé avec succès."
 
 #: xlsx/views.py:85
 msgid ""
-"Error when importing {} : File size must be <= 1 Mb and extension must "
-"be .xlsx or .xls"
+"Error when importing {} : File size must be <= 1 Mb and extension must be "
+".xlsx or .xls"
 msgstr ""
-"Erreur à l'importation de {} : La taille du fichier doit être <= 1 Mb et son "
-"extension doit être .xlsx ou .xls"
+"Erreur à l'importation de {} : La taille du fichier doit être <= 1 Mb et son"
+" extension doit être .xlsx ou .xls"
 
 #: xlsx/views.py:91
 msgid "No file to import."
@@ -4003,7 +4051,8 @@ msgstr ""
 #: xlsx/xlsx_invoice_import.py:125
 #, python-format
 msgid ""
-"Row %(row_num)d : A required column %(column_name)s is missing %(error_msg)s."
+"Row %(row_num)d : A required column %(column_name)s is missing "
+"%(error_msg)s."
 msgstr ""
 "Ligne %(row_num)d : Une colonne requise %(column_name)s est absente du "
 "fichier %(error_msg)s."
@@ -4132,11 +4181,13 @@ msgstr "Ligne %(row_num)d : Pas d'achat trouvé correspondant à l'Id donné."
 msgid ""
 "Row %(row_num)d : The given permanence doesn't own the given purchase id."
 msgstr ""
-"Ligne %(row_num)d : L'achat donné ne fait pas partie de la permanence donnée."
+"Ligne %(row_num)d : L'achat donné ne fait pas partie de la permanence "
+"donnée."
 
 #: xlsx/xlsx_purchase_import.py:74
 #, python-format
-msgid "Row %(row_num)d : No offer_item corresponding to the given purchase id."
+msgid ""
+"Row %(row_num)d : No offer_item corresponding to the given purchase id."
 msgstr "Ligne %(row_num)d : Pas de produit en offre correspondant à l'achat."
 
 #: xlsx/xlsx_purchase_import.py:80
@@ -4153,7 +4204,8 @@ msgstr "Ligne %(row_num)d : Règle de trois dans un contexte inapproprié."
 #, python-format
 msgid "Row %(row_num)d : A required column is missing %(error_msg)s."
 msgstr ""
-"Ligne %(row_num)d : Une colonne requise est absente du fichier %(error_msg)s."
+"Ligne %(row_num)d : Une colonne requise est absente du fichier "
+"%(error_msg)s."
 
 #: xlsx/xlsx_purchase_import.py:193
 msgid "At least one customer must represent the buying group."
@@ -4201,8 +4253,8 @@ msgid ""
 "A permanence created by mistake must not pollute the preparation screen: it "
 "can be cancelled here in one single action."
 msgstr ""
-"Une permanence créée par erreur ne doit pas polluer l'écran de préparation : "
-"elle peut être annulée ici en une seule action."
+"Une permanence créée par erreur ne doit pas polluer l'écran de préparation :"
+" elle peut être annulée ici en une seule action."
 
 msgid ""
 "The orders will be opened without sending any email, then closed without "
@@ -4213,16 +4265,17 @@ msgstr ""
 
 msgid ""
 "The permanence will then be cancelled. Purchases and invoices are kept, and "
-"the cancellation can itself be reverted from the payment screen (restore the "
-"delivery)."
+"the cancellation can itself be reverted from the payment screen (restore the"
+" delivery)."
 msgstr ""
-"La permanence sera ensuite annulée. Les achats et factures sont conservés, et "
-"l'annulation peut elle-même être annulée depuis l'écran de paiement (restaurer "
-"la livraison)."
+"La permanence sera ensuite annulée. Les achats et factures sont conservés, "
+"et l'annulation peut elle-même être annulée depuis l'écran de paiement "
+"(restaurer la livraison)."
 
 #, python-format
 msgid "This permanence carries %(counter)s order. It will be cancelled."
-msgid_plural "This permanence carries %(counter)s orders. They will be cancelled."
+msgid_plural ""
+"This permanence carries %(counter)s orders. They will be cancelled."
 msgstr[0] "Cette permanence contient %(counter)s commande. Elle sera annulée."
 msgstr[1] ""
 "Cette permanence contient %(counter)s commandes. Elles seront annulées."
@@ -4235,20 +4288,31 @@ msgstr ""
 "Pour effectuer cette action, le statut de {permanence} doit être "
 "'{expected_statuses}'."
 
-msgid "No order was placed: the permanence is an empty shell, it will be deleted for good."
+msgid ""
+"No order was placed: the permanence is an empty shell, it will be deleted "
+"for good."
 msgstr ""
-"Aucune commande n'a été passée : la permanence est une coquille vide, elle sera "
-"supprimée définitivement."
+"Aucune commande n'a été passée : la permanence est une coquille vide, elle "
+"sera supprimée définitivement."
 
 msgid "The permanence has been deleted."
 msgstr "La permanence a été supprimée."
+
 #: repanier/templates/repanier/registration/unsubscribe.html
-msgid "You no longer receive the general mails of the group. Your order confirmations keep arriving: they follow your orders."
-msgstr "Vous ne recevez plus les mails généraux du groupe. Les confirmations de commande continuent d'arriver : elles suivent vos commandes."
+msgid ""
+"You no longer receive the general mails of the group. Your order "
+"confirmations keep arriving: they follow your orders."
+msgstr ""
+"Vous ne recevez plus les mails généraux du groupe. Les confirmations de "
+"commande continuent d'arriver : elles suivent vos commandes."
 
 #: repanier/templates/repanier/widgets/money.html
-msgid "Calculator: type a formula like 4*2,20= and the field keeps only the result (decimal comma, a dot groups thousands)."
-msgstr "Calculatrice : tapez une formule comme 4*2,20= et le champ ne garde que le résultat (virgule décimale, le point sépare les milliers)."
+msgid ""
+"Calculator: type a formula like 4*2,20= and the field keeps only the result "
+"(decimal comma, a dot groups thousands)."
+msgstr ""
+"Calculatrice : tapez une formule comme 4*2,20= et le champ ne garde que le "
+"résultat (virgule décimale, le point sépare les milliers)."
 
 #: repanier/templates/repanier/registration/unsubscribe.html
 msgid "Receive the mails again"
@@ -4259,24 +4323,42 @@ msgid "Your account is temporarily locked"
 msgstr "Votre compte est temporairement verrouillé"
 
 #: repanier/auth_backend.py
-msgid "Your account is locked after too many failed attempts: try again in %(minutes)d minutes, or ask for a new password right now."
-msgstr "Votre compte est verrouillé après trop de tentatives échouées : réessayez dans %(minutes)d minutes, ou demandez tout de suite un nouveau mot de passe."
+msgid ""
+"Your account is locked after too many failed attempts: try again in "
+"%(minutes)d minutes, or ask for a new password right now."
+msgstr ""
+"Votre compte est verrouillé après trop de tentatives échouées : réessayez "
+"dans %(minutes)d minutes, ou demandez tout de suite un nouveau mot de passe."
 
 #: repanier/templates/repanier/registration/login_locked_email.html
-msgid "Someone tried to sign in to your account at %(group_name)s too many times: your account is now locked for %(login_lock_minutes)s minutes."
-msgstr "Quelqu'un a tenté de se connecter à votre compte sur %(group_name)s un trop grand nombre de fois : votre compte est maintenant verrouillé pendant %(login_lock_minutes)s minutes."
+msgid ""
+"Someone tried to sign in to your account at %(group_name)s too many times: "
+"your account is now locked for %(login_lock_minutes)s minutes."
+msgstr ""
+"Quelqu'un a tenté de se connecter à votre compte sur %(group_name)s un trop "
+"grand nombre de fois : votre compte est maintenant verrouillé pendant "
+"%(login_lock_minutes)s minutes."
 
 #: repanier/templates/repanier/registration/login_locked_email.html
 msgid "This message concerns the account %(customer_email)s."
 msgstr "Ce message concerne le compte %(customer_email)s."
 
 #: repanier/templates/repanier/registration/login_locked_email.html
-msgid "If these attempts were yours: check the caps lock and the num lock of your keyboard before trying again in %(login_lock_minutes)s minutes."
-msgstr "Si ces tentatives venaient de vous : vérifiez la touche majuscule et le verrouillage numérique de votre clavier avant de réessayer dans %(login_lock_minutes)s minutes."
+msgid ""
+"If these attempts were yours: check the caps lock and the num lock of your "
+"keyboard before trying again in %(login_lock_minutes)s minutes."
+msgstr ""
+"Si ces tentatives venaient de vous : vérifiez la touche majuscule et le "
+"verrouillage numérique de votre clavier avant de réessayer dans "
+"%(login_lock_minutes)s minutes."
 
 #: repanier/auth_backend.py
-msgid "If these attempts were not yours, someone is probably trying to access your account: change your password now."
-msgstr "Si ces tentatives ne venaient pas de vous, quelqu'un essaie probablement d'accéder à votre compte : changez votre mot de passe maintenant."
+msgid ""
+"If these attempts were not yours, someone is probably trying to access your "
+"account: change your password now."
+msgstr ""
+"Si ces tentatives ne venaient pas de vous, quelqu'un essaie probablement "
+"d'accéder à votre compte : changez votre mot de passe maintenant."
 
 #: repanier/templates/repanier/registration/login_locked_email.html
 msgid "Ask for a new password"
@@ -4289,12 +4371,12 @@ msgstr "Connectez-vous avec votre passeport Repanier"
 #: repanier/templates/repanier/registration/passport_request.html
 msgid ""
 "You are a member of another Repanier site: sign in here with the e-mail of "
-"your home account, choose your home site, and your password there opens this "
-"one."
+"your home account, choose your home site, and your password there opens this"
+" one."
 msgstr ""
-"Vous êtes membre d'un autre site Repanier : connectez-vous ici avec l'e-mail "
-"de votre compte de votre site d'origine, choisissez votre site d'origine, et "
-"votre mot de passe là-bas ouvre celui-ci."
+"Vous êtes membre d'un autre site Repanier : connectez-vous ici avec l'e-mail"
+" de votre compte de votre site d'origine, choisissez votre site d'origine, "
+"et votre mot de passe là-bas ouvre celui-ci."
 
 #: repanier/templates/repanier/registration/passport_request.html
 msgid "Your home site"
@@ -4317,8 +4399,8 @@ msgid ""
 "A site of the Repanier family asks you to sign in on your home site: enter "
 "the password of your account here, and you will go straight back to it."
 msgstr ""
-"Un site de la famille Repanier vous demande de vous connecter sur votre site "
-"d'origine : entrez ici le mot de passe de votre compte, et vous y "
+"Un site de la famille Repanier vous demande de vous connecter sur votre site"
+" d'origine : entrez ici le mot de passe de votre compte, et vous y "
 "retournerez directement."
 
 #: repanier/templates/repanier/registration/unsubscribe.html
@@ -4333,6 +4415,11 @@ msgstr "Passeport"
 msgid "# passeports"
 msgstr "# passeports"
 
+msgid "Choose your home site"
+msgstr "Choisissez votre site d'origine"
+
+msgid "I have no home site"
+msgstr "Je n'ai pas de site d'origine"
 
 #~ msgid "My balance"
 #~ msgstr "Mon solde"

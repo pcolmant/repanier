@@ -53,6 +53,11 @@ passport_logger = logging.getLogger("repanier.passport")
 
 TEMPLATES = "repanier/registration/{}"
 
+# The choice which brings a member without a home site back to the
+# classical sign in of this site. It never matches a mirror: the
+# underscore cannot be a subdomain.
+NO_HOME = "no_home"
+
 
 def _login_url():
     return reverse("repanier:login_form")
@@ -94,7 +99,14 @@ class PassportRequestForm(forms.Form):
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop("choices", [])
         super().__init__(*args, **kwargs)
-        self.fields["home"].choices = choices
+        # The screen opens on the pale choice: nothing leaves until
+        # the member chose a home site, and the member without a
+        # home site goes back to the classical sign in.
+        self.fields["home"].choices = (
+            [(EMPTY_STRING, _("Choose your home site"))]
+            + list(choices)
+            + [(NO_HOME, _("I have no home site"))]
+        )
 
 
 @sensitive_post_parameters()
@@ -114,6 +126,10 @@ def passport_request_view(request):
         form = PassportRequestForm(request.POST, choices=choices)
         if form.is_valid():
             home = form.cleaned_data["home"]
+            if home == NO_HOME:
+                # The member has no home site: no door to open, the
+                # classical sign in of this site is his way in.
+                return HttpResponseRedirect(_login_url())
             email = form.cleaned_data["email"].strip().lower()
             arrive_url = request.build_absolute_uri(
                 reverse("passport_arrive")
@@ -135,6 +151,7 @@ def passport_request_view(request):
     context = {
         "form": form,
         "next": request.GET.get("next", EMPTY_STRING),
+        "no_home": NO_HOME,
     }
     return TemplateResponse(
         request, TEMPLATES.format("passport_request.html"), context
