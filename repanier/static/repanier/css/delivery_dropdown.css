@@ -5,3 +5,10 @@
     max-height: 300px;
     overflow-y: auto;
 }
+
+/* A delivery point name is longer than a phone screen: the choice
+   wraps on several lines instead of overflowing its menu item
+   (Bootstrap keeps the dropdown items on one line by default). */
+.delivery-dropdown .dropdown-item {
+    white-space: normal;
+}
