@@ -5,6 +5,32 @@
  * and its menu items come from delivery_select_ajax via HTMX.
  */
 
+// The confirm box - and with it the delivery dropdown - is injected
+// into #span_btn_confirm_order by four AJAX paths (order init, an
+// order change, a delivery selection, the confirm button), none of
+// them an HTMX swap: HTMX never wires the hx-* attributes of what
+// they inject, and the menu stays on "Loading...". Observing the
+// single span and handing its content back to HTMX wires the
+// dropdown whatever the path which refreshed it.
+(function () {
+    function wireTheConfirmBox() {
+        var confirmBox = document.getElementById("span_btn_confirm_order");
+        if (!confirmBox || !window.htmx || confirmBox.dataset.htmxWired) {
+            return;
+        }
+        confirmBox.dataset.htmxWired = "yes";
+        htmx.process(confirmBox);
+        new MutationObserver(function () {
+            window.htmx.process(confirmBox);
+        }).observe(confirmBox, {childList: true});
+    }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", wireTheConfirmBox);
+    } else {
+        wireTheConfirmBox();
+    }
+})();
+
 // Select a delivery point and update the order via delivery_ajax.
 function selectDelivery(deliveryId, element) {
     const dropdown = element.closest('.dropdown');
