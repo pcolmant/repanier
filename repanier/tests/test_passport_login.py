@@ -319,6 +319,13 @@ class PassportLoginJourneyTest(TestCase):
         )
         self.assertContains(response, "Choisissez votre site d&#x27;origine")
         self.assertContains(response, "Je n&#x27;ai pas de site d&#x27;origine")
+        # The way out sits right under the pale choice, before the
+        # sites.
+        content = response.content.decode("utf-8")
+        self.assertLess(
+            content.index("Je n&#x27;ai pas"),
+            content.index('<option value="gasath"'),
+        )
         response = self.client.post(
             "/fr/passport/request/",
             {"email": "louis@example.com", "home": ""},
@@ -330,9 +337,11 @@ class PassportLoginJourneyTest(TestCase):
         self.assertFalse(self.client.session.keys())
 
     def test_a_member_without_a_home_site_goes_back_to_the_classical_sign_in(self):
+        # Without any e-mail either: his e-mail belongs to the door
+        # he is leaving, the way out must not ask for it.
         response = self.client.post(
             "/fr/passport/request/",
-            {"email": "louis@example.com", "home": "no_home"},
+            {"home": "no_home"},
             HTTP_HOST="courtcircuit.repanier.be",
         )
         # He has no home site to vouch for him: the classical sign in

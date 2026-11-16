@@ -101,11 +101,11 @@ class PassportRequestForm(forms.Form):
         super().__init__(*args, **kwargs)
         # The screen opens on the pale choice: nothing leaves until
         # the member chose a home site, and the member without a
-        # home site goes back to the classical sign in.
+        # home site finds the way out right under it.
         self.fields["home"].choices = (
             [(EMPTY_STRING, _("Choose your home site"))]
-            + list(choices)
             + [(NO_HOME, _("I have no home site"))]
+            + list(choices)
         )
 
 
@@ -123,13 +123,15 @@ def passport_request_view(request):
         # Nobody accepts the passport members here: no door to open.
         return HttpResponseRedirect(_login_url())
     if request.method == "POST":
+        # The member without a home site goes back to the classical
+        # sign in whatever the rest of the form says: his e-mail
+        # belongs to the door he is leaving, the form must not ask
+        # for it once he said he has no home site.
+        if request.POST.get("home") == NO_HOME:
+            return HttpResponseRedirect(_login_url())
         form = PassportRequestForm(request.POST, choices=choices)
         if form.is_valid():
             home = form.cleaned_data["home"]
-            if home == NO_HOME:
-                # The member has no home site: no door to open, the
-                # classical sign in of this site is his way in.
-                return HttpResponseRedirect(_login_url())
             email = form.cleaned_data["email"].strip().lower()
             arrive_url = request.build_absolute_uri(
                 reverse("passport_arrive")
