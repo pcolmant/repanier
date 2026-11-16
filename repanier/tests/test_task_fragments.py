@@ -169,3 +169,22 @@ class BtnLikeFragmentTest(TestCase):
         html = render_tag(self.request(), BTN_LIKE_TAG, offer=self.offer_item)
         self.assertIn("bi-heart-fill", html)
         self.assertIn("like_ajax({})".format(self.offer_item.id), html)
+
+    def test_the_heart_of_a_thousands_offer_item_stays_wired(self):
+        # Production offer items passed 1000 and localization broke the
+        # fragment in two places: a thousands separator inside the
+        # class of the button (the like_ajax answer no longer matched
+        # it) and inside the onclick call (a JavaScript syntax error at
+        # click time). The id renders as it is, whatever its size.
+        from django.template.loader import render_to_string
+
+        for template_name in (
+            "repanier/btn_like.html",
+            "repanier/like_heart.html",
+        ):
+            html = render_to_string(
+                template_name, {"offer_item_id": 48512, "is_liked": False}
+            )
+            self.assertIn("48512", html)
+            self.assertNotIn("\xa0", html)
+            self.assertNotIn("&#160;", html)
