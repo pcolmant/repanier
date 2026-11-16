@@ -309,3 +309,33 @@ class PassportLoginJourneyTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Choisissez votre site")
         self.assertContains(response, "dans la liste.")
+
+    def test_the_screen_opens_on_the_pale_choice_and_refuses_it(self):
+        # The list opens on "Choose your home site" and offers the way
+        # out to the member without a home site: the screen lies to
+        # nobody about what is already chosen.
+        response = self.client.get(
+            "/fr/passport/request/", HTTP_HOST="courtcircuit.repanier.be"
+        )
+        self.assertContains(response, "Choisissez votre site d&#x27;origine")
+        self.assertContains(response, "Je n&#x27;ai pas de site d&#x27;origine")
+        response = self.client.post(
+            "/fr/passport/request/",
+            {"email": "louis@example.com", "home": ""},
+            HTTP_HOST="courtcircuit.repanier.be",
+        )
+        # Nothing was chosen: no door opens.
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Location", response)
+        self.assertFalse(self.client.session.keys())
+
+    def test_a_member_without_a_home_site_goes_back_to_the_classical_sign_in(self):
+        response = self.client.post(
+            "/fr/passport/request/",
+            {"email": "louis@example.com", "home": "no_home"},
+            HTTP_HOST="courtcircuit.repanier.be",
+        )
+        # He has no home site to vouch for him: the classical sign in
+        # of this site is his way in.
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/fr/repanier/go_repanier/")

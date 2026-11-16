@@ -46,7 +46,8 @@
                         </div>
                         <div class="card-footer bg-light py-3">
                             <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
-                                <button class="btn btn-success text-white" type="submit" form="passport-request-form">
+                                <button class="btn btn-success text-white" type="submit" form="passport-request-form"
+                                        id="passport-request-sign-in">
                                     {% translate "Sign in" %}</button>
                                 <a href="{% url "repanier:login_form" %}"
                                    class="btn btn-link text-decoration-none">{% translate "Cancel" %}</a>
@@ -57,4 +58,24 @@
             </div>
         </div>
     </div>
+    <script>
+        (function () {
+            // The sign in stays pale until the member really chose a
+            // home site. Without JavaScript the button keeps its
+            // classical colour and the server still refuses the
+            // empty choice.
+            var select = document.getElementById("id_home");
+            var button = document.getElementById("passport-request-sign-in");
+            var noHome = "{{ no_home }}";
+            function refresh() {
+                var chosen = select.value !== "" && select.value !== noHome;
+                button.classList.toggle("btn-outline-success", !chosen);
+                button.classList.toggle("btn-success", chosen);
+                button.classList.toggle("text-white", chosen);
+            }
+            select.addEventListener("change", refresh);
+            select.addEventListener("keyup", refresh);
+            refresh();
+        })();
+    </script>
 {% endblock %}
