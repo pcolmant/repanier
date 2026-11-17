@@ -315,8 +315,6 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_example.ini /etc/uwsgi/apps-enabled/
 
 3. **Deploy Codebase**:
    ```bash
-   cp ~/repanier_git/mysite/media/robots.txt ~/prd1/_0_prd_example/_0_prd_example/media/
-   cp ~/repanier_git/mysite/media/favicon.ico ~/prd1/_0_prd_example/_0_prd_example/media/
    cp ~/repanier_git/mysite/common_settings.py ~/prd1/_0_prd_example/_0_prd_example/
    cp ~/repanier_git/mysite/urls.py ~/prd1/_0_prd_example/_0_prd_example/
    cp ~/repanier_git/mysite/wsgi.py ~/prd1/_0_prd_example/_0_prd_example/
