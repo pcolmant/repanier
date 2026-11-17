@@ -24,7 +24,7 @@ from django.urls import path
 from django.views.i18n import JavaScriptCatalog
 
 from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
-from repanier.sitemaps import PermamenceSitemap
+from repanier.sitemaps import PermanenceSitemap
 from repanier.views.passport_door_view import (
     passport_arrive_view,
     passport_login_view,
@@ -46,7 +46,7 @@ urlpatterns = [
         sitemap,
         {
             "sitemaps": {
-                REPANIER_SETTINGS_PERMANENCES_NAME: PermamenceSitemap,
+                REPANIER_SETTINGS_PERMANENCES_NAME: PermanenceSitemap,
                 "cmspages": CMSSitemap,
             }
         },
