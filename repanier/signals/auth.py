@@ -29,6 +29,7 @@ def notify_admin_sign_in(sender, request, user, **kwargs):
     if not user.is_superuser:
         return
     try:
+        from repanier.const import EmailNature
         from repanier.email.email import RepanierEmail
 
         # Behind the nginx proxy the visible address of the client
@@ -54,6 +55,7 @@ def notify_admin_sign_in(sender, request, user, **kwargs):
             timezone.localtime().strftime("%Y-%m-%d %H:%M:%S"),
         )
         email = RepanierEmail(
+            email_nature=EmailNature.ADMIN,
             subject="{} - {}".format(
                 settings.REPANIER_SETTINGS_GROUP_NAME,
                 _("A superuser signed in"),

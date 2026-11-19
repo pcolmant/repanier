@@ -31,6 +31,7 @@ from repanier.views.passport_door_view import (
     passport_request_view,
 )
 from repanier.views.passport_view import passport_profile_view, passport_verify_view
+from repanier.views.brevo_webhook_view import brevo_webhook_view
 
 admin.site.site_header = ""
 admin.site.site_title = ""
@@ -51,6 +52,11 @@ urlpatterns = [
             }
         },
         name="django.contrib.sitemaps.views.sitemap",
+    ),
+    path(
+        "repanier/webhooks/brevo/<str:token>/",
+        brevo_webhook_view,
+        name="brevo_webhook",
     ),
 ]
 

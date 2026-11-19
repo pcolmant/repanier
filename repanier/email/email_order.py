@@ -4,6 +4,7 @@ from django.template import Template, Context as TemplateContext
 from django.utils.translation import gettext_lazy as _
 
 from repanier.const import EMPTY_STRING
+from repanier.const import EmailNature
 from repanier.email.email import RepanierEmail, in_customer_language
 from repanier.models import Producer
 from repanier.models.customer import Customer
@@ -86,6 +87,8 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
             to_email = list(set(to_email + order_responsible["to_email"]))
 
             email = RepanierEmail(
+                email_nature=EmailNature.ORDER,
+                permanence=permanence,
                 subject=order_staff_mail_subject,
                 html_body=html_body,
                 to=to_email,
@@ -170,6 +173,8 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
         if send_email:
             to_email = list(set(to_email + order_responsible["to_email"]))
             email = RepanierEmail(
+                email_nature=EmailNature.ORDER,
+                permanence=permanence,
                 subject=order_producer_mail_subject,
                 html_body=html_body,
                 to=to_email,
@@ -279,6 +284,8 @@ def export_order_2_1_group(
         to_email = list(set(to_email + order_responsible["to_email"]))
 
         email = RepanierEmail(
+            email_nature=EmailNature.ORDER,
+            permanence=permanence,
             subject=order_customer_mail_subject,
             html_body=html_body,
             to=to_email,
@@ -390,6 +397,8 @@ def export_order_2_1_customer(
             html_body = template.render(context)
 
             email = RepanierEmail(
+                email_nature=EmailNature.ORDER,
+                permanence=permanence,
                 subject=order_customer_mail_subject,
                 html_body=html_body,
                 to=to_email,

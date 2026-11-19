@@ -4,23 +4,26 @@ from email.mime.image import MIMEImage
 from random import random
 from smtplib import (
     SMTPAuthenticationError,
-    SMTPRecipientsRefused,
+    SMTPConnectError,
+    SMTPDataError,
+    SMTPHeloError,
     SMTPNotSupportedError,
-    SMTPServerDisconnected,
+    SMTPRecipientsRefused,
     SMTPResponseException,
     SMTPSenderRefused,
-    SMTPDataError,
-    SMTPConnectError,
-    SMTPHeloError,
+    SMTPServerDisconnected,
 )
 
 from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives, mail_admins
 from django.utils import translation
-from django.utils.html import strip_tags, format_html
+from django.utils import timezone
+from django.utils.html import format_html, strip_tags
 from django.utils.translation import gettext_lazy as _
-from repanier.const import EMPTY_STRING
+
+from repanier.const import EMPTY_STRING, EmailDeliveryStatus, EmailNature
+from repanier.models.emaillog import EmailLog
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +34,9 @@ def in_customer_language(function):
     the attachments resolve against Customer.language, whatever the
     language of the site or of the sending process.
 
-        @in_customer_language
-        def email_one_customer(customer, ...):
-            ...
+    @in_customer_language
+    def email_one_customer(customer, ...):
+        ...
 
     The first argument of the decorated function must be the
     customer. Restore the previous language on the way out, whatever
@@ -55,6 +58,8 @@ class RepanierEmail(EmailMultiAlternatives):
             "show_customer_may_unsubscribe", True
         )
         self.send_even_if_unsubscribed = kwargs.pop("send_even_if_unsubscribed", False)
+        self.email_nature = kwargs.pop("email_nature", EmailNature.OTHER)
+        self.permanence = kwargs.pop("permanence", None)
         super().__init__(*args, **kwargs)
 
     def send_email(self):
@@ -69,6 +74,22 @@ class RepanierEmail(EmailMultiAlternatives):
         for email_to in recipients:
             self._send_email_with_unsubscribe(email_to=email_to.strip())
 
+    def _ensure_email_log(self, customer, email_to):
+        email_log = EmailLog.objects.create(
+            customer=customer,
+            recipient_email=email_to,
+            permanence=self.permanence,
+            nature=self.email_nature,
+            status=EmailDeliveryStatus.SENT,
+        )
+        domain = email_to.split("@")[-1] if "@" in email_to else "repanier.local"
+        rfc_message_id = f"<{email_log.uuid}@{domain}>"
+        self.extra_headers["Message-ID"] = rfc_message_id
+        EmailLog.objects.filter(id=email_log.id).update(
+            message_id=rfc_message_id,
+            updated_at=timezone.now(),
+        )
+        return email_log
 
     # @debug_parameters
     def _send_email_with_unsubscribe(self, email_to=None):
@@ -99,6 +120,7 @@ class RepanierEmail(EmailMultiAlternatives):
                 return
         else:
             self.attach_alternative(self.html_body, "text/html")
+
         email_send = False
         # Email subject *must not* contain newlines
         self.subject = "".join(self.subject.splitlines())
@@ -106,6 +128,8 @@ class RepanierEmail(EmailMultiAlternatives):
         logger.debug(
             "################################## send_email to : {}".format(email_to)
         )
+        email_log = None
+        last_error = EMPTY_STRING
         attempt_counter = 1
         while not email_send and attempt_counter < 3:
             if attempt_counter > 1:
@@ -119,7 +143,10 @@ class RepanierEmail(EmailMultiAlternatives):
                         self.subject = "<{}>, subject : <{}>".format(
                             email_to, self.subject
                         )
+                        if email_log is None:
+                            email_log = self._ensure_email_log(customer, email_to)
                         self.send()
+                        email_send = True
                         self.subject = subject_save
                         logger.debug(
                             "email send only to REPANIER_SETTINGS_BCC_ALL_EMAIL_TO (DEBUG)"
@@ -131,19 +158,54 @@ class RepanierEmail(EmailMultiAlternatives):
                 else:
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
+                    if email_log is None:
+                        email_log = self._ensure_email_log(customer, email_to)
                     self.send()
-                email_send = True
+                    email_send = True
             except Exception as error_str:
+                last_error = error_str
                 logger.error("################################## send_email error")
                 logger.error(error_str)
                 self._send_error("send_email error", error_str)
                 # reset connection : EmailMessage.get_connection() will get/open a new connection
                 # before next self.send()
                 self.connection = None
+
+        if email_log is not None:
+            if email_send:
+                EmailLog.objects.filter(
+                    id=email_log.id, status=EmailDeliveryStatus.SENT
+                ).update(
+                    status=EmailDeliveryStatus.SENT,
+                    error_reason=EMPTY_STRING,
+                    updated_at=timezone.now(),
+                )
+            else:
+                EmailLog.objects.filter(
+                    id=email_log.id, status=EmailDeliveryStatus.SENT
+                ).update(
+                    status=EmailDeliveryStatus.SEND_ERROR,
+                    error_reason=str(last_error)[:255],
+                    updated_at=timezone.now(),
+                )
+
         if customer is not None:
             # customer.save(update_fields=['valid_email'])
             # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-            Customer.objects.filter(id=customer.id).update(valid_email=email_send)
+            customer_query = Customer.objects.filter(id=customer.id)
+            if email_log is not None:
+                # SMTP acceptance must not undo an already received bounce.
+                customer_query = customer_query.filter(
+                    emaillog__id=email_log.id,
+                    emaillog__status__in=[
+                        EmailDeliveryStatus.SENT,
+                        EmailDeliveryStatus.SEND_ERROR,
+                        EmailDeliveryStatus.SOFT_BOUNCE,
+                        EmailDeliveryStatus.DELIVERED,
+                        EmailDeliveryStatus.OPENED,
+                    ],
+                )
+            customer_query.update(valid_email=email_send)
 
     @classmethod
     def send_test_email(cls, to_email, subject=EMPTY_STRING, html_body=EMPTY_STRING):
@@ -169,23 +231,23 @@ class RepanierEmail(EmailMultiAlternatives):
 
             with open(settings.MEDIA_ROOT / "android-chrome-192x192.png", "rb") as fp:
                 msgImage = MIMEImage(fp.read(), name="repanier.jpg")
-                # Define the image's ID in header
-                msgImage.add_header("Content-ID", "<id1>")
-                # attach it to root
-                email.attach(msgImage)
-                html_body = format_html(
-                    """
-                    <hr/>
-                     <img
-                        alt="{label}" title="{label}"
-                        style="float: left; margin: 5px;"
-                        src="cid:id1"/>
-                    <hr/>
-                    {body}
-                    """,
-                    label="label",
-                    body=html_body,
-                )
+            # Define the image's ID in header
+            msgImage.add_header("Content-ID", "<id1>")
+            # attach it to root
+            email.attach(msgImage)
+            html_body = format_html(
+                """
+                <hr/>
+                <img
+                  alt="{label}" title="{label}"
+                  style="float: left; margin: 5px;"
+                  src="cid:id1"/>
+                <hr/>
+                {body}
+                """,
+                label="label",
+                body=html_body,
+            )
 
             email.attach_alternative(
                 html_body,
@@ -220,7 +282,7 @@ class RepanierEmail(EmailMultiAlternatives):
             return "SMTPDataError"
         except SMTPResponseException:
             return "SMTPResponseException"
-        except:
+        except Exception:
             return "socket.gaierror"
 
     @classmethod
@@ -281,8 +343,7 @@ class RepanierEmail(EmailMultiAlternatives):
                 else:
                     if board:
                         return True, _("This email will be sent to the staff.")
-        else:
-            return False, _("No email will be sent.")
+        return False, _("No email will be sent.")
 
     def _send_error(self, subject, error_str):
         from_email = "from_email : {}".format(self.from_email)
@@ -302,5 +363,5 @@ class RepanierEmail(EmailMultiAlternatives):
                 subject, "{}\n{}".format(message, error_str), connection=connection
             )
             connection.close()
-        except:
+        except Exception:
             pass

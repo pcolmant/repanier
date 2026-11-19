@@ -13,6 +13,7 @@ from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
 )
+from repanier.const import EmailNature
 from repanier.email.email import RepanierEmail
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
@@ -41,6 +42,7 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
 
         email = RepanierEmail(
             subject,
+            email_nature=EmailNature.PASSWORD_RESET,
             html_body=body,
             to=[to_email],
             show_customer_may_unsubscribe=False,

@@ -18,6 +18,7 @@ from repanier.const import (
     EMPTY_STRING,
     AuthGroup,
 )
+from repanier.const import EmailNature
 from repanier.email.email import RepanierEmail
 from repanier.models import Customer, Staff, Configuration
 from repanier.tools import get_repanier_template_name
@@ -207,6 +208,7 @@ class RepanierAuthBackend(ModelBackend):
                 },
             )
             email = RepanierEmail(
+                email_nature=EmailNature.LOGIN_LOCK,
                 subject="{} - {}".format(
                     settings.REPANIER_SETTINGS_GROUP_NAME,
                     _("Your account is temporarily locked"),
@@ -229,6 +231,7 @@ class RepanierAuthBackend(ModelBackend):
                     # RepanierEmail still carries the failed attempt -
                     # recipient and coordinator copy - in its report.
                     email = RepanierEmail(
+                        email_nature=EmailNature.LOGIN_LOCK,
                         subject=_("Your account is temporarily locked"),
                         html_body=EMPTY_STRING,
                         to=[to_email or EMPTY_STRING],

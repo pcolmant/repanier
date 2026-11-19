@@ -7,6 +7,7 @@ from django.utils.html import strip_tags
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
+from repanier.const import EmailNature
 from repanier.email.email import RepanierEmail
 from repanier.models.staff import Staff
 from repanier.tools import get_repanier_template_name
@@ -46,6 +47,7 @@ def send_mail_to_coordinators_view(request):
 
             email = RepanierEmail(
                 strip_tags(form.cleaned_data.get("subject")),
+                email_nature=EmailNature.ADMIN,
                 html_body=strip_tags(form.cleaned_data.get("message")),
                 to=to_email,
             )

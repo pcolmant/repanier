@@ -211,3 +211,24 @@ class Currency(models.TextChoices):
     EUR = "100", "€"
     CHF = "200", "Fr."
     LOC = "300", "SolAToi"
+
+class EmailNature(models.TextChoices):
+    OPENING = "100", _("Opening")
+    REMINDER = "120", _("Reminder")
+    ORDER = "140", _("Order confirmation")
+    INVOICE = "160", _("Invoice / balance")
+    PASSWORD_RESET = "180", _("Password reset")
+    LOGIN_LOCK = "200", _("Account locked")
+    ADMIN = "220", _("Admin notification")
+    OTHER = "900", _("Other")
+
+
+class EmailDeliveryStatus(models.TextChoices):
+    SENT = "100", _("Sent")
+    SEND_ERROR = "120", _("Send error")
+    DELIVERED = "200", _("Delivered")
+    OPENED = "220", _("Opened")
+    SOFT_BOUNCE = "300", _("Soft bounce")
+    HARD_BOUNCE = "400", _("Hard bounce")
+    BLOCKED = "420", _("Blocked")
+    SPAM = "500", _("Spam")

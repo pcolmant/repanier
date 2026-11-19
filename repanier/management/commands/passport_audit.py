@@ -23,6 +23,7 @@ import time
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from repanier.const import EmailNature
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.passport_network import verify_passport_member
@@ -114,6 +115,7 @@ class Command(BaseCommand):
         )
         body = "\n".join(lines)
         email = RepanierEmail(
+            email_nature=EmailNature.ADMIN,
             subject="[{}] Repanier passport audit".format(
                 settings.REPANIER_SETTINGS_GROUP_NAME
             ),

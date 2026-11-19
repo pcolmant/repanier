@@ -3,6 +3,7 @@ from email.mime.image import MIMEImage
 from django.template import Template, Context as TemplateContext
 from django.utils.html import format_html
 from repanier.const import OrderUnit
+from repanier.const import EmailNature
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItemReadOnly
@@ -92,6 +93,8 @@ def send_open_order(permanence_id):
     # logger.debug("send_open_order after html_body = template.render(context)")
     # to_email = list(set(to_email + order_responsible["to_email"]))
     email = RepanierEmail(
+        email_nature=EmailNature.OPENING,
+        permanence=permanence,
         subject=offer_customer_mail_subject,
         html_body=html_body,
         to=to_email,

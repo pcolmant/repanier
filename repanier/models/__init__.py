@@ -27,3 +27,5 @@ from .invoice import CustomerSend
 from .offeritem import OfferItemSend, OfferItemReadOnly
 from .permanence import PermanenceInPreparation, PermanenceDone
 from .purchase import PurchaseWoReceiver
+
+from .emaillog import EmailLog
