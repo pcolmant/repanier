@@ -302,9 +302,9 @@ class PermanenceInPreparationAdmin(SaleAdmin):
     def open_order(self, request, permanence_id, permanence=None):
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             send_mail = not ("apply-wo-mail" in request.POST)
-            open_order(permanence.id, send_mail)
-            # t = threading.Thread(target=open_order, args=(permanence.id, send_mail))
-            # t.start()
+            # open_order(permanence.id, send_mail)
+            t = threading.Thread(target=open_order, args=(permanence.id, send_mail))
+            t.start()
             user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
