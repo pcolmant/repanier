@@ -464,6 +464,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_readonly_fields(self, request, customer=None):
         if customer is not None:
             readonly_fields = [
+                "valid_email",
                 "get_admin_date_balance",
                 "get_admin_balance",
                 "get_last_login",
@@ -476,7 +477,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             if customer.represent_this_buyinggroup:
                 readonly_fields += ["represent_this_buyinggroup"]
             return readonly_fields
-        return []
+        return ["valid_email"]
 
     def get_form(self, request, customer=None, **kwargs):
 

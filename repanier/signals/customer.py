@@ -1,5 +1,6 @@
+from django.conf import settings
 from django.db.models import Q
-from django.db.models.signals import pre_save, post_delete
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from repanier.const import EMPTY_STRING, DECIMAL_ZERO, DECIMAL_ONE
@@ -40,7 +41,36 @@ def customer_pre_save(sender, **kwargs):
         customer.price_list_multiplier = DECIMAL_ONE
     customer.city = "{}".format(customer.city).upper()
     customer.login_attempt_counter = DECIMAL_ZERO
-    customer.valid_email = None
+    update_fields = kwargs.get("update_fields")
+    if customer.pk and update_fields is None and not customer.is_anonymized:
+        # A customer instance loaded before an address change or webhook can be stale.
+        stored = Customer.objects.using(kwargs["using"]).filter(pk=customer.pk).values(
+            "user_id", "user__email", "valid_email"
+        ).first()
+        if stored:
+            if stored["user_id"] != customer.user_id and (
+                stored["user__email"] != customer.user.email
+            ):
+                customer.valid_email = None
+            else:
+                customer.valid_email = stored["valid_email"]
+
+
+@receiver(pre_save, sender=settings.AUTH_USER_MODEL)
+def detect_customer_email_change(sender, instance, using, update_fields, raw, **kwargs):
+    instance._repanier_email_changed = False
+    if raw or instance.pk is None or (update_fields is not None and "email" not in update_fields):
+        return
+    previous_email = sender.objects.using(using).filter(pk=instance.pk).values_list(
+        "email", flat=True
+    ).first()
+    instance._repanier_email_changed = previous_email is not None and previous_email != instance.email
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def reset_customer_email_validity(sender, instance, using, **kwargs):
+    if getattr(instance, "_repanier_email_changed", False):
+        Customer.objects.using(using).filter(user_id=instance.pk).update(valid_email=None)
 
 
 @receiver(post_delete, sender=Customer)

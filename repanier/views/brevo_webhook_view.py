@@ -3,6 +3,8 @@ import logging
 from secrets import compare_digest
 
 from django.conf import settings
+from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -25,9 +27,17 @@ BREVO_EVENT_TO_STATUS = {
     "spam": EmailDeliveryStatus.SPAM,
 }
 
-INVALID_EMAIL_STATUSES = {
+EMAIL_VALIDITY_BY_STATUS = {
+    EmailDeliveryStatus.DELIVERED: True,
+    EmailDeliveryStatus.OPENED: True,
+    EmailDeliveryStatus.HARD_BOUNCE: False,
+    EmailDeliveryStatus.BLOCKED: False,
+}
+
+UNSUBSCRIBE_STATUSES = {
     EmailDeliveryStatus.HARD_BOUNCE,
     EmailDeliveryStatus.BLOCKED,
+    EmailDeliveryStatus.SPAM,
 }
 
 # Only allow progress: retries and delayed callbacks must not erase a later
@@ -106,23 +116,48 @@ def brevo_webhook_view(request, token=EMPTY_STRING):
                 recipient_email__iexact=normalized["email"],
             ).first()
 
-        if email_log is not None:
-            previous_statuses = [
-                status for status, priority in STATUS_PRECEDENCE.items()
-                if priority < STATUS_PRECEDENCE[normalized["status"]]
-            ]
+        if email_log is None:
+            continue
+
+        status = normalized["status"]
+        previous_statuses = [
+            previous for previous, priority in STATUS_PRECEDENCE.items()
+            if priority < STATUS_PRECEDENCE[status]
+        ]
+        with transaction.atomic():
             updated = EmailLog.objects.filter(
                 id=email_log.id, status__in=previous_statuses
             ).update(
-                status=normalized["status"],
+                status=status,
                 error_reason=normalized["reason"],
                 updated_at=timezone.now(),
             )
-            if updated and normalized["status"] in INVALID_EMAIL_STATUSES and email_log.customer_id:
-                Customer.objects.filter(
-                    id=email_log.customer_id,
-                    user__email__iexact=normalized["email"],
-                ).update(
-                    valid_email=False
-                )
+            if not updated or not email_log.customer_id:
+                continue
+            if status not in EMAIL_VALIDITY_BY_STATUS and status not in UNSUBSCRIBE_STATUSES:
+                continue
+
+            current_customer = Customer.objects.filter(
+                id=email_log.customer_id,
+                user__email__iexact=normalized["email"],
+            )
+            if current_customer.select_for_update(of=("self",)).only("pk").first() is None:
+                continue
+
+            if status in UNSUBSCRIBE_STATUSES:
+                current_customer.update(subscribe_to_email=False)
+            if status not in EMAIL_VALIDITY_BY_STATUS:
+                continue
+
+            # A delayed result for an older message must not replace a newer result.
+            newer_result = EmailLog.objects.filter(
+                customer_id=email_log.customer_id,
+                recipient_email__iexact=normalized["email"],
+                status__in=EMAIL_VALIDITY_BY_STATUS,
+            ).filter(
+                Q(created_at__gt=email_log.created_at)
+                | Q(created_at=email_log.created_at, pk__gt=email_log.pk)
+            )
+            if not newer_result.exists():
+                current_customer.update(valid_email=EMAIL_VALIDITY_BY_STATUS[status])
     return HttpResponse(status=204)

@@ -194,24 +194,6 @@ class RepanierEmail(EmailMultiAlternatives):
                     updated_at=timezone.now(),
                 )
 
-        if customer is not None:
-            # customer.save(update_fields=['valid_email'])
-            # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-            customer_query = Customer.objects.filter(id=customer.id)
-            if email_log is not None:
-                # SMTP acceptance must not undo an already received bounce.
-                customer_query = customer_query.filter(
-                    emaillog__id=email_log.id,
-                    emaillog__status__in=[
-                        EmailDeliveryStatus.SENT,
-                        EmailDeliveryStatus.SEND_ERROR,
-                        EmailDeliveryStatus.SOFT_BOUNCE,
-                        EmailDeliveryStatus.DELIVERED,
-                        EmailDeliveryStatus.OPENED,
-                    ],
-                )
-            customer_query.update(valid_email=email_send)
-
         return email_send
 
     @classmethod
