@@ -70,7 +70,11 @@ class PermanenceDoneAdmin(SaleAdmin):
         return False
 
     def has_change_permission(self, request, permanence=None):
-        return request.user.is_invoice_manager
+        if not request.user.is_invoice_manager:
+            return False
+        if permanence is None:
+            return True
+        return permanence.status == SaleStatus.SEND.value
 
     def get_urls(self):
         urls = super().get_urls()

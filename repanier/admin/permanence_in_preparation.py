@@ -82,7 +82,11 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         return request.user.is_order_manager
 
     def has_change_permission(self, request, permanence=None):
-        return request.user.is_order_manager
+        if not request.user.is_order_manager:
+            return False
+        if permanence is None:
+            return True
+        return permanence.status == SaleStatus.PLANNED.value
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change=change, **kwargs)
