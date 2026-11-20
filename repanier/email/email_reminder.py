@@ -7,6 +7,10 @@ from django.utils.translation import gettext as _
 from repanier import apps
 from repanier.const import EmailNature, OrderUnit, SaleStatus
 from repanier.email.email import RepanierEmail
+from repanier.email.email_offer import (
+    _build_board_task_notice,
+    _get_roles_by_customer,
+)
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanence_reminder import PermanenceReminder
@@ -35,6 +39,44 @@ def _customer_has_valid_order(permanence, customer_id: int) -> bool:
     return True
 
 
+def _build_reminder_body(
+    permanence,
+    closing_label,
+    order_url,
+    signature,
+    only_for_callback,
+    board_notice_html="",
+):
+    return format_html(
+        "{board_notice}"
+        "<p>{intro}</p>"
+        "<p>{deadline}</p>"
+        '<p style="margin: 18px 0;">'
+        '<a href="{url}" style="display: inline-block; padding: 10px 18px; '
+        "background-color: #0d6efd; color: #ffffff; text-decoration: none; "
+        'border-radius: 4px; font-weight: bold;">{cta}</a>'
+        "</p>"
+        "{signature}",
+        board_notice=board_notice_html,
+        intro=_(
+            "Hello, you asked for a reminder before orders close for %(perm)s."
+        )
+        % {"perm": permanence}
+        if only_for_callback
+        else _(
+            "Hello, there is still time to place an order for %(perm)s."
+        )
+        % {"perm": permanence},
+        deadline=_(
+            "Orders will close automatically on %(closing)s."
+        )
+        % {"closing": closing_label},
+        url=order_url,
+        cta=_("Place my order now"),
+        signature=signature,
+    )
+
+
 def send_closing_reminders(permanence):
     if permanence.status != SaleStatus.OPENED:
         return
@@ -59,13 +101,34 @@ def send_closing_reminders(permanence):
     if only_for_callback:
         candidates = candidates.filter(Exists(requests.filter(sent_at__isnull=True)))
 
-    recipients = {}
+    roles_by_customer = _get_roles_by_customer(permanence.id)
+    standard_recipients = {}
+    task_recipients = {}
+
     for customer in candidates:
         address = customer.user.email.strip()
-        if address and not _customer_has_valid_order(permanence, customer.id):
-            recipients.setdefault(address, []).append(customer.id)
+        if not address or _customer_has_valid_order(permanence, customer.id):
+            continue
+        roles = roles_by_customer.get(customer.id, [])
+        if roles:
+            entry = task_recipients.setdefault(
+                address, {"customer_ids": [], "roles": []}
+            )
+            entry["customer_ids"].append(customer.id)
+            for role in roles:
+                if role not in entry["roles"]:
+                    entry["roles"].append(role)
+        else:
+            standard_recipients.setdefault(address, []).append(customer.id)
 
-    if not recipients:
+    # If two accounts share the same email address and one has a task, keep only the personalized email.
+    for address in task_recipients:
+        if address in standard_recipients:
+            task_recipients[address]["customer_ids"].extend(
+                standard_recipients.pop(address)
+            )
+
+    if not standard_recipients and not task_recipients:
         return True
 
     order_responsible = Staff.get_or_create_order_responsible()
@@ -77,51 +140,65 @@ def send_closing_reminders(permanence):
         "perm": permanence,
         "hour": local_closing.strftime("%H:%M"),
     }
-    html_body = format_html(
-        "<p>{intro}</p>"
-        "<p>{deadline}</p>"
-        '<p style="margin: 18px 0;">'
-        '<a href="{url}" style="display: inline-block; padding: 10px 18px; '
-        "background-color: #0d6efd; color: #ffffff; text-decoration: none; "
-        'border-radius: 4px; font-weight: bold;">{cta}</a>'
-        "</p>"
-        "{signature}",
-        intro=_(
-            "Hello, you asked for a reminder before orders close for %(perm)s."
-        )
-        % {"perm": permanence}
-        if only_for_callback
-        else _(
-            "Hello, there is still time to place an order for %(perm)s."
-        )
-        % {"perm": permanence},
-        deadline=_(
-            "Orders will close automatically on %(closing)s."
-        )
-        % {"closing": closing_label},
-        url=order_url,
-        cta=_("Place my order now"),
-        signature=order_responsible["html_signature"],
-    )
 
-    email = RepanierEmail(
-        email_nature=EmailNature.REMINDER,
-        permanence=permanence,
-        subject=subject,
-        html_body=html_body,
-        to=list(recipients),
-        show_customer_may_unsubscribe=True,
-    )
-    sent = email.send_email()
+    sent_addresses = set()
     sent_at = timezone.now()
-    for address in sent:
-        for customer_id in recipients[address]:
-            PermanenceReminder.objects.update_or_create(
-                permanence=permanence,
-                customer_id=customer_id,
-                defaults={"sent_at": sent_at},
-            )
 
+    if standard_recipients:
+        html_body = _build_reminder_body(
+            permanence=permanence,
+            closing_label=closing_label,
+            order_url=order_url,
+            signature=order_responsible["html_signature"],
+            only_for_callback=only_for_callback,
+        )
+        email = RepanierEmail(
+            email_nature=EmailNature.REMINDER,
+            permanence=permanence,
+            subject=subject,
+            html_body=html_body,
+            to=list(standard_recipients),
+            show_customer_may_unsubscribe=True,
+        )
+        sent = email.send_email()
+        sent_addresses.update(sent)
+        for address in sent:
+            for customer_id in standard_recipients[address]:
+                PermanenceReminder.objects.update_or_create(
+                    permanence=permanence,
+                    customer_id=customer_id,
+                    defaults={"sent_at": sent_at},
+                )
+
+    for address, data in task_recipients.items():
+        board_notice_html = _build_board_task_notice(data["roles"])
+        html_body = _build_reminder_body(
+            permanence=permanence,
+            closing_label=closing_label,
+            order_url=order_url,
+            signature=order_responsible["html_signature"],
+            only_for_callback=only_for_callback,
+            board_notice_html=board_notice_html,
+        )
+        email = RepanierEmail(
+            email_nature=EmailNature.REMINDER,
+            permanence=permanence,
+            subject=subject,
+            html_body=html_body,
+            to=[address],
+            show_customer_may_unsubscribe=True,
+        )
+        sent = email.send_email()
+        sent_addresses.update(sent)
+        for address_sent in sent:
+            for customer_id in data["customer_ids"]:
+                PermanenceReminder.objects.update_or_create(
+                    permanence=permanence,
+                    customer_id=customer_id,
+                    defaults={"sent_at": sent_at},
+                )
+
+    all_recipients = set(standard_recipients) | set(task_recipients)
     if settings.DEBUG:
-        return bool(sent) or not settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO
-    return sent == recipients.keys()
+        return bool(sent_addresses) or not settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO
+    return sent_addresses == all_recipients
