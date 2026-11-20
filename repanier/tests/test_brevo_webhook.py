@@ -203,7 +203,7 @@ class BrevoWebhookTest(TestCase):
         self.customer.refresh_from_db()
         self.log.refresh_from_db()
         self.assertFalse(self.customer.valid_email)
-        self.assertEqual(self.log.error_reason, "Unknown mailbox")
+        self.assertEqual(self.log.reason, "Unknown mailbox")
 
     def test_old_address_bounce_does_not_invalidate_new_address(self):
         Customer.objects.filter(pk=self.customer.pk).update(subscribe_to_email=True)

@@ -58,8 +58,8 @@ class EmailLog(models.Model):
         default=EmailDeliveryStatus.SENT,
         db_index=True,
     )
-    error_reason = models.CharField(
-        verbose_name=_("Error reason"),
+    reason = models.CharField(
+        verbose_name=_("Reason"),
         max_length=255,
         blank=True,
         default=EMPTY_STRING,

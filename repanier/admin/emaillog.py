@@ -11,7 +11,7 @@ class EmailLogAdmin(admin.ModelAdmin):
         "permanence",
         "nature",
         "status",
-        "error_reason",
+        "reason",
     )
     list_filter = ("nature", "status")
     search_fields = ("recipient_email", "customer__short_basket_name", "customer__user__email",)
@@ -21,7 +21,7 @@ class EmailLogAdmin(admin.ModelAdmin):
         "permanence",
         "nature",
         "status",
-        "error_reason",
+        "reason",
         "updated_at",
     )
     date_hierarchy = "updated_at"

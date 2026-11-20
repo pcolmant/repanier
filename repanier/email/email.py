@@ -182,7 +182,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     id=email_log.id, status=EmailDeliveryStatus.SENT
                 ).update(
                     status=EmailDeliveryStatus.SENT,
-                    error_reason=EMPTY_STRING,
+                    reason=EMPTY_STRING,
                     updated_at=timezone.now(),
                 )
             else:
@@ -190,7 +190,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     id=email_log.id, status=EmailDeliveryStatus.SENT
                 ).update(
                     status=EmailDeliveryStatus.SEND_ERROR,
-                    error_reason=str(last_error)[:255],
+                    reason=str(last_error)[:255],
                     updated_at=timezone.now(),
                 )
 

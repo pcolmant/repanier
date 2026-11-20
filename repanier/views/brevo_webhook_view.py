@@ -21,6 +21,8 @@ BREVO_EVENT_TO_STATUS = {
     "opened": EmailDeliveryStatus.OPENED,
     "unique_opened": EmailDeliveryStatus.OPENED,
     "soft_bounce": EmailDeliveryStatus.SOFT_BOUNCE,
+    "deferred": EmailDeliveryStatus.SOFT_BOUNCE,
+    "error": EmailDeliveryStatus.SEND_ERROR,
     "hard_bounce": EmailDeliveryStatus.HARD_BOUNCE,
     "invalid_email": EmailDeliveryStatus.HARD_BOUNCE,
     "blocked": EmailDeliveryStatus.BLOCKED,
@@ -129,7 +131,7 @@ def brevo_webhook_view(request, token=EMPTY_STRING):
                 id=email_log.id, status__in=previous_statuses
             ).update(
                 status=status,
-                error_reason=normalized["reason"],
+                reason=normalized["reason"],
                 updated_at=timezone.now(),
             )
             if not updated or not email_log.customer_id:
