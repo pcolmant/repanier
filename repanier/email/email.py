@@ -65,14 +65,23 @@ class RepanierEmail(EmailMultiAlternatives):
     def send_email(self):
         self.body = strip_tags(self.html_body)
 
-        # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
-        # for chunk in chunks:
-        # Remove duplicates
-        send_email_to = list(set(self.to + self.cc + self.bcc))
-        # Si DEBUG est actif, on ne garde que le premier élément de la liste
-        recipients = send_email_to[:1] if settings.DEBUG else send_email_to
-        for email_to in recipients:
-            self._send_email_with_unsubscribe(email_to=email_to.strip())
+        recipients = dict.fromkeys(
+            address.strip() for address in self.to + self.cc + self.bcc if address.strip()
+        )
+        if settings.DEBUG and not settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
+            logger.debug(
+                "email not send (DEBUG and no REPANIER_SETTINGS_BCC_ALL_EMAIL_TO)"
+            )
+            return set()
+
+        sent = set()
+        for address in recipients:
+            result = self._send_email_with_unsubscribe(email_to=address)
+            if result:
+                sent.add(address)
+            if settings.DEBUG and result is not None:
+                break
+        return sent
 
     def _ensure_email_log(self, customer, email_to):
         email_log = EmailLog.objects.create(
@@ -145,23 +154,19 @@ class RepanierEmail(EmailMultiAlternatives):
                         )
                         if email_log is None:
                             email_log = self._ensure_email_log(customer, email_to)
-                        self.send()
-                        email_send = True
+                        email_send = bool(self.send())
                         self.subject = subject_save
                         logger.debug(
                             "email send only to REPANIER_SETTINGS_BCC_ALL_EMAIL_TO (DEBUG)"
                         )
                     else:
-                        logger.debug(
-                            "email not send (DEBUG and no REPANIER_SETTINGS_BCC_ALL_EMAIL_TO)"
-                        )
+                        pass
                 else:
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
                     if email_log is None:
                         email_log = self._ensure_email_log(customer, email_to)
-                    self.send()
-                    email_send = True
+                    email_send = bool(self.send())
             except Exception as error_str:
                 last_error = error_str
                 logger.error("################################## send_email error")
@@ -206,6 +211,8 @@ class RepanierEmail(EmailMultiAlternatives):
                     ],
                 )
             customer_query.update(valid_email=email_send)
+
+        return email_send
 
     @classmethod
     def send_test_email(cls, to_email, subject=EMPTY_STRING, html_body=EMPTY_STRING):

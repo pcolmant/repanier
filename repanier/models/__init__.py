@@ -29,3 +29,4 @@ from .permanence import PermanenceInPreparation, PermanenceDone
 from .purchase import PurchaseWoReceiver
 
 from .emaillog import EmailLog
+from .permanence_reminder import PermanenceReminder

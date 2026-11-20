@@ -257,8 +257,9 @@ Tests: `test_status_flow.py`, `test_order_journey.py`.
 
 ### Automatic closure
 
-A permanence flagged `automatically_closed` is closed (and its orders
-sent) by the cron without any manual action.
+If a permanence has an automatic closing date, the cron closes it and
+sends its orders at or after the closing time configured for the site.
+Leave the date blank to close the permanence manually.
 
 ### The language of the member mails
 

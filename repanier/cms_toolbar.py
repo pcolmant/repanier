@@ -108,6 +108,9 @@ class RepanierToolbar(BasicToolbar):
         )
         office_menu.add_sideframe_item(_("Delivery points"), url=url)
 
+        url = reverse("admin:repanier_emaillog_changelist")
+        office_menu.add_sideframe_item(_("Emails logs"), url=url)
+
         url = reverse("admin:repanier_notification_change", args=(1,))
         repanier_menu.add_sideframe_item(_('"Flash" ad'), url=url, position=position)
         position += 1

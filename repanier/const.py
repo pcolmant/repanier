@@ -213,13 +213,14 @@ class Currency(models.TextChoices):
     LOC = "300", "SolAToi"
 
 class EmailNature(models.TextChoices):
-    OPENING = "100", _("Opening")
-    REMINDER = "120", _("Reminder")
-    ORDER = "140", _("Order confirmation")
-    INVOICE = "160", _("Invoice / balance")
-    PASSWORD_RESET = "180", _("Password reset")
-    LOGIN_LOCK = "200", _("Account locked")
-    ADMIN = "220", _("Admin notification")
+    OPENING = "100", _("Offer opening")
+    REMINDER = "200", _("Order reminder")
+    ORDER_CONFIRM = "300", _("Order confirmation")
+    ORDER = "400", _("Order confirmation")
+    INVOICE = "500", _("Invoice / balance")
+    PASSWORD_RESET = "600", _("Password reset")
+    LOGIN_LOCK = "700", _("Account locked")
+    ADMIN = "800", _("Admin notification")
     OTHER = "900", _("Other")
 
 

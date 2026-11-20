@@ -875,6 +875,7 @@ msgstr "Taken"
 msgid "Labels"
 msgstr "Labels"
 
+#: models/lut.py:136
 #: cms_toolbar.py:109
 msgid "Delivery points"
 msgstr "Leveringspunten"
@@ -1840,10 +1841,6 @@ msgstr "Labels"
 msgid "The group centralises payments"
 msgstr "De groep centraliseert de betalingen"
 
-#: models/lut.py:136
-msgid "Delivery points"
-msgstr "Leveringspunten"
-
 #: models/lut.py:208
 msgid "This task constitutes a participation in the activities of the group"
 msgstr "Deze taak vormt een deelname aan de activiteiten van de groep"
@@ -1946,10 +1943,6 @@ msgstr "Datum"
 #: models/permanence.py:87
 msgid "With delivery point"
 msgstr "Met leveringspunt"
-
-#: models/permanence.py:89
-msgid "Closing AND automatically transmitting orders"
-msgstr "De bestellingen sluiten EN automatisch verzenden"
 
 #: models/permanence.py:100
 msgid "Master permanence"
@@ -2761,6 +2754,8 @@ msgstr "Alle producenten."
 msgid ", calculated : "
 msgstr ", berekend : "
 
+#: xlsx/xlsx_order_producer.py:323 xlsx/xlsx_order_producer.py:361
+#: xlsx/xlsx_order_producer.py:526 xlsx/xlsx_order_producer.py:553
 #: templates/bs3/repanier/admin/confirm_invoice.html:83
 #: templates/bs3/repanier/admin/confirm_invoice.html:94
 #: templates/bs5/repanier/admin/confirm_invoice.html:83
@@ -3475,14 +3470,18 @@ msgid ""
 "\n"
 "                                                Restore deleted %(name)s\n"
 "                                            "
-msgstr "Het verwijderde %(name)s herstellen"
+msgstr ""
+"\n"
+"Het verwijderde %(name)s herstellen"
 
 #: templates/bs5/admin/cms/page/tree/base_PCO.html:140
 msgid ""
 "\n"
 "                                New %(name)s\n"
 "                            "
-msgstr "Nieuw %(name)s"
+msgstr ""
+"\n"
+"Nieuw %(name)s"
 
 #: templates/bs5/admin/cms/page/tree/base_PCO.html:152
 msgid "Main Navigation"
@@ -3559,6 +3558,7 @@ msgid ""
 "                            <a href=\"%(add_url)s\" class=\"addlink\">Add %(object)s</a> now.\n"
 "                        "
 msgstr ""
+"\n"
 "<em>Er is nog geen %(object)s.</em>\n"
 "                            <br>\n"
 "                            <a href=\"%(add_url)s\" class=\"addlink\">Voeg nu %(object)s toe</a>.\n"
@@ -3973,11 +3973,6 @@ msgstr "Statiegelden"
 msgid "by product"
 msgstr "per produkt"
 
-#: xlsx/xlsx_order_producer.py:323 xlsx/xlsx_order_producer.py:361
-#: xlsx/xlsx_order_producer.py:526 xlsx/xlsx_order_producer.py:553
-msgid "incl. VAT"
-msgstr "incl. btw"
-
 #: xlsx/xlsx_order_producer.py:420
 msgid "duplicate, by basket"
 msgstr "duplicata, per mand"
@@ -4202,3 +4197,153 @@ msgstr "Paspoort"
 msgid "# passeports"
 msgstr "# paspoorten"
 
+msgid "Order closing"
+msgstr "Bestelsluiting"
+
+msgid "Short on time today? We will only remind you if you have not placed an order yet."
+msgstr "Vandaag weinig tijd? We herinneren je er alleen aan als je nog geen bestelling hebt geplaatst."
+
+msgid "Remind me before orders close (if I have not ordered)"
+msgstr "Herinner me vóór de bestelsluiting (als ik nog niet heb besteld)"
+
+#, python-format
+msgid "Reminder: orders for %(perm)s close at %(hour)s"
+msgstr "Herinnering: bestellen voor %(perm)s kan tot %(hour)s"
+
+#, python-format
+msgid "Hello, you asked for a reminder before orders close for %(perm)s."
+msgstr "Hallo, je hebt om een herinnering gevraagd voordat de bestellingen voor %(perm)s sluiten."
+
+#, python-format
+msgid "Hello, there is still time to place an order for %(perm)s."
+msgstr "Hallo, je kunt nog bestellen voor %(perm)s."
+
+#, python-format
+msgid "Orders will close automatically on %(closing)s."
+msgstr "Bestellen sluit automatisch op %(closing)s."
+
+msgid "Place my order now"
+msgstr "Nu bestellen"
+
+msgid "Reminder scheduled"
+msgstr "Herinnering gepland"
+
+msgid "Scheduled reminder"
+msgstr "Geplande herinnering"
+
+msgid "Order deadline"
+msgstr "Uiterste besteltijd"
+
+msgid "Order now"
+msgstr "Nu bestellen"
+
+msgid "Back to the site"
+msgstr "Terug naar de website"
+
+msgid "Reminder sign-ups have closed"
+msgstr "Aanmelden voor de herinnering is gesloten"
+
+msgid "View the offer"
+msgstr "Bekijk het aanbod"
+
+msgid "Orders have already closed"
+msgstr "Bestellen is al gesloten"
+
+msgid "Invalid or expired link"
+msgstr "Ongeldige of verlopen link"
+
+msgid "This reminder link is no longer active."
+msgstr "Deze herinneringslink is niet meer actief."
+
+#, python-format
+msgid "Hello %(name)s, your reminder request has been registered."
+msgstr "Hallo %(name)s, je aanvraag voor een herinnering is opgeslagen."
+
+#, python-format
+msgid "For <strong>%(perm)s</strong>, we will only email you a reminder if your order has not been completed when we send it."
+msgstr "Voor <strong>%(perm)s</strong> sturen we je alleen een herinnering per e-mail als je bestelling op dat moment nog niet is afgerond."
+
+#, python-format
+msgid "Orders are scheduled to close automatically on <strong>%(closing)s</strong>."
+msgstr "Bestellen sluit naar verwachting automatisch op <strong>%(closing)s</strong>."
+
+#, python-format
+msgid "The order period for <strong>%(perm)s</strong> has ended. No reminder will be sent."
+msgstr "De bestelperiode voor <strong>%(perm)s</strong> is voorbij. Er wordt geen herinnering verstuurd."
+
+msgid "Automatic closing time"
+msgstr "Tijdstip van automatische bestelsluiting"
+
+msgid "Automatic closing date"
+msgstr "Datum van automatische bestelsluiting"
+
+msgid "Reminder delay before closing (in hours)"
+msgstr "Tijd tussen herinnering en bestelsluiting (in uren)"
+
+msgid "Send the pre-closing reminder only to members who clicked 'Remind me'"
+msgstr "Stuur de herinnering vóór de bestelsluiting alleen naar leden die op ‘Herinner me’ hebben geklikt"
+
+msgid "Reminder sent on"
+msgstr "Herinnering verzonden op"
+
+msgid "Requested on"
+msgstr "Aangevraagd op"
+
+msgid "Sent on"
+msgstr "Verzonden op"
+
+msgid "Order reminder request"
+msgstr "Aanvraag voor een bestelherinnering"
+
+msgid "Order reminder requests"
+msgstr "Aanvragen voor bestelherinneringen"
+
+msgid "Offer opening"
+msgstr "Opening van het aanbod"
+
+msgid "Order reminder"
+msgstr "Bestelherinnering"
+
+msgid "Emails logs"
+msgstr "E-maillogboek"
+
+msgid "Context"
+msgstr "Context"
+
+msgid "Ref"
+msgstr "Ref."
+
+msgid "Session notice"
+msgstr "Aanmeldmelding"
+
+#, python-format
+msgid "Orders will close automatically at %(closing)s on that day (reminder sent %(hours)s h before, at %(reminder)s). Leave empty to close manually."
+msgstr "Bestellen sluit op die dag automatisch om %(closing)s (herinnering %(hours)s uur eerder, om %(reminder)s). Laat leeg om handmatig te sluiten."
+
+#, python-format
+msgid "Orders will close automatically at %(closing)s on that day. Leave empty to close manually."
+msgstr "Bestellen sluit op die dag automatisch om %(closing)s. Laat leeg om handmatig te sluiten."
+
+msgid "Configure the fixed closing time in Configuration before using automatic closing."
+msgstr "Stel eerst het vaste sluitingstijdstip in de configuratie in om automatisch te sluiten."
+
+msgid "Fixed time of day at which orders close when an automatic closing date is set on an offer."
+msgstr "Tijdstip waarop bestellen sluit als voor een aanbod een automatische sluitingsdatum is ingesteld."
+
+msgid "0 means: no automatic reminder before closing."
+msgstr "Met de waarde 0 schakel je de automatische herinnering vóór de bestelsluiting uit."
+
+msgid "Order confirmation"
+msgstr "Bestelbevestiging"
+
+msgid "Invoice / balance"
+msgstr "Factuur / saldo"
+
+msgid "Account locked"
+msgstr "Account vergrendeld"
+
+msgid "Admin notification"
+msgstr "Beheerdersmelding"
+
+msgid "Offer"
+msgstr "Aanbod"

@@ -322,3 +322,92 @@ input[type=checkbox]:checked + label:before {
     letter-spacing: 10px;
     color: #1e90ff;
 }
+/* Keep standard field labels on one line */
+#content-main .aligned label {
+    width: auto;
+    min-width: 260px;
+    white-space: nowrap;
+    padding-right: 16px;
+}
+
+/* Checkbox labels */
+#content-main .aligned .vCheckboxLabel {
+    width: auto;
+    max-width: none;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+/* Fields displayed side by side, such as tuples in fieldsets */
+#content-main .aligned .fieldBox label {
+    min-width: auto;
+    width: auto;
+    white-space: nowrap;
+}
+
+/* Place labels above multiline text fields and rich-text editors */
+#content-main .aligned .form-row:has(textarea) > div,
+#content-main .aligned .form-row:has(textarea) .flex-container,
+#content-main .aligned .form-row:has(.django-ckeditor-widget) > div,
+#content-main .aligned .form-row:has(.django-ckeditor-widget) .flex-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+}
+
+#content-main .aligned .form-row:has(textarea) label,
+#content-main .aligned .form-row:has(.django-ckeditor-widget) label {
+    float: none;
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    margin-bottom: 8px;
+}
+
+#content-main .aligned .form-row:has(textarea) textarea,
+#content-main .aligned .form-row:has(textarea) .django-ckeditor-widget,
+#content-main .aligned .form-row:has(.django-ckeditor-widget) .django-ckeditor-widget {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100%;
+}
+
+/* Alignement des textes d'aide sous les champs */
+#content-main .aligned .help,
+#content-main .aligned p.help,
+#content-main .aligned div.help {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+/* Allow wrapping on small screens */
+@media (max-width: 767px) {
+    #content-main .aligned label,
+    #content-main .aligned .vCheckboxLabel,
+    #content-main .aligned .fieldBox label {
+        white-space: normal;
+        min-width: 0;
+    }
+}
+
+/* Let read-only fields expand to display their full contents */
+#content-main .aligned .readonly,
+#content-main .aligned input[readonly],
+#content-main .aligned textarea[readonly] {
+    width: auto !important;
+    min-width: 280px;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+/* Keep read-only inputs on one line and expand them to fit their contents */
+#content-main .aligned input[readonly] {
+    white-space: nowrap;
+    width: auto !important;
+    min-width: 320px;
+    max-width: calc(100vw - 340px);
+}

@@ -902,6 +902,7 @@ msgstr "Tâches"
 msgid "Labels"
 msgstr "Labels"
 
+#: models/lut.py:136
 #: cms_toolbar.py:109
 msgid "Delivery points"
 msgstr "Points de livraisons"
@@ -1906,10 +1907,6 @@ msgstr "Labels"
 msgid "The group centralises payments"
 msgstr "Le groupe centralise les paiements"
 
-#: models/lut.py:136
-msgid "Delivery points"
-msgstr "Points de livraisons"
-
 #: models/lut.py:208
 msgid "This task constitutes a participation in the activities of the group"
 msgstr "Cette tâche constitue une participation aux activités du groupe"
@@ -2014,10 +2011,6 @@ msgstr "Date"
 #: models/permanence.py:87
 msgid "With delivery point"
 msgstr "Avec point de livraison"
-
-#: models/permanence.py:89
-msgid "Closing AND automatically transmitting orders"
-msgstr "Clôturer ET transmettre automatiquement les commandes"
 
 #: models/permanence.py:100
 msgid "Master permanence"
@@ -2850,6 +2843,8 @@ msgstr "Tous les producteurs."
 msgid ", calculated : "
 msgstr ", calculé : "
 
+#: xlsx/xlsx_order_producer.py:323 xlsx/xlsx_order_producer.py:361
+#: xlsx/xlsx_order_producer.py:526 xlsx/xlsx_order_producer.py:553
 #: templates/bs3/repanier/admin/confirm_invoice.html:83
 #: templates/bs3/repanier/admin/confirm_invoice.html:94
 #: templates/bs5/repanier/admin/confirm_invoice.html:83
@@ -4129,11 +4124,6 @@ msgstr "Consignes"
 msgid "by product"
 msgstr "par produit"
 
-#: xlsx/xlsx_order_producer.py:323 xlsx/xlsx_order_producer.py:361
-#: xlsx/xlsx_order_producer.py:526 xlsx/xlsx_order_producer.py:553
-msgid "incl. VAT"
-msgstr "avec TVA"
-
 #: xlsx/xlsx_order_producer.py:420
 msgid "duplicate, by basket"
 msgstr "duplicata, par panier"
@@ -4423,3 +4413,154 @@ msgstr "Je n'ai pas de site d'origine"
 
 #~ msgid "My balance"
 #~ msgstr "Mon solde"
+
+msgid "Order closing"
+msgstr "Clôture des commandes"
+
+msgid "Short on time today? We will only remind you if you have not placed an order yet."
+msgstr "Vous manquez de temps aujourd’hui ? Nous vous enverrons un rappel uniquement si vous n’avez pas encore commandé."
+
+msgid "Remind me before orders close (if I have not ordered)"
+msgstr "Me rappeler avant la clôture (si je n'ai pas commandé)"
+
+#, python-format
+msgid "Reminder: orders for %(perm)s close at %(hour)s"
+msgstr "Rappel : clôture des commandes pour %(perm)s à %(hour)s"
+
+#, python-format
+msgid "Hello, you asked for a reminder before orders close for %(perm)s."
+msgstr "Bonjour, vous aviez demandé à être prévenu(e) avant la clôture de l'offre « %(perm)s »."
+
+#, python-format
+msgid "Hello, there is still time to place an order for %(perm)s."
+msgstr "Bonjour, il est encore temps de passer commande pour l'offre « %(perm)s »."
+
+#, python-format
+msgid "Orders will close automatically on %(closing)s."
+msgstr "Les commandes seront clôturées automatiquement le %(closing)s."
+
+msgid "Place my order now"
+msgstr "Passer ma commande maintenant"
+
+msgid "Reminder scheduled"
+msgstr "Rappel programmé"
+
+msgid "Scheduled reminder"
+msgstr "Rappel prévu le :"
+
+msgid "Order deadline"
+msgstr "Clôture des commandes le :"
+
+msgid "Order now"
+msgstr "Commander dès maintenant"
+
+msgid "Back to the site"
+msgstr "Retour au site"
+
+msgid "Reminder sign-ups have closed"
+msgstr "Les inscriptions au rappel sont terminées"
+
+msgid "View the offer"
+msgstr "Consulter l'offre"
+
+msgid "Orders have already closed"
+msgstr "Les commandes sont déjà clôturées"
+
+msgid "Invalid or expired link"
+msgstr "Lien invalide ou expiré"
+
+msgid "This reminder link is no longer active."
+msgstr "Ce lien de rappel n'est plus actif."
+
+#, python-format
+msgid "Hello %(name)s, your reminder request has been registered."
+msgstr "Bonjour %(name)s, votre demande de rappel est bien enregistrée."
+
+#, python-format
+msgid "For <strong>%(perm)s</strong>, we will only email you a reminder if your order has not been completed when we send it."
+msgstr "Pour l'offre <strong>%(perm)s</strong>, nous ne vous enverrons un e-mail de rappel que si votre commande n'est pas encore validée au moment de l'envoi."
+
+#, python-format
+msgid "Orders are scheduled to close automatically on <strong>%(closing)s</strong>."
+msgstr "Clôture automatique prévue le <strong>%(closing)s</strong>."
+
+#, python-format
+msgid "The order period for <strong>%(perm)s</strong> has ended. No reminder will be sent."
+msgstr "La période de commande pour <strong>%(perm)s</strong> est terminée : aucun rappel ne sera envoyé."
+
+msgid "Automatic closing time"
+msgstr "Heure de clôture automatique"
+
+msgid "Automatic closing date"
+msgstr "Date de clôture automatique"
+
+msgid "Reminder delay before closing (in hours)"
+msgstr "Délai du rappel avant la clôture (en heures)"
+
+msgid "Send the pre-closing reminder only to members who clicked 'Remind me'"
+msgstr "Envoyer le rappel avant la clôture uniquement aux membres qui ont cliqué sur « Me rappeler »"
+
+msgid "Reminder sent on"
+msgstr "Rappel envoyé le"
+
+msgid "Requested on"
+msgstr "Demandé le"
+
+msgid "Sent on"
+msgstr "Envoyé le"
+
+msgid "Order reminder request"
+msgstr "Demande de rappel de commande"
+
+msgid "Order reminder requests"
+msgstr "Demandes de rappel de commande"
+
+msgid "Offer opening"
+msgstr "Ouverture de l’offre"
+
+msgid "Order reminder"
+msgstr "Rappel de commande"
+
+msgid "Emails logs"
+msgstr "Journal des e-mails"
+
+msgid "Context"
+msgstr "Contexte"
+
+msgid "Ref"
+msgstr "Réf."
+
+msgid "Session notice"
+msgstr "Notification de connexion"
+
+#, python-format
+msgid "Orders will close automatically at %(closing)s on that day (reminder sent %(hours)s h before, at %(reminder)s). Leave empty to close manually."
+msgstr "Les commandes seront clôturées automatiquement à %(closing)s ce jour-là (rappel envoyé %(hours)s h avant, à %(reminder)s). Laissez vide pour clôturer manuellement."
+
+#, python-format
+msgid "Orders will close automatically at %(closing)s on that day. Leave empty to close manually."
+msgstr "Les commandes seront clôturées automatiquement à %(closing)s ce jour-là. Laissez vide pour clôturer manuellement."
+
+msgid "Configure the fixed closing time in Configuration before using automatic closing."
+msgstr "Définissez l’heure de clôture dans la configuration avant d’utiliser la clôture automatique."
+
+msgid "Fixed time of day at which orders close when an automatic closing date is set on an offer."
+msgstr "Heure à laquelle les commandes sont clôturées lorsqu’une date de clôture automatique est définie pour l’offre."
+
+msgid "0 means: no automatic reminder before closing."
+msgstr "Une valeur de 0 désactive le rappel automatique avant la clôture."
+
+msgid "Order confirmation"
+msgstr "Confirmation de commande"
+
+msgid "Invoice / balance"
+msgstr "Facture / solde"
+
+msgid "Account locked"
+msgstr "Compte verrouillé"
+
+msgid "Admin notification"
+msgstr "Notification administrative"
+
+msgid "Offer"
+msgstr "Offre"

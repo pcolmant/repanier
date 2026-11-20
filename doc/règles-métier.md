@@ -277,8 +277,9 @@ Tests : `test_status_flow.py`, `test_order_journey.py`.
 
 ### Clôture automatique
 
-Une permanence marquée `automatically_closed` est fermée (et les
-commandes transmises) par le cron sans intervention.
+Si une permanence a une date de clôture automatique, le cron la ferme
+et transmet les commandes à partir de l’heure de clôture configurée pour
+le site. Laisser la date vide pour clôturer la permanence manuellement.
 
 ### La langue des mails aux membres
 

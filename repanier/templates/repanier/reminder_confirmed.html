@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block aliases_content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+          {% if status == "ok" %}
+            <div class="alert alert-success mb-4" role="alert">
+              <strong>{% trans "Reminder scheduled" %}</strong> —
+              {% blocktrans trimmed with name=customer_label %}
+                Hello {{ name }}, your reminder request has been registered.
+              {% endblocktrans %}
+            </div>
+
+            <p class="mb-3">
+              {% blocktrans trimmed with perm=permanence %}
+                For <strong>{{ perm }}</strong>, we will only email you a reminder if your order has not been completed when we send it.
+              {% endblocktrans %}
+            </p>
+
+            {% if reminder_dt and closing_dt %}
+              <ul class="list-unstyled bg-light p-3 rounded mb-4">
+                <li class="mb-2">
+                  <strong>{% trans "Scheduled reminder" %}</strong>
+                  {{ reminder_dt|date:"DATETIME_FORMAT" }}
+                </li>
+                <li class="mb-0">
+                  <strong>{% trans "Order deadline" %}</strong>
+                  {{ closing_dt|date:"DATETIME_FORMAT" }}
+                </li>
+              </ul>
+            {% elif closing_dt %}
+              <p class="text-muted mb-4">
+                {% blocktrans trimmed with closing=closing_dt|date:"DATETIME_FORMAT" %}
+                  Orders are scheduled to close automatically on <strong>{{ closing }}</strong>.
+                {% endblocktrans %}
+              </p>
+            {% endif %}
+
+            <div class="d-flex flex-wrap gap-2">
+              <a href="{{ permanence.get_order_url }}" class="btn btn-success">
+                {% trans "Order now" %}
+              </a>
+              <a href="/" class="btn btn-outline-secondary">
+                {% trans "Back to the site" %}
+              </a>
+            </div>
+
+          {% elif status == "reminder_unavailable" %}
+            <h1 class="h4 mb-3">{% trans "Reminder sign-ups have closed" %}</h1>
+            <a href="{{ permanence.get_order_url }}" class="btn btn-success">
+              {% trans "View the offer" %}
+            </a>
+
+          {% elif status == "closed" %}
+            <h1 class="h4 mb-3">{% trans "Orders have already closed" %}</h1>
+            <p class="text-muted mb-4">
+              {% blocktrans trimmed with perm=permanence %}
+                The order period for <strong>{{ perm }}</strong> has ended. No reminder will be sent.
+              {% endblocktrans %}
+            </p>
+            <a href="/" class="btn btn-outline-secondary">{% trans "Back to the site" %}</a>
+
+          {% else %}
+            <h1 class="h4 mb-3">{% trans "Invalid or expired link" %}</h1>
+            <p class="text-muted mb-4">
+              {% trans "This reminder link is no longer active." %}
+            </p>
+            <a href="/" class="btn btn-outline-secondary">{% trans "Back to the site" %}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

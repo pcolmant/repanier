@@ -1,12 +1,12 @@
 import logging
-
-from django.db import transaction
+from datetime import timedelta
 from typing import Any
 
+from django.db import transaction
+from django.utils import timezone
+
+from repanier import apps
 from repanier.models import Permanence
-
-logger = logging.getLogger(__name__)
-
 from repanier.const import SaleStatus
 from repanier.email import email_offer
 from repanier.email import email_order
@@ -19,11 +19,14 @@ from repanier.tools import reorder_offer_items, debug_parameters
 from repanier.tools import reorder_purchases
 
 
+logger = logging.getLogger(__name__)
+
+
 @transaction.atomic
 def automatically_open():
     something_to_open = False
     for permanence in Permanence.objects.filter(
-        status=SaleStatus.PLANNED, automatically_closed=True
+        status=SaleStatus.PLANNED, automatic_closing_date__isnull=False
     ):
         permanence.set_status(
             old_status=SaleStatus.PLANNED, new_status=SaleStatus.WAIT_FOR_OPEN
@@ -92,12 +95,54 @@ def back_to_scheduled(permanence):
     permanence.set_status(old_status=SaleStatus.OPENED, new_status=SaleStatus.PLANNED)
 
 
-@transaction.atomic
 def automatically_closed():
-    something_to_close = False
+    now = timezone.now()
+    reminder_hours = apps.REPANIER_SETTINGS_REMINDER_HOURS_BEFORE_CLOSING
+    something_done = False
+
+    # Send reminders during the configured window before closing.
+    if apps.REPANIER_SETTINGS_AUTOMATIC_CLOSING_TIME is not None and reminder_hours > 0:
+        reminder_delta = timedelta(hours=reminder_hours)
+        for permanence in Permanence.objects.filter(
+            status=SaleStatus.OPENED,
+            automatic_closing_date__isnull=False,
+            reminder_sent_at__isnull=True,
+        ):
+            closing_dt = permanence.get_automatic_closing_datetime()
+            if closing_dt is None:
+                continue
+            reminder_dt = closing_dt - reminder_delta
+            if reminder_dt <= now < closing_dt:
+                from repanier.email.email_reminder import send_closing_reminders
+
+                with transaction.atomic():
+                    locked = Permanence.objects.select_for_update().filter(
+                        id=permanence.id,
+                        status=SaleStatus.OPENED,
+                        reminder_sent_at__isnull=True,
+                    ).first()
+                    if locked is None:
+                        continue
+                    closing_dt = locked.get_automatic_closing_datetime()
+                    now_for_reminder = timezone.now()
+                    if closing_dt is None or not (
+                        closing_dt - reminder_delta <= now_for_reminder < closing_dt
+                    ):
+                        continue
+                    if send_closing_reminders(locked):
+                        Permanence.objects.filter(id=locked.id).update(
+                            reminder_sent_at=timezone.now()
+                        )
+                        something_done = True
+
     for permanence in Permanence.objects.filter(
-        status=SaleStatus.OPENED, automatically_closed=True
+        status=SaleStatus.OPENED,
+        automatic_closing_date__isnull=False,
     ):
+        closing_dt = permanence.get_automatic_closing_datetime()
+        if closing_dt is None or timezone.now() < closing_dt:
+            continue
+
         if permanence.with_delivery_point:
             deliveries_id = list(
                 DeliveryBoard.objects.filter(
@@ -106,11 +151,13 @@ def automatically_closed():
             )
         else:
             deliveries_id = ()
+
         close_order(
             permanence.id, everything=True, deliveries_id=deliveries_id, send_mail=True
         )
-        something_to_close = True
-    return something_to_close
+        something_done = True
+
+    return something_done
 
 
 @transaction.atomic

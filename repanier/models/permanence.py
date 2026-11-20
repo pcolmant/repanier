@@ -1,25 +1,29 @@
-import datetime
+import datetime as dt_module
+from datetime import datetime, timedelta
 import logging
 
+from django.conf import settings
 from django.core.cache import cache
+from django.db import models
 from django.db import transaction, connection
 from django.db.models import F, Sum, DecimalField
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils import timezone, translation
+from django.utils import timezone
+from django.utils import translation
 from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
-from django.conf import settings
-from django.db import models
-from repanier.fields.RepanierMoneyField import RepanierMoney
+
+from repanier import apps
 from repanier.const import (
     BankMovement, DECIMAL_ZERO, EMPTY_STRING, OrderUnit, REPANIER_MONEY_ZERO,
     RoundUpTo, SaleStatus
 )
+from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.middleware import add_filter
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -53,6 +57,11 @@ refresh_status = [
 
 
 class Permanence(models.Model):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_automatic_closing_date = self.automatic_closing_date
+
     short_name_v2 = models.CharField(_("Offer name"), max_length=50, blank=True)
     offer_description_v2 = HTMLField(
         _("Offer description"),
@@ -88,9 +97,19 @@ class Permanence(models.Model):
     )
 
     with_delivery_point = models.BooleanField(_("With delivery point"), default=False)
-    automatically_closed = models.BooleanField(
-        _("Closing AND automatically transmitting orders"), default=False
+    automatic_closing_date = models.DateField(
+        _("Automatic closing date"),
+        blank=True,
+        null=True,
+        db_index=True,
     )
+    reminder_sent_at = models.DateTimeField(
+        _("Reminder sent on"),
+        blank=True,
+        null=True,
+        editable=False,
+    )
+
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True)
     highest_status = models.CharField(
         max_length=3,
@@ -142,7 +161,8 @@ class Permanence(models.Model):
                 reverse("admin:permanence-export-offer", args=[self.id])
             )
             button_download = format_html(
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a>',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas '
+                'fa-download"></i></a>',
                 download_url,
                 _("Export"),
             )
@@ -165,7 +185,8 @@ class Permanence(models.Model):
                 reverse("admin:permanence-export-producer-opened-order", args=[self.id])
             )
             button_download = format_html(
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a>',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas '
+                'fa-download"></i></a>',
                 download_url,
                 _("Export"),
             )
@@ -191,7 +212,8 @@ class Permanence(models.Model):
                     )
                 )
                 button_download = format_html(
-                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a>',
+                    '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas '
+                    'fa-download"></i></a>',
                     download_url,
                     _("Export"),
                 )
@@ -206,9 +228,9 @@ class Permanence(models.Model):
             producers = []
             producers_html = []
             for pi in (
-                ProducerInvoice.objects.filter(permanence_id=self.id)
-                .select_related("producer")
-                .order_by("producer")
+                    ProducerInvoice.objects.filter(permanence_id=self.id)
+                            .select_related("producer")
+                            .order_by("producer")
             ):
                 if pi.status == SaleStatus.SEND:
                     if pi.producer.invoice_by_basket:
@@ -232,8 +254,8 @@ class Permanence(models.Model):
                     group_id = Producer.get_or_create_group().id
                     if pi.invoice_reference:
                         if (
-                            pi.to_be_invoiced_balance != DECIMAL_ZERO
-                            or pi.total_price_with_tax != DECIMAL_ZERO
+                                pi.to_be_invoiced_balance != DECIMAL_ZERO
+                                or pi.total_price_with_tax != DECIMAL_ZERO
                         ):
                             label = "{} ({} - {})".format(
                                 pi.producer.short_profile_name,
@@ -251,8 +273,8 @@ class Permanence(models.Model):
                             )
                     else:
                         if (
-                            pi.to_be_invoiced_balance != DECIMAL_ZERO
-                            or pi.total_price_with_tax != DECIMAL_ZERO
+                                pi.to_be_invoiced_balance != DECIMAL_ZERO
+                                or pi.total_price_with_tax != DECIMAL_ZERO
                         ):
                             label = "{} ({})".format(
                                 pi.producer.short_profile_name,
@@ -329,7 +351,8 @@ class Permanence(models.Model):
                     )
                 )
             button_download = format_html(
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a> ',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas '
+                'fa-download"></i></a> ',
                 download_url,
                 _("Export"),
             )
@@ -337,7 +360,8 @@ class Permanence(models.Model):
                 reverse("admin:repanier_purchase_add"), self.id
             )
             button_add = format_html(
-                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-edit"></i></a> ',
+                '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas '
+                'fa-edit"></i></a> ',
                 add_url,
                 _("Edit purchases"),
             )
@@ -345,9 +369,9 @@ class Permanence(models.Model):
             customers_html = []
             delivery_save = None
             for ci in (
-                CustomerInvoice.objects.filter(permanence_id=self.id, is_group=False)
-                .select_related("customer")
-                .order_by("delivery", "customer")
+                    CustomerInvoice.objects.filter(permanence_id=self.id, is_group=False)
+                            .select_related("customer")
+                            .order_by("delivery", "customer")
             ):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
@@ -390,9 +414,9 @@ class Permanence(models.Model):
             display_total = True
             total_price_with_tax_save = REPANIER_MONEY_ZERO
             for ci in (
-                CustomerInvoice.objects.filter(permanence_id=self.id)
-                .select_related("customer")
-                .order_by("delivery", "is_group", "customer")
+                    CustomerInvoice.objects.filter(permanence_id=self.id)
+                            .select_related("customer")
+                            .order_by("delivery", "is_group", "customer")
             ):
                 if delivery_save != ci.delivery:
                     if delivery_save is not None and display_total:
@@ -511,11 +535,11 @@ class Permanence(models.Model):
                         )
                     )
                     r_link = (
-                        '<a href="'
-                        + r_url
-                        + '" target="_blank">'
-                        + r.short_name_v2.replace(" ", "&nbsp;")
-                        + "</a>"
+                            '<a href="'
+                            + r_url
+                            + '" target="_blank">'
+                            + r.short_name_v2.replace(" ", "&nbsp;")
+                            + "</a>"
                     )
                 c_link = EMPTY_STRING
                 c = permanenceboard_row.customer
@@ -524,11 +548,11 @@ class Permanence(models.Model):
                         reverse("admin:repanier_customer_change", args=(c.id,))
                     )
                     c_link = (
-                        '&nbsp;->&nbsp;<a href="'
-                        + c_url
-                        + '" target="_blank">'
-                        + c.short_basket_name.replace(" ", "&nbsp;")
-                        + "</a>"
+                            '&nbsp;->&nbsp;<a href="'
+                            + c_url
+                            + '" target="_blank">'
+                            + c.short_basket_name.replace(" ", "&nbsp;")
+                            + "</a>"
                     )
                     board.append(c.short_basket_name)
                 board_html.append(r_link + c_link)
@@ -554,13 +578,13 @@ class Permanence(models.Model):
     @transaction.atomic
     # @debug_parameters
     def set_status(
-        self,
-        old_status: SaleStatus,
-        new_status: SaleStatus,
-        everything=True,
-        deliveries_id=(),
-        update_payment_date=False,
-        payment_date=None,
+            self,
+            old_status: SaleStatus,
+            new_status: SaleStatus,
+            everything=True,
+            deliveries_id=(),
+            update_payment_date=False,
+            payment_date=None,
     ):
         if everything:
             permanence = (
@@ -590,7 +614,7 @@ class Permanence(models.Model):
             if everything:
                 # Cancel also purchases without any delivery point
                 for customer_invoice in CustomerInvoice.objects.filter(
-                    permanence_id=self.id, delivery_id=None
+                        permanence_id=self.id, delivery_id=None
                 ):
                     customer_invoice.cancel()
 
@@ -655,8 +679,8 @@ class Permanence(models.Model):
         if everything:
             # Add membership fee
             if (
-                REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0
-                and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0
+                    REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0
+                    and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0
             ):
                 membership_fee_product = Product.objects.filter(
                     order_unit=OrderUnit.MEMBERSHIP_FEE, is_active=True
@@ -773,9 +797,9 @@ class Permanence(models.Model):
         producer_buyinggroup = Producer.get_or_create_group()
         customer_buyinggroup = Customer.get_or_create_group()
         if (
-            bank_account_latest_total is None
-            or producer_buyinggroup is None
-            or customer_buyinggroup is None
+                bank_account_latest_total is None
+                or producer_buyinggroup is None
+                or customer_buyinggroup is None
         ):
             return
         self.set_status(
@@ -811,7 +835,7 @@ class Permanence(models.Model):
         ).count()
         # A real subset: at least one not selected and at least one selected
         permanence_partially_invoiced = (
-            0 < producers_not_to_invoiced < producers_to_invoiced
+                0 < producers_not_to_invoiced < producers_to_invoiced
         )
         if permanence_partially_invoiced:
             # Move the producers not invoiced into a new permanence
@@ -852,7 +876,7 @@ class Permanence(models.Model):
             ).update(permanence_id=new_permanence.id)
 
             for old_customer_invoice in CustomerInvoice.objects.filter(
-                permanence_id=self.id, customer_id__in=customers_to_move
+                    permanence_id=self.id, customer_id__in=customers_to_move
             ):
                 new_customer_invoice = old_customer_invoice.create_child(
                     new_permanence=new_permanence
@@ -919,42 +943,42 @@ class Permanence(models.Model):
 
         self.generate_bank_account_movement(payment_date=payment_date)
         new_bank_latest_total = (
-            bank_account_latest_total.bank_amount_in.amount
-            - bank_account_latest_total.bank_amount_out.amount
+                bank_account_latest_total.bank_amount_in.amount
+                - bank_account_latest_total.bank_amount_out.amount
         )
 
         # Calculate new current balance : Bank
         for bank_account in BankAccount.objects.select_for_update().filter(
-            customer_invoice__isnull=True,
-            producer_invoice__isnull=True,
-            operation_status__in=[BankMovement.PROFIT, BankMovement.TAX],
-            customer_id=customer_buyinggroup.id,
-            operation_date__lte=payment_date,
+                customer_invoice__isnull=True,
+                producer_invoice__isnull=True,
+                operation_status__in=[BankMovement.PROFIT, BankMovement.TAX],
+                customer_id=customer_buyinggroup.id,
+                operation_date__lte=payment_date,
         ):
             # --> This bank movement is not a real entry
             # It will not be counted into the customer_buyinggroup bank movements twice
             Customer.objects.filter(id=bank_account.customer_id).update(
                 date_balance=payment_date,
                 balance=F("balance")
-                + bank_account.bank_amount_in.amount
-                - bank_account.bank_amount_out.amount,
+                        + bank_account.bank_amount_in.amount
+                        - bank_account.bank_amount_out.amount,
             )
             CustomerInvoice.objects.filter(
                 customer_id=bank_account.customer_id, permanence_id=self.id
             ).update(
                 date_balance=payment_date,
                 balance=F("balance")
-                + bank_account.bank_amount_in.amount
-                - bank_account.bank_amount_out.amount,
+                        + bank_account.bank_amount_in.amount
+                        - bank_account.bank_amount_out.amount,
             )
             bank_account.customer_invoice_id = customer_invoice_buyinggroup.id
             bank_account.save(update_fields=["customer_invoice"])
 
         for bank_account in BankAccount.objects.select_for_update().filter(
-            customer_invoice__isnull=True,
-            producer_invoice__isnull=True,
-            customer__isnull=False,
-            operation_date__lte=payment_date,
+                customer_invoice__isnull=True,
+                producer_invoice__isnull=True,
+                customer__isnull=False,
+                operation_date__lte=payment_date,
         ):
 
             customer_invoice = CustomerInvoice.objects.filter(
@@ -991,10 +1015,10 @@ class Permanence(models.Model):
             bank_account.save()
 
         for bank_account in BankAccount.objects.select_for_update().filter(
-            customer_invoice__isnull=True,
-            producer_invoice__isnull=True,
-            producer__isnull=False,
-            operation_date__lte=payment_date,
+                customer_invoice__isnull=True,
+                producer_invoice__isnull=True,
+                producer__isnull=False,
+                operation_date__lte=payment_date,
         ):
 
             producer_invoice = ProducerInvoice.objects.filter(
@@ -1040,9 +1064,9 @@ class Permanence(models.Model):
         # nothing is billed to it: as soon as a PROFIT, a TAX or an
         # adjustment attaches a bank movement to it, it stays.
         for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id,
-            transport=DECIMAL_ZERO,
-            min_transport=DECIMAL_ZERO,
+                permanence_id=self.id,
+                transport=DECIMAL_ZERO,
+                min_transport=DECIMAL_ZERO,
         ).exclude(
             purchase__isnull=False
         ).exclude(
@@ -1062,8 +1086,8 @@ class Permanence(models.Model):
         # plus deltas - is zero, it is inert and disappears from the
         # producer invoice list of the permanence.
         for producer_invoice in ProducerInvoice.objects.filter(
-            permanence_id=self.id,
-            producer__represent_this_buyinggroup=True,
+                permanence_id=self.id,
+                producer__represent_this_buyinggroup=True,
         ).exclude(
             purchase__isnull=False
         ).exclude(
@@ -1123,7 +1147,7 @@ class Permanence(models.Model):
         # (close_order already extended the dates); it restores the
         # extension after a cancel_invoice of a previous invoicing.
         for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id, membership_fee_valid_until_save__isnull=False
+                permanence_id=self.id, membership_fee_valid_until_save__isnull=False
         ):
             customer_invoice.restore_membership_fee_extension()
 
@@ -1241,7 +1265,7 @@ class Permanence(models.Model):
         # A cancelled delivery never pays the forced membership fee:
         # restore the renewal dates extended at close time
         for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id, membership_fee_valid_until_save__isnull=False
+                permanence_id=self.id, membership_fee_valid_until_save__isnull=False
         ):
             customer_invoice.cancel_membership_fee_extension()
         bank_account = BankAccount.get_closest_to(self.permanence_date)
@@ -1254,7 +1278,7 @@ class Permanence(models.Model):
         membership fees forced at close time apply again."""
         self.set_status(old_status=SaleStatus.CANCELLED, new_status=SaleStatus.SEND)
         for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id, membership_fee_valid_until_save__isnull=False
+                permanence_id=self.id, membership_fee_valid_until_save__isnull=False
         ):
             customer_invoice.restore_membership_fee_extension()
 
@@ -1280,7 +1304,7 @@ class Permanence(models.Model):
         from repanier.task import task_order
 
         if not Purchase.objects.filter(
-            permanence_id=self.id, quantity_ordered__gt=0
+                permanence_id=self.id, quantity_ordered__gt=0
         ).exists():
             # Nothing was ever ordered: delete the shell, no trace to keep
             CustomerInvoice.objects.filter(permanence_id=self.id).delete()
@@ -1390,19 +1414,19 @@ class Permanence(models.Model):
     def generate_bank_account_movement(self, payment_date):
 
         for producer_invoice in ProducerInvoice.objects.filter(
-            permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=True
+                permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=True
         ).select_related("producer"):
             # We have to pay something
             producer = producer_invoice.producer
             bank_not_invoiced = producer.get_bank_not_invoiced()
             if (
-                producer.balance.amount != DECIMAL_ZERO
-                or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO
-                or bank_not_invoiced.amount != DECIMAL_ZERO
+                    producer.balance.amount != DECIMAL_ZERO
+                    or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO
+                    or bank_not_invoiced.amount != DECIMAL_ZERO
             ):
                 delta = (
-                    producer_invoice.to_be_invoiced_balance.amount
-                    - bank_not_invoiced.amount
+                        producer_invoice.to_be_invoiced_balance.amount
+                        - bank_not_invoiced.amount
                 ).quantize(RoundUpTo.TWO_DECIMALS)
                 if delta > DECIMAL_ZERO:
                     if producer_invoice.invoice_reference:
@@ -1412,22 +1436,22 @@ class Permanence(models.Model):
                             operation_comment = self.get_permanence_display()
                         else:
                             if (
-                                producer_invoice.get_total_price_with_tax().amount
-                                == delta
+                                    producer_invoice.get_total_price_with_tax().amount
+                                    == delta
                             ):
                                 operation_comment = _(
                                     "Delivery %(current_site)s - %(permanence)s. Thanks!"
                                 ) % {
-                                    "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
-                                    "permanence": self.get_permanence_display(),
-                                }
+                                                        "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
+                                                        "permanence": self.get_permanence_display(),
+                                                    }
                             else:
                                 operation_comment = _(
                                     "Deliveries %(current_site)s - up to the %(permanence)s (included). Thanks!"
                                 ) % {
-                                    "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
-                                    "permanence": self.get_permanence_display(),
-                                }
+                                                        "current_site": settings.REPANIER_SETTINGS_GROUP_NAME,
+                                                        "permanence": self.get_permanence_display(),
+                                                    }
                     BankAccount.objects.create(
                         permanence_id=None,
                         producer_id=producer.id,
@@ -1440,7 +1464,7 @@ class Permanence(models.Model):
                         producer_invoice=None,
                     )
             delta = (
-                producer.balance.amount - producer_invoice.to_be_invoiced_balance.amount
+                    producer.balance.amount - producer_invoice.to_be_invoiced_balance.amount
             ).quantize(RoundUpTo.TWO_DECIMALS)
             if delta != DECIMAL_ZERO:
                 # Profit or loss for the group
@@ -1477,7 +1501,7 @@ class Permanence(models.Model):
             )
         permanence_offer_item_qs = offer_item_qs.filter(permanence_id=self.id)
         for offer_item in permanence_offer_item_qs.select_related(
-            "producer", "product"
+                "producer", "product"
         ):
             product = offer_item.product
             producer = offer_item.producer
@@ -1488,8 +1512,8 @@ class Permanence(models.Model):
             # Offer_items are not subjects to customer price modifications
             # if product.is_box or product.is_box_content or product.order_unit >= OrderUnit.DEPOSIT
             offer_item.is_resale_price_fixed = (
-                not (offer_item.manage_production)
-                or product.order_unit >= OrderUnit.DEPOSIT
+                    not (offer_item.manage_production)
+                    or product.order_unit >= OrderUnit.DEPOSIT
             )
 
             offer_item.may_order = False
@@ -1523,7 +1547,7 @@ class Permanence(models.Model):
         item rows are the only ones carrying data that depends on the
         product record and its availability flag - recompute those."""
         for offer_item in OfferItemReadOnly.objects.filter(
-            permanence_id=self.id, product_id=product.id
+                permanence_id=self.id, product_id=product.id
         ):
             offer_item.calculate_order_amount(status=self.status)
             offer_item.save()
@@ -1538,7 +1562,7 @@ class Permanence(models.Model):
             producer_invoice.save()
 
         for customer_producer_invoice in CustomerProducerInvoice.objects.filter(
-            permanence_id=self.id
+                permanence_id=self.id
         ):
             customer_producer_invoice.calculate_order_amount()
             customer_producer_invoice.save()
@@ -1607,8 +1631,8 @@ class Permanence(models.Model):
     def get_new_products(self):
         assert self.status < SaleStatus.SEND
         result = []
-        six_months_ago = timezone.now().date() - datetime.timedelta(days=6 * 30)
-        six_days_ago = timezone.now() - datetime.timedelta(days=6)
+        six_months_ago = timezone.now().date() - timedelta(days=6 * 30)
+        six_days_ago = timezone.now().date() - timedelta(days=6)
         for a_producer in self.producers.all():
             current_products = list(
                 OfferItemReadOnly.objects.filter(
@@ -1679,7 +1703,7 @@ class Permanence(models.Model):
             status = None
             status_counter = 0
             for delivery in DeliveryBoard.objects.filter(
-                permanence_id=self.id
+                    permanence_id=self.id
             ).order_by("status", "id"):
                 need_to_refresh_status |= delivery.status in refresh_status
                 if status != delivery.status:
@@ -1765,13 +1789,20 @@ class Permanence(models.Model):
 
         board_composition = []
         for permanence_board in PermanenceBoard.objects.filter(
-            permanence_id=self.id
+                permanence_id=self.id
         ).order_by("permanence_role__tree_id", "permanence_role__lft"):
             member = permanence_board.get_html_board_member
             if member is not None:
                 board_composition.append(member)
 
         return mark_safe("<br>".join(board_composition))
+
+    def get_automatic_closing_datetime(self):
+        closing_time = apps.REPANIER_SETTINGS_AUTOMATIC_CLOSING_TIME
+        if self.automatic_closing_date is None or closing_time is None:
+            return None
+        naive_dt = datetime.combine(self.automatic_closing_date, closing_time)
+        return timezone.make_aware(naive_dt, timezone.get_current_timezone())
 
     def __str__(self):
         return self.get_permanence_display()
@@ -1781,6 +1812,12 @@ class Permanence(models.Model):
 
     def get_order_url(self):
         return reverse("repanier:order_view", args=[self.id])
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None and self.automatic_closing_date != self._initial_automatic_closing_date:
+            self.reminder_sent_at = None
+        super().save(*args, **kwargs)
+        self._initial_automatic_closing_date = self.automatic_closing_date
 
 
 class PermanenceInPreparation(Permanence):

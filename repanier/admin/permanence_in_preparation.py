@@ -84,6 +84,38 @@ class PermanenceInPreparationAdmin(SaleAdmin):
     def has_change_permission(self, request, permanence=None):
         return request.user.is_order_manager
 
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, change=change, **kwargs)
+        if "automatic_closing_date" in form.base_fields:
+            from datetime import datetime, timedelta
+
+            closing_time = repanier.apps.REPANIER_SETTINGS_AUTOMATIC_CLOSING_TIME
+            reminder_hours = repanier.apps.REPANIER_SETTINGS_REMINDER_HOURS_BEFORE_CLOSING
+            if closing_time is not None:
+                closing_str = closing_time.strftime("%H:%M")
+                if reminder_hours > 0:
+                    sample_dt = datetime.combine(datetime.today(), closing_time) - timedelta(
+                        hours=reminder_hours
+                    )
+                    reminder_str = sample_dt.strftime("%H:%M")
+                    form.base_fields["automatic_closing_date"].help_text = _(
+                        "Orders will close automatically at %(closing)s on that day "
+                        "(reminder sent %(hours)s h before, at %(reminder)s). Leave empty to close manually."
+                    ) % {
+                                                                               "closing": closing_str,
+                                                                               "hours": reminder_hours,
+                                                                               "reminder": reminder_str,
+                                                                           }
+                else:
+                    form.base_fields["automatic_closing_date"].help_text = _(
+                        "Orders will close automatically at %(closing)s on that day. Leave empty to close manually."
+                    ) % {"closing": closing_str}
+            else:
+                form.base_fields["automatic_closing_date"].help_text = _(
+                    "Configure the fixed closing time in Configuration before using automatic closing."
+                )
+        return form
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -266,9 +298,9 @@ class PermanenceInPreparationAdmin(SaleAdmin):
     def open_order(self, request, permanence_id, permanence=None):
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             send_mail = not ("apply-wo-mail" in request.POST)
-            # open_order(permanence.id, send_mail)
-            t = threading.Thread(target=open_order, args=(permanence.id, send_mail))
-            t.start()
+            open_order(permanence.id, send_mail)
+            # t = threading.Thread(target=open_order, args=(permanence.id, send_mail))
+            # t.start()
             user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)

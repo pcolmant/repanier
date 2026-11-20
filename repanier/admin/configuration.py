@@ -69,6 +69,8 @@ class ConfigurationAdmin(admin.ModelAdmin):
             ("membership_fee", "membership_fee_duration"),
             "display_anonymous_order_form",
             "display_who_is_who",
+            ("automatic_closing_time", "reminder_hours_before_closing"),
+            "reminder_only_for_callback",
             "how_to_register_v2",
         ]
         fieldsets = [

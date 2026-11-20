@@ -37,6 +37,11 @@ def configuration_post_save(sender, **kwargs):
     config = kwargs["instance"]
     if config.id is not None:
         apps.REPANIER_SETTINGS_CONFIG = config
+        apps.REPANIER_SETTINGS_AUTOMATIC_CLOSING_TIME = config.automatic_closing_time
+        apps.REPANIER_SETTINGS_REMINDER_HOURS_BEFORE_CLOSING = (
+            config.reminder_hours_before_closing
+        )
+        apps.REPANIER_SETTINGS_REMINDER_ONLY_FOR_CALLBACK = config.reminder_only_for_callback
         if config.name == PermanenceName.PERMANENCE:
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence of ")

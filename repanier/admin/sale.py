@@ -187,7 +187,7 @@ class SaleAdmin(admin.ModelAdmin):
     def get_fields(self, request, permanence=None):
         fields = [
             ("permanence_date", "picture"),
-            "automatically_closed",
+            "automatic_closing_date",
             "short_name_v2",
             self.description,
             "producers",
@@ -206,7 +206,7 @@ class SaleAdmin(admin.ModelAdmin):
                 # into the sale to update the offer item required to add a product.
                 readonly_fields.append("producers")
             elif permanence.status >= SaleStatus.CLOSED.value:
-                readonly_fields.append("automatically_closed")
+                readonly_fields.append("automatic_closing_date")
         return readonly_fields
 
     def get_formsets_with_inlines(self, request, obj=None):

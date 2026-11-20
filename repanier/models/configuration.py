@@ -1,4 +1,5 @@
 import logging
+from datetime import time
 
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
@@ -76,9 +77,24 @@ class Configuration(models.Model):
     display_who_is_who = models.BooleanField(
         _('Display the "who\'s who"'), default=True
     )
-    # xlsx_portrait = models.BooleanField(
-    #     _("Always generate XLSX files in portrait mode"), default=False
-    # )
+    automatic_closing_time = models.TimeField(
+        _("Automatic closing time"),
+        help_text=_(
+            "Fixed time of day at which orders close when an automatic closing date is set on an offer."
+        ),
+        null=True,
+        blank=True,
+        default=time(5, 0),
+    )
+    reminder_hours_before_closing = models.PositiveSmallIntegerField(
+        _("Reminder delay before closing (in hours)"),
+        help_text=_("0 means: no automatic reminder before closing."),
+        default=12,
+    )
+    reminder_only_for_callback = models.BooleanField(
+        _("Send the pre-closing reminder only to members who clicked 'Remind me'"),
+        default=True,
+    )
     bank_account = models.CharField(
         _("Bank account"), max_length=100, blank=True, default=EMPTY_STRING
     )

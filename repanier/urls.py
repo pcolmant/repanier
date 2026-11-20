@@ -43,6 +43,7 @@ from repanier.views.task_history_class import TaskHistoryView
 from repanier.views.test_mail_config_ajax import test_mail_config_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
 from repanier.views.who_is_who_view import who_is_who_view
+from repanier.views.reminder_view import reminder_view
 
 app_name = "repanier"
 # https://consideratecode.com/2018/05/02/django-2-0-url-to-path-cheatsheet/
@@ -228,4 +229,7 @@ urlpatterns = [
         never_cache(TaskHistoryView.as_view()),
         name="task_history_view",
     ),
+    path("rappeler/<str:token>/",
+         reminder_view,
+         name="reminder_view"),
 ]

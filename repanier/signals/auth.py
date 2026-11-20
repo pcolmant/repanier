@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def notify_admin_sign_in(sender, request, user, **kwargs):
-    if not user.is_superuser:
+    if not user.is_superuser or settings.DEBUG:
         return
     try:
         from repanier.const import EmailNature
@@ -40,25 +40,19 @@ def notify_admin_sign_in(sender, request, user, **kwargs):
         html_body = format_html(
             "<p>{} : {}</p>"
             "<p>{} : {}</p>"
-            "<p>{} : {}</p>"
-            "<p>{} : {}</p>"
             "<p>{} : {}</p>",
-            _("Site"),
+            _("Context"),
             settings.REPANIER_SETTINGS_GROUP_NAME,
-            _("Account"),
-            user.username,
-            _("E-mail"),
-            user.email,
-            _("Address"),
-            client_address,
-            _("Timestamp"),
+            _("Ref"),
+            f"{user.username} ({client_address})",
+            _("Date"),
             timezone.localtime().strftime("%Y-%m-%d %H:%M:%S"),
         )
         email = RepanierEmail(
             email_nature=EmailNature.ADMIN,
             subject="{} - {}".format(
                 settings.REPANIER_SETTINGS_GROUP_NAME,
-                _("A superuser signed in"),
+                _("Session notice"),
             ),
             html_body=html_body,
             to=[settings.ADMIN_EMAIL],

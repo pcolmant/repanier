@@ -42,6 +42,10 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
                 config, delivery_id, filename, permanence, order_responsible
             )
 
+            if settings.DEBUG:
+                # Send only the first email if in debug mode
+                break
+
     if not everything:
         abstract_ws = None
     else:
@@ -193,6 +197,10 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
 
             email.send_email()
 
+            if settings.DEBUG:
+                # Send only the first email if in debug mode
+                break
+
     if everything:
         # Orders send to our customers only if they don't have already received it
         customer_set = Customer.objects.filter(
@@ -216,6 +224,10 @@ def email_order(permanence_id, everything : bool=True, deliveries_id=()):
             export_order_2_1_customer(
                 customer, filename, permanence, order_responsible, abstract_ws
             )
+
+            if settings.DEBUG:
+                # Send only the first email if in debug mode
+                break
 
 
 def export_order_2_1_group(
