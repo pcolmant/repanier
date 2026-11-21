@@ -20,3 +20,4 @@ cache
 # Dossier média local et de configuration
 /mysite/media/
 /setup/
+setup/cron/
