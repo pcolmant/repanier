@@ -54,18 +54,13 @@ os.sys.path.insert(0, PROJECT_PATH)
 # print("---- common_settings.py - Python path is : ", os.sys.path)
 
 conf_file_name = PROJECT_DIR / (DJANGO_SETTINGS_SITE_NAME + ".ini")
-
-if DEBUG:
-    if not conf_file_name.exists():
-        print(
-            "---- common_settings.py - /!\\ settings file <{}> not found".format(
-                conf_file_name
-            )
+if not conf_file_name.exists():
+    print(
+        "---- common_settings.py - /!\\ settings file <{}> not found".format(
+            conf_file_name
         )
-        raise SystemExit(-1)
-    else:
-        print("---- common_settings.py - settings file is : <{}>".format(conf_file_name))
-
+    )
+    raise SystemExit(-1)
 config = configparser.ConfigParser()
 config.read(conf_file_name, encoding="utf-8")
 
@@ -279,11 +274,13 @@ REPANIER_SETTINGS_HTMX_PATH = get_repanier_css_name(
 )
 
 if DEBUG:
+    print("---- common_settings.py - settings file is : <{}>".format(conf_file_name))
     print(
         "---- common_settings.py - bootstrap css path : {}".format(
             REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
         )
     )
+
 
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
