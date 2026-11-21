@@ -21,3 +21,4 @@ cache
 /mysite/media/
 /setup/
 setup/cron/
+repanier/management/commands/
