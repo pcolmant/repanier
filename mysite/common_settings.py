@@ -55,15 +55,16 @@ os.sys.path.insert(0, PROJECT_PATH)
 
 conf_file_name = PROJECT_DIR / (DJANGO_SETTINGS_SITE_NAME + ".ini")
 
-if not conf_file_name.exists():
-    print(
-        "---- common_settings.py - /!\\ settings file <{}> not found".format(
-            conf_file_name
+if DEBUG:
+    if not conf_file_name.exists():
+        print(
+            "---- common_settings.py - /!\\ settings file <{}> not found".format(
+                conf_file_name
+            )
         )
-    )
-    raise SystemExit(-1)
-else:
-    print("---- common_settings.py - settings file is : <{}>".format(conf_file_name))
+        raise SystemExit(-1)
+    else:
+        print("---- common_settings.py - settings file is : <{}>".format(conf_file_name))
 
 config = configparser.ConfigParser()
 config.read(conf_file_name, encoding="utf-8")
@@ -191,6 +192,10 @@ DEFAULT_FROM_EMAIL = "{} <{}>".format(
     REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO
 )
 
+SILENCED_SYSTEM_CHECKS = [
+    "treebeard.E001",
+]
+
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
 DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
@@ -273,11 +278,12 @@ REPANIER_SETTINGS_HTMX_PATH = get_repanier_css_name(
     os.path.join("htmx", "js", "htmx.min.js")
 )
 
-print(
-    "---- common_settings.py - bootstrap css path : {}".format(
-        REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
+if DEBUG:
+    print(
+        "---- common_settings.py - bootstrap css path : {}".format(
+            REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
+        )
     )
-)
 
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
