@@ -57,18 +57,39 @@ def export_poll_xlsx(poll):
         if col_idx > 1:
             cell.alignment = Alignment(horizontal="right")
 
-    choices_with_counts = poll.choices.annotate(
-        votes=Count("responses", filter=models.Q(responses__answered_at__isnull=False))
-    )
+    if poll.allow_multiple:
+        choices_with_counts = poll.choices.annotate(
+            votes=Count(
+                "multi_responses",
+                filter=models.Q(multi_responses__answered_at__isnull=False),
+            )
+        )
+    else:
+        choices_with_counts = poll.choices.annotate(
+            votes=Count(
+                "responses", filter=models.Q(responses__answered_at__isnull=False)
+            )
+        )
 
     current_row = 7
-    for choice in choices_with_counts:
-        pct = round((choice.votes / total_invited) * 100, 1) if total_invited else 0
-        ws.cell(row=current_row, column=1, value=choice.label)
-        c_votes = ws.cell(row=current_row, column=2, value=choice.votes)
+    has_choices = choices_with_counts.exists()
+    if has_choices:
+        for choice in choices_with_counts:
+            pct = round((choice.votes / total_invited) * 100, 1) if total_invited else 0
+            ws.cell(row=current_row, column=1, value=choice.label)
+            c_votes = ws.cell(row=current_row, column=2, value=choice.votes)
+            c_votes.font = bold_font
+            c_votes.alignment = Alignment(horizontal="right")
+            c_pct = ws.cell(row=current_row, column=3, value=f"{pct}%")
+            c_pct.alignment = Alignment(horizontal="right")
+            current_row += 1
+    else:
+        answered_pct = round((answered_count / total_invited) * 100, 1) if total_invited else 0
+        ws.cell(row=current_row, column=1, value=_("Responses received"))
+        c_votes = ws.cell(row=current_row, column=2, value=answered_count)
         c_votes.font = bold_font
         c_votes.alignment = Alignment(horizontal="right")
-        c_pct = ws.cell(row=current_row, column=3, value=f"{pct}%")
+        c_pct = ws.cell(row=current_row, column=3, value=f"{answered_pct}%")
         c_pct.alignment = Alignment(horizontal="right")
         current_row += 1
 
@@ -116,6 +137,8 @@ def export_poll_xlsx(poll):
 
         if resp.choice:
             ws.cell(row=current_row, column=3, value=resp.choice.label)
+        elif resp.answered_at and not has_choices:
+            ws.cell(row=current_row, column=3, value=_("Open-ended response"))
         else:
             c_empty = ws.cell(row=current_row, column=3, value=_("No response yet"))
             c_empty.font = muted_font

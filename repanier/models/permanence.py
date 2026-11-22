@@ -603,6 +603,23 @@ class Permanence(models.Model):
         if permanence is None:
             raise ValueError
 
+        if not everything and new_status == SaleStatus.WAIT_FOR_CLOSED:
+            delivery_ids = set(deliveries_id)
+            selected_deliveries = list(
+                DeliveryBoard.objects.select_for_update().filter(
+                    permanence_id=self.id, id__in=delivery_ids
+                )
+            )
+            if (
+                not delivery_ids
+                or len(selected_deliveries) != len(delivery_ids)
+                or any(
+                    delivery.status != old_status
+                    for delivery in selected_deliveries
+                )
+            ):
+                raise ValueError
+
         if self.with_delivery_point:
             qs = DeliveryBoard.objects.filter(permanence_id=self.id).exclude(
                 status=new_status

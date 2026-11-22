@@ -1,12 +1,11 @@
 from datetime import timedelta
 import logging
-import threading
 
 from django.conf import settings
 from django.contrib import admin, messages
-from django.db import close_old_connections, models
-from django.db.models import Count
+from django.db import models
 from django import forms
+from django.db.models import Count, Q
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -14,6 +13,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 
 from repanier.email.email import RepanierEmail, in_customer_language
+from repanier.admin.background import start_background_task
 from repanier.models.customer import Customer
 from repanier.models.poll import Poll, PollChoice, PollResponse, is_new_poll_enabled
 from repanier.xlsx.xlsx_poll import export_poll_xlsx
@@ -21,6 +21,47 @@ from repanier.xlsx.xlsx_poll import export_poll_xlsx
 logger = logging.getLogger(__name__)
 
 MIN_DELETE_AGE = timedelta(days=365)
+POLL_SEND_LEASE = timedelta(hours=1)
+
+
+def _reserve_poll_email_send(poll_id):
+    now = timezone.now()
+    reserved = (
+        Poll.objects.filter(pk=poll_id)
+        .filter(
+            Q(email_send_started_at__isnull=True)
+            | Q(email_send_started_at__lt=now - POLL_SEND_LEASE)
+        )
+        .update(email_send_started_at=now)
+    )
+    return now if reserved == 1 else None
+
+
+def _refresh_poll_email_send(poll_id, lease_started_at):
+    now = timezone.now()
+    refreshed = Poll.objects.filter(
+        pk=poll_id, email_send_started_at=lease_started_at
+    ).update(email_send_started_at=now)
+    return now if refreshed == 1 else None
+
+
+def _release_poll_email_send(poll_id, lease_started_at):
+    Poll.objects.filter(
+        pk=poll_id, email_send_started_at=lease_started_at
+    ).update(email_send_started_at=None)
+
+
+def _send_poll_email(email, poll_id, customer_id):
+    if email is None:
+        return False
+    sent = email.send_email()
+    if not sent:
+        logger.error(
+            "Poll email delivery failed for poll %s and customer %s",
+            poll_id,
+            customer_id,
+        )
+    return bool(sent)
 
 
 class PollChoiceInline(admin.TabularInline):
@@ -118,11 +159,16 @@ def _send_poll_emails_worker(
     only_customer_id=None,
     mark_sent=False,
     stop_on_first_in_debug=False,
+    lease_started_at=None,
 ):
-    close_old_connections()
     try:
+        if lease_started_at is None:
+            return
         poll = Poll.objects.filter(pk=poll_id).first()
         if poll is None:
+            return
+        lease_started_at = _refresh_poll_email_send(poll_id, lease_started_at)
+        if lease_started_at is None:
             return
 
         if only_customer_id is not None:
@@ -145,8 +191,7 @@ def _send_poll_emails_worker(
                 is_reminder=is_reminder,
                 show_unsubscribe=True,
             )
-            if email is not None:
-                email.send_email()
+            _send_poll_email(email, poll_id, customer.id)
             return
 
         if is_reminder:
@@ -158,6 +203,9 @@ def _send_poll_emails_worker(
                 ).select_related("customer__user")
             )
             for response_obj in targets:
+                lease_started_at = _refresh_poll_email_send(poll_id, lease_started_at)
+                if lease_started_at is None:
+                    return
                 email = _render_invitation_for_customer(
                     response_obj.customer,
                     poll,
@@ -166,7 +214,7 @@ def _send_poll_emails_worker(
                     is_reminder=True,
                     show_unsubscribe=True,
                 )
-                if email is not None and email.send_email():
+                if _send_poll_email(email, poll_id, response_obj.customer_id):
                     if stop_on_first_in_debug:
                         break
             return
@@ -182,6 +230,9 @@ def _send_poll_emails_worker(
 
         sent_count = 0
         for customer in eligible_customers:
+            lease_started_at = _refresh_poll_email_send(poll_id, lease_started_at)
+            if lease_started_at is None:
+                return
             response_obj, _created = PollResponse.objects.get_or_create(
                 poll=poll,
                 customer=customer,
@@ -194,7 +245,7 @@ def _send_poll_emails_worker(
                 is_reminder=False,
                 show_unsubscribe=True,
             )
-            if email is not None and email.send_email():
+            if _send_poll_email(email, poll_id, customer.id):
                 sent_count += 1
                 if stop_on_first_in_debug:
                     break
@@ -202,10 +253,45 @@ def _send_poll_emails_worker(
         if mark_sent and sent_count > 0:
             poll.sent_at = timezone.now()
             poll.save(update_fields=["sent_at"])
-    except Exception:
-        logger.exception("Error while sending poll emails in background thread")
     finally:
-        close_old_connections()
+        if lease_started_at is not None:
+            _release_poll_email_send(poll_id, lease_started_at)
+
+
+def _start_poll_email_task(
+    admin_instance,
+    request,
+    poll,
+    base_url,
+    *,
+    name,
+    started_message,
+    **worker_kwargs,
+):
+    lease_started_at = _reserve_poll_email_send(poll.id)
+    if lease_started_at is None:
+        admin_instance.message_user(
+            request,
+            _("An email task for this poll is already running."),
+            level=messages.WARNING,
+        )
+        return False
+
+    try:
+        start_background_task(
+            name,
+            _send_poll_emails_worker,
+            poll.id,
+            base_url,
+            lease_started_at=lease_started_at,
+            **worker_kwargs,
+        )
+    except Exception:
+        _release_poll_email_send(poll.id, lease_started_at)
+        raise
+
+    admin_instance.message_user(request, started_message, level=messages.INFO)
+    return True
 
 @admin.register(Poll)
 class PollAdmin(admin.ModelAdmin):
@@ -288,6 +374,16 @@ class PollAdmin(admin.ModelAdmin):
         answered_count = obj.responses.filter(answered_at__isnull=False).count()
         unanswered_count = total_invited - answered_count
 
+        if not obj.choices.exists():
+            return format_html(
+                "{}: {} / {}<br>{}: {}",
+                _("Responses"),
+                answered_count,
+                total_invited,
+                _("No response yet"),
+                unanswered_count,
+            )
+
         if getattr(obj, "allow_multiple", False):
             choices_with_counts = obj.choices.annotate(
                 votes=Count(
@@ -355,10 +451,12 @@ class PollAdmin(admin.ModelAdmin):
             return
 
         poll = queryset.first()
-        if poll.choices.count() < 2:
+        if poll.choices.count() == 1:
             self.message_user(
                 request,
-                _("Please define at least two choices before sending."),
+                _(
+                    "Define at least two choices, or remove all choices for an open-ended poll."
+                ),
                 level=messages.ERROR,
             )
             return
@@ -387,23 +485,18 @@ class PollAdmin(admin.ModelAdmin):
             return
 
         base_url = request.build_absolute_uri("/")
-        t = threading.Thread(
-            target=_send_poll_emails_worker,
-            args=(poll.id, base_url),
-            kwargs={
-                "is_reminder": False,
-                "only_customer_id": customer.id,
-                "mark_sent": False,
-                "stop_on_first_in_debug": False,
-            },
-        )
-        t.start()
-
-        self.message_user(
+        _start_poll_email_task(
+            self,
             request,
-            _("Test poll email is being sent to %(email)s.")
+            poll,
+            base_url,
+            name=f"poll-test-email-{poll.id}",
+            started_message=_("Test poll email is being sent to %(email)s.")
             % {"email": customer.user.email},
-            level=messages.INFO,
+            is_reminder=False,
+            only_customer_id=customer.id,
+            mark_sent=False,
+            stop_on_first_in_debug=False,
         )
 
     @admin.action(description=_("Send poll email to active members"))
@@ -420,31 +513,28 @@ class PollAdmin(admin.ModelAdmin):
             return
 
         poll = queryset.first()
-        if poll.choices.count() < 2:
+        if poll.choices.count() == 1:
             self.message_user(
                 request,
-                _("Please define at least two choices before sending."),
+                _(
+                    "Define at least two choices, or remove all choices for an open-ended poll."
+                ),
                 level=messages.ERROR,
             )
             return
 
         base_url = request.build_absolute_uri("/")
-        t = threading.Thread(
-            target=_send_poll_emails_worker,
-            args=(poll.id, base_url),
-            kwargs={
-                "is_reminder": False,
-                "only_customer_id": None,
-                "mark_sent": True,
-                "stop_on_first_in_debug": bool(settings.DEBUG),
-            },
-        )
-        t.start()
-
-        self.message_user(
+        _start_poll_email_task(
+            self,
             request,
-            _("Poll emails are being sent in the background."),
-            level=messages.INFO,
+            poll,
+            base_url,
+            name=f"poll-invitation-{poll.id}",
+            started_message=_("Poll emails are being sent in the background."),
+            is_reminder=False,
+            only_customer_id=None,
+            mark_sent=True,
+            stop_on_first_in_debug=bool(settings.DEBUG),
         )
 
     @admin.action(description=_("Remind only members who haven't answered"))
@@ -461,6 +551,16 @@ class PollAdmin(admin.ModelAdmin):
             return
 
         poll = queryset.first()
+        if poll.choices.count() == 1:
+            self.message_user(
+                request,
+                _(
+                    "Define at least two choices, or remove all choices for an open-ended poll."
+                ),
+                level=messages.ERROR,
+            )
+            return
+
         if not poll.is_open:
             self.message_user(
                 request,
@@ -469,31 +569,18 @@ class PollAdmin(admin.ModelAdmin):
             )
             return
 
-        if poll.choices.count() < 2:
-            self.message_user(
-                request,
-                _("Please define at least two choices before sending."),
-                level=messages.ERROR,
-            )
-            return
-
         base_url = request.build_absolute_uri("/")
-        t = threading.Thread(
-            target=_send_poll_emails_worker,
-            args=(poll.id, base_url),
-            kwargs={
-                "is_reminder": True,
-                "only_customer_id": None,
-                "mark_sent": False,
-                "stop_on_first_in_debug": bool(settings.DEBUG),
-            },
-        )
-        t.start()
-
-        self.message_user(
+        _start_poll_email_task(
+            self,
             request,
-            _("Reminder emails are being sent in the background."),
-            level=messages.INFO,
+            poll,
+            base_url,
+            name=f"poll-reminder-{poll.id}",
+            started_message=_("Reminder emails are being sent in the background."),
+            is_reminder=True,
+            only_customer_id=None,
+            mark_sent=False,
+            stop_on_first_in_debug=bool(settings.DEBUG),
         )
 
     @admin.action(description=_("Export results to Excel (.xlsx)"))

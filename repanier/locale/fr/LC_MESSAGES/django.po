@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-22 13:16+0100\n"
-"PO-Revision-Date: 2026-11-22 13:28+0100\n"
+"POT-Creation-Date: 2026-11-22 20:26+0100\n"
+"PO-Revision-Date: 2026-11-22 20:32+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -41,7 +41,7 @@ msgstr "Seulement enregistré"
 
 #: admin/admin_filter.py:39 admin/admin_filter.py:73 admin/admin_filter.py:101
 #: models/deliveryboard.py:32 models/invoice.py:31 models/permanence.py:86
-#: models/permanence.py:1757
+#: models/permanence.py:1774
 msgid "Status"
 msgstr "Statut"
 
@@ -162,7 +162,7 @@ msgstr "Dénomination du groupe"
 #: admin/customer.py:365 admin/group.py:25 admin/group.py:28 admin/group.py:259
 #: models/producer.py:42 templates/repanier/who_is_who.html:62
 #: xlsx/xlsx_order_customer.py:73 xlsx/xlsx_order_customer.py:144
-#: xlsx/xlsx_poll.py:93
+#: xlsx/xlsx_poll.py:104
 msgid "Email"
 msgstr "Email principal"
 
@@ -279,12 +279,12 @@ msgstr "Fichier à importer"
 msgid "Accounting reference"
 msgstr "Référence comptable"
 
-#: admin/forms.py:108 admin/permanence_in_preparation.py:364
-#: admin/permanence_in_preparation.py:365
-#: admin/permanence_in_preparation.py:483
-#: admin/permanence_in_preparation.py:486
-#: admin/permanence_in_preparation.py:504
-#: admin/permanence_in_preparation.py:505 models/customer.py:54
+#: admin/forms.py:108 admin/permanence_in_preparation.py:368
+#: admin/permanence_in_preparation.py:369
+#: admin/permanence_in_preparation.py:490
+#: admin/permanence_in_preparation.py:493
+#: admin/permanence_in_preparation.py:511
+#: admin/permanence_in_preparation.py:512 models/customer.py:54
 #: models/lut.py:34 models/lut.py:81 models/lut.py:161 models/lut.py:199
 #: models/producer.py:32
 msgid "Short name"
@@ -349,7 +349,7 @@ msgid "Action performed."
 msgstr "Action effectuée."
 
 #: admin/permanence_done.py:194 admin/permanence_done.py:444
-#: admin/permanence_done.py:513 cms_toolbar.py:160 models/permanence.py:1834
+#: admin/permanence_done.py:513 cms_toolbar.py:160 models/permanence.py:1851
 #: templates/admin/repanier/permanencedone/change_list.html:15
 #: templates/repanier/admin/confirm_bank_movement.html:7
 #: templates/repanier/admin/confirm_invoice.html:12
@@ -429,8 +429,8 @@ msgid "Import"
 msgstr "Importer"
 
 #: admin/permanence_done.py:576 admin/permanence_done.py:594
-#: admin/permanence_in_preparation.py:773
-#: admin/permanence_in_preparation.py:782
+#: admin/permanence_in_preparation.py:780
+#: admin/permanence_in_preparation.py:789
 msgid "Cancel the delivery"
 msgstr "Annuler"
 
@@ -438,7 +438,7 @@ msgstr "Annuler"
 msgid "Book"
 msgstr "Comptabiliser"
 
-#: admin/permanence_done.py:598 admin/permanence_in_preparation.py:775
+#: admin/permanence_done.py:598 admin/permanence_in_preparation.py:782
 msgid "To archive"
 msgstr "Archiver"
 
@@ -492,35 +492,35 @@ msgid "Customers"
 msgstr "Consommateurs"
 
 #: admin/permanence_in_preparation.py:237
-#: admin/permanence_in_preparation.py:419
+#: admin/permanence_in_preparation.py:423
 msgid "You must select at least one delivery point."
 msgstr "Vous deviez sélectionner au moins un point de livraison."
 
-#: admin/permanence_in_preparation.py:308
+#: admin/permanence_in_preparation.py:312
 msgid "The offers are being generated."
 msgstr "Les commandes sont en train d'être ouvertes."
 
-#: admin/permanence_in_preparation.py:362
-#: admin/permanence_in_preparation.py:363
-#: admin/permanence_in_preparation.py:502
-#: admin/permanence_in_preparation.py:503
-#: admin/permanence_in_preparation.py:528
-#: admin/permanence_in_preparation.py:529 models/customer.py:62
+#: admin/permanence_in_preparation.py:366
+#: admin/permanence_in_preparation.py:367
+#: admin/permanence_in_preparation.py:509
+#: admin/permanence_in_preparation.py:510
+#: admin/permanence_in_preparation.py:535
+#: admin/permanence_in_preparation.py:536 models/customer.py:62
 #: models/item.py:362 models/offeritem.py:21 models/producer.py:40
 #: models/product.py:19 models/staff.py:48 xlsx/xlsx_product.py:63
 msgid "Long name"
 msgstr "Nom étendu"
 
-#: admin/permanence_in_preparation.py:430
+#: admin/permanence_in_preparation.py:437
 msgid "The orders are being sent."
 msgstr "Les commandes sont en train d'être envoyées."
 
-#: admin/permanence_in_preparation.py:465
+#: admin/permanence_in_preparation.py:472
 #, python-format
 msgid "The balance of your account as of %(date)s is %(balance)s."
 msgstr "Le solde de votre compte en date du %(date)s est de %(balance)s."
 
-#: admin/permanence_in_preparation.py:471
+#: admin/permanence_in_preparation.py:478
 #, python-format
 msgid ""
 "This balance does not take into account payments made after the last "
@@ -531,7 +531,7 @@ msgstr ""
 "comptabilisation (pour un montant de %(bank)s), ni compte des commandes qui "
 "ne sont pas encore comptabilisées (pour un montant de %(other_order)s)"
 
-#: admin/permanence_in_preparation.py:489
+#: admin/permanence_in_preparation.py:496
 #, python-format
 msgid ""
 "Please pay a prepayment of %(payment)s to the bank account %(name)s "
@@ -540,7 +540,7 @@ msgstr ""
 "Veuillez payer une provision de %(payment)s sur le compte bancaire %(name)s "
 "%(number)s avec la communication %(communication)s."
 
-#: admin/permanence_in_preparation.py:515 admin/purchase.py:290
+#: admin/permanence_in_preparation.py:522 admin/purchase.py:290
 #: models/deliveryboard.py:18 models/invoice.py:713 models/lut.py:136
 #: models/purchase.py:209
 #: templates/repanier/bootstrap5_delivery_dropdown.html:11
@@ -550,13 +550,13 @@ msgstr ""
 msgid "Delivery point"
 msgstr "Point de livraison"
 
-#: admin/permanence_in_preparation.py:602
+#: admin/permanence_in_preparation.py:609
 msgid "The permanence is back to \"Scheduled\"."
 msgstr "La permanence est de retour au statut \"Planifié\"."
 
-#: admin/permanence_in_preparation.py:612
-#: admin/permanence_in_preparation.py:643 cms_toolbar.py:153
-#: models/permanence.py:1827
+#: admin/permanence_in_preparation.py:619
+#: admin/permanence_in_preparation.py:650 cms_toolbar.py:153
+#: models/permanence.py:1844
 #: templates/repanier/admin/confirm_cancel_permanence.html:8
 #: templates/repanier/admin/confirm_close_order.html:8
 #: templates/repanier/admin/confirm_export_customer_order.html:8
@@ -565,147 +565,155 @@ msgstr "La permanence est de retour au statut \"Planifié\"."
 msgid "Offers in preparation"
 msgstr "Offres en préparation"
 
-#: admin/permanence_in_preparation.py:614
+#: admin/permanence_in_preparation.py:621
 msgid "Please confirm the action: back to scheduled"
 msgstr "Veuillez confirmer votre demande de re-planification de la permanence"
 
-#: admin/permanence_in_preparation.py:629
+#: admin/permanence_in_preparation.py:636
 msgid "The permanence has been cancelled."
 msgstr "La permanence a été annulée."
 
-#: admin/permanence_in_preparation.py:631
+#: admin/permanence_in_preparation.py:638
 msgid "The permanence has been deleted."
 msgstr "La permanence a été supprimée."
 
-#: admin/permanence_in_preparation.py:669
+#: admin/permanence_in_preparation.py:676
 msgid "Nothing to do."
 msgstr "Rien à faire."
 
-#: admin/permanence_in_preparation.py:671
+#: admin/permanence_in_preparation.py:678
 msgid "{} duplicate created."
 msgstr "{} duplicata créé."
 
-#: admin/permanence_in_preparation.py:673
+#: admin/permanence_in_preparation.py:680
 msgid "{} duplicates created."
 msgstr "{} duplicatas créés."
 
-#: admin/permanence_in_preparation.py:715 admin/product.py:392
+#: admin/permanence_in_preparation.py:722 admin/product.py:392
 #: admin/product.py:504
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: admin/permanence_in_preparation.py:719
+#: admin/permanence_in_preparation.py:726
 msgid "Open orders"
 msgstr "Ouvrir"
 
 # New strings of the "cancel a prepared permanence" feature
-#: admin/permanence_in_preparation.py:723
+#: admin/permanence_in_preparation.py:730
 msgid "Cancel this permanence"
 msgstr "Annuler"
 
-#: admin/permanence_in_preparation.py:737
+#: admin/permanence_in_preparation.py:744
 msgid "Modify the offer"
 msgstr "Modifier l'offre"
 
-#: admin/permanence_in_preparation.py:741
+#: admin/permanence_in_preparation.py:748
 msgid "Close orders"
 msgstr "Clôturer"
 
-#: admin/poll.py:59 models/poll.py:99
+#: admin/poll.py:100 models/poll.py:102
 msgid "Selected choices"
 msgstr "Choix sélectionnés"
 
-#: admin/poll.py:85
+#: admin/poll.py:131
 #, python-format
 msgid "[Reminder] %(title)s"
 msgstr "[Rappel] %(title)s"
 
-#: admin/poll.py:259
+#: admin/poll.py:273
+msgid "An email task for this poll is already running."
+msgstr "Une tâche d'envoi d'e-mails pour ce sondage est déjà en cours."
+
+#: admin/poll.py:350
 msgid "Polls created less than one year ago cannot be deleted."
 msgstr "Les sondages créés il y a moins d'un an ne peuvent pas être supprimés."
 
-#: admin/poll.py:266 models/poll.py:107
+#: admin/poll.py:357 admin/poll.py:378 models/poll.py:110
 msgid "Responses"
 msgstr "Réponses"
 
-#: admin/poll.py:272
+#: admin/poll.py:363
 msgid "Results summary"
 msgstr "Résumé des résultats"
 
-#: admin/poll.py:275
+#: admin/poll.py:366
 msgid "Save the poll first to see results."
 msgstr "Enregistrez d'abord le sondage pour voir les résultats."
 
-#: admin/poll.py:279
+#: admin/poll.py:370
 msgid "No invitations sent yet."
 msgstr "Aucune invitation envoyée pour l'instant."
 
-#: admin/poll.py:329 models/poll.py:66 xlsx/xlsx_poll.py:52
-msgid "Choice"
-msgstr "Choix"
-
-#: admin/poll.py:330 xlsx/xlsx_poll.py:52
-msgid "Votes"
-msgstr "Votes"
-
-#: admin/poll.py:332 xlsx/xlsx_poll.py:77 xlsx/xlsx_poll.py:120
+#: admin/poll.py:381 admin/poll.py:433 xlsx/xlsx_poll.py:88
+#: xlsx/xlsx_poll.py:133
 msgid "No response yet"
 msgstr "Pas encore de réponse"
 
-#: admin/poll.py:337
+#: admin/poll.py:430 models/poll.py:69 xlsx/xlsx_poll.py:52
+msgid "Choice"
+msgstr "Choix"
+
+#: admin/poll.py:431 xlsx/xlsx_poll.py:52
+msgid "Votes"
+msgstr "Votes"
+
+#: admin/poll.py:438
 msgid "Send test poll to me"
 msgstr "M'envoyer le sondage pour le tester"
 
-#: admin/poll.py:345 admin/poll.py:451
+#: admin/poll.py:446 admin/poll.py:546
 msgid "Please select exactly one poll."
 msgstr "Veuillez sélectionner exactement un sondage."
 
-#: admin/poll.py:354 admin/poll.py:419 admin/poll.py:468
-msgid "Please define at least two choices before sending."
-msgstr "Veuillez définir au moins deux choix avant d'envoyer."
+#: admin/poll.py:456 admin/poll.py:518 admin/poll.py:556
+msgid ""
+"Define at least two choices, or remove all choices for an open-ended poll."
+msgstr ""
+"Définissez au moins deux choix, ou supprimez tous les choix pour un sondage "
+"à réponse ouverte."
 
-#: admin/poll.py:366
+#: admin/poll.py:469
 msgid "No customer profile is linked to your user account."
 msgstr "Aucun profil consommateur n'est lié à votre compte utilisateur."
 
-#: admin/poll.py:377
+#: admin/poll.py:480
 msgid "Your customer account has no email address."
 msgstr "Votre compte consommateur n'a pas d'adresse e-mail."
 
-#: admin/poll.py:397
+#: admin/poll.py:492
 #, python-format
 msgid "Test poll email is being sent to %(email)s."
 msgstr "L'e-mail de test du sondage est en cours d'envoi à %(email)s."
 
-#: admin/poll.py:402
+#: admin/poll.py:500
 msgid "Send poll email to active members"
 msgstr "Envoyer l'e-mail du sondage aux membres actifs"
 
-#: admin/poll.py:410
+#: admin/poll.py:508
 msgid "Please select exactly one poll to send."
 msgstr "Veuillez sélectionner exactement un sondage à envoyer."
 
-#: admin/poll.py:439
+#: admin/poll.py:531
 msgid "Poll emails are being sent in the background."
 msgstr "Les e-mails du sondage sont en cours d'envoi en arrière-plan."
 
-#: admin/poll.py:443
+#: admin/poll.py:538
 msgid "Remind only members who haven't answered"
 msgstr "Relancer uniquement les membres n'ayant pas répondu"
 
-#: admin/poll.py:460
+#: admin/poll.py:565
 msgid "This poll is already closed."
 msgstr "Ce sondage est déjà clos."
 
-#: admin/poll.py:488
+#: admin/poll.py:577
 msgid "Reminder emails are being sent in the background."
 msgstr "Les e-mails de rappel sont en cours d'envoi en arrière-plan."
 
-#: admin/poll.py:492
+#: admin/poll.py:584
 msgid "Export results to Excel (.xlsx)"
 msgstr "Exporter les résultats vers Excel (.xlsx)"
 
-#: admin/poll.py:500
+#: admin/poll.py:592
 msgid "Please select exactly one poll to export."
 msgstr "Veuillez sélectionner exactement un sondage à exporter."
 
@@ -1012,7 +1020,7 @@ msgstr "Journal des e-mails"
 msgid "\"Flash\" ad"
 msgstr "Annonce \"flash\""
 
-#: cms_toolbar.py:122 models/poll.py:42
+#: cms_toolbar.py:122 models/poll.py:45
 msgid "Polls / Decisions"
 msgstr "Sondages / Décisions"
 
@@ -1187,7 +1195,7 @@ msgstr "Clôture"
 msgid "Delivery"
 msgstr "Livraison"
 
-#: const.py:199 email/email_order.py:35 models/poll.py:63
+#: const.py:199 email/email_order.py:35 models/poll.py:66
 #: views/btn_confirm_order_ajax.py:38
 msgid "Order"
 msgstr "Commande"
@@ -1855,9 +1863,9 @@ msgstr "Arrêter de recevoir des mails provenant de {}"
 msgid "nameless"
 msgstr "sans nom"
 
-#: models/deliveryboard.py:13 models/poll.py:102 models/purchase.py:141
+#: models/deliveryboard.py:13 models/poll.py:105 models/purchase.py:141
 #: xlsx/xlsx_invoice_export.py:203 xlsx/xlsx_invoice_import.py:105
-#: xlsx/xlsx_poll.py:95 xlsx/xlsx_purchase_export.py:58
+#: xlsx/xlsx_poll.py:106 xlsx/xlsx_purchase_export.py:58
 #: xlsx/xlsx_purchase_import.py:90
 msgid "Comment"
 msgstr "Commentaire"
@@ -2286,36 +2294,36 @@ msgstr "Achats par"
 msgid "Manage purchases"
 msgstr "Gestion des achats"
 
-#: models/permanence.py:1443
+#: models/permanence.py:1460
 #, python-format
 msgid "Delivery %(current_site)s - %(permanence)s. Thanks!"
 msgstr "Livraison %(current_site)s - %(permanence)s. Merci!"
 
-#: models/permanence.py:1450
+#: models/permanence.py:1467
 #, python-format
 msgid ""
 "Deliveries %(current_site)s - up to the %(permanence)s (included). Thanks!"
 msgstr ""
 "Livraisons %(current_site)s - jusqu'à la %(permanence)s (inclue). Merci!"
 
-#: models/permanence.py:1472
+#: models/permanence.py:1489
 #, python-format
 msgid "Correction %(producer)s"
 msgstr "Correction %(producer)s"
 
-#: models/permanence.py:1720
+#: models/permanence.py:1737
 msgid "Error, call helpdesk"
 msgstr "Erreur, contacter votre helpdesk"
 
-#: models/permanence.py:1775
+#: models/permanence.py:1792
 msgid "Sales"
 msgstr "Ventes"
 
-#: models/permanence.py:1826
+#: models/permanence.py:1843
 msgid "Offer in preparation"
 msgstr "Offre en préparation"
 
-#: models/permanence.py:1833
+#: models/permanence.py:1850
 msgid "Offer in payment"
 msgstr "Offre en paiement"
 
@@ -2389,35 +2397,39 @@ msgstr "Date et heure de clôture facultatives pour les réponses."
 msgid "Sent at"
 msgstr "Envoyé le"
 
-#: models/poll.py:41
+#: models/poll.py:40
+msgid "Email task started at"
+msgstr "Tâche d'envoi d'e-mails démarrée à"
+
+#: models/poll.py:44
 msgid "Poll / Decision"
 msgstr "Sondage / Décision"
 
-#: models/poll.py:60 models/poll.py:79
+#: models/poll.py:63 models/poll.py:82
 msgid "Poll"
 msgstr "Sondage"
 
-#: models/poll.py:62
+#: models/poll.py:65
 msgid "Choice label"
 msgstr "Libellé du choix"
 
-#: models/poll.py:67
+#: models/poll.py:70
 msgid "Choices"
 msgstr "Choix"
 
-#: models/poll.py:85 xlsx/xlsx_poll.py:92
+#: models/poll.py:88 xlsx/xlsx_poll.py:103
 msgid "Member"
 msgstr "Membre"
 
-#: models/poll.py:93 xlsx/xlsx_poll.py:94
+#: models/poll.py:96 xlsx/xlsx_poll.py:105
 msgid "Selected choice"
 msgstr "Choix sélectionné"
 
-#: models/poll.py:103 xlsx/xlsx_poll.py:96
+#: models/poll.py:106 xlsx/xlsx_poll.py:107
 msgid "Answered at"
 msgstr "Répondu le"
 
-#: models/poll.py:106
+#: models/poll.py:109
 msgid "Response"
 msgstr "Réponse"
 
@@ -3497,15 +3509,19 @@ msgstr ""
 msgid "Your recorded response:"
 msgstr "Votre réponse enregistrée :"
 
-#: templates/repanier/poll_confirm.html:36
+#: templates/repanier/poll_confirm.html:39
 msgid "Comment:"
 msgstr "Commentaire :"
 
-#: templates/repanier/poll_confirm.html:42
+#: templates/repanier/poll_confirm.html:41
+msgid "Your response:"
+msgstr "Votre réponse :"
+
+#: templates/repanier/poll_confirm.html:49
 msgid "You did not record a response before the poll closed."
 msgstr "Vous n'avez pas enregistré de réponse avant la clôture du sondage."
 
-#: templates/repanier/poll_confirm.html:48
+#: templates/repanier/poll_confirm.html:55
 #, python-format
 msgid ""
 "\n"
@@ -3517,27 +3533,35 @@ msgstr ""
 "                Merci %(name)s, votre réponse a bien été enregistrée.\n"
 "              "
 
-#: templates/repanier/poll_confirm.html:66
+#: templates/repanier/poll_confirm.html:74
 msgid "Select one or more choices:"
 msgstr "Sélectionnez un ou plusieurs choix :"
 
-#: templates/repanier/poll_confirm.html:68
+#: templates/repanier/poll_confirm.html:76
 msgid "Select your choice:"
 msgstr "Sélectionnez votre choix :"
 
-#: templates/repanier/poll_confirm.html:91
+#: templates/repanier/poll_confirm.html:101
 msgid "Optional comment for the coordinators"
 msgstr "Commentaire facultatif pour les coordinateurs"
 
-#: templates/repanier/poll_confirm.html:98
+#: templates/repanier/poll_confirm.html:103
+msgid "Your response for the coordinators"
+msgstr "Votre réponse pour les coordinateurs"
+
+#: templates/repanier/poll_confirm.html:111
 msgid "Add a note or question if needed..."
 msgstr "Ajoutez une remarque ou une question si besoin..."
 
-#: templates/repanier/poll_confirm.html:103
+#: templates/repanier/poll_confirm.html:111
+msgid "Write your response..."
+msgstr "Écrivez votre réponse..."
+
+#: templates/repanier/poll_confirm.html:117
 msgid "Save my response"
 msgstr "Enregistrer ma réponse"
 
-#: templates/repanier/poll_confirm.html:109
+#: templates/repanier/poll_confirm.html:123
 #, python-format
 msgid ""
 "Responses open until\n"
@@ -4253,9 +4277,13 @@ msgstr "Choisissez votre site d'origine"
 msgid "I have no home site"
 msgstr "Je n'ai pas de site d'origine"
 
-#: views/poll.py:57
+#: views/poll.py:59
 msgid "Please select at least one option."
 msgstr "Veuillez sélectionner au moins une option."
+
+#: views/poll.py:61
+msgid "Please enter your response."
+msgstr "Veuillez saisir votre réponse."
 
 #: views/send_mail_to_coordinators_view.py:17
 msgid "Send an email to"
@@ -4504,9 +4532,17 @@ msgstr "Aucun"
 msgid "Summary"
 msgstr "Résumé"
 
-#: xlsx/xlsx_poll.py:88
+#: xlsx/xlsx_poll.py:78
+msgid "Responses received"
+msgstr "Réponses reçues"
+
+#: xlsx/xlsx_poll.py:99
 msgid "Detailed responses"
 msgstr "Réponses détaillées"
+
+#: xlsx/xlsx_poll.py:131
+msgid "Open-ended response"
+msgstr "Réponse ouverte"
 
 #: xlsx/xlsx_product.py:32
 msgid "Producer prices list"
@@ -4605,6 +4641,9 @@ msgstr "Stock restant"
 #: xlsx/xlsx_stock.py:86
 msgid "Stock check"
 msgstr "Contrôle du stock"
+
+#~ msgid "Please define at least two choices before sending."
+#~ msgstr "Veuillez définir au moins deux choix avant d'envoyer."
 
 #, python-format
 #~ msgid "Poll sent to %(count)d active members."

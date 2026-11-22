@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from repanier.models.poll import PollChoice, PollResponse, is_new_poll_enabled
+from repanier.models.poll import PollResponse, is_new_poll_enabled
 
 
 def poll_vote(request, token):
@@ -18,6 +18,7 @@ def poll_vote(request, token):
     )
     poll = poll_response.poll
     choices = list(poll.choices.all())
+    has_choices = bool(choices)
     allow_multiple = bool(getattr(poll, "allow_multiple", False))
 
     selected_choices = list(poll_response.choices.all())
@@ -32,6 +33,7 @@ def poll_vote(request, token):
                 "poll": poll,
                 "poll_response": poll_response,
                 "choices": choices,
+                "has_choices": has_choices,
                 "selected_choices": selected_choices,
                 "allow_multiple": allow_multiple,
                 "closed": True,
@@ -53,11 +55,13 @@ def poll_vote(request, token):
         if not allow_multiple and len(selected_ids) > 1:
             selected_ids = selected_ids[:1]
 
-        if not selected_ids:
+        if has_choices and not selected_ids:
             error_message = _("Please select at least one option.")
+        elif not has_choices and not comment:
+            error_message = _("Please enter your response.")
         else:
             chosen_objs = [c for c in choices if str(c.id) in selected_ids]
-            poll_response.choice = chosen_objs[0]
+            poll_response.choice = chosen_objs[0] if chosen_objs else None
             poll_response.comment = comment
             poll_response.answered_at = timezone.now()
             poll_response.save(update_fields=["choice", "comment", "answered_at"])
@@ -74,6 +78,7 @@ def poll_vote(request, token):
             "poll": poll,
             "poll_response": poll_response,
             "choices": choices,
+            "has_choices": has_choices,
             "selected_choices": selected_choices,
             "selected_id_set": selected_id_set,
             "allow_multiple": allow_multiple,

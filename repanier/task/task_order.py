@@ -28,9 +28,6 @@ def automatically_open():
     for permanence in Permanence.objects.filter(
         status=SaleStatus.PLANNED, automatic_closing_date__isnull=False
     ):
-        permanence.set_status(
-            old_status=SaleStatus.PLANNED, new_status=SaleStatus.WAIT_FOR_OPEN
-        )
         open_order(permanence.id)
         something_to_open = True
     return something_to_open
@@ -43,9 +40,19 @@ def open_order(permanence_id, send_mail=True):
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
     permanence = Permanence.objects.filter(id=permanence_id).first()
-    permanence.set_status(
-        old_status=SaleStatus.PLANNED, new_status=SaleStatus.WAIT_FOR_OPEN
-    )
+    if permanence is None:
+        logger.warning("Cannot open missing permanence %s", permanence_id)
+        return
+    try:
+        permanence.set_status(
+            old_status=SaleStatus.PLANNED, new_status=SaleStatus.WAIT_FOR_OPEN
+        )
+    except ValueError:
+        logger.info(
+            "Skipping duplicate or stale open-order task for permanence %s",
+            permanence_id,
+        )
+        return
 
     # Create offer items which can be purchased depending on selection in the admin
     producers_in_this_permanence = Producer.objects.filter(
@@ -202,12 +209,19 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
         if len(deliveries_id) == 0:
             return
 
-    permanence.set_status(
-        old_status=SaleStatus.OPENED,
-        new_status=SaleStatus.WAIT_FOR_CLOSED,
-        everything=everything,
-        deliveries_id=deliveries_id,
-    )
+    try:
+        permanence.set_status(
+            old_status=SaleStatus.OPENED,
+            new_status=SaleStatus.WAIT_FOR_CLOSED,
+            everything=everything,
+            deliveries_id=deliveries_id,
+        )
+    except ValueError:
+        logger.info(
+            "Skipping duplicate or stale close-order task for permanence %s",
+            permanence_id,
+        )
+        return
     permanence.close_order(
         everything=everything, deliveries_id=deliveries_id, send_mail=send_mail
     )

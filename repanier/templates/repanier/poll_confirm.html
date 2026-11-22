@@ -21,19 +21,26 @@
                                 {% trans "This poll is now closed. No new responses can be recorded." %}
                             </div>
 
-                            {% if selected_choices %}
+                            {% if selected_choices or poll_response.comment %}
                                 <div class="border rounded p-3 bg-light">
                                     <p class="fw-semibold mb-2">
                                         {% trans "Your recorded response:" %}
                                     </p>
-                                    <ul class="mb-0">
-                                        {% for c in selected_choices %}
-                                            <li>{{ c.label }}</li>
-                                        {% endfor %}
-                                    </ul>
+                                    {% if selected_choices %}
+                                        <ul class="mb-0">
+                                            {% for c in selected_choices %}
+                                                <li>{{ c.label }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
                                     {% if poll_response.comment %}
                                         <p class="mt-2 mb-0 small text-muted">
-                                            <strong>{% trans "Comment:" %}</strong> {{ poll_response.comment }}
+                                            {% if has_choices %}
+                                                <strong>{% trans "Comment:" %}</strong>
+                                            {% else %}
+                                                <strong>{% trans "Your response:" %}</strong>
+                                            {% endif %}
+                                            {{ poll_response.comment }}
                                         </p>
                                     {% endif %}
                                 </div>
@@ -60,42 +67,49 @@
                             <form method="post">
                                 {% csrf_token %}
 
-                                <fieldset class="mb-4">
-                                    <legend class="col-form-label fw-semibold pt-0 mb-2">
-                                        {% if allow_multiple %}
-                                            {% trans "Select one or more choices:" %}
-                                        {% else %}
-                                            {% trans "Select your choice:" %}
-                                        {% endif %}
-                                    </legend>
+                                {% if has_choices %}
+                                    <fieldset class="mb-4">
+                                        <legend class="col-form-label fw-semibold pt-0 mb-2">
+                                            {% if allow_multiple %}
+                                                {% trans "Select one or more choices:" %}
+                                            {% else %}
+                                                {% trans "Select your choice:" %}
+                                            {% endif %}
+                                        </legend>
 
-                                    {% for choice in choices %}
-                                        <div class="form-check mb-2">
-                                            <input
-                                                    class="form-check-input"
-                                                    type="{% if allow_multiple %}checkbox{% else %}radio{% endif %}"
-                                                    name="choices"
-                                                    id="id_choice_{{ choice.id }}"
-                                                    value="{{ choice.id }}"
-                                                    {% if choice.id in selected_id_set %}checked{% endif %}
-                                            >
-                                            <label class="form-check-label" for="id_choice_{{ choice.id }}">
-                                                {{ choice.label }}
-                                            </label>
-                                        </div>
-                                    {% endfor %}
-                                </fieldset>
+                                        {% for choice in choices %}
+                                            <div class="form-check mb-2">
+                                                <input
+                                                        class="form-check-input"
+                                                        type="{% if allow_multiple %}checkbox{% else %}radio{% endif %}"
+                                                        name="choices"
+                                                        id="id_choice_{{ choice.id }}"
+                                                        value="{{ choice.id }}"
+                                                        {% if choice.id in selected_id_set %}checked{% endif %}
+                                                >
+                                                <label class="form-check-label" for="id_choice_{{ choice.id }}">
+                                                    {{ choice.label }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </fieldset>
+                                {% endif %}
 
                                 <div class="mb-3">
                                     <label for="id_comment" class="form-label fw-semibold">
-                                        {% trans "Optional comment for the coordinators" %}
+                                        {% if has_choices %}
+                                            {% trans "Optional comment for the coordinators" %}
+                                        {% else %}
+                                            {% trans "Your response for the coordinators" %}
+                                        {% endif %}
                                     </label>
                                     <textarea
                                             id="id_comment"
                                             name="comment"
                                             rows="3"
                                             class="form-control"
-                                            placeholder="{% trans 'Add a note or question if needed...' %}"
+                                            placeholder="{% if has_choices %}{% trans 'Add a note or question if needed...' %}{% else %}{% trans 'Write your response...' %}{% endif %}"
+                                            {% if not has_choices %}required{% endif %}
                                     >{{ poll_response.comment }}</textarea>
                                 </div>
 

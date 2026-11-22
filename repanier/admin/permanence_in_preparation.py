@@ -1,5 +1,4 @@
 import logging
-import threading
 from urllib.parse import quote
 
 from django.contrib import admin
@@ -16,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 
 import repanier.apps
 from repanier.admin.admin_filter import AdminFilterPermanenceInPreparationStatus
+from repanier.admin.background import start_background_task
 from repanier.admin.forms import (
     OpenAndSendOfferForm,
     CloseAndSendOrderForm,
@@ -303,8 +303,12 @@ class PermanenceInPreparationAdmin(SaleAdmin):
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             send_mail = not ("apply-wo-mail" in request.POST)
             # open_order(permanence.id, send_mail)
-            t = threading.Thread(target=open_order, args=(permanence.id, send_mail))
-            t.start()
+            start_background_task(
+                f"open-order-{permanence.id}",
+                open_order,
+                permanence.id,
+                send_mail,
+            )
             user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
@@ -422,11 +426,14 @@ class PermanenceInPreparationAdmin(SaleAdmin):
                 return HttpResponseRedirect(self.get_redirect_to_change_list_url())
             send_mail = not ("apply-wo-mail" in request.POST)
             # close_order(permanence.id, everything, deliveries_to_be_send, send_mail)
-            t = threading.Thread(
-                target=close_order,
-                args=(permanence.id, everything, deliveries_to_be_send, send_mail),
+            start_background_task(
+                f"close-order-{permanence.id}",
+                close_order,
+                permanence.id,
+                everything,
+                deliveries_to_be_send,
+                send_mail,
             )
-            t.start()
             user_message = _("The orders are being sent.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)

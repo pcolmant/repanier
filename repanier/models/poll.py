@@ -36,6 +36,9 @@ class Poll(models.Model):
     )
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     sent_at = models.DateTimeField(_("Sent at"), null=True, blank=True)
+    email_send_started_at = models.DateTimeField(
+        _("Email task started at"), null=True, blank=True, editable=False
+    )
 
     class Meta:
         verbose_name = _("Poll / Decision")
