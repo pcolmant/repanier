@@ -278,7 +278,7 @@ class RepanierEmail(EmailMultiAlternatives):
     def send_startup_email(cls, argv_0):
         if argv_0 == "uwsgi":  # Maybe better != manage.py',
             subject = "Start of instance {}".format(settings.ALLOWED_HOSTS[0])
-            body = "<br>".join([
+            body = "\n".join([
                 f"[{settings.REPANIER_SETTINGS_GROUP_NAME} : {settings.ALLOWED_HOSTS[0]}]",
                 f"DJANGO_SETTINGS_LANGUAGE : {settings.DJANGO_SETTINGS_LANGUAGE}",
                 f"DJANGO_SETTINGS_LOGGING : {settings.DJANGO_SETTINGS_LOGGING}",
