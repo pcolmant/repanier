@@ -170,33 +170,36 @@ def send_closing_reminders(permanence):
                     defaults={"sent_at": sent_at},
                 )
 
-    for address, data in task_recipients.items():
-        board_notice_html = _build_board_task_notice(data["roles"])
-        html_body = _build_reminder_body(
-            permanence=permanence,
-            closing_label=closing_label,
-            order_url=order_url,
-            signature=order_responsible["html_signature"],
-            only_for_callback=only_for_callback,
-            board_notice_html=board_notice_html,
-        )
-        email = RepanierEmail(
-            email_nature=EmailNature.REMINDER,
-            permanence=permanence,
-            subject=subject,
-            html_body=html_body,
-            to=[address],
-            show_customer_may_unsubscribe=True,
-        )
-        sent = email.send_email()
-        sent_addresses.update(sent)
-        for address_sent in sent:
-            for customer_id in data["customer_ids"]:
-                PermanenceReminder.objects.update_or_create(
-                    permanence=permanence,
-                    customer_id=customer_id,
-                    defaults={"sent_at": sent_at},
-                )
+    if not (settings.DEBUG and sent_addresses):
+        for address, data in task_recipients.items():
+            board_notice_html = _build_board_task_notice(data["roles"])
+            html_body = _build_reminder_body(
+                permanence=permanence,
+                closing_label=closing_label,
+                order_url=order_url,
+                signature=order_responsible["html_signature"],
+                only_for_callback=only_for_callback,
+                board_notice_html=board_notice_html,
+            )
+            email = RepanierEmail(
+                email_nature=EmailNature.REMINDER,
+                permanence=permanence,
+                subject=subject,
+                html_body=html_body,
+                to=[address],
+                show_customer_may_unsubscribe=True,
+            )
+            sent = email.send_email()
+            if sent:
+                sent_addresses.update(sent)
+                for customer_id in data["customer_ids"]:
+                    PermanenceReminder.objects.update_or_create(
+                        permanence=permanence,
+                        customer_id=customer_id,
+                        defaults={"sent_at": sent_at},
+                    )
+                if settings.DEBUG:
+                    break
 
     all_recipients = set(standard_recipients) | set(task_recipients)
     if settings.DEBUG:
