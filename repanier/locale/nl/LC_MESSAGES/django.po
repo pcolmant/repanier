@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 19:06+0100\n"
-"PO-Revision-Date: 2026-11-20 19:22+0100\n"
+"POT-Creation-Date: 2026-11-22 13:16+0100\n"
+"PO-Revision-Date: 2026-11-22 13:30+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Repanier\n"
 "Language: nl\n"
@@ -17,13 +17,13 @@ msgstr ""
 
 #: admin/admin_filter.py:13 admin/permanence_in_preparation.py:288
 #: admin/purchase.py:63 admin/rule_of_3_per_customer.py:114
-#: admin/rule_of_3_per_product.py:83 cms_toolbar.py:139 models/permanence.py:96
+#: admin/rule_of_3_per_product.py:83 cms_toolbar.py:148 models/permanence.py:96
 #: models/producer.py:460 templates/admin/repanier/product/change_list.html:13
 #: xlsx/xlsx_order_customer.py:317
 msgid "Producers"
 msgstr "Producenten"
 
-#: admin/admin_filter.py:19 cms_toolbar.py:104 models/lut.py:176
+#: admin/admin_filter.py:19 cms_toolbar.py:106 models/lut.py:176
 msgid "Departments"
 msgstr "Afdelingen"
 
@@ -158,6 +158,7 @@ msgstr "Naam van de groep"
 #: admin/customer.py:365 admin/group.py:25 admin/group.py:28 admin/group.py:259
 #: models/producer.py:42 templates/repanier/who_is_who.html:62
 #: xlsx/xlsx_order_customer.py:73 xlsx/xlsx_order_customer.py:144
+#: xlsx/xlsx_poll.py:93
 msgid "Email"
 msgstr "E-mail"
 
@@ -341,7 +342,7 @@ msgid "Action performed."
 msgstr "Actie uitgevoerd."
 
 #: admin/permanence_done.py:194 admin/permanence_done.py:444
-#: admin/permanence_done.py:513 cms_toolbar.py:151 models/permanence.py:1834
+#: admin/permanence_done.py:513 cms_toolbar.py:160 models/permanence.py:1834
 #: templates/admin/repanier/permanencedone/change_list.html:15
 #: templates/repanier/admin/confirm_bank_movement.html:7
 #: templates/repanier/admin/confirm_invoice.html:12
@@ -478,7 +479,7 @@ msgstr "1 --- Het aanbod controleren"
 
 #: admin/permanence_in_preparation.py:229
 #: admin/permanence_in_preparation.py:250 admin/purchase.py:98
-#: cms_toolbar.py:133 models/customer.py:600 models/invoice.py:954
+#: cms_toolbar.py:142 models/customer.py:600 models/invoice.py:954
 msgid "Customers"
 msgstr "Klanten"
 
@@ -546,7 +547,7 @@ msgid "The permanence is back to \"Scheduled\"."
 msgstr "De uitdeling is terug naar de status \"Gepland\"."
 
 #: admin/permanence_in_preparation.py:612
-#: admin/permanence_in_preparation.py:643 cms_toolbar.py:144
+#: admin/permanence_in_preparation.py:643 cms_toolbar.py:153
 #: models/permanence.py:1827
 #: templates/repanier/admin/confirm_cancel_permanence.html:8
 #: templates/repanier/admin/confirm_close_order.html:8
@@ -600,6 +601,106 @@ msgstr "Aanbod wijzigen"
 #: admin/permanence_in_preparation.py:741
 msgid "Close orders"
 msgstr "Bestellingen sluiten"
+
+#: admin/poll.py:59 models/poll.py:99
+msgid "Selected choices"
+msgstr "Geselecteerde keuzes"
+
+#: admin/poll.py:85
+#, python-format
+msgid "[Reminder] %(title)s"
+msgstr "[Herinnering] %(title)s"
+
+#: admin/poll.py:259
+msgid "Polls created less than one year ago cannot be deleted."
+msgstr ""
+"Peilingen die minder dan een jaar geleden zijn aangemaakt, kunnen niet "
+"worden verwijderd."
+
+#: admin/poll.py:266 models/poll.py:107
+msgid "Responses"
+msgstr "Antwoorden"
+
+#: admin/poll.py:272
+msgid "Results summary"
+msgstr "Overzicht van de resultaten"
+
+#: admin/poll.py:275
+msgid "Save the poll first to see results."
+msgstr "Sla de peiling eerst op om de resultaten te bekijken."
+
+#: admin/poll.py:279
+msgid "No invitations sent yet."
+msgstr "Nog geen uitnodigingen verzonden."
+
+#: admin/poll.py:329 models/poll.py:66 xlsx/xlsx_poll.py:52
+msgid "Choice"
+msgstr "Keuze"
+
+#: admin/poll.py:330 xlsx/xlsx_poll.py:52
+msgid "Votes"
+msgstr "Stemmen"
+
+#: admin/poll.py:332 xlsx/xlsx_poll.py:77 xlsx/xlsx_poll.py:120
+msgid "No response yet"
+msgstr "Nog geen antwoord"
+
+#: admin/poll.py:337
+msgid "Send test poll to me"
+msgstr "Testpeiling naar mij sturen"
+
+#: admin/poll.py:345 admin/poll.py:451
+msgid "Please select exactly one poll."
+msgstr "Selecteer exact één peiling."
+
+#: admin/poll.py:354 admin/poll.py:419 admin/poll.py:468
+msgid "Please define at least two choices before sending."
+msgstr "Definieer minstens twee keuzes voor u verzendt."
+
+#: admin/poll.py:366
+msgid "No customer profile is linked to your user account."
+msgstr "Er is geen klantprofiel gekoppeld aan uw gebruikersaccount."
+
+#: admin/poll.py:377
+msgid "Your customer account has no email address."
+msgstr "Uw klantaccount heeft geen e-mailadres."
+
+#: admin/poll.py:397
+#, python-format
+msgid "Test poll email is being sent to %(email)s."
+msgstr "De testpeilingsmail wordt verzonden naar %(email)s."
+
+#: admin/poll.py:402
+msgid "Send poll email to active members"
+msgstr "Peilingsmail sturen naar actieve leden"
+
+#: admin/poll.py:410
+msgid "Please select exactly one poll to send."
+msgstr "Selecteer exact één peiling om te verzenden."
+
+#: admin/poll.py:439
+msgid "Poll emails are being sent in the background."
+msgstr "Les e-mails du sondage sont en cours d'envoi en arrière-plan."
+
+#: admin/poll.py:443
+msgid "Remind only members who haven't answered"
+msgstr "Herinner enkel leden die nog niet geantwoord hebben"
+
+#: admin/poll.py:460
+msgid "This poll is already closed."
+msgstr "Deze peiling is al gesloten."
+
+#: admin/poll.py:488
+msgid "Reminder emails are being sent in the background."
+msgstr "Les e-mails de rappel sont en cours d'envoi en arrière-plan."
+
+#: admin/poll.py:492
+msgid "Export results to Excel (.xlsx)"
+msgstr "Resultaten exporteren naar Excel (.xlsx)"
+
+#: admin/poll.py:500
+msgid "Please select exactly one poll to export."
+msgstr "Selecteer exact één peiling om te exporteren."
 
 #: admin/producer.py:74
 msgid "The short_basket_name {} is already used by another producer."
@@ -836,15 +937,15 @@ msgstr ""
 msgid "Your account is temporarily locked"
 msgstr "Je account is tijdelijk geblokkeerd"
 
-#: cms_toolbar.py:50 cms_toolbar.py:180
+#: cms_toolbar.py:52 cms_toolbar.py:189
 msgid "Page"
 msgstr "Pagina"
 
-#: cms_toolbar.py:57
+#: cms_toolbar.py:59
 msgid "Aliases"
 msgstr "Aliassen"
 
-#: cms_toolbar.py:79 templates/admin/base_site.html:33
+#: cms_toolbar.py:81 templates/admin/base_site.html:33
 #: templates/admin/change_form.html:19 templates/admin/change_list.html:30
 #: templates/admin/import_export/base.html:12
 #: templates/admin/repanier/bankaccount/change_list.html:12
@@ -872,61 +973,65 @@ msgstr "Aliassen"
 msgid "Manage"
 msgstr "Beheren"
 
-#: cms_toolbar.py:84
+#: cms_toolbar.py:86
 msgid "Parameters ..."
 msgstr "Parameters ..."
 
-#: cms_toolbar.py:89 models/configuration.py:520
+#: cms_toolbar.py:91 models/configuration.py:520
 msgid "Configuration"
 msgstr "Configuratie"
 
-#: cms_toolbar.py:94 models/permanence.py:576
+#: cms_toolbar.py:96 models/permanence.py:576
 msgid "Tasks"
 msgstr "Taken"
 
-#: cms_toolbar.py:99
+#: cms_toolbar.py:101
 msgid "Labels"
 msgstr "Labels"
 
-#: cms_toolbar.py:109 models/lut.py:137
+#: cms_toolbar.py:111 models/lut.py:137
 msgid "Delivery points"
 msgstr "Leveringspunten"
 
-#: cms_toolbar.py:112
+#: cms_toolbar.py:114
 msgid "Emails logs"
 msgstr "E-maillogboek"
 
-#: cms_toolbar.py:115
+#: cms_toolbar.py:117
 msgid "\"Flash\" ad"
 msgstr "\"Flash\"-advertentie"
 
-#: cms_toolbar.py:120
+#: cms_toolbar.py:122 models/poll.py:42
+msgid "Polls / Decisions"
+msgstr "Peilingen / Beslissingen"
+
+#: cms_toolbar.py:129
 msgid "Management team"
 msgstr "Beheersteam"
 
-#: cms_toolbar.py:127 models/group.py:13
+#: cms_toolbar.py:136 models/group.py:13
 msgid "Groups"
 msgstr "Groepen"
 
-#: cms_toolbar.py:156 models/bankaccount.py:221
+#: cms_toolbar.py:165 models/bankaccount.py:221
 #: templates/admin/repanier/bankaccount/change_list.html:13
 msgid "Bank account transactions"
 msgstr "Rekeninguittreksels"
 
-#: cms_toolbar.py:162
+#: cms_toolbar.py:171
 #: templates/admin/repanier/permanencedone/change_list.html:15
 msgid "Offers in archiving"
 msgstr "Aanbod in archivering"
 
-#: cms_toolbar.py:191 templates/admin/cms/page/tree/base_PCO.html:46
+#: cms_toolbar.py:200 templates/admin/cms/page/tree/base_PCO.html:46
 msgid "Page Tree"
 msgstr "Paginaboom"
 
-#: cms_toolbar.py:194
+#: cms_toolbar.py:203
 msgid "Files"
 msgstr "Bestanden"
 
-#: cms_toolbar.py:206
+#: cms_toolbar.py:215
 msgid "Help"
 msgstr "Hulp ❓"
 
@@ -1072,7 +1177,8 @@ msgstr "Sluiting"
 msgid "Delivery"
 msgstr "Levering"
 
-#: const.py:199 email/email_order.py:35 views/btn_confirm_order_ajax.py:38
+#: const.py:199 email/email_order.py:35 models/poll.py:63
+#: views/btn_confirm_order_ajax.py:38
 msgid "Order"
 msgstr "Bestelling"
 
@@ -1741,9 +1847,10 @@ msgstr "Geen mails van {} meer ontvangen"
 msgid "nameless"
 msgstr "naamloos"
 
-#: models/deliveryboard.py:13 models/purchase.py:141
+#: models/deliveryboard.py:13 models/poll.py:102 models/purchase.py:141
 #: xlsx/xlsx_invoice_export.py:203 xlsx/xlsx_invoice_import.py:105
-#: xlsx/xlsx_purchase_export.py:58 xlsx/xlsx_purchase_import.py:90
+#: xlsx/xlsx_poll.py:95 xlsx/xlsx_purchase_export.py:58
+#: xlsx/xlsx_purchase_import.py:90
 msgid "Comment"
 msgstr "Commentaar"
 
@@ -1779,7 +1886,7 @@ msgstr "Afleverstatus"
 msgid "Reason"
 msgstr "Reden"
 
-#: models/emaillog.py:68
+#: models/emaillog.py:68 models/poll.py:37
 msgid "Created at"
 msgstr "Aangemaakt op"
 
@@ -2237,6 +2344,72 @@ msgstr "Taaklijst van de uitdeling"
 #: models/permanenceboard.py:51
 msgid "Permanence boards"
 msgstr "Taaklijsten"
+
+#: models/poll.py:16
+msgid "Title"
+msgstr "Titel"
+
+#: models/poll.py:18 views/send_mail_to_coordinators_view.py:20
+msgid "Message"
+msgstr "Bericht"
+
+#: models/poll.py:19
+msgid "Rich HTML message included in the email sent to members."
+msgstr "Opgemaakt HTML-bericht in de e-mail naar de leden."
+
+#: models/poll.py:25
+msgid "Allow multiple choices"
+msgstr "Meerdere keuzes toestaan"
+
+#: models/poll.py:28
+msgid "If checked, members can select several options instead of just one."
+msgstr ""
+"Indien aangevinkt, kunnen leden meerdere opties selecteren in plaats van "
+"slechts één."
+
+#: models/poll.py:32 xlsx/xlsx_poll.py:37
+msgid "Deadline"
+msgstr "Deadline"
+
+#: models/poll.py:35
+msgid "Optional closing date and time for responses."
+msgstr "Optionele einddatum en -tijd voor antwoorden."
+
+#: models/poll.py:38 xlsx/xlsx_poll.py:30
+msgid "Sent at"
+msgstr "Verzonden op"
+
+#: models/poll.py:41
+msgid "Poll / Decision"
+msgstr "Peiling / Beslissing"
+
+#: models/poll.py:60 models/poll.py:79
+msgid "Poll"
+msgstr "Peiling"
+
+#: models/poll.py:62
+msgid "Choice label"
+msgstr "Keuzelabel"
+
+#: models/poll.py:67
+msgid "Choices"
+msgstr "Keuzes"
+
+#: models/poll.py:85 xlsx/xlsx_poll.py:92
+msgid "Member"
+msgstr "Lid"
+
+#: models/poll.py:93 xlsx/xlsx_poll.py:94
+msgid "Selected choice"
+msgstr "Gekozen optie"
+
+#: models/poll.py:103 xlsx/xlsx_poll.py:96
+msgid "Answered at"
+msgstr "Beantwoord op"
+
+#: models/poll.py:106
+msgid "Response"
+msgstr "Antwoord"
 
 #: models/producer.py:44
 msgid "Second email address"
@@ -3220,6 +3393,24 @@ msgstr "Geen aankoop gevonden"
 msgid "No order placed"
 msgstr "Geen bestelling geplaatst"
 
+#: templates/repanier/email/poll_invitation.html:4
+msgid "Friendly reminder: we haven't received your response yet."
+msgstr "Vriendelijke herinnering: we hebben uw antwoord nog niet ontvangen."
+
+#: templates/repanier/email/poll_invitation.html:8
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "Hallo %(name)s,"
+
+#: templates/repanier/email/poll_invitation.html:18
+msgid "Open the poll form"
+msgstr "Het peilingsformulier openen"
+
+#: templates/repanier/email/poll_invitation.html:24
+#, python-format
+msgid "Responses open until %(deadline)s."
+msgstr "Antwoorden mogelijk tot %(deadline)s."
+
 #: templates/repanier/my_profile_form.html:8
 msgid "Update done."
 msgstr "Bijwerking uitgevoerd."
@@ -3280,6 +3471,65 @@ msgstr "Geen aankoop"
 #: tests/test_admin_blocks.py:65
 msgid "No offer"
 msgstr "Geen aanbod"
+
+#: templates/repanier/poll_confirm.html:21
+msgid "This poll is now closed. No new responses can be recorded."
+msgstr ""
+"Deze peiling is nu gesloten. Er kunnen geen nieuwe antwoorden meer worden "
+"geregistreerd."
+
+#: templates/repanier/poll_confirm.html:27
+msgid "Your recorded response:"
+msgstr "Uw geregistreerd antwoord:"
+
+#: templates/repanier/poll_confirm.html:36
+msgid "Comment:"
+msgstr "Opmerking:"
+
+#: templates/repanier/poll_confirm.html:42
+msgid "You did not record a response before the poll closed."
+msgstr "U hebt geen antwoord geregistreerd voordat de peiling werd gesloten."
+
+#: templates/repanier/poll_confirm.html:48
+#, python-format
+msgid ""
+"\n"
+"                                        Thank you %(name)s, your response "
+"has been recorded.\n"
+"                                    "
+msgstr ""
+"\n"
+"                Bedankt %(name)s, uw antwoord is geregistreerd.\n"
+"              "
+
+#: templates/repanier/poll_confirm.html:66
+msgid "Select one or more choices:"
+msgstr "Selecteer een of meer keuzes:"
+
+#: templates/repanier/poll_confirm.html:68
+msgid "Select your choice:"
+msgstr "Selecteer uw keuze:"
+
+#: templates/repanier/poll_confirm.html:91
+msgid "Optional comment for the coordinators"
+msgstr "Optionele opmerking voor de coördinatoren"
+
+#: templates/repanier/poll_confirm.html:98
+msgid "Add a note or question if needed..."
+msgstr "Voeg indien nodig een opmerking of vraag toe..."
+
+#: templates/repanier/poll_confirm.html:103
+msgid "Save my response"
+msgstr "Mijn antwoord opslaan"
+
+#: templates/repanier/poll_confirm.html:109
+#, python-format
+msgid ""
+"Responses open until\n"
+"                                        %(deadline)s."
+msgstr ""
+"Antwoorden mogelijk tot\n"
+"                                        %(deadline)s."
 
 #: templates/repanier/producer_invoice_form.html:58
 msgid "Group reduction(s) granted"
@@ -3984,6 +4234,10 @@ msgstr "Kies uw thuissite"
 msgid "I have no home site"
 msgstr "Ik heb geen thuissite"
 
+#: views/poll.py:57
+msgid "Please select at least one option."
+msgstr "Selecteer minstens één optie."
+
 #: views/send_mail_to_coordinators_view.py:17
 msgid "Send an email to"
 msgstr "Een mail sturen naar"
@@ -3995,10 +4249,6 @@ msgstr "Mijn e-mailadres"
 #: views/send_mail_to_coordinators_view.py:19
 msgid "Subject"
 msgstr "Onderwerp"
-
-#: views/send_mail_to_coordinators_view.py:20
-msgid "Message"
-msgstr "Bericht"
 
 #: xlsx/export_tools.py:124 xlsx/xlsx_purchase_export.py:47
 #: xlsx/xlsx_purchase_import.py:53 xlsx/xlsx_purchase_import.py:58
@@ -4217,6 +4467,26 @@ msgstr "per produkt"
 msgid "duplicate, by basket"
 msgstr "duplicata, per mand"
 
+#: xlsx/xlsx_poll.py:16
+msgid "Results"
+msgstr "Resultaten"
+
+#: xlsx/xlsx_poll.py:34
+msgid "Not sent yet"
+msgstr "Nog niet verzonden"
+
+#: xlsx/xlsx_poll.py:41
+msgid "None"
+msgstr "Geen"
+
+#: xlsx/xlsx_poll.py:49
+msgid "Summary"
+msgstr "Samenvatting"
+
+#: xlsx/xlsx_poll.py:88
+msgid "Detailed responses"
+msgstr "Gedetailleerde antwoorden"
+
 #: xlsx/xlsx_product.py:32
 msgid "Producer prices list"
 msgstr "Producententarief"
@@ -4318,6 +4588,30 @@ msgstr "Resterende voorraad"
 #: xlsx/xlsx_stock.py:86
 msgid "Stock check"
 msgstr "Voorraadcontrole"
+
+#, python-format
+#~ msgid "Poll sent to %(count)d active members."
+#~ msgstr "Peiling verzonden naar %(count)d actieve leden."
+
+#, python-format
+#~ msgid "Reminder sent to %(count)d unanswered members."
+#~ msgstr "Herinnering verzonden naar %(count)d leden zonder antwoord."
+
+#~ msgid "Please click your choice below:"
+#~ msgstr "Klik hieronder op uw keuze:"
+
+#~ msgid "Your comment has been saved."
+#~ msgstr "Uw opmerking is opgeslagen."
+
+#~ msgid "Save comment"
+#~ msgstr "Opmerking opslaan"
+
+#~ msgid ""
+#~ "Changed your mind? You can simply click another option in the original "
+#~ "email while the poll remains open."
+#~ msgstr ""
+#~ "Van gedachten veranderd? U kunt gewoon op een andere optie in de "
+#~ "oorspronkelijke e-mail klikken zolang de peiling openstaat."
 
 #~ msgid ""
 #~ "You must now first reset your password because you tried to log in too "

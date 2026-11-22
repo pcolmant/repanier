@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block base_content %}
+    <div class="container-repanier py-4">
+        {#<div class="container my-5">#}
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h1 class="h4 mb-3">{{ poll.title }}</h1>
+
+                        {% if poll.description %}
+                            <div class="mb-4">
+                                {{ poll.description|safe }}
+                            </div>
+                        {% endif %}
+
+                        {% if closed %}
+                            <div class="alert alert-warning" role="alert">
+                                {% trans "This poll is now closed. No new responses can be recorded." %}
+                            </div>
+
+                            {% if selected_choices %}
+                                <div class="border rounded p-3 bg-light">
+                                    <p class="fw-semibold mb-2">
+                                        {% trans "Your recorded response:" %}
+                                    </p>
+                                    <ul class="mb-0">
+                                        {% for c in selected_choices %}
+                                            <li>{{ c.label }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% if poll_response.comment %}
+                                        <p class="mt-2 mb-0 small text-muted">
+                                            <strong>{% trans "Comment:" %}</strong> {{ poll_response.comment }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted small mb-0">
+                                    {% trans "You did not record a response before the poll closed." %}
+                                </p>
+                            {% endif %}
+                        {% else %}
+                            {% if saved %}
+                                <div class="alert alert-success" role="alert">
+                                    {% blocktrans with name=poll_response.customer.short_basket_name %}
+                                        Thank you {{ name }}, your response has been recorded.
+                                    {% endblocktrans %}
+                                </div>
+                            {% endif %}
+
+                            {% if error_message %}
+                                <div class="alert alert-danger" role="alert">
+                                    {{ error_message }}
+                                </div>
+                            {% endif %}
+
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <fieldset class="mb-4">
+                                    <legend class="col-form-label fw-semibold pt-0 mb-2">
+                                        {% if allow_multiple %}
+                                            {% trans "Select one or more choices:" %}
+                                        {% else %}
+                                            {% trans "Select your choice:" %}
+                                        {% endif %}
+                                    </legend>
+
+                                    {% for choice in choices %}
+                                        <div class="form-check mb-2">
+                                            <input
+                                                    class="form-check-input"
+                                                    type="{% if allow_multiple %}checkbox{% else %}radio{% endif %}"
+                                                    name="choices"
+                                                    id="id_choice_{{ choice.id }}"
+                                                    value="{{ choice.id }}"
+                                                    {% if choice.id in selected_id_set %}checked{% endif %}
+                                            >
+                                            <label class="form-check-label" for="id_choice_{{ choice.id }}">
+                                                {{ choice.label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </fieldset>
+
+                                <div class="mb-3">
+                                    <label for="id_comment" class="form-label fw-semibold">
+                                        {% trans "Optional comment for the coordinators" %}
+                                    </label>
+                                    <textarea
+                                            id="id_comment"
+                                            name="comment"
+                                            rows="3"
+                                            class="form-control"
+                                            placeholder="{% trans 'Add a note or question if needed...' %}"
+                                    >{{ poll_response.comment }}</textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-success">
+                                    {% trans "Save my response" %}
+                                </button>
+                            </form>
+
+                            {% if poll.deadline %}
+                                <p class="text-muted small mt-3 mb-0">
+                                    {% blocktrans with deadline=poll.deadline|date:"d/m/Y H:i" %}Responses open until
+                                        {{ deadline }}.{% endblocktrans %}
+                                </p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock base_content %}

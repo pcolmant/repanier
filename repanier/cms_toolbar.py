@@ -18,6 +18,7 @@ except:
 from cms.toolbar_pool import toolbar_pool
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from repanier.models.poll import is_new_poll_enabled
 
 from django.conf import settings
 
@@ -35,6 +36,7 @@ class RepanierToolbar(BasicToolbar):
         user = self.request.user
         if user.is_anonymous:
             return
+
         if ADMIN_MENU_IDENTIFIER in self.toolbar.menus:
             menu = self.toolbar.menus[ADMIN_MENU_IDENTIFIER]
             self.toolbar.remove_item(menu)
@@ -114,6 +116,13 @@ class RepanierToolbar(BasicToolbar):
         url = reverse("admin:repanier_notification_change", args=(1,))
         repanier_menu.add_sideframe_item(_('"Flash" ad'), url=url, position=position)
         position += 1
+
+        if is_new_poll_enabled():
+            repanier_menu.add_sideframe_item(
+                _("Polls / Decisions"),
+                url=reverse("admin:repanier_poll_changelist"),
+            )
+            position += 1
 
         url = reverse("admin:repanier_staff_changelist")
         repanier_menu.add_sideframe_item(

@@ -35,7 +35,9 @@ from repanier.views.order_class import OrderView
 from repanier.views.order_filter_view import order_filter_view
 from repanier.views.order_init_ajax import order_init_ajax
 from repanier.views.order_select_ajax import order_select_ajax
+from repanier.views.poll import poll_vote
 from repanier.views.producer_invoice_class import ProducerInvoiceView
+from repanier.views.reminder_view import reminder_view
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
 from repanier.views.task_class import TaskView
 from repanier.views.task_form_ajax import task_form_ajax
@@ -43,7 +45,6 @@ from repanier.views.task_history_class import TaskHistoryView
 from repanier.views.test_mail_config_ajax import test_mail_config_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
 from repanier.views.who_is_who_view import who_is_who_view
-from repanier.views.reminder_view import reminder_view
 
 app_name = "repanier"
 # https://consideratecode.com/2018/05/02/django-2-0-url-to-path-cheatsheet/
@@ -232,4 +233,5 @@ urlpatterns = [
     path("rappeler/<str:token>/",
          reminder_view,
          name="reminder_view"),
+    path("poll/<uuid:token>/", poll_vote, name="poll_vote"),
 ]

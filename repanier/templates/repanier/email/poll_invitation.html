@@ -1,0 +1,26 @@
+{% load i18n %}
+{% if is_reminder %}
+  <p style="color: #856404; background-color: #fff3cd; padding: 8px 12px; border-radius: 4px;">
+    {% trans "Friendly reminder: we haven't received your response yet." %}
+  </p>
+{% endif %}
+
+<p>{% blocktrans with name=customer.short_basket_name %}Hello {{ name }},{% endblocktrans %}</p>
+{% if poll.description %}
+  <div style="margin: 12px 0;">
+    {{ poll.description|safe }}
+  </div>
+{% endif %}
+
+<p style="margin: 18px 0;">
+  <a href="{{ form_url }}"
+     style="display: inline-block; padding: 10px 18px; background-color: #2a4329; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">
+    {% trans "Open the poll form" %}
+  </a>
+</p>
+
+{% if poll.deadline %}
+  <p style="color: #666666; font-size: 0.9em;">
+    {% blocktrans with deadline=poll.deadline|date:"d/m/Y H:i" %}Responses open until {{ deadline }}.{% endblocktrans %}
+  </p>
+{% endif %}

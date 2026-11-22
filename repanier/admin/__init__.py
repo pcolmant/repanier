@@ -19,3 +19,4 @@ from repanier.admin.producer import ProducerAdmin
 from repanier.admin.product import ProductAdmin
 from repanier.admin.staff import StaffWithUserDataAdmin
 from repanier.admin.emaillog import EmailLogAdmin
+from repanier.admin.poll import PollAdmin  # noqa: F401

@@ -30,3 +30,4 @@ from .purchase import PurchaseWoReceiver
 
 from .emaillog import EmailLog
 from .permanence_reminder import PermanenceReminder
+from .poll import Poll, PollChoice, PollResponse  # noqa: F401

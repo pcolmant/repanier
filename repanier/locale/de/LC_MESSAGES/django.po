@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 19:22+0100\n"
-"PO-Revision-Date: 2026-11-20 19:36+0100\n"
+"POT-Creation-Date: 2026-11-22 13:17+0100\n"
+"PO-Revision-Date: 2026-11-22 13:26+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Repanier\n"
 "Language: de\n"
@@ -17,13 +17,13 @@ msgstr ""
 
 #: admin/admin_filter.py:13 admin/permanence_in_preparation.py:288
 #: admin/purchase.py:63 admin/rule_of_3_per_customer.py:114
-#: admin/rule_of_3_per_product.py:83 cms_toolbar.py:139 models/permanence.py:96
+#: admin/rule_of_3_per_product.py:83 cms_toolbar.py:148 models/permanence.py:96
 #: models/producer.py:460 templates/admin/repanier/product/change_list.html:13
 #: xlsx/xlsx_order_customer.py:317
 msgid "Producers"
 msgstr "Erzeuger"
 
-#: admin/admin_filter.py:19 cms_toolbar.py:104 models/lut.py:176
+#: admin/admin_filter.py:19 cms_toolbar.py:106 models/lut.py:176
 msgid "Departments"
 msgstr "Abteilungen"
 
@@ -159,6 +159,7 @@ msgstr "Name der Gruppe"
 #: admin/customer.py:365 admin/group.py:25 admin/group.py:28 admin/group.py:259
 #: models/producer.py:42 templates/repanier/who_is_who.html:62
 #: xlsx/xlsx_order_customer.py:73 xlsx/xlsx_order_customer.py:144
+#: xlsx/xlsx_poll.py:93
 msgid "Email"
 msgstr "E-Mail"
 
@@ -345,7 +346,7 @@ msgid "Action performed."
 msgstr "Aktion durchgeführt."
 
 #: admin/permanence_done.py:194 admin/permanence_done.py:444
-#: admin/permanence_done.py:513 cms_toolbar.py:151 models/permanence.py:1834
+#: admin/permanence_done.py:513 cms_toolbar.py:160 models/permanence.py:1834
 #: templates/admin/repanier/permanencedone/change_list.html:15
 #: templates/repanier/admin/confirm_bank_movement.html:7
 #: templates/repanier/admin/confirm_invoice.html:12
@@ -483,7 +484,7 @@ msgstr "1 --- Das Angebot prüfen"
 
 #: admin/permanence_in_preparation.py:229
 #: admin/permanence_in_preparation.py:250 admin/purchase.py:98
-#: cms_toolbar.py:133 models/customer.py:600 models/invoice.py:954
+#: cms_toolbar.py:142 models/customer.py:600 models/invoice.py:954
 msgid "Customers"
 msgstr "Kunden"
 
@@ -551,7 +552,7 @@ msgid "The permanence is back to \"Scheduled\"."
 msgstr "Die Verteilung ist zurück im Status \"Geplant\"."
 
 #: admin/permanence_in_preparation.py:612
-#: admin/permanence_in_preparation.py:643 cms_toolbar.py:144
+#: admin/permanence_in_preparation.py:643 cms_toolbar.py:153
 #: models/permanence.py:1827
 #: templates/repanier/admin/confirm_cancel_permanence.html:8
 #: templates/repanier/admin/confirm_close_order.html:8
@@ -605,6 +606,106 @@ msgstr "Angebot ändern"
 #: admin/permanence_in_preparation.py:741
 msgid "Close orders"
 msgstr "Bestellungen schließen"
+
+#: admin/poll.py:59 models/poll.py:99
+msgid "Selected choices"
+msgstr "Ausgewählte Optionen"
+
+#: admin/poll.py:85
+#, python-format
+msgid "[Reminder] %(title)s"
+msgstr "[Erinnerung] %(title)s"
+
+#: admin/poll.py:259
+msgid "Polls created less than one year ago cannot be deleted."
+msgstr ""
+"Umfragen, die vor weniger als einem Jahr erstellt wurden, können nicht "
+"gelöscht werden."
+
+#: admin/poll.py:266 models/poll.py:107
+msgid "Responses"
+msgstr "Antworten"
+
+#: admin/poll.py:272
+msgid "Results summary"
+msgstr "Ergebnisübersicht"
+
+#: admin/poll.py:275
+msgid "Save the poll first to see results."
+msgstr "Speichern Sie die Umfrage zuerst, um Ergebnisse zu sehen."
+
+#: admin/poll.py:279
+msgid "No invitations sent yet."
+msgstr "Noch keine Einladungen versendet."
+
+#: admin/poll.py:329 models/poll.py:66 xlsx/xlsx_poll.py:52
+msgid "Choice"
+msgstr "Auswahl"
+
+#: admin/poll.py:330 xlsx/xlsx_poll.py:52
+msgid "Votes"
+msgstr "Stimmen"
+
+#: admin/poll.py:332 xlsx/xlsx_poll.py:77 xlsx/xlsx_poll.py:120
+msgid "No response yet"
+msgstr "Noch keine Antwort"
+
+#: admin/poll.py:337
+msgid "Send test poll to me"
+msgstr "Testumfrage an mich senden"
+
+#: admin/poll.py:345 admin/poll.py:451
+msgid "Please select exactly one poll."
+msgstr "Bitte wählen Sie genau eine Umfrage aus."
+
+#: admin/poll.py:354 admin/poll.py:419 admin/poll.py:468
+msgid "Please define at least two choices before sending."
+msgstr "Bitte legen Sie vor dem Versenden mindestens zwei Optionen fest."
+
+#: admin/poll.py:366
+msgid "No customer profile is linked to your user account."
+msgstr "Ihrem Benutzerkonto ist kein Kundenprofil zugeordnet."
+
+#: admin/poll.py:377
+msgid "Your customer account has no email address."
+msgstr "Ihr Kundenkonto hat keine E-Mail-Adresse."
+
+#: admin/poll.py:397
+#, python-format
+msgid "Test poll email is being sent to %(email)s."
+msgstr "Die Test-Umfrage-E-Mail wird an %(email)s gesendet."
+
+#: admin/poll.py:402
+msgid "Send poll email to active members"
+msgstr "Umfrage-E-Mail an aktive Mitglieder senden"
+
+#: admin/poll.py:410
+msgid "Please select exactly one poll to send."
+msgstr "Bitte wählen Sie genau eine Umfrage zum Senden aus."
+
+#: admin/poll.py:439
+msgid "Poll emails are being sent in the background."
+msgstr "Die Umfrage-E-Mails werden im Hintergrund gesendet."
+
+#: admin/poll.py:443
+msgid "Remind only members who haven't answered"
+msgstr "Nur Mitglieder erinnern, die noch nicht geantwortet haben"
+
+#: admin/poll.py:460
+msgid "This poll is already closed."
+msgstr "Diese Umfrage ist bereits geschlossen."
+
+#: admin/poll.py:488
+msgid "Reminder emails are being sent in the background."
+msgstr "Die Erinnerungs-E-Mails werden im Hintergrund gesendet."
+
+#: admin/poll.py:492
+msgid "Export results to Excel (.xlsx)"
+msgstr "Ergebnisse nach Excel (.xlsx) exportieren"
+
+#: admin/poll.py:500
+msgid "Please select exactly one poll to export."
+msgstr "Bitte wählen Sie genau eine Umfrage zum Exportieren aus."
 
 #: admin/producer.py:74
 msgid "The short_basket_name {} is already used by another producer."
@@ -846,15 +947,15 @@ msgstr ""
 msgid "Your account is temporarily locked"
 msgstr "Ihr Konto ist vorübergehend gesperrt"
 
-#: cms_toolbar.py:50 cms_toolbar.py:180
+#: cms_toolbar.py:52 cms_toolbar.py:189
 msgid "Page"
 msgstr "Seite"
 
-#: cms_toolbar.py:57
+#: cms_toolbar.py:59
 msgid "Aliases"
 msgstr "Aliase"
 
-#: cms_toolbar.py:79 templates/admin/base_site.html:33
+#: cms_toolbar.py:81 templates/admin/base_site.html:33
 #: templates/admin/change_form.html:19 templates/admin/change_list.html:30
 #: templates/admin/import_export/base.html:12
 #: templates/admin/repanier/bankaccount/change_list.html:12
@@ -882,61 +983,65 @@ msgstr "Aliase"
 msgid "Manage"
 msgstr "Verwalten"
 
-#: cms_toolbar.py:84
+#: cms_toolbar.py:86
 msgid "Parameters ..."
 msgstr "Parameter ..."
 
-#: cms_toolbar.py:89 models/configuration.py:520
+#: cms_toolbar.py:91 models/configuration.py:520
 msgid "Configuration"
 msgstr "Konfiguration"
 
-#: cms_toolbar.py:94 models/permanence.py:576
+#: cms_toolbar.py:96 models/permanence.py:576
 msgid "Tasks"
 msgstr "Aufgaben"
 
-#: cms_toolbar.py:99
+#: cms_toolbar.py:101
 msgid "Labels"
 msgstr "Labels"
 
-#: cms_toolbar.py:109 models/lut.py:137
+#: cms_toolbar.py:111 models/lut.py:137
 msgid "Delivery points"
 msgstr "Lieferpunkte"
 
-#: cms_toolbar.py:112
+#: cms_toolbar.py:114
 msgid "Emails logs"
 msgstr "E-Mail-Protokoll"
 
-#: cms_toolbar.py:115
+#: cms_toolbar.py:117
 msgid "\"Flash\" ad"
 msgstr "\"Flash\"-Anzeige"
 
-#: cms_toolbar.py:120
+#: cms_toolbar.py:122 models/poll.py:42
+msgid "Polls / Decisions"
+msgstr "Umfragen / Entscheidungen"
+
+#: cms_toolbar.py:129
 msgid "Management team"
 msgstr "Verwaltungsteam"
 
-#: cms_toolbar.py:127 models/group.py:13
+#: cms_toolbar.py:136 models/group.py:13
 msgid "Groups"
 msgstr "Gruppen"
 
-#: cms_toolbar.py:156 models/bankaccount.py:221
+#: cms_toolbar.py:165 models/bankaccount.py:221
 #: templates/admin/repanier/bankaccount/change_list.html:13
 msgid "Bank account transactions"
 msgstr "Kontobewegungen"
 
-#: cms_toolbar.py:162
+#: cms_toolbar.py:171
 #: templates/admin/repanier/permanencedone/change_list.html:15
 msgid "Offers in archiving"
 msgstr "Angebot in Archivierung"
 
-#: cms_toolbar.py:191 templates/admin/cms/page/tree/base_PCO.html:46
+#: cms_toolbar.py:200 templates/admin/cms/page/tree/base_PCO.html:46
 msgid "Page Tree"
 msgstr "Seitenbaum"
 
-#: cms_toolbar.py:194
+#: cms_toolbar.py:203
 msgid "Files"
 msgstr "Dateien"
 
-#: cms_toolbar.py:206
+#: cms_toolbar.py:215
 msgid "Help"
 msgstr "Hilfe ❓"
 
@@ -1083,7 +1188,8 @@ msgstr "Abschluss"
 msgid "Delivery"
 msgstr "Lieferung"
 
-#: const.py:199 email/email_order.py:35 views/btn_confirm_order_ajax.py:38
+#: const.py:199 email/email_order.py:35 models/poll.py:63
+#: views/btn_confirm_order_ajax.py:38
 msgid "Order"
 msgstr "Bestellung"
 
@@ -1751,9 +1857,10 @@ msgstr "Keine E-Mails von {} mehr erhalten"
 msgid "nameless"
 msgstr "namenlos"
 
-#: models/deliveryboard.py:13 models/purchase.py:141
+#: models/deliveryboard.py:13 models/poll.py:102 models/purchase.py:141
 #: xlsx/xlsx_invoice_export.py:203 xlsx/xlsx_invoice_import.py:105
-#: xlsx/xlsx_purchase_export.py:58 xlsx/xlsx_purchase_import.py:90
+#: xlsx/xlsx_poll.py:95 xlsx/xlsx_purchase_export.py:58
+#: xlsx/xlsx_purchase_import.py:90
 msgid "Comment"
 msgstr "Kommentar"
 
@@ -1789,7 +1896,7 @@ msgstr "Zustellstatus"
 msgid "Reason"
 msgstr "Grund"
 
-#: models/emaillog.py:68
+#: models/emaillog.py:68 models/poll.py:37
 msgid "Created at"
 msgstr "Erstellt am"
 
@@ -2250,6 +2357,71 @@ msgstr "Aufgabenplan der Verteilung"
 #: models/permanenceboard.py:51
 msgid "Permanence boards"
 msgstr "Aufgabenpläne"
+
+#: models/poll.py:16
+msgid "Title"
+msgstr "Titel"
+
+#: models/poll.py:18 views/send_mail_to_coordinators_view.py:20
+msgid "Message"
+msgstr "Nachricht"
+
+#: models/poll.py:19
+msgid "Rich HTML message included in the email sent to members."
+msgstr "Formatierte HTML-Nachricht in der E-Mail an die Mitglieder."
+
+#: models/poll.py:25
+msgid "Allow multiple choices"
+msgstr "Mehrfachauswahl erlauben"
+
+#: models/poll.py:28
+msgid "If checked, members can select several options instead of just one."
+msgstr ""
+"Wenn aktiviert, können Mitglieder mehrere Optionen statt nur einer auswählen."
+
+#: models/poll.py:32 xlsx/xlsx_poll.py:37
+msgid "Deadline"
+msgstr "Frist"
+
+#: models/poll.py:35
+msgid "Optional closing date and time for responses."
+msgstr "Optionales Enddatum und -uhrzeit für Antworten."
+
+#: models/poll.py:38 xlsx/xlsx_poll.py:30
+msgid "Sent at"
+msgstr "Gesendet am"
+
+#: models/poll.py:41
+msgid "Poll / Decision"
+msgstr "Umfrage / Entscheidung"
+
+#: models/poll.py:60 models/poll.py:79
+msgid "Poll"
+msgstr "Umfrage"
+
+#: models/poll.py:62
+msgid "Choice label"
+msgstr "Bezeichnung der Option"
+
+#: models/poll.py:67
+msgid "Choices"
+msgstr "Optionen"
+
+#: models/poll.py:85 xlsx/xlsx_poll.py:92
+msgid "Member"
+msgstr "Mitglied"
+
+#: models/poll.py:93 xlsx/xlsx_poll.py:94
+msgid "Selected choice"
+msgstr "Gewählte Option"
+
+#: models/poll.py:103 xlsx/xlsx_poll.py:96
+msgid "Answered at"
+msgstr "Beantwortet am"
+
+#: models/poll.py:106
+msgid "Response"
+msgstr "Antwort"
 
 #: models/producer.py:44
 msgid "Second email address"
@@ -3239,6 +3411,24 @@ msgstr "Kein Einkauf gefunden"
 msgid "No order placed"
 msgstr "Keine Bestellung aufgegeben"
 
+#: templates/repanier/email/poll_invitation.html:4
+msgid "Friendly reminder: we haven't received your response yet."
+msgstr "Freundliche Erinnerung: Wir haben Ihre Antwort noch nicht erhalten."
+
+#: templates/repanier/email/poll_invitation.html:8
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "\tHallo %(name)s,"
+
+#: templates/repanier/email/poll_invitation.html:18
+msgid "Open the poll form"
+msgstr "Umfrageformular öffnen"
+
+#: templates/repanier/email/poll_invitation.html:24
+#, python-format
+msgid "Responses open until %(deadline)s."
+msgstr "Antworten möglich bis %(deadline)s."
+
 #: templates/repanier/my_profile_form.html:8
 msgid "Update done."
 msgstr "Aktualisierung durchgeführt."
@@ -3299,6 +3489,65 @@ msgstr "Kein Einkauf"
 #: tests/test_admin_blocks.py:65
 msgid "No offer"
 msgstr "Kein Angebot"
+
+#: templates/repanier/poll_confirm.html:21
+msgid "This poll is now closed. No new responses can be recorded."
+msgstr ""
+"Diese Umfrage ist jetzt geschlossen. Es können keine neuen Antworten mehr "
+"erfasst werden."
+
+#: templates/repanier/poll_confirm.html:27
+msgid "Your recorded response:"
+msgstr "Ihre gespeicherte Antwort:"
+
+#: templates/repanier/poll_confirm.html:36
+msgid "Comment:"
+msgstr "Kommentar:"
+
+#: templates/repanier/poll_confirm.html:42
+msgid "You did not record a response before the poll closed."
+msgstr "Sie haben vor Schließung der Umfrage keine Antwort abgegeben."
+
+#: templates/repanier/poll_confirm.html:48
+#, python-format
+msgid ""
+"\n"
+"                                        Thank you %(name)s, your response "
+"has been recorded.\n"
+"                                    "
+msgstr ""
+"\n"
+"                Vielen Dank %(name)s, Ihre Antwort wurde gespeichert.\n"
+"              "
+
+#: templates/repanier/poll_confirm.html:66
+msgid "Select one or more choices:"
+msgstr "Wählen Sie eine oder mehrere Optionen aus:"
+
+#: templates/repanier/poll_confirm.html:68
+msgid "Select your choice:"
+msgstr "\tWählen Sie Ihre Option aus:"
+
+#: templates/repanier/poll_confirm.html:91
+msgid "Optional comment for the coordinators"
+msgstr "Optionaler Kommentar für die Koordinatoren"
+
+#: templates/repanier/poll_confirm.html:98
+msgid "Add a note or question if needed..."
+msgstr "Bei Bedarf eine Notiz oder Frage hinzufügen..."
+
+#: templates/repanier/poll_confirm.html:103
+msgid "Save my response"
+msgstr "Meine Antwort speichern"
+
+#: templates/repanier/poll_confirm.html:109
+#, python-format
+msgid ""
+"Responses open until\n"
+"                                        %(deadline)s."
+msgstr ""
+"Antworten möglich bis\n"
+"                                        %(deadline)s."
 
 #: templates/repanier/producer_invoice_form.html:58
 msgid "Group reduction(s) granted"
@@ -4008,6 +4257,10 @@ msgstr "Wählen Sie Ihre Heimat-Website"
 msgid "I have no home site"
 msgstr "Ich habe keine Heimat-Website"
 
+#: views/poll.py:57
+msgid "Please select at least one option."
+msgstr "Bitte wählen Sie mindestens eine Option aus."
+
 #: views/send_mail_to_coordinators_view.py:17
 msgid "Send an email to"
 msgstr "Eine E-Mail senden an"
@@ -4019,10 +4272,6 @@ msgstr "Meine E-Mail-Adresse"
 #: views/send_mail_to_coordinators_view.py:19
 msgid "Subject"
 msgstr "Betreff"
-
-#: views/send_mail_to_coordinators_view.py:20
-msgid "Message"
-msgstr "Nachricht"
 
 #: xlsx/export_tools.py:124 xlsx/xlsx_purchase_export.py:47
 #: xlsx/xlsx_purchase_import.py:53 xlsx/xlsx_purchase_import.py:58
@@ -4242,6 +4491,26 @@ msgstr "nach Produkt"
 msgid "duplicate, by basket"
 msgstr "Duplikat, nach Korb"
 
+#: xlsx/xlsx_poll.py:16
+msgid "Results"
+msgstr "Ergebnisse"
+
+#: xlsx/xlsx_poll.py:34
+msgid "Not sent yet"
+msgstr "Noch nicht gesendet"
+
+#: xlsx/xlsx_poll.py:41
+msgid "None"
+msgstr "Keine"
+
+#: xlsx/xlsx_poll.py:49
+msgid "Summary"
+msgstr "Zusammenfassung"
+
+#: xlsx/xlsx_poll.py:88
+msgid "Detailed responses"
+msgstr "Detaillierte Antworten"
+
 #: xlsx/xlsx_product.py:32
 msgid "Producer prices list"
 msgstr "Produzententarif"
@@ -4342,6 +4611,30 @@ msgstr "Verbleibender Bestand"
 #: xlsx/xlsx_stock.py:86
 msgid "Stock check"
 msgstr "Bestandskontrolle"
+
+#, python-format
+#~ msgid "Poll sent to %(count)d active members."
+#~ msgstr "Umfrage an %(count)d aktive Mitglieder gesendet."
+
+#, python-format
+#~ msgid "Reminder sent to %(count)d unanswered members."
+#~ msgstr "Erinnerung an %(count)d Mitglieder ohne Antwort gesendet."
+
+#~ msgid "Please click your choice below:"
+#~ msgstr "Bitte klicken Sie unten auf Ihre Auswahl:"
+
+#~ msgid "Your comment has been saved."
+#~ msgstr "Ihr Kommentar wurde gespeichert."
+
+#~ msgid "Save comment"
+#~ msgstr "Kommentar speichern"
+
+#~ msgid ""
+#~ "Changed your mind? You can simply click another option in the original "
+#~ "email while the poll remains open."
+#~ msgstr ""
+#~ "Haben Sie es sich anders überlegt? Sie können einfach eine andere Option "
+#~ "in der ursprünglichen E-Mail anklicken, solange die Umfrage geöffnet ist."
 
 #~ msgid ""
 #~ "You must now first reset your password because you tried to log in too "
