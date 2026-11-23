@@ -138,4 +138,18 @@ class ConfigurationAdmin(admin.ModelAdmin):
             ),
         ]
 
+        fieldsets += [
+            (
+                _("Operating mode & progressive features"),
+                {
+                    "fields": (
+                        "accounting_mode",
+                        "use_groups",
+                        "use_invoice_by_basket",
+                        "use_deposits",
+                    ),
+                },
+            ),
+        ]
+
         return fieldsets

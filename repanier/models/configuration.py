@@ -12,7 +12,7 @@ from djangocms_text_ckeditor.fields import HTMLField
 from django.conf import settings
 from django.db import models
 from repanier.const import (
-    AuthGroup, Currency, DECIMAL_ZERO, EMPTY_STRING, PermanenceName
+    AuthGroup, Currency, DECIMAL_ZERO, EMPTY_STRING, PermanenceName, AccountingMode
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 
@@ -170,6 +170,36 @@ class Configuration(models.Model):
         configuration="CKEDITOR_SETTINGS_MODEL2",
         default=EMPTY_STRING,
         blank=True,
+    )
+    accounting_mode = models.CharField(
+        _("Accounting mode"),
+        max_length=3,
+        choices=AccountingMode.choices,
+        default=AccountingMode.INTERNAL_BANK,
+        help_text=_(
+            "Adapts the accounting workflow, closing screens and toolbar menus to the group's organization."
+        ),
+    )
+    use_groups = models.BooleanField(
+        _("Enable member groups / delivery points"),
+        default=True,
+        help_text=_(
+            "Displays group and delivery point management in the toolbar and order forms."
+        ),
+    )
+    use_invoice_by_basket = models.BooleanField(
+        _("Enable producers invoicing by prepared basket"),
+        default=True,
+        help_text=_(
+            "Displays the 'invoice by basket' option on producer records."
+        ),
+    )
+    use_deposits = models.BooleanField(
+        _("Enable returnable deposits"),
+        default=True,
+        help_text=_(
+            "Displays deposit fields and columns on products, orders and exports."
+        ),
     )
 
     def clean(self):

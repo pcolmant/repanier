@@ -9,6 +9,8 @@ from django.utils.translation import get_language_from_request
 from djangocms_alias.cms_toolbars import ALIAS_MENU_IDENTIFIER
 from djangocms_alias.constants import LIST_ALIAS_URL_NAME
 from djangocms_alias.models import Alias
+from repanier import apps
+from repanier.const import AccountingMode
 
 try:
     from cms.cms_toolbars import HELP_MENU_IDENTIFIER, HELP_MENU_BREAK
@@ -130,11 +132,12 @@ class RepanierToolbar(BasicToolbar):
         )
         position += 1
 
-        url = "{}?is_active__exact=1".format(
-            reverse("admin:repanier_group_changelist")
-        )
-        repanier_menu.add_sideframe_item(_("Groups"), url=url, position=position)
-        position += 1
+        if apps.REPANIER_SETTINGS_USE_GROUPS:
+            url = "{}?is_active__exact=1".format(
+                reverse("admin:repanier_group_changelist")
+            )
+            repanier_menu.add_sideframe_item(_("Groups"), url=url, position=position)
+            position += 1
 
         url = "{}?is_active__exact=1".format(
             reverse("admin:repanier_customer_changelist")
@@ -154,17 +157,23 @@ class RepanierToolbar(BasicToolbar):
         )
         position += 1
 
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+        accounting_mode = apps.REPANIER_SETTINGS_ACCOUNTING_MODE or AccountingMode.INTERNAL_BANK
+        manage_accounting = (
+                settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING
+                and accounting_mode != AccountingMode.SIMPLE_ORDERS
+        )
+        if manage_accounting:
             url = reverse("admin:repanier_permanencedone_changelist")
             repanier_menu.add_sideframe_item(
                 _("Offers in payment"), url=url, position=position
             )
             position += 1
-            url = reverse("admin:repanier_bankaccount_changelist")
-            repanier_menu.add_sideframe_item(
-                _("Bank account transactions"), url=url, position=position
-            )
-            position += 1
+            if accounting_mode == AccountingMode.INTERNAL_BANK:
+                url = reverse("admin:repanier_bankaccount_changelist")
+                repanier_menu.add_sideframe_item(
+                    _("Bank account transactions"), url=url, position=position
+                )
+                position += 1
         else:
             url = reverse("admin:repanier_permanencedone_changelist")
             repanier_menu.add_sideframe_item(

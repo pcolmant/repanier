@@ -233,3 +233,14 @@ class EmailDeliveryStatus(models.TextChoices):
     HARD_BOUNCE = "400", _("Hard bounce")
     BLOCKED = "420", _("Blocked")
     SPAM = "500", _("Spam")
+
+class AccountingMode(models.TextChoices):
+    INTERNAL_BANK = "100", _(
+        "Buying group with shared cash / bank account (member balances & producer payments)"
+    )
+    PRODUCER_SELLER = "200", _(
+        "Direct-selling producer (no central cash account, payment collected by producer)"
+    )
+    SIMPLE_ORDERS = "300", _(
+        "Simple orders without accounting tracking"
+    )

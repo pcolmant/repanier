@@ -101,6 +101,12 @@ def configuration_post_save(sender, **kwargs):
             apps.REPANIER_SETTINGS_HOME_SITE = config.home_site
         else:
             apps.REPANIER_SETTINGS_HOME_SITE = "/"
+
+        apps.REPANIER_SETTINGS_ACCOUNTING_MODE = config.accounting_mode
+        apps.REPANIER_SETTINGS_USE_GROUPS = config.use_groups
+        apps.REPANIER_SETTINGS_USE_INVOICE_BY_BASKET = config.use_invoice_by_basket
+        apps.REPANIER_SETTINGS_USE_DEPOSITS = config.use_deposits
+
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)
         toolbar_pool.register(repanier.cms_toolbar.RepanierToolbar)
