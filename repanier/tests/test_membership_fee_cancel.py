@@ -10,7 +10,7 @@ import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from repanier.const import BankMovement, OrderUnit, SaleStatus, Vat
@@ -39,6 +39,7 @@ def utc_today():
     return timezone.now().date()
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class MembershipFeeCancelRestoreTest(TestCase):
     def build_home_run(self, valid_until):
         """A member buys one product, the group forces the fee at close."""

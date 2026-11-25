@@ -18,9 +18,13 @@ from repanier.xlsx.const import ROW_VALUE, ROW_FORMAT
 
 
 def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
+    if getattr(permanence, "is_demo", False):
+        return wb
     """
     Exporte le détail des mouvements bancaires (soldes, entrées/sorties de caisse) pour une permanence.
     """
+    if getattr(permanence, "is_demo", False):
+        return wb
 
     wb, ws = new_landscape_a4_sheet(
         wb, "{} {}".format(_("Dashboard"), sheet_name), permanence

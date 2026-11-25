@@ -19,6 +19,7 @@ from repanier.tools import (
     get_repanier_template_name,
     get_html_basket_message,
 )
+from repanier.accounting_policy import AccountingPolicy
 
 template_communication_confirm_order = get_repanier_template_name(
     "communication_confirm_order.html"
@@ -48,7 +49,7 @@ def delivery_ajax(request):
         raise Http404
 
     delivery_id = sint(request.GET.get("delivery", 0))
-    if customer.group is not None:
+    if AccountingPolicy.use_groups() and customer.group is not None:
         # The customer is member of a group
         qs = DeliveryBoard.objects.filter(
             Q(

@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+    <h1>{% translate "Accounting exports" %}</h1>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        {% if REPANIER_MANAGE_MEMBER_BALANCES %}
+        <button type="submit" name="download" value="producer"
+                form="accounting-export-form"
+                class="btn btn-success">
+            {% translate "Clôture fournisseurs" %} - 1 clic
+        </button>
+        <button type="submit" name="download" value="member"
+                form="accounting-export-form"
+                class="btn btn-primary">
+            {% translate "Comptes membres" %} - 1 clic
+        </button>
+        {% endif %}
+    </div>
+    <form method="get" id="accounting-export-form">
+        <table>
+            {{ form.as_table }}
+        </table>
+        <button type="submit">{% translate "Preview" %}</button>
+        <button type="submit" name="download" value="producer">
+            {% translate "Clôture fournisseurs" %}
+        </button>
+        {% if REPANIER_MANAGE_MEMBER_BALANCES %}
+            <button type="submit" name="download" value="member">
+                {% translate "Comptes membres" %}
+            </button>
+        {% endif %}
+        <button type="submit" name="download" value="preparation_trace">
+            {% translate "Journal de traçabilité terrain (permanences réelles)" %}
+        </button>
+        <button type="submit" name="download" value="purchase_lines">
+            {% translate "Lignes d’achat (filtre offre)" %}
+        </button>
+    </form>
+
+    {% if producer_preview %}
+        <h2>{% translate "Producer closures" %}</h2>
+        <ul>
+            {% for invoice in producer_preview %}
+                <li>{{ invoice.permanence }} — {{ invoice.producer }} — {{ invoice.get_total_price_with_tax }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if member_preview %}
+        <h2>{% translate "Member accounts" %}</h2>
+        <ul>
+            {% for customer in member_preview %}
+                <li>{{ customer.short_basket_name }} — {{ customer.balance }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

@@ -20,3 +20,6 @@ from repanier.admin.product import ProductAdmin
 from repanier.admin.staff import StaffWithUserDataAdmin
 from repanier.admin.emaillog import EmailLogAdmin
 from repanier.admin.poll import PollAdmin  # noqa: F401
+from repanier.admin.distribution import (  # noqa: F401
+    OfferAdmin, DistributionEventAdmin, PickupSlotAdmin, ProductAliasAdmin,
+)

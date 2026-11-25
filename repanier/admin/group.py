@@ -18,6 +18,7 @@ from repanier.models import Customer
 from repanier.models import LUT_DeliveryPoint
 from repanier.models.group import Group
 from repanier.xlsx.xlsx_invoice import export_invoice
+from repanier.accounting_policy import AccountingPolicy
 
 
 class UserDataForm(forms.ModelForm):
@@ -241,13 +242,22 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
     list_max_show_all = 16
 
     def has_delete_permission(self, request, customer=None):
+        if not AccountingPolicy.use_groups():
+            return False
         return request.user.is_repanier_admin
 
     def has_add_permission(self, request):
+        if not AccountingPolicy.use_groups():
+            return False
         user = request.user
-        return user.is_order_manager or user.is_invoice_manager
+        return (
+            getattr(user, "is_order_manager", False)
+            or getattr(user, "is_invoice_manager", False)
+        )
 
     def has_change_permission(self, request, group=None):
+        if not AccountingPolicy.use_groups():
+            return False
         return self.has_delete_permission(request)
 
     def get_email(self, group):
@@ -280,6 +290,8 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         return actions
 
     def get_fieldsets(self, request, group=None):
+        if not AccountingPolicy.use_groups():
+            return ((None, {"fields": ()}),)
         fields_advanced = None
         fields_basic = [
             "short_basket_name",

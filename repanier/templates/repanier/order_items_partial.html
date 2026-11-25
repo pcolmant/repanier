@@ -56,7 +56,7 @@
                         {% if forloop.last %}</div>{% endif %}
                     {% endfor %}
 
-                    {% if offer.unit_deposit != 0 %}
+                    {% if REPANIER_USE_DEPOSITS and offer.unit_deposit != 0 %}
                     <small class="text-muted d-block" style="font-size: 0.75rem;">♻ {{ offer.unit_deposit }}</small>
                     {% endif %}
                 </div>

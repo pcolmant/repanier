@@ -457,7 +457,7 @@ class EmailOnlySignInTest(TestCase):
             follow=True,
         )
         self.assertNotIn("_auth_user_id", self.client.session)
-        configuration = Configuration.objects.filter(id=DECIMAL_ONE).first()
+        configuration = Configuration.objects.first()
         self.assertEqual(configuration.login_attempt_counter, 1)
         self.assertIsNone(configuration.login_locked_on)
 

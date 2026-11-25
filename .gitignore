@@ -21,4 +21,7 @@ cache
 /mysite/media/
 /setup/
 setup/cron/
-repanier/management/commands/
+repanier/management/commands/*
+!repanier/management/commands/auto_validate_group_deliveries.py
+!repanier/management/commands/compute_producer_benchmarks.py
+!repanier/management/commands/suggest_product_aliases.py

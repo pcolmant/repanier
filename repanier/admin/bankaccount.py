@@ -1,6 +1,7 @@
 from dal import autocomplete
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from import_export import resources, fields
@@ -15,6 +16,7 @@ from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.producer import Producer
+from repanier.accounting_policy import AccountingPolicy
 from repanier.xlsx.widget import (
     IdWidget,
     TwoMoneysWidget,
@@ -28,7 +30,7 @@ class BankAccountResource(resources.ModelResource):
     id = fields.Field(attribute="id", widget=IdWidget(), readonly=True)
     permanence = fields.Field(attribute="permanence", readonly=True)
     operation_date = fields.Field(attribute="operation_date", widget=DateWidgetExcel())
-    operation_status = fields.Field(attribute="operation_status", readonly=True)
+    operation_status = fields.Field(attribute="operation_status")
     producer_name = fields.Field(
         attribute="producer",
         widget=ProducerNameWidget(Producer, field="short_profile_name"),
@@ -52,17 +54,32 @@ class BankAccountResource(resources.ModelResource):
         readonly=True,
     )
 
+    def __init__(self, *args, allow_unusual_amount_direction=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.allow_unusual_amount_direction = allow_unusual_amount_direction
+
     def before_save_instance(self, instance, row, **kwargs):
         """
         Override to add additional logic.
         """
         if instance.id is None:
+            allow_unusual = kwargs.pop(
+                "allow_unusual_amount_direction",
+                getattr(self, "allow_unusual_amount_direction", False),
+            )
             if instance.bank_amount_out is None:
                 instance.bank_amount_out = DECIMAL_ZERO
             if instance.bank_amount_in is None:
                 instance.bank_amount_in = DECIMAL_ZERO
             if instance.producer is None and instance.customer is None:
-                if instance.bank_amount_out != DECIMAL_ZERO:
+                explicit_statuses = (
+                    BankMovement.PAYMENT_RECEIVED,
+                    BankMovement.PRODUCER_WAIVER,
+                    BankMovement.PRODUCER_CLAIMED_AMOUNT,
+                    BankMovement.GROUP_EXPENSE,
+                    BankMovement.PRODUCER_DRAW,
+                )
+                if instance.operation_status not in explicit_statuses and instance.bank_amount_out != DECIMAL_ZERO:
                     only_one_target = ProducerInvoice.objects.filter(
                         status=SaleStatus.SEND,
                         total_price_with_tax=instance.bank_amount_out,
@@ -76,7 +93,10 @@ class BankAccountResource(resources.ModelResource):
                             .first()
                             .producer
                         )
-                elif instance.bank_amount_in != DECIMAL_ZERO:
+                elif (
+                    instance.operation_status not in explicit_statuses
+                    and instance.bank_amount_in != DECIMAL_ZERO
+                ):
                     only_one_target = CustomerInvoice.objects.filter(
                         status=SaleStatus.SEND,
                         total_price_with_tax=instance.bank_amount_in,
@@ -90,8 +110,28 @@ class BankAccountResource(resources.ModelResource):
                             .first()
                             .customer
                         )
-                if instance.producer is None and instance.customer is None:
-                    raise ValueError(_("No producer nor customer found."))
+            unusual_direction = BankAccount.validate_explicit_movement(
+                operation_status=instance.operation_status,
+                producer=instance.producer,
+                customer=instance.customer,
+                bank_amount_in=instance.bank_amount_in,
+                bank_amount_out=instance.bank_amount_out,
+                customer_invoice=instance.customer_invoice,
+                producer_invoice=instance.producer_invoice,
+                allow_unusual_direction=allow_unusual,
+            )
+            if unusual_direction:
+                comment = (instance.operation_comment or EMPTY_STRING).strip()
+                if not comment:
+                    raise ValueError(
+                        _(
+                            "An operation with an unusual amount direction requires a comment."
+                        )
+                    )
+                marker = BankAccount.UNUSUAL_DIRECTION_CONFIRMED_MARKER
+                if marker not in comment:
+                    trace = f"{marker}: {comment}"
+                    instance.operation_comment = trace[:100]
             if instance.producer is not None and instance.customer is not None:
                 raise ValueError(_("Only a customer or a producer may be entered."))
             if instance.producer is not None:
@@ -214,6 +254,15 @@ class ProducerAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class BankAccountDataForm(forms.ModelForm):
+    confirm_unusual_direction = forms.BooleanField(
+        label=_("Confirm unusual amount direction"),
+        required=False,
+        help_text=_(
+            "Required only for an unusual cash-in direction on a producer waiver "
+            "or producer claimed amount."
+        ),
+    )
+
     customer = forms.ModelChoiceField(
         label=_("Customer"),
         queryset=Customer.objects.filter(is_active=True),
@@ -291,11 +340,56 @@ class BankAccountDataForm(forms.ModelForm):
             return
         customer = self.cleaned_data.get("customer")
         producer = self.cleaned_data.get("producer")
+        operation_status = self.cleaned_data.get("operation_status")
+        bank_amount_in = self.cleaned_data.get("bank_amount_in") or DECIMAL_ZERO
+        bank_amount_out = self.cleaned_data.get("bank_amount_out") or DECIMAL_ZERO
+        confirmed = self.cleaned_data.get("confirm_unusual_direction", False)
+        try:
+            unusual_direction = BankAccount.validate_explicit_movement(
+                operation_status=operation_status,
+                producer=producer,
+                customer=customer,
+                bank_amount_in=bank_amount_in,
+                bank_amount_out=bank_amount_out,
+                customer_invoice=self.instance.customer_invoice,
+                producer_invoice=self.instance.producer_invoice,
+                allow_unusual_direction=confirmed,
+            )
+            if unusual_direction and not confirmed:
+                raise forms.ValidationError(
+                    _("Confirm the unusual amount direction before saving.")
+                )
+            if unusual_direction:
+                comment = (self.cleaned_data.get("operation_comment") or "").strip()
+                if not comment:
+                    raise forms.ValidationError(
+                        _(
+                            "A comment is required for an unusual amount direction."
+                        )
+                    )
+                trace = BankAccount.UNUSUAL_DIRECTION_CONFIRMED_MARKER
+                if trace not in comment:
+                    self.cleaned_data["operation_comment"] = (
+                        f"{trace}: {comment}"[:100]
+                    )
+        except ValidationError as error:
+            raise forms.ValidationError(error.messages)
         initial_id = self.instance.id
         initial_customer = self.instance.customer
         initial_producer = self.instance.producer
         if customer is None and producer is None:
-            if initial_id is not None:
+            if operation_status == BankMovement.GROUP_EXPENSE:
+                pass
+            elif operation_status == BankMovement.PAYMENT_RECEIVED:
+                self.add_error(
+                    "customer",
+                    _("A payment received must be assigned to a customer."),
+                )
+                self.add_error(
+                    "producer",
+                    _("A payment received must not be assigned to a producer."),
+                )
+            elif initial_id is not None:
                 if initial_customer is None and initial_producer is None:
                     raise forms.ValidationError(_("You may not update a balance."))
                 else:
@@ -356,7 +450,9 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     fields = (
         "operation_date",
         ("producer", "customer"),
+        "operation_status",
         "operation_comment",
+        "confirm_unusual_direction",
         "bank_amount_in",
         "bank_amount_out",
         ("customer_invoice", "producer_invoice"),
@@ -386,6 +482,8 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         return False
 
     def has_add_permission(self, request):
+        if not AccountingPolicy.manage_bank_account():
+            return False
         user = request.user
         if user.is_invoice_manager:
             return True

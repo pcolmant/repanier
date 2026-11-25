@@ -13,7 +13,12 @@ from django.conf import settings
 from django.db import models
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.const import (
-    DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING, LUT_BANK_NOTE, SaleStatus
+    DECIMAL_ONE,
+    DECIMAL_ZERO,
+    EMPTY_STRING,
+    LUT_BANK_NOTE,
+    RoundUpTo,
+    SaleStatus,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.deliveryboard import DeliveryBoard
@@ -115,6 +120,23 @@ class Invoice(models.Model):
 
 
 class CustomerInvoice(Invoice):
+    pickup_slot = models.ForeignKey(
+        "PickupSlot",
+        verbose_name=_("Pickup slot"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="customer_invoices",
+    )
+
+    def set_pickup_slot(self, pickup_slot):
+        if pickup_slot is not None:
+            if pickup_slot.distribution_event.permanence_id != self.permanence_id:
+                raise ValueError(
+                    "Pickup slot must belong to the invoice permanence."
+                )
+        self.pickup_slot = pickup_slot
+        self.save(update_fields=["pickup_slot"])
     customer = models.ForeignKey(
         "Customer", verbose_name=_("Customer"), on_delete=models.PROTECT
     )
@@ -332,6 +354,16 @@ class CustomerInvoice(Invoice):
             # then permanence.with_delivery_point is also True
             confirm_box = EMPTY_STRING
         else:
+            from repanier.models.distribution import PickupSlot
+            from repanier.models.distribution import DistributionEvent
+
+            pickup_slots = (
+                PickupSlot.objects.filter(
+                    distribution_event__permanence_id=permanence.id
+                )
+                if is_basket and self.status == SaleStatus.OPENED
+                else PickupSlot.objects.none()
+            )
             confirm_button_label = EMPTY_STRING
             if self.is_order_confirm_send:
                 # Nothing to confirm: only the basket page keeps a link
@@ -381,6 +413,11 @@ class CustomerInvoice(Invoice):
                     "show_history": show_history,
                     "order_url": permanence.get_order_url(),
                     "customer_id": self.customer.id,
+                    "pickup_slots": pickup_slots,
+                    "selected_pickup_slot_id": self.pickup_slot_id,
+                    "uncertain_arrival": is_basket and DistributionEvent.objects.filter(
+                        permanence_id=permanence.id, offer__is_uncertain_arrival=True
+                    ).exists(),
                 },
             )
         return {"#span_btn_confirm_order": mark_safe(confirm_box)}
@@ -607,6 +644,29 @@ class CustomerInvoice(Invoice):
         self.total_deposit.amount = (
             result_set["deposit"] if result_set["deposit"] is not None else DECIMAL_ZERO
         )
+
+        from repanier.models.preparation import DepositReceipt
+
+        applied_deposit_credit = (
+            DepositReceipt.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_id,
+                accounting_status="applied",
+            ).aggregate(
+                credit=Sum(
+                    "credit_amount",
+                    output_field=DecimalField(
+                        max_digits=8,
+                        decimal_places=2,
+                        default=DECIMAL_ZERO,
+                    ),
+                )
+            )["credit"]
+            or DECIMAL_ZERO
+        )
+        self.delta_price_with_tax.amount = (
+            self.delta_price_with_tax.amount - applied_deposit_credit
+        ).quantize(RoundUpTo.TWO_DECIMALS)
 
         self.calculate_order_transport()
         self.calculate_order_rounding()

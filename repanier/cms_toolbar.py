@@ -21,6 +21,7 @@ from cms.toolbar_pool import toolbar_pool
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from repanier.models.poll import is_new_poll_enabled
+from repanier.accounting_policy import AccountingPolicy
 
 from django.conf import settings
 
@@ -132,7 +133,7 @@ class RepanierToolbar(BasicToolbar):
         )
         position += 1
 
-        if apps.REPANIER_SETTINGS_USE_GROUPS:
+        if AccountingPolicy.use_groups():
             url = "{}?is_active__exact=1".format(
                 reverse("admin:repanier_group_changelist")
             )
@@ -157,18 +158,15 @@ class RepanierToolbar(BasicToolbar):
         )
         position += 1
 
-        accounting_mode = apps.REPANIER_SETTINGS_ACCOUNTING_MODE or AccountingMode.INTERNAL_BANK
-        manage_accounting = (
-                settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING
-                and accounting_mode != AccountingMode.SIMPLE_ORDERS
-        )
+        accounting_mode = AccountingPolicy.accounting_mode()
+        manage_accounting = AccountingPolicy.manage_accounting()
         if manage_accounting:
             url = reverse("admin:repanier_permanencedone_changelist")
             repanier_menu.add_sideframe_item(
                 _("Offers in payment"), url=url, position=position
             )
             position += 1
-            if accounting_mode == AccountingMode.INTERNAL_BANK:
+            if AccountingPolicy.manage_bank_account():
                 url = reverse("admin:repanier_bankaccount_changelist")
                 repanier_menu.add_sideframe_item(
                     _("Bank account transactions"), url=url, position=position
@@ -178,6 +176,14 @@ class RepanierToolbar(BasicToolbar):
             url = reverse("admin:repanier_permanencedone_changelist")
             repanier_menu.add_sideframe_item(
                 _("Offers in archiving"), url=url, position=position
+            )
+            position += 1
+
+        if AccountingPolicy.manage_accounting():
+            repanier_menu.add_sideframe_item(
+                _("Accounting exports"),
+                url=reverse("repanier:accounting_exports"),
+                position=position,
             )
             position += 1
 

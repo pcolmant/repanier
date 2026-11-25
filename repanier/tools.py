@@ -645,6 +645,11 @@ def rule_of_3_reload_purchase(
     customer, offer_item, purchase_form, purchase_form_instance
 ):
     from repanier.models.purchase import Purchase
+    from repanier.models.invoice import (
+        CustomerInvoice,
+        ProducerInvoice,
+        CustomerProducerInvoice,
+    )
 
     purchase_form.repanier_is_valid = True
     # Reload purchase, because it has maybe be deleted
@@ -653,11 +658,29 @@ def rule_of_3_reload_purchase(
     ).first()
     if purchase is None:
         # Doesn't exists ? Create one
+        customer_invoice = CustomerInvoice.get_or_create_invoice(
+            permanence_id=offer_item.permanence_id,
+            customer_id=customer.id,
+            status=const.SaleStatus.SEND,
+        )
+        producer_invoice = ProducerInvoice.get_or_create_invoice(
+            permanence_id=offer_item.permanence_id,
+            producer_id=offer_item.producer_id,
+            status=const.SaleStatus.SEND,
+        )
+        customer_producer_invoice = CustomerProducerInvoice.get_or_create_invoice(
+            permanence_id=offer_item.permanence_id,
+            customer_id=customer.id,
+            producer_id=offer_item.producer_id,
+        )
         purchase = Purchase.objects.create(
             permanence=offer_item.permanence,
             offer_item=offer_item,
             producer=offer_item.producer,
             customer=customer,
+            customer_invoice=customer_invoice,
+            producer_invoice=producer_invoice,
+            customer_producer_invoice=customer_producer_invoice,
             quantity_ordered=const.DECIMAL_ZERO,
             quantity_invoiced=const.DECIMAL_ZERO,
             comment=purchase_form_instance.comment,

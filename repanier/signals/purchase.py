@@ -49,6 +49,12 @@ def purchase_pre_save(sender, **kwargs):
     """
 
     purchase = kwargs["instance"]
+    if getattr(purchase.permanence, "is_demo", False):
+        purchase.previous_quantity_ordered = purchase.quantity_ordered
+        purchase.previous_quantity_invoiced = purchase.quantity_invoiced
+        purchase.previous_purchase_price = purchase.purchase_price.amount
+        purchase.previous_selling_price = purchase.selling_price.amount
+        return
     offer_item = purchase.offer_item
     # logger.info("purchase pre save : {}".format(purchase.id))
     if purchase.status < SaleStatus.WAIT_FOR_SEND:

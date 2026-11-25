@@ -19,6 +19,8 @@ from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.lut import LUT_DeliveryPoint
 from repanier.models.permanence import Permanence
+from repanier import apps
+from repanier.const import AccountingMode
 
 
 @override_settings(
@@ -67,6 +69,20 @@ class DeliveryPointDropdownTest(TestCase):
 
     def _login(self):
         self.client.login(username="client@example.com", password="x")
+
+    def test_groups_disabled_uses_only_unassigned_delivery_points(self):
+        previous = apps.REPANIER_SETTINGS_USE_GROUPS
+        apps.REPANIER_SETTINGS_USE_GROUPS = False
+        try:
+            self._login()
+            response = self.client.get(
+                reverse("repanier:delivery_select_ajax"),
+                {"permanence": self.permanence.id},
+                follow=True,
+            )
+            self.assertEqual(response.status_code, 200)
+        finally:
+            apps.REPANIER_SETTINGS_USE_GROUPS = previous
 
     def test_order_init_renders_a_bootstrap_dropdown(self):
         self._login()

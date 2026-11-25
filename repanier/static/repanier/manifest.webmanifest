@@ -1,0 +1,12 @@
+{
+  "name": "Repanier Preparation Terrain",
+  "short_name": "Preparation",
+  "description": "Preparation hors ligne des permanences Repanier",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#198754",
+  "orientation": "portrait",
+  "icons": []
+}

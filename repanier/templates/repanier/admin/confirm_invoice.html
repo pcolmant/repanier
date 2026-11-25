@@ -4,6 +4,7 @@
 {% block extrahead %}
     {{ block.super }}
     {{ permanence_form.media }}
+    {% if adjustment_offers or adjustment_products %}<script defer src="{% static 'repanier/htmx/js/htmx.min.js' %}"></script>{% endif %}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -20,6 +21,39 @@
         <form action="{{ form_url }}" method="post" id="repanier_confirm_action_form">{% csrf_token %}
             <h1>{{ permanence }}</h1>
             <p>{% translate "Please confirm your request for payments calculation" %}</p>
+            {% if closing_blocking %}
+            <div class="card border-danger mb-3">
+                <div class="card-header fw-semibold">{% translate "Closing checklist" %}</div>
+                <div class="card-body">
+                <div class="errornote">
+                    {% translate "Closing balance: blocking findings." %}
+                </div>
+                <ul class="errorlist">
+                    {% for finding in closing_blocking %}
+                        <li class="mb-2">
+                            <span class="badge text-bg-danger">{{ finding.category|default:"accounting" }}</span>
+                            <strong>{{ finding.code }}</strong>: {{ finding.message }}
+                        </li>
+                    {% endfor %}
+                </ul>
+                </div>
+            </div>
+            {% endif %}
+            {% if closing_warnings %}
+            <div class="card border-warning mb-3">
+                <div class="card-header fw-semibold">{% translate "Review before closing" %}</div>
+                <div class="card-body">
+                <div class="messagelist">
+                    {% for finding in closing_warnings %}
+                        <p>
+                            <span class="badge text-bg-warning">{{ finding.category|default:"accounting" }}</span>
+                            <strong>{% translate "Warning" %} {{ finding.code }}</strong>: {{ finding.message }}
+                        </p>
+                    {% endfor %}
+                </div>
+                </div>
+            </div>
+            {% endif %}
             <div id="myDIV">
                 <div class="submit-row">
                     <input type="submit" name="apply" value="{% translate "Yes, I'm sure and I have already encoded the customer's prepayments into the bank account" %}" class="default"
@@ -100,5 +134,74 @@
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>
         </form>
+        {% if adjustment_offers or adjustment_products %}
+        <section class="card border-info mb-3">
+            <h2>{% translate "Products for this delivery" %}</h2>
+            <a href="{% url 'admin:permanence-closing-products' permanence.id %}"
+               hx-get="{% url 'admin:permanence-closing-products' permanence.id %}"
+               hx-target="#closing-products" hx-swap="innerHTML">
+                {% translate "Open the product adjustment panel" %}
+            </a>
+            <div id="closing-products" aria-live="polite"></div>
+        </section>
+        <div class="card border-info mb-3" id="accounting-adjustment-section">
+            <div class="card-header fw-semibold">
+                {% translate "Accounting adjustment" %}
+            </div>
+            <div class="card-body">
+                <p>{% translate "Choose either a delivery product or a catalogue product, and assign it to a member. This changes this delivery, not the catalogue." %}</p>
+                <form method="post"
+                      action="{% url 'admin:permanence-closing-balance-adjustment' permanence.id %}"
+                      class="row g-2 align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="accounting_adjustment" value="1">
+                    <div class="col-md-4">
+                        <label class="form-label" for="adjustment-customer">
+                            {% translate "Member" %}
+                        </label>
+                        <select class="form-select" id="adjustment-customer" name="customer_id" required>
+                            {% for customer in adjustment_customers %}
+                                <option value="{{ customer.id }}">{{ customer.short_basket_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="adjustment-offer">
+                            {% translate "Offer" %}
+                        </label>
+                        <select class="form-select" id="adjustment-offer" name="offer_item_id">
+                            <option value="">{% translate "Choose a delivery product" %}</option>
+                            {% for offer in adjustment_offers %}
+                                <option value="{{ offer.id }}">{{ offer.get_long_name_with_customer_price }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="adjustment-product">
+                            {% translate "Or catalogue product not in this delivery" %}
+                        </label>
+                        <select class="form-select" id="adjustment-product" name="product_id">
+                            <option value="">{% translate "Choose a catalogue product" %}</option>
+                            {% for product in adjustment_products %}
+                                <option value="{{ product.id }}">{{ product.producer }} — {{ product.long_name_v2 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label" for="adjustment-quantity">
+                            {% translate "Quantity" %}
+                        </label>
+                        <input class="form-control" id="adjustment-quantity" name="quantity"
+                               type="number" min="0.0001" step="0.0001" value="1" required>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-primary w-100" type="submit" style="min-height:44px">
+                            {% translate "Add" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
     </div>
 {% endblock %}

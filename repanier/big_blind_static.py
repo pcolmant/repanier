@@ -43,6 +43,14 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
     )
 
     def url(self, name, force=True):
+        pwa_asset_names = (
+            "repanier/manifest.webmanifest",
+            "repanier/sw.js",
+            "repanier/css/preparation.css",
+            "repanier/js/preparation-offline.js",
+        )
+        if name in pwa_asset_names:
+            return posixpath.join(self.base_url, name)
         try:
             return super().url(name, force)
         except ValueError:
@@ -62,6 +70,14 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
                 return posixpath.join(self.base_url, name)
 
     def hashed_name(self, name, content=None, filename=None):
+        pwa_asset_names = (
+            "repanier/manifest.webmanifest",
+            "repanier/sw.js",
+            "repanier/css/preparation.css",
+            "repanier/js/preparation-offline.js",
+        )
+        if name in pwa_asset_names:
+            return name
         try:
             return super().hashed_name(name, content, filename)
         except ValueError:

@@ -34,6 +34,7 @@ from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
 from repanier.views.order_filter_view import order_filter_view
 from repanier.views.order_init_ajax import order_init_ajax
+from repanier.views.pickup_slot import select_pickup_slot
 from repanier.views.order_select_ajax import order_select_ajax
 from repanier.views.poll import poll_vote
 from repanier.views.producer_invoice_class import ProducerInvoiceView
@@ -45,10 +46,68 @@ from repanier.views.task_history_class import TaskHistoryView
 from repanier.views.test_mail_config_ajax import test_mail_config_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
 from repanier.views.who_is_who_view import who_is_who_view
+from repanier.views.accounting_exports_view import accounting_exports
+from repanier.views.preparation_view import (
+    preparation_page,
+    preparation_snapshot,
+    preparation_sync,
+)
+from repanier.views.preparation_demo_view import (
+    demo_create,
+    demo_reset,
+    demo_status,
+    demo_replay,
+    demo_export,
+)
 
 app_name = "repanier"
 # https://consideratecode.com/2018/05/02/django-2-0-url-to-path-cheatsheet/
 urlpatterns = [
+    path(
+        "demo/mobile-preparation/create/",
+        demo_create,
+        name="demo_mobile_preparation_create",
+    ),
+    path(
+        "demo/mobile-preparation/<int:permanence_id>/reset/",
+        demo_reset,
+        name="demo_mobile_preparation_reset",
+    ),
+    path(
+        "demo/mobile-preparation/<int:permanence_id>/status/",
+        demo_status,
+        name="demo_mobile_preparation_status",
+    ),
+    path(
+        "demo/mobile-preparation/<int:permanence_id>/replay/",
+        demo_replay,
+        name="demo_mobile_preparation_replay",
+    ),
+    path(
+        "demo/mobile-preparation/<int:permanence_id>/export/",
+        demo_export,
+        name="demo_mobile_preparation_export",
+    ),
+    path(
+        "permanence/<str:token>/prep/",
+        preparation_page,
+        name="preparation_page",
+    ),
+    path(
+        "permanence/<str:token>/snapshot/",
+        preparation_snapshot,
+        name="preparation_snapshot",
+    ),
+    path(
+        "permanence/<str:token>/sync/",
+        preparation_sync,
+        name="preparation_sync",
+    ),
+    path(
+        "admin/accounting-exports/",
+        accounting_exports,
+        name="accounting_exports",
+    ),
     path("go_repanier/", login_view, name="login_form"),
     path("leave_repanier/", logout_view, name="logout"),
     path(
@@ -132,6 +191,7 @@ urlpatterns = [
     path("ajax/order-name/", customer_name_ajax, name="order_name"),
     path("ajax/home-info/", home_info_ajax, name="home_info"),
     path("ajax/order-init/", order_init_ajax, name="order_init_ajax"),
+    path("ajax/pickup-slot/", select_pickup_slot, name="select_pickup_slot"),
     path("ajax/order-select/", order_select_ajax, name="order_select_ajax"),
     path("ajax/delivery-select/", delivery_select_ajax, name="delivery_select_ajax"),
     path("ajax/permanence/", task_form_ajax, name="task_form_ajax"),

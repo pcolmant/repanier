@@ -61,6 +61,7 @@
                 {% endif %}
             {% endif %}
 
+            {% if REPANIER_MANAGE_MEMBER_BALANCES %}
             <div class="mb-3">
                 {% for bank_account in bank_account_set %}
                     {% if bank_account.bank_amount_in != 0 %}
@@ -87,6 +88,7 @@
                     {% endif %}
                 {% endfor %}
             </div>
+            {% endif %}
 
             {% if object %}
                 <div class="row mb-3">
@@ -132,7 +134,7 @@
                                     {{ offer_item.quantity_invoiced }}
                                 </td>
                                 <td class="text-end">
-                                    {{ offer_item.get_producer_unit_price_invoiced }}{% if offer_item.unit_deposit != 0 %}, ♻ {{ offer_item.unit_deposit }}{% endif %}
+                                    {{ offer_item.get_producer_unit_price_invoiced }}{% if REPANIER_USE_DEPOSITS and offer_item.unit_deposit != 0 %}, ♻ {{ offer_item.unit_deposit }}{% endif %}
                                 </td>
                                 <td class="text-end">
                                     {{ offer_item.get_producer_row_price_invoiced }}

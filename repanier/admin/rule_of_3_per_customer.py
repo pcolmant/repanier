@@ -194,7 +194,7 @@ class CustomerPurchaseSendInline(admin.TabularInline):
         "comment",
     ]
     readonly_fields = ["get_html_producer_unit_price", "get_html_unit_deposit"]
-    extra = 0
+    extra = 1
     fk_name = "customer_producer_invoice"
     parent_object = None
 

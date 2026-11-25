@@ -201,8 +201,29 @@ class Configuration(models.Model):
             "Displays deposit fields and columns on products, orders and exports."
         ),
     )
+    use_mobile_preparation = models.BooleanField(
+        _("Enable mobile preparation and demonstration mode"),
+        default=False,
+        help_text=_(
+            "Enables the signed GSM preparation page and isolated demo permanence."
+        ),
+    )
 
     def clean(self):
+        super().clean()
+        if self.accounting_mode == AccountingMode.SIMPLE_ORDERS:
+            if self.use_invoice_by_basket:
+                raise ValidationError({
+                    "use_invoice_by_basket": _(
+                        "Invoice by basket cannot be enabled in simple orders mode."
+                    )
+                })
+        if self.use_mobile_preparation and self.accounting_mode == AccountingMode.SIMPLE_ORDERS:
+            raise ValidationError({
+                "use_mobile_preparation": _(
+                    "Mobile preparation cannot be used for closure in simple orders mode."
+                )
+            })
         try:
             _ = Template(self.offer_customer_mail_v2)
         except Exception as error_str:

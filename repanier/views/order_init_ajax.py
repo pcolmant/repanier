@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -75,6 +76,30 @@ def order_init_ajax(request):
 
     if customer_invoice is None:
         raise Http404
+
+    if (
+        permanence.status == SaleStatus.OPENED
+        and customer_invoice.status == SaleStatus.OPENED
+        and customer_invoice.pickup_slot_id is None
+    ):
+        from repanier.models.distribution import PickupSlot
+
+        slots = list(PickupSlot.objects.filter(
+            distribution_event__permanence_id=permanence.id
+        )[:2])
+        if len(slots) == 1:
+            with transaction.atomic():
+                customer_invoice = CustomerInvoice.objects.select_for_update().get(
+                    pk=customer_invoice.pk
+                )
+                if (
+                    customer_invoice.status == SaleStatus.OPENED
+                    and customer_invoice.pickup_slot_id is None
+                    and Permanence.objects.filter(
+                        pk=permanence.pk, status=SaleStatus.OPENED
+                    ).exists()
+                ):
+                    customer_invoice.set_pickup_slot(slots[0])
 
     basket = sboolean(request.GET.get("ba", False))
     if customer_invoice.delivery is not None:

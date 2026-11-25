@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-22 11:10+0100\n"
+"POT-Creation-Date: 2026-11-23 22:46+0100\n"
 "PO-Revision-Date: 2026-10-30 11:13+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <pcolmant@gmail.com>\n"
@@ -18,47 +18,47 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 3.10\n"
 
-#: _a_dev_site/common_settings.py:545
+#: _a_dev_site/common_settings.py:549
 msgid "Repanier guide"
 msgstr "Mode d'emploi de Repanier"
 
-#: _a_dev_site/common_settings.py:549
+#: _a_dev_site/common_settings.py:553
 msgid "django CMS guide"
 msgstr "Mode d'emploi de Django CMS"
 
-#: _a_dev_site/common_settings.py:980
+#: _a_dev_site/common_settings.py:984
 msgid "Internal page with menu on left"
 msgstr "Page interne avec menu à gauche"
 
-#: _a_dev_site/common_settings.py:981
+#: _a_dev_site/common_settings.py:985
 msgid "Internal page"
 msgstr "Page interne"
 
-#: _a_dev_site/common_settings.py:982
+#: _a_dev_site/common_settings.py:986
 msgid "Home page"
 msgstr "Page d'accueil"
 
-#: _a_dev_site/common_settings.py:1044
+#: _a_dev_site/common_settings.py:1048
 msgid "Hero"
 msgstr "Bannière"
 
-#: _a_dev_site/common_settings.py:1052
+#: _a_dev_site/common_settings.py:1056
 msgid "Column 1"
 msgstr "Colonne 1"
 
-#: _a_dev_site/common_settings.py:1060
+#: _a_dev_site/common_settings.py:1064
 msgid "Column 2"
 msgstr "Colonne 2"
 
-#: _a_dev_site/common_settings.py:1068
+#: _a_dev_site/common_settings.py:1072
 msgid "Column 3"
 msgstr "Colonne 3"
 
-#: _a_dev_site/common_settings.py:1076
+#: _a_dev_site/common_settings.py:1080
 msgid "Content"
 msgstr "Contenu"
 
-#: _a_dev_site/common_settings.py:1093
+#: _a_dev_site/common_settings.py:1097
 msgid "Footer"
 msgstr "Pied de page"
 

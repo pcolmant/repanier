@@ -16,6 +16,7 @@ from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
 from repanier.middleware import get_query_filters
 from repanier.models.producer import Producer
 from repanier.tools import web_services_activated
+from repanier.accounting_policy import AccountingPolicy
 from repanier.xlsx.widget import (
     IdWidget,
     TwoDecimalsWidget,
@@ -264,7 +265,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_list_display(self, request):
         list_display = ["__str__", "get_products"]
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+        if AccountingPolicy.manage_member_balances():
             list_display += ["get_balance"]
         list_display += ["phone1", "email"]
         return list_display
@@ -287,7 +288,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 "picture",
                 "memo",
                 "producer_price_are_wo_vat",
-                "invoice_by_basket",
                 "sort_products_by_reference",
                 "checking_stock",
                 "minimum_order_value",
@@ -302,12 +302,16 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 "city",
                 "memo",
                 "producer_price_are_wo_vat",
-                "invoice_by_basket",
                 "sort_products_by_reference",
                 "checking_stock",
                 "minimum_order_value",
                 "price_list_multiplier",
             ]
+        if AccountingPolicy.use_invoice_by_basket():
+            if producer is not None:
+                fields_basic.insert(fields_basic.index("sort_products_by_reference"), "invoice_by_basket")
+            else:
+                fields_basic.insert(fields_basic.index("sort_products_by_reference"), "invoice_by_basket")
         if producer is not None and producer.represent_this_buyinggroup:
             fields_advanced = ["represent_this_buyinggroup"]
         else:

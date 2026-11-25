@@ -13,6 +13,7 @@ from django.forms import Textarea, TextInput
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from repanier.accounting_policy import AccountingPolicy
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
@@ -375,7 +376,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     get_last_login.admin_order_field = "user__last_login"
 
     def get_list_display(self, request):
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+        if AccountingPolicy.manage_member_balances():
             return (
                 "__str__",
                 "get_balance",
@@ -407,9 +408,9 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "email",
                 "phone1",
                 "phone2",
-                "get_admin_balance",
-                "get_admin_date_balance",
             ]
+            if AccountingPolicy.manage_member_balances():
+                fields_basic += ["get_admin_balance", "get_admin_date_balance"]
         else:
             fields_basic = [
                 "short_basket_name",
@@ -424,9 +425,9 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "membership_fee_valid_until",
                 "price_list_multiplier",
             ]
-            if Customer.objects.filter(is_group=True).exists():
+            if AccountingPolicy.use_groups() and Customer.objects.filter(is_group=True).exists():
                 fields_basic += ["group"]
-            if customer is not None:
+            if customer is not None and AccountingPolicy.manage_member_balances():
                 fields_basic += [
                     "get_admin_balance",
                     "get_admin_date_balance",

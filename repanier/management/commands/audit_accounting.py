@@ -191,7 +191,9 @@ def audit_customer_accounts(customer_id=None):
     bank_net = {
         row["customer_id"]: net(row["bank_in"], row["bank_out"])
         for row in BankAccount.objects.filter(
-            customer_invoice__isnull=False, customer__isnull=False
+            customer_invoice__isnull=False,
+            customer__isnull=False,
+            permanence__is_demo=False,
         )
         .exclude(operation_status__in=BOOKKEEPING_ONLY)
         .values("customer_id")
@@ -201,7 +203,9 @@ def audit_customer_accounts(customer_id=None):
     charged_total = {
         row["customer_id"]: cents(row["charged"])
         for row in CustomerInvoice.objects.filter(
-            customer_charged_id=F("customer_id"), status__in=INVOICED_STATUSES
+            customer_charged_id=F("customer_id"),
+            status__in=INVOICED_STATUSES,
+            permanence__is_demo=False,
         )
         .values("customer_id")
         .annotate(charged=Sum(charged_expression(), output_field=MONEY))
@@ -255,7 +259,8 @@ def audit_producer_accounts(producer_id=None, since=None):
     profit_by_round = {}
     site_kept_by_round = {}
     invoiced_books = ProducerInvoice.objects.filter(
-        status__in=INVOICED_STATUSES
+        status__in=INVOICED_STATUSES,
+        permanence__is_demo=False,
     )
     if producer_id is not None:
         invoiced_books = invoiced_books.filter(producer_id=producer_id)
@@ -312,7 +317,9 @@ def audit_producer_accounts(producer_id=None, since=None):
     bank_net = {
         row["producer_id"]: net(row["bank_in"], row["bank_out"])
         for row in BankAccount.objects.filter(
-            producer_invoice__isnull=False, producer__isnull=False
+            producer_invoice__isnull=False,
+            producer__isnull=False,
+            permanence__is_demo=False,
         )
         .values("producer_id")
         .annotate(bank_in=Sum("bank_amount_in", output_field=MONEY))
@@ -375,7 +382,7 @@ def audit_producer_accounts(producer_id=None, since=None):
             rounds_to_check &= era_rounds
         for permanence_id in sorted(rounds_to_check):
             permanence = (
-                Permanence.objects.filter(id=permanence_id)
+                Permanence.objects.filter(id=permanence_id, is_demo=False)
                 .only("id", "permanence_date", "short_name_v2")
                 .first()
             )
@@ -471,12 +478,21 @@ def replay_customer_invoice(invoice):
     return total_price, total_vat, total_deposit, delta_price, delta_transport
 
 
-def audit_invoice_purchase_totals(permanence_id=None, since=None):
+def audit_invoice_purchase_totals(permanence_id=None, since=None, include_pending=False):
     """Every invoiced book, recomputed from the purchases."""
     findings = []
-    customer_invoices = CustomerInvoice.objects.filter(
-        permanence__status__in=INVOICED_STATUSES
-    )
+    if include_pending:
+        customer_invoices = CustomerInvoice.objects.filter(
+            permanence_id=permanence_id,
+            permanence__is_demo=False,
+        ) if permanence_id is not None else CustomerInvoice.objects.filter(
+            permanence__is_demo=False
+        )
+    else:
+        customer_invoices = CustomerInvoice.objects.filter(
+            permanence__status__in=INVOICED_STATUSES,
+            permanence__is_demo=False,
+        )
     if since is not None:
         customer_invoices = customer_invoices.filter(
             permanence__permanence_date__gte=since
@@ -559,7 +575,8 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
             )
 
     producer_invoices = ProducerInvoice.objects.filter(
-        permanence__status__in=INVOICED_STATUSES
+        permanence__status__in=INVOICED_STATUSES,
+        permanence__is_demo=False,
     )
     if since is not None:
         producer_invoices = producer_invoices.filter(
@@ -681,7 +698,8 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
             )
 
     cross_invoices = CustomerProducerInvoice.objects.filter(
-        permanence__status__in=INVOICED_STATUSES
+        permanence__status__in=INVOICED_STATUSES,
+        permanence__is_demo=False,
     )
     if since is not None:
         cross_invoices = cross_invoices.filter(
@@ -740,7 +758,7 @@ def audit_invoice_purchase_totals(permanence_id=None, since=None):
 # ----------------------------------------------------------------- D
 
 
-def audit_permanence_totals(permanence_id=None, since=None):
+def audit_permanence_totals(permanence_id=None, since=None, include_pending=False):
     """Charged to the customers == booked on the producers, margin apart.
 
     The resale margin of the round (selling - purchase) stays with the
@@ -749,9 +767,11 @@ def audit_permanence_totals(permanence_id=None, since=None):
     """
     findings = []
     margins = round_margins()
-    invoiced = Permanence.objects.filter(status__in=INVOICED_STATUSES).order_by(
-        "permanence_date", "id"
-    )
+    invoiced = (
+        Permanence.objects.filter(is_demo=False)
+        if include_pending
+        else Permanence.objects.filter(status__in=INVOICED_STATUSES, is_demo=False)
+    ).order_by("permanence_date", "id")
     if since is not None:
         invoiced = invoiced.filter(permanence_date__gte=since)
     if permanence_id is not None:
@@ -763,14 +783,15 @@ def audit_permanence_totals(permanence_id=None, since=None):
             CustomerInvoice.objects.filter(
                 permanence_id=permanence.id,
                 customer_charged_id=F("customer_id"),
-                status__in=INVOICED_STATUSES,
+                **({} if include_pending else {"status__in": INVOICED_STATUSES}),
             ),
             charged_expression(),
             MONEY,
         )
         booked = money_sum(
             ProducerInvoice.objects.filter(
-                permanence_id=permanence.id, status__in=INVOICED_STATUSES
+                permanence_id=permanence.id,
+                **({} if include_pending else {"status__in": INVOICED_STATUSES}),
             ),
             charged_expression(),
             MONEY,
@@ -829,7 +850,10 @@ def audit_permanence_closure(permanence_id=None, since=None):
                 )
             )
 
-    invoiced = Permanence.objects.filter(status__in=INVOICED_STATUSES).order_by(
+    invoiced = Permanence.objects.filter(
+        status__in=INVOICED_STATUSES,
+        is_demo=False,
+    ).order_by(
         "permanence_date", "id"
     )
     if since is not None:
@@ -944,7 +968,7 @@ def audit_bank(since=None):
             previous_net = anchor_net
             continue
         permanence = (
-            Permanence.objects.filter(id=anchor.permanence_id)
+            Permanence.objects.filter(id=anchor.permanence_id, is_demo=False)
             .only("id", "status", "permanence_date", "short_name_v2")
             .first()
         )

@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<main class="container-fluid py-3">
+    <h1>{% translate "GSM preparation link" %}</h1>
+    <p class="text-muted">
+        {{ permanence }}
+    </p>
+
+    {% if access and access.is_valid %}
+        <div class="alert alert-success">
+            {% translate "A preparation access is active." %}
+            {% if access.expires_at %}
+                {% blocktranslate with expires=access.expires_at %}
+                    Expires at {{ expires }}.
+                {% endblocktranslate %}
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="alert alert-secondary">
+            {% translate "No active preparation access." %}
+        </div>
+    {% endif %}
+
+    {% if link %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <label class="form-label" for="preparation-link">
+                    {% translate "GSM preparation link" %}
+                </label>
+                <input id="preparation-link" class="form-control" readonly value="{{ link }}">
+                <p class="small text-muted mt-2">
+                    {% translate "Open this link on the GSM, or copy it to a QR Code tool." %}
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if can_generate %}
+        <form method="post" class="d-flex flex-wrap gap-2">
+            {% csrf_token %}
+            <button class="btn btn-success" type="submit" name="action" value="generate">
+                {% translate "Generate or renew the link" %}
+            </button>
+            <button class="btn btn-outline-danger" type="submit" name="action" value="revoke">
+                {% translate "Revoke access" %}
+            </button>
+        </form>
+    {% else %}
+        <div class="alert alert-warning">
+            {% translate "A demonstration permanence cannot be given real accounting access." %}
+        </div>
+    {% endif %}
+</main>
+{% endblock %}

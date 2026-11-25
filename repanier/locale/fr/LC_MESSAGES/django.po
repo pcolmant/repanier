@@ -4294,3 +4294,27 @@ msgstr "Mode de fonctionnement et options progressives"
 
 #~ msgid "My balance"
 #~ msgstr "Mon solde"
+
+msgid "Accounting adjustment"
+msgstr "Ajustement comptable"
+
+msgid "Closing checklist"
+msgstr "Checklist de clôture"
+
+msgid "Review before closing"
+msgstr "À vérifier avant clôture"
+
+msgid "GSM preparation link"
+msgstr "Lien de préparation GSM"
+
+msgid "A preparation access is active."
+msgstr "Un accès de préparation est actif."
+
+msgid "No active preparation access."
+msgstr "Aucun accès de préparation actif."
+
+msgid "Generate or renew the link"
+msgstr "Générer ou renouveler le lien"
+
+msgid "Revoke access"
+msgstr "Révoquer l'accès"

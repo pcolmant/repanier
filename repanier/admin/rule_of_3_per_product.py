@@ -15,7 +15,7 @@ from repanier.admin.admin_filter import (
     AdminFilterQuantityInvoiced,
 )
 from repanier.const import (
-    DECIMAL_ZERO, EMPTY_STRING, OrderUnit, REPANIER_MONEY_ZERO, RoundUpTo
+    DECIMAL_ZERO, EMPTY_STRING, OrderUnit, REPANIER_MONEY_ZERO, RoundUpTo, SaleStatus
 )
 from repanier.fields.RepanierMoneyField import FormRepanierMoneyField
 from repanier.middleware import get_request_params
@@ -166,7 +166,7 @@ class OfferItemPurchaseSendInline(admin.TabularInline):
     model = Purchase
     fields = ["customer", "quantity_invoiced", "purchase_price", "comment"]
     ordering = ("quantity_for_preparation_sort_order", "customer__short_basket_name")
-    extra = 0
+    extra = 1
     fk_name = "offer_item"
 
     def has_delete_permission(self, request, obj=None):
@@ -186,6 +186,11 @@ class OfferItemPurchaseSendInline(admin.TabularInline):
 
 
 class OfferItemSendForm(forms.ModelForm):
+    update_catalogue_prices = forms.BooleanField(
+        label=_("Apply these prices to the catalogue product"),
+        required=False,
+        initial=False,
+    )
     offer_purchase_price = FormRepanierMoneyField(
         label=_("Producer amount booked"),
         max_digits=8,
@@ -264,45 +269,11 @@ class OfferItemSendForm(forms.ModelForm):
             "offer_purchase_price",
         ]
 
-    def save(self, *args, **kwargs):
-        offer_item = super().save(*args, **kwargs)
-        if offer_item.id is not None:
-            previous_producer_unit_price = self.cleaned_data[
-                "previous_producer_unit_price"
-            ]
-            previous_customer_unit_price = self.cleaned_data.get(
-                "previous_customer_unit_price", DECIMAL_ZERO
-            )
-            previous_unit_deposit = self.cleaned_data["previous_unit_deposit"]
-            producer_unit_price = self.cleaned_data["producer_unit_price"]
-            customer_unit_price = self.cleaned_data.get(
-                "customer_unit_price", offer_item.customer_unit_price
-            )
-            unit_deposit = self.cleaned_data["unit_deposit"]
-
-            if (
-                previous_producer_unit_price != producer_unit_price
-                or previous_customer_unit_price != customer_unit_price
-                or previous_unit_deposit != unit_deposit
-            ):
-                # Important : linked with (1*)
-                # Only update the price of the product and the current offer_item
-                product = offer_item.product
-                product.producer_unit_price = producer_unit_price
-                product.customer_unit_price = customer_unit_price
-                product.unit_deposit = unit_deposit
-                product.save()
-                offer_item.producer_unit_price = product.producer_unit_price
-                offer_item.customer_unit_price = product.customer_unit_price
-                offer_item.unit_deposit = product.unit_deposit
-                offer_item.save()
-                # Do not : update_offer_item(product_id=product.id, producer_id=None)
-        return offer_item
-
 @admin.register(OfferItemSend)
 class OfferItemSendAdmin(admin.ModelAdmin):
     form = OfferItemSendForm
     inlines = [OfferItemPurchaseSendInline]
+    change_form_template = "repanier/admin/offer_item_send_change.html"
     search_fields = ("long_name_v2",)
     list_display = [
         "producer",
@@ -327,6 +298,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, product=None):
         prices = ("producer_unit_price", "unit_deposit")
+        catalogue_choice = ("update_catalogue_prices",)
 
         if not product.wrapped and product.order_unit in [
             OrderUnit.KG,
@@ -335,6 +307,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             fields_basic = (
                 ("permanence",),
                 prices,
+                catalogue_choice,
                 (
                     "offer_purchase_price",
                     "rule_of_3",
@@ -344,6 +317,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             fields_basic = (
                 ("permanence",),
                 prices,
+                catalogue_choice,
                 ("offer_purchase_price",),
             )
         fieldsets = ((None, {"fields": fields_basic}),)
@@ -360,9 +334,26 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, offer_item=None):
         user = request.user
-        if user.is_repanier_staff:
-            return True
-        return False
+        if not user.is_repanier_staff:
+            return False
+        return offer_item is None or (
+            offer_item.permanence.status == SaleStatus.SEND
+            and not offer_item.permanence.is_demo
+        )
+
+    def save_model(self, request, obj, form, change):
+        price_changed = bool({"producer_unit_price", "unit_deposit"} & set(form.changed_data))
+        if price_changed:
+            obj.recalculate_prices()
+        super().save_model(request, obj, form, change)
+        if form.cleaned_data.get("update_catalogue_prices"):
+            product = obj.product
+            product.producer_unit_price = obj.producer_unit_price
+            product.unit_deposit = obj.unit_deposit
+            product.save(update_fields=[
+                "producer_unit_price", "customer_unit_price",
+                "producer_vat", "customer_vat", "unit_deposit", "is_updated_on",
+            ])
 
     def get_urls(self):
         urls = super().get_urls()
@@ -424,6 +415,16 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             "DELIVERY_POINT": EMPTY_STRING,  # TODO
             "OFFER_ITEM": offer_item,
         }
+        if obj is not None:
+            from django.urls import reverse
+
+            extra_context["PRODUCT_CHANGE_URL"] = "{}?next={}".format(
+                reverse(
+                    "admin:repanier_product_change",
+                    args=(obj.product_id,),
+                ),
+                request.get_full_path(),
+            )
         context.update(extra_context)
         return super().render_change_form(request, context, add, change, form_url, obj)
 
@@ -540,9 +541,21 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                         purchase.quantity_invoiced = quantity_invoiced
                         purchase.save()
 
+        price_changed = bool({"producer_unit_price", "unit_deposit"} & set(form.changed_data))
         for purchase_form in formset:
-            if purchase_form.has_changed() and purchase_form.repanier_is_valid:
+            if (purchase_form.has_changed() or price_changed) and purchase_form.repanier_is_valid:
                 purchase_form.instance.save()
+
+        if price_changed:
+            saved_ids = [
+                purchase_form.instance.pk
+                for purchase_form in formset
+                if purchase_form.repanier_is_valid and purchase_form.instance.pk
+            ]
+            for purchase in Purchase.objects.select_for_update().filter(
+                offer_item=offer_item
+            ).exclude(pk__in=saved_ids):
+                purchase.save()
 
         # Important : linked with (1*)
         offer_item.permanence.calculate_order_amount()

@@ -72,6 +72,20 @@ class SaleStatus(models.TextChoices):
     CANCELLED = "950", _("Cancelled")
 
 
+class PreparationStatus(models.TextChoices):
+    ORDERED = "ordered", _("Ordered")
+    PREPARED = "prepared", _("Prepared")
+    HANDED_TO_GROUP = "handed_to_group", _("Handed to group")
+    VALIDATED = "validated", _("Validated")
+
+
+class PreparationOrigin(models.TextChoices):
+    NORMAL = "normal", _("Normal")
+    SUBSTITUTION = "substitution", _("Substitution")
+    EXPRESS_REQUEST = "express_request", _("Express request")
+    ACCOUNTING_ADJUSTMENT = "accounting_adjustment", _("Accounting adjustment")
+
+
 class Placement(models.TextChoices):
     FREEZER = "100", _("Freezer")
     FRIDGE = "200", _("Fridge")
@@ -190,6 +204,11 @@ class BankMovement(models.TextChoices):
     CALCULATED_INVOICE = "250", "N/A 250"
     NEXT_LATEST_TOTAL = "300", _("This is the next latest bank total.")
     LATEST_TOTAL = "400", _("This is the latest bank total.")
+    PAYMENT_RECEIVED = "450", _("Payment received")
+    PRODUCER_WAIVER = "460", _("Producer waiver")
+    PRODUCER_CLAIMED_AMOUNT = "470", _("Producer claimed amount")
+    GROUP_EXPENSE = "480", _("Group expense")
+    PRODUCER_DRAW = "490", _("Producer draw")
 
 
 class PermanenceName(models.TextChoices):

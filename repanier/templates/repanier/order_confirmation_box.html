@@ -5,6 +5,20 @@
             {{ delivery_message }}
             {{ basket_message }}
             {% if basket_message %}<br>{% endif %}
+            {% if uncertain_arrival %}
+                <p class="alert alert-warning" role="status">{% translate "The arrival of this offer is uncertain; the pickup slot remains available." %}</p>
+            {% endif %}
+            {% if pickup_slots %}
+                <label for="pickup_slot">{% translate "Pickup slot" %}</label>
+                <select id="pickup_slot" class="form-select" data-saved-slot="{{ selected_pickup_slot_id|default_if_none:'' }}">
+                    <option value=""{% if selected_pickup_slot_id %} disabled{% endif %}>{% translate "Choose a pickup slot" %}</option>
+                    {% for slot in pickup_slots %}
+                        <option value="{{ slot.pk }}"{% if slot.pk == selected_pickup_slot_id %} selected{% endif %}>{{ slot.location }} — {{ slot.starts_at }} – {{ slot.ends_at }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-info" onclick="select_pickup_slot();">{% translate "Save pickup slot" %}</button>
+                <span id="pickup_slot_error" role="alert"></span>
+            {% endif %}
             {% if is_order_confirm_send %}
                 <p><span class="text-success">{{ email_sent_to }}</span></p>
             {% endif %}

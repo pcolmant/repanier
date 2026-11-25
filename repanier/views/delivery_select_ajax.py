@@ -12,6 +12,7 @@ from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
 from repanier.tools import sint
+from repanier.accounting_policy import AccountingPolicy
 
 
 @never_cache
@@ -30,7 +31,7 @@ def delivery_select_ajax(request):
     ).first()
     if customer_invoice is None:
         raise Http404
-    if customer.group is not None:
+    if AccountingPolicy.use_groups() and customer.group is not None:
         qs = DeliveryBoard.objects.filter(
             Q(
                 permanence_id=permanence_id,

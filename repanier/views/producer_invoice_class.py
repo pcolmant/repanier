@@ -6,6 +6,7 @@ from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItemReadOnly
 from repanier.tools import get_repanier_template_name
+from repanier.accounting_policy import AccountingPolicy
 
 
 class ProducerInvoiceView(DetailView):
@@ -22,6 +23,8 @@ class ProducerInvoiceView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["REPANIER_MANAGE_MEMBER_BALANCES"] = AccountingPolicy.manage_member_balances()
+        context["REPANIER_USE_DEPOSITS"] = AccountingPolicy.use_deposits()
         if context["object"] is None:
             # This producer has never been invoiced
             raise Http404
@@ -84,6 +87,8 @@ class ProducerInvoiceView(DetailView):
         return context
 
     def get_queryset(self):
+        if not AccountingPolicy.manage_member_balances():
+            raise Http404
         if self.request.user.is_staff:
             producer_id = self.kwargs.get("producer_id", 0)
         else:

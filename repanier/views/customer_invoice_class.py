@@ -8,6 +8,7 @@ from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.purchase import Purchase
 from repanier.tools import get_repanier_template_name
+from repanier.accounting_policy import AccountingPolicy
 
 
 class CustomerInvoiceView(DetailView):
@@ -26,6 +27,8 @@ class CustomerInvoiceView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["REPANIER_MANAGE_MEMBER_BALANCES"] = AccountingPolicy.manage_member_balances()
+        context["REPANIER_USE_DEPOSITS"] = AccountingPolicy.use_deposits()
         context["my_invoices"] = self.my_invoices
         customer_invoice = context["object"]
         # Use get() instead of filter().first() for single object lookup
@@ -122,6 +125,8 @@ class CustomerInvoiceView(DetailView):
         return context
 
     def get_queryset(self):
+        if not AccountingPolicy.manage_member_balances():
+            raise Http404
         invoice_id = self.kwargs.get("invoice_id", 0)
         user = self.request.user
         if user.is_repanier_staff:

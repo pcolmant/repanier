@@ -2,7 +2,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from repanier.const import EMPTY_STRING
+from repanier.const import AccountingMode, EMPTY_STRING
 from repanier.models.configuration import Configuration
 from repanier.widget.button_test_mail_config import ButtonTestMailConfigWidget
 
@@ -37,6 +37,29 @@ class ConfigurationDataForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["group_name"].widget.attrs["readonly"] = True
         self.fields["email"].widget.attrs["readonly"] = True
+
+    def clean(self):
+        cleaned = super().clean()
+        accounting_mode = cleaned.get("accounting_mode")
+        use_invoice_by_basket = cleaned.get("use_invoice_by_basket")
+        use_mobile_preparation = cleaned.get("use_mobile_preparation")
+        if (
+            accounting_mode == AccountingMode.SIMPLE_ORDERS
+            and use_invoice_by_basket
+        ):
+            self.add_error(
+                "use_invoice_by_basket",
+                _("Invoice by basket cannot be enabled in simple orders mode."),
+            )
+        if (
+            accounting_mode == AccountingMode.SIMPLE_ORDERS
+            and use_mobile_preparation
+        ):
+            self.add_error(
+                "use_mobile_preparation",
+                _("Mobile preparation cannot be used for closure in simple orders mode."),
+            )
+        return cleaned
 
     class Meta:
         model = Configuration
@@ -147,6 +170,7 @@ class ConfigurationAdmin(admin.ModelAdmin):
                         "use_groups",
                         "use_invoice_by_basket",
                         "use_deposits",
+                        "use_mobile_preparation",
                     ),
                 },
             ),

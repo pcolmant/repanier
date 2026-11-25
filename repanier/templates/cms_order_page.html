@@ -348,8 +348,51 @@
                     }
                 }
 
-                function btn_receive_order_email() {
+                function save_pickup_slot(select) {
+                    var body = new URLSearchParams({
+                        permanence: '{{ permanence.id|unlocalize }}',
+                        pickup_slot: select.value
+                    });
+                    return fetch('{% url "repanier:select_pickup_slot" %}', {
+                        method: 'POST',
+                        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                        body: body
+                    }).then(function (response) {
+                        if (!response.ok) throw new Error('Pickup slot update failed');
+                    });
+                }
+
+                function show_pickup_error() {
+                    {% translate "Could not save the pickup slot. Please try again." as pickup_error_message %}
+                    document.getElementById("pickup_slot_error").textContent = '{{ pickup_error_message|escapejs }}';
+                }
+
+                function select_pickup_slot() {
+                    var select = document.getElementById("pickup_slot");
+                    if (!select.value) {
+                        {% translate "Choose a pickup slot" as pickup_choose_message %}
+                        document.getElementById("pickup_slot_error").textContent = '{{ pickup_choose_message|escapejs }}';
+                        return;
+                    }
+                    save_pickup_slot(select).then(function () {
+                        window.location.reload();
+                    }).catch(show_pickup_error);
+                }
+
+                async function btn_receive_order_email() {
                     var receive_email = document.getElementById("btn_confirm_order");
+                    var pickup = document.getElementById("pickup_slot");
+                    if (pickup && pickup.value && pickup.value !== pickup.dataset.savedSlot) {
+                        if (receive_email) receive_email.disabled = true;
+                        try {
+                            await save_pickup_slot(pickup);
+                            pickup.dataset.savedSlot = pickup.value;
+                        } catch (error) {
+                            if (receive_email) receive_email.disabled = false;
+                            show_pickup_error();
+                            return;
+                        }
+                    }
                     if (receive_email) {
                         receive_email.setAttribute("disabled", "true");
                         receive_email.innerHTML = '<span class="bi bi-arrow-repeat gly-spin"></span> ' + '{% translate "Your order is being processed..." %}';

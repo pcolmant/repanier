@@ -286,6 +286,7 @@ class CancelPreparedViewTest(TestCase):
 
 
 @override_settings(SECURE_SSL_REDIRECT=False, SESSION_COOKIE_SECURE=False, CSRF_COOKIE_SECURE=False)
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class CancelPreparedRowActionsTest(TestCase):
     """The buttons offered by the preparation screen, per status."""
 
@@ -374,6 +375,7 @@ class CancelPreparedRowActionsTest(TestCase):
             )
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class PermanenceDoneRowActionsTest(TestCase):
     """The buttons of the payment and archive screens carry the same
     terse tooltips, at most two translated words each."""

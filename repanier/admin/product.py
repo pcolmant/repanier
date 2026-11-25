@@ -19,6 +19,7 @@ from repanier.admin.admin_filter import (
     AdminFilterDepartment,
 )
 from repanier.admin.tools import check_cancel_in_post, check_product
+from repanier.accounting_policy import AccountingPolicy
 from repanier.const import (
     LUT_ALL_VAT,
     LUT_ALL_VAT_REVERSE,
@@ -201,6 +202,8 @@ class ProductResource(resources.ModelResource):
 class ProductDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not AccountingPolicy.use_deposits():
+            self.fields.pop("unit_deposit", None)
 
     def clean(self):
         if any(self.errors):
@@ -337,6 +340,28 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     autocomplete_fields = ["department_for_customer", "production_mode"]
 
+    def get_fieldsets(self, request, product=None):
+        fieldsets = super().get_fieldsets(request, product)
+        if AccountingPolicy.use_deposits():
+            return fieldsets
+        cleaned = []
+        for title, options in fieldsets:
+            fields = options.get("fields", ())
+            if isinstance(fields, tuple):
+                fields = tuple(
+                    field
+                    for field in fields
+                    if not (
+                        field == "unit_deposit"
+                        or (
+                            isinstance(field, tuple)
+                            and "unit_deposit" in field
+                        )
+                    )
+                )
+            cleaned.append((title, {**options, "fields": fields}))
+        return tuple(cleaned)
+
     def has_module_permission(self, request):
         return False
 
@@ -392,13 +417,17 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     duplicate_product.short_description = _("Duplicate")
 
     def get_fields(self, request, product=None):
-        return [
+        fields = [
             "producer",
             "department_for_customer",
             "long_name_v2",
             "picture2",
             "order_unit",
-            ("producer_unit_price", "unit_deposit", "order_average_weight"),
+            (
+                ("producer_unit_price", "order_average_weight")
+                if not AccountingPolicy.use_deposits()
+                else ("producer_unit_price", "unit_deposit", "order_average_weight")
+            ),
             (
                 "customer_minimum_order_quantity",
                 "customer_increment_order_quantity",

@@ -281,6 +281,77 @@ Si une permanence a une date de clôture automatique, le cron la ferme
 et transmet les commandes à partir de l’heure de clôture configurée pour
 le site. Laisser la date vide pour clôturer la permanence manuellement.
 
+### Ajustements avant facturation
+
+Pour une permanence réelle en `SEND`, le panneau de clôture donne accès
+aux fiches des produits de la livraison. Une modification de prix y concerne
+la livraison ; la case explicite de mise à jour du catalogue rend également
+le prix durable. Les achats concernés et les totaux de leurs factures sont
+recalculés. La fiche catalogue séparée modifie le produit pour l'avenir.
+
+On peut attribuer à un membre un article de la livraison qui n'avait pas été
+commandé ou un article actif du catalogue absent de la livraison, si son
+fournisseur participe à la permanence. Les paniers et articles spéciaux
+(consignes et cotisations) ne sont pas ajoutés par cette dernière voie.
+L'achat est relié aux trois factures et conserve une quantité commandée nulle ;
+les erreurs annulent la transaction. Aucun paiement ni mouvement bancaire
+n'est créé par cet ajustement.
+
+### Validation tacite des remises aux groupes
+
+`python manage.py auto_validate_group_deliveries --dry-run` affiche les
+candidats et les dossiers en attente ; sans `--dry-run`, seuls les états
+de préparation éligibles sont validés. `--days` fixe le délai, à deux
+jours par défaut, après la date de permanence **et** la remise enregistrée.
+La permanence doit être ouverte à la préparation, en statut `SEND`, et
+ne pas être une démonstration. Un conflit, un rejet ou tout événement
+non appliqué bloque la permanence.
+
+Une ligne doit avoir une remise et une réception enregistrées, sans
+anomalie de colis ni substitution, et ses quantités commandée,
+préparée, reçue et facturée doivent concorder. Les quantités relevées
+dans les événements de préparation et de réception doivent aussi être
+lisibles et conformes. Une ambiguïté ou un écart d'une ligne bloque
+toutes les lignes en remise de ce point de livraison ; le dossier reste en attente pour
+revue humaine ; aucune écriture bancaire ni modification de solde n'est
+créée. Cette règle conservatrice n'impute pas les écarts collectifs.
+
+Les exemples d'exploitation des commandes et timers, ainsi que l'utilitaire
+de proposition d'alias en lecture seule, sont décrits dans
+`doc/exploitation-batch.md`.
+
+Sur une ligne groupée standard, le bouton OK enregistre pour chaque achat
+une préparation si nécessaire, puis une réception et une remise au groupe,
+dans cet ordre. Après synchronisation, l'état est « remis au groupe »,
+et non « validé » : la validation tacite intervient ultérieurement.
+Une remise en conflit reste bloquée pour examen par le responsable.
+
+Un arrivage incertain lié à une distribution est signalé au panier et
+en préparation ; il ne rend pas les créneaux indisponibles et ne valide
+pas à lui seul les lignes de préparation.
+La distribution est actuellement liée à une seule `Offer` : le signal
+ne détaille pas les arrivages par producteur ni par article lorsque la
+permanence comprend plusieurs offres fournisseur. Les offres non liées
+ne sont pas prises en compte ; cette granularité nécessite une évolution
+du modèle avant de pouvoir être exploitée.
+
+### Créneaux de retrait et limites hors ligne
+
+Sur le panier d'une commande ouverte, le membre peut enregistrer un
+créneau de la distribution liée à sa permanence. Un créneau unique est
+attribué automatiquement lors de l'initialisation ; avec plusieurs
+créneaux, aucun choix n'est imposé. Changer de créneau annule une
+confirmation déjà envoyée : le membre doit confirmer à nouveau. Le
+même créneau ne l'annule pas. Les commandes fermées ou facturées ne
+permettent plus de modifier le créneau. Aucun créneau n'est requis
+pour les permanences qui n'en possèdent pas.
+
+La validation tacite ne voit que les événements reçus par le serveur :
+un écart encore en attente sur un GSM hors ligne ne peut pas bloquer
+la commande. Synchroniser les appareils et traiter les conflits avant
+de l'exécuter ; le délai ne garantit pas que tous les GSM ont été
+reconnectés.
+
 ### La langue des mails aux membres
 
 Le site est multilingue (les langues vivent dans l'ini,

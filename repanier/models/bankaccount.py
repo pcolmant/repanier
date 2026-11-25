@@ -1,4 +1,5 @@
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -10,6 +11,8 @@ from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 
 
 class BankAccount(models.Model):
+    UNUSUAL_DIRECTION_CONFIRMED_MARKER = "UNUSUAL_DIRECTION_CONFIRMED"
+
     permanence = models.ForeignKey(
         "Permanence",
         verbose_name=_("Sale"),
@@ -75,6 +78,161 @@ class BankAccount(models.Model):
         db_index=True,
     )
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True)
+
+    INVOICE_CANCEL_OPERATION_STATUSES = (
+        BankMovement.CALCULATED_INVOICE,
+        BankMovement.PROFIT,
+        BankMovement.TAX,
+        BankMovement.MEMBERSHIP_FEE,
+        BankMovement.COMPENSATION,
+    )
+
+    @classmethod
+    def invoice_cancel_movements(cls, permanence_id):
+        """Movements historically generated and owned by a permanence invoice."""
+        return cls.objects.filter(
+            permanence_id=permanence_id,
+            operation_status__in=cls.INVOICE_CANCEL_OPERATION_STATUSES,
+        )
+
+    @classmethod
+    def validate_explicit_movement(
+        cls,
+        *,
+        operation_status,
+        producer=None,
+        customer=None,
+        bank_amount_in=DECIMAL_ZERO,
+        bank_amount_out=DECIMAL_ZERO,
+        customer_invoice=None,
+        producer_invoice=None,
+        allow_unusual_direction=False,
+    ):
+        """Validate accounting movements used by manual entry and imports."""
+        explicit_statuses = {
+            BankMovement.PAYMENT_RECEIVED,
+            BankMovement.PRODUCER_WAIVER,
+            BankMovement.PRODUCER_CLAIMED_AMOUNT,
+            BankMovement.GROUP_EXPENSE,
+            BankMovement.PRODUCER_DRAW,
+        }
+        if operation_status not in explicit_statuses:
+            return False
+
+        amount_in = getattr(bank_amount_in, "amount", bank_amount_in)
+        amount_out = getattr(bank_amount_out, "amount", bank_amount_out)
+        amount_in = DECIMAL_ZERO if amount_in is None else amount_in
+        amount_out = DECIMAL_ZERO if amount_out is None else amount_out
+
+        if amount_in < DECIMAL_ZERO or amount_out < DECIMAL_ZERO:
+            raise ValidationError(_("Bank movements cannot have negative amounts."))
+        if amount_in != DECIMAL_ZERO and amount_out != DECIMAL_ZERO:
+            raise ValidationError(
+                _("A bank movement cannot have cash in and cash out at the same time.")
+            )
+
+        unusual_direction = False
+
+        if operation_status == BankMovement.PAYMENT_RECEIVED:
+            if customer is None or producer is not None:
+                raise ValidationError(
+                    _("A payment received must be assigned to a customer.")
+                )
+            if amount_in <= DECIMAL_ZERO or amount_out != DECIMAL_ZERO:
+                raise ValidationError(
+                    _("A payment received requires a positive cash-in amount.")
+                )
+            if producer_invoice is not None:
+                raise ValidationError(
+                    _("A payment received cannot use a producer invoice.")
+                )
+            if customer_invoice is not None:
+                invoice_total = getattr(
+                    customer_invoice, "get_total_price_with_tax", lambda: DECIMAL_ZERO
+                )()
+                invoice_total = getattr(invoice_total, "amount", invoice_total)
+                if invoice_total == DECIMAL_ZERO:
+                    raise ValidationError(
+                        _("A payment received must not use a zero-total invoice.")
+                    )
+
+        elif operation_status == BankMovement.PRODUCER_DRAW:
+            if producer is None or customer is not None:
+                raise ValidationError(
+                    _("A producer draw must be assigned to a producer.")
+                )
+            if amount_out <= DECIMAL_ZERO or amount_in != DECIMAL_ZERO:
+                raise ValidationError(
+                    _("A producer draw requires cash-out only.")
+                )
+
+        elif operation_status == BankMovement.GROUP_EXPENSE:
+            if customer is not None or producer is not None:
+                raise ValidationError(
+                    _("A group expense must not be assigned to a customer or producer.")
+                )
+            if amount_out <= DECIMAL_ZERO or amount_in != DECIMAL_ZERO:
+                raise ValidationError(
+                    _("A group expense requires cash-out only.")
+                )
+            if customer_invoice is not None or producer_invoice is not None:
+                raise ValidationError(
+                    _("A group expense must not use a business invoice.")
+                )
+
+        elif operation_status in (
+            BankMovement.PRODUCER_WAIVER,
+            BankMovement.PRODUCER_CLAIMED_AMOUNT,
+        ):
+            if producer is None or customer is not None:
+                raise ValidationError(
+                    _("This producer operation must be assigned to a producer.")
+                )
+            if amount_in == DECIMAL_ZERO and amount_out == DECIMAL_ZERO:
+                raise ValidationError(
+                    _("This producer operation requires a positive amount.")
+                )
+            if amount_out > DECIMAL_ZERO:
+                unusual_direction = False
+            elif amount_in > DECIMAL_ZERO:
+                unusual_direction = True
+            if unusual_direction and not allow_unusual_direction:
+                raise ValidationError(
+                    _("This unusual amount direction requires confirmation.")
+                )
+
+        return unusual_direction
+
+    def clean(self):
+        super().clean()
+        confirmed_unusual_direction = (
+            self.UNUSUAL_DIRECTION_CONFIRMED_MARKER in (self.operation_comment or "")
+        )
+        self.validate_explicit_movement(
+            operation_status=self.operation_status,
+            producer=self.producer,
+            customer=self.customer,
+            bank_amount_in=self.bank_amount_in,
+            bank_amount_out=self.bank_amount_out,
+            customer_invoice=self.customer_invoice,
+            producer_invoice=self.producer_invoice,
+            allow_unusual_direction=confirmed_unusual_direction,
+        )
+
+    def save(self, *args, allow_unusual_amount_direction=False, **kwargs):
+        if self.UNUSUAL_DIRECTION_CONFIRMED_MARKER in (self.operation_comment or ""):
+            allow_unusual_amount_direction = True
+        self.validate_explicit_movement(
+            operation_status=self.operation_status,
+            producer=self.producer,
+            customer=self.customer,
+            bank_amount_in=self.bank_amount_in,
+            bank_amount_out=self.bank_amount_out,
+            customer_invoice=self.customer_invoice,
+            producer_invoice=self.producer_invoice,
+            allow_unusual_direction=allow_unusual_amount_direction,
+        )
+        super().save(*args, **kwargs)
 
     @classmethod
     def open_account(cls, customer_buyinggroup, very_first_customer):

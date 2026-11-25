@@ -46,6 +46,7 @@
                     {% endif %}
                 {% endwith %}
             {% endfor %}
+            {% if REPANIER_MANAGE_MEMBER_BALANCES %}
             {% for bank_account in not_invoiced_bank_account_set %}
                 <div class="row">
                     <div class="col-12">
@@ -74,6 +75,7 @@
                     </div>
                 </div>
             {% endfor %}
+            {% endif %}
             {% for invoiced in invoiced_array %}
                 {% with balance=invoiced.customer_invoice.balance %}
                     {% if balance != 0 %}
@@ -125,6 +127,7 @@
                         {% endif %}
                     {% endif %}
                 {% endwith %}
+                {% if REPANIER_MANAGE_MEMBER_BALANCES %}
                 {% for bank_account in invoiced.bank_account_set %}
                     <div class="row">
                         <div class="col-12">
@@ -159,6 +162,7 @@
                         </div>
                     </div>
                 {% endfor %}
+                {% endif %}
             {% endfor %}
             {% for archived in archived_customer_invoice_set %}
                 <div class="row">

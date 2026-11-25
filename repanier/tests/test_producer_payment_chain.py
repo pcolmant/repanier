@@ -24,7 +24,7 @@ import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from repanier.const import BankMovement, OrderUnit, SaleStatus, Vat
@@ -177,6 +177,7 @@ class ProducerChainFixtureMixin:
         )
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class SplitUnpaidProducersTest(ProducerChainFixtureMixin, TestCase):
     """After round 1, the unpaid producer is carried by the child."""
 
@@ -241,6 +242,7 @@ class SplitUnpaidProducersTest(ProducerChainFixtureMixin, TestCase):
         )
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class InvoiceTheChildPaysTheLastProducerTest(ProducerChainFixtureMixin, TestCase):
     """Round 2: invoicing the child pays B and charges the customer."""
 
@@ -309,6 +311,7 @@ class InvoiceTheChildPaysTheLastProducerTest(ProducerChainFixtureMixin, TestCase
         self.assertEqual(self.child.invoice_sort_order, anchor_2.id)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class NoSplitWhenEveryProducerIsSelectedTest(ProducerChainFixtureMixin, TestCase):
     """When the treasurer selects every producer (the common case), the
     permanence is invoiced as a whole: no child permanence."""
@@ -469,6 +472,7 @@ class ProducerChainJourneyMixin:
         return anchor.bank_amount_in.amount - anchor.bank_amount_out.amount
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class ThreeRoundsChainTest(ProducerChainJourneyMixin, TestCase):
     """Three producers paid one after another, over three invoicing
     rounds: the child chain (parent -> child -> grandchild) and the bank
@@ -570,6 +574,7 @@ class ThreeRoundsChainTest(ProducerChainJourneyMixin, TestCase):
             )
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class TwoUnpaidProducersMoveTogetherTest(ProducerChainJourneyMixin, TestCase):
     """When the treasurer pays one producer out of three, the two unpaid
     ones move together into the SAME child permanence, and paying them
@@ -629,6 +634,7 @@ class TwoUnpaidProducersMoveTogetherTest(ProducerChainJourneyMixin, TestCase):
         self.assertEqual(self.anchor_net(self.child.id), D("-16.00"))
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class ClaimedLowerThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestCase):
     """Between two rounds the treasurer received the producer's paper
     invoice, which claims LESS than calculated: the discount becomes a
@@ -695,6 +701,7 @@ class ClaimedLowerThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestCa
         self.assertEqual(self.anchor_net(self.child.id), D("-11.50"))
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class BreakageAdjustedBetweenRoundsTest(ProducerChainJourneyMixin, TestCase):
     """Between two rounds the group records breakage for the still unpaid
     producer: the invoiced quantity of the child is adjusted BEFORE the
@@ -756,6 +763,7 @@ class BreakageAdjustedBetweenRoundsTest(ProducerChainJourneyMixin, TestCase):
         self.assertEqual(self.anchor_net(self.child.id), D("-9.00"))
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class MembershipFeeWithinTheSplitTest(ProducerChainJourneyMixin, TestCase):
     """The membership fee - a product of the site producer - is forced at
     closure into the order of an outdated member. Within a split, it must
@@ -832,6 +840,7 @@ class MembershipFeeWithinTheSplitTest(ProducerChainJourneyMixin, TestCase):
         self.assertEqual(self.anchor_net(self.child.id), D("-12.00"))
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class SplitWithDeliveryPointsAndGroupTest(TestCase):
     """A split in a permanence with delivery points, where the moved
     producer is bought by members invoiced to their GROUP: the group
@@ -1103,6 +1112,7 @@ class CancelChainJourneyMixin(ProducerChainJourneyMixin):
         cls.pay_producers(cls.child, {"Bananes": D("6.00")})
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class CancelTheInvoicedChildTest(CancelChainJourneyMixin, TestCase):
     """The treasurer cancels the child (the last book): only round 2 is
     restored, and the child can be invoiced again afterwards."""
@@ -1169,6 +1179,7 @@ class CancelTheInvoicedChildTest(CancelChainJourneyMixin, TestCase):
         self.assertEqual(latest.permanence_id, self.child.id)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class CancelTheWholeChainFromTheNewestTest(CancelChainJourneyMixin, TestCase):
     """Cancel the child then the parent: the whole chain is reopened, in
     the reverse order of the invoicing rounds."""
@@ -1211,6 +1222,7 @@ class CancelTheWholeChainFromTheNewestTest(CancelChainJourneyMixin, TestCase):
         self.assertIsNotNone(self.child.canceled_invoice_sort_order)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class CancelTheParentWhileTheChildIsStillOpenTest(ProducerChainJourneyMixin, TestCase):
     """After round 1 only, the child still carries the unpaid producer at
     SEND: cancelling the parent reopens the parent and leaves the child
@@ -1303,6 +1315,7 @@ class CancelTheParentWhileTheChildIsStillOpenTest(ProducerChainJourneyMixin, Tes
         )
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class PaymentAttachedShellIsKeptTest(TestCase):
     """The invoice cleanup that follows a split only removes inert
     zero-total shells. A fully moved customer who already paid at the
@@ -1434,6 +1447,7 @@ class PaymentAttachedShellIsKeptTest(TestCase):
         self.assertEqual(self.alice.balance.amount, D("4.00"))
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class ClaimedHigherThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestCase):
     """Mirror of ClaimedLowerThanCalculatedAtTheChildTest: the producer's
     paper invoice claims MORE than calculated (e.g. delivered extra
@@ -1516,6 +1530,7 @@ class ClaimedHigherThanCalculatedAtTheChildTest(ProducerChainJourneyMixin, TestC
         self.assertEqual(self.anchor_net(self.child.id), D("-12.50"))
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class ShortfallCoveredByTheGroupTest(ProducerChainJourneyMixin, TestCase):
     """The producer delivered less than invoiced - the child purchase is
     adjusted down - but the group accepts to pay the difference out of

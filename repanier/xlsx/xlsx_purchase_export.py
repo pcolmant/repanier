@@ -137,7 +137,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                 ]
 
         # Optimized: prefetch related data to avoid N+1 queries
-        purchases = Purchase.objects.filter(**base_filters).order_by(*order_by).select_related(
+        purchases = Purchase.objects.filter(**base_filters).filter(permanence__is_demo=False).order_by(*order_by).select_related(
             'permanence',
             'producer',
             'customer',

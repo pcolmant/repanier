@@ -43,7 +43,7 @@ def export_invoice(
     hide_customer_prices = customer is None
     purchase_set = Purchase.objects.get_invoices(
         permanence=permanence, year=year, customer=customer, producer=producer
-    ).select_related(
+    ).filter(permanence__is_demo=False).select_related(
         'permanence',
         'producer',
         'customer',

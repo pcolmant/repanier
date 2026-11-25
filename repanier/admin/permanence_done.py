@@ -1,8 +1,10 @@
 import logging
 
 from django.contrib import admin
+from django.db import transaction
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy, path
@@ -11,6 +13,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from repanier.models import PermanenceDone
+from repanier.models.permanence import Permanence
 from repanier.admin.admin_filter import AdminFilterPermanenceDoneStatus
 from repanier.admin.forms import (
     ProducerInvoicedFormSet,
@@ -19,6 +22,8 @@ from repanier.admin.forms import (
     ImportInvoiceForm,
 )
 from repanier.admin.sale import SaleAdmin
+from repanier.accounting_policy import AccountingPolicy
+from repanier.accounting_closing import ClosingBalance
 from repanier.admin.tools import (
     check_permanence,
     check_cancel_in_post,
@@ -26,7 +31,7 @@ from repanier.admin.tools import (
     get_back_to_change_list_url,
 )
 from django.conf import settings
-from repanier.const import BankMovement, DECIMAL_ZERO, EMPTY_STRING, SaleStatus
+from repanier.const import BankMovement, DECIMAL_ZERO, EMPTY_STRING, OrderUnit, SaleStatus
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.middleware import add_filter
 from repanier.models.bankaccount import BankAccount
@@ -105,6 +110,21 @@ class PermanenceDoneAdmin(SaleAdmin):
                 name="permanence-accounting-report",
             ),
             path(
+                "<int:permanence_id>/closing-balance/",
+                self.admin_site.admin_view(self.closing_balance),
+                name="permanence-closing-balance",
+            ),
+            path(
+                "<int:permanence_id>/closing-balance-adjustment/",
+                self.admin_site.admin_view(self.closing_balance_adjustment),
+                name="permanence-closing-balance-adjustment",
+            ),
+            path(
+                "<int:permanence_id>/closing-products/",
+                self.admin_site.admin_view(self.closing_products),
+                name="permanence-closing-products",
+            ),
+            path(
                 "<int:permanence_id>/archive/",
                 self.admin_site.admin_view(self.archive),
                 name="permanence-archive",
@@ -129,8 +149,51 @@ class PermanenceDoneAdmin(SaleAdmin):
                 self.admin_site.admin_view(self.restore_delivery),
                 name="permanence-restore-delivery",
             ),
+            path(
+                "<int:permanence_id>/preparation-link/",
+                self.admin_site.admin_view(self.preparation_link),
+                name="permanence-preparation-link",
+            ),
         ]
         return custom_urls + urls
+
+    @check_permanence(SaleStatus.SEND)
+    def preparation_link(self, request, permanence_id, permanence=None):
+        from repanier.accounting_policy import AccountingPolicy
+        from repanier.preparation_sync import (
+            make_preparation_token,
+            revoke_preparation_access,
+        )
+        if not AccountingPolicy.use_mobile_preparation():
+            raise PermissionDenied
+
+        action = request.POST.get("action")
+        if action == "generate":
+            token = make_preparation_token(permanence.id)
+        else:
+            token = None
+        if action == "revoke":
+            revoke_preparation_access(permanence.id)
+
+        access = getattr(permanence, "preparation_access", None)
+        link = ""
+        if token:
+            from django.urls import reverse
+            link = request.build_absolute_uri(
+                reverse("repanier:preparation_page", args=[token])
+            )
+        elif access is not None and access.is_valid():
+            link = ""
+        return render(
+            request,
+            get_repanier_template_name("admin/preparation_link.html"),
+            {
+                "permanence": permanence,
+                "link": link,
+                "access": access,
+                "can_generate": not permanence.is_demo,
+            },
+        )
 
     @check_cancel_in_post
     def import_new_invoice(self, request):
@@ -200,6 +263,132 @@ class PermanenceDoneAdmin(SaleAdmin):
             },
         )
 
+    @check_permanence(SaleStatus.SEND)
+    def closing_balance_adjustment(self, request, permanence_id, permanence=None):
+        if request.method != "POST":
+            raise PermissionDenied
+        if (
+            not self.has_change_permission(request, permanence)
+            or permanence.is_demo
+            or not AccountingPolicy.manage_permanence_accounting()
+        ):
+            raise PermissionDenied
+        import decimal
+        from django.core.exceptions import ValidationError
+        from repanier.accounting_closing import (
+            create_accounting_adjustment,
+            create_catalogue_adjustment,
+        )
+        from repanier.models.customer import Customer
+        from repanier.models.offeritem import OfferItem
+        from repanier.models.product import Product
+
+        try:
+            customer = Customer.objects.filter(pk=request.POST.get("customer_id")).first()
+            offer_id = request.POST.get("offer_item_id")
+            product_id = request.POST.get("product_id")
+            if customer is None or bool(offer_id) == bool(product_id):
+                raise ValidationError("Select a member and exactly one delivery or catalogue product.")
+            if offer_id:
+                offer_item = OfferItem.objects.filter(pk=offer_id, permanence=permanence).first()
+                if offer_item is None:
+                    raise ValidationError("The product is not in this delivery.")
+                create_accounting_adjustment(
+                    permanence=permanence, customer=customer, offer_item=offer_item,
+                    quantity=request.POST.get("quantity", "0"),
+                )
+            else:
+                product = Product.objects.filter(pk=product_id).first()
+                if product is None:
+                    raise ValidationError("The catalogue product does not exist.")
+                create_catalogue_adjustment(
+                    permanence=permanence, customer=customer, product=product,
+                    quantity=request.POST.get("quantity", "0"),
+                )
+            self.message_user(
+                request,
+                _("Accounting adjustment added and totals recalculated."),
+                messages.INFO,
+            )
+        except (ValidationError, decimal.InvalidOperation, ValueError) as error:
+            self.message_user(request, str(error), messages.ERROR)
+        return HttpResponseRedirect(
+            reverse(
+                "admin:permanence-closing-balance",
+                args=[permanence_id],
+            )
+        )
+
+    @check_permanence(SaleStatus.SEND)
+    def closing_products(self, request, permanence_id, permanence=None):
+        if (
+            request.method != "GET"
+            or not self.has_change_permission(request, permanence)
+            or permanence.is_demo
+            or not AccountingPolicy.manage_permanence_accounting()
+        ):
+            raise PermissionDenied
+        from repanier.models.offeritem import OfferItem
+
+        context = {
+            **self.admin_site.each_context(request),
+            "permanence": permanence,
+            "offers": OfferItem.objects.filter(
+                permanence=permanence,
+            ).select_related("product", "producer").order_by("producer__short_profile_name", "long_name_v2"),
+        }
+        template = (
+            "repanier/admin/closing_products_partial.html"
+            if request.headers.get("HX-Request") == "true"
+            else "repanier/admin/closing_products.html"
+        )
+        return render(request, template, context)
+
+    @check_permanence(SaleStatus.SEND)
+    def closing_balance(self, request, permanence_id, permanence=None):
+        if (
+            not self.has_change_permission(request, permanence)
+            or permanence.is_demo
+            or not AccountingPolicy.manage_permanence_accounting()
+        ):
+            raise PermissionDenied
+        balance = ClosingBalance(permanence).check()
+        from repanier.models.customer import Customer
+        from repanier.models.offeritem import OfferItem
+        from repanier.models.product import Product
+        return render(
+            request,
+            get_repanier_template_name("admin/confirm_invoice.html"),
+            {
+                **self.admin_site.each_context(request),
+                "action": "closing-balance",
+                "permanence": permanence,
+                "permanence_form": PermanenceInvoicedForm(),
+                "producer_invoiced_formset": ProducerInvoicedFormSet(),
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
+                "min_payment_date": timezone.now().date(),
+                "max_payment_date": timezone.now().date(),
+                "closing_blocking": balance.blocking,
+                "closing_warnings": balance.warnings,
+                "adjustment_customers": Customer.objects.filter(
+                    may_order=True,
+                    is_active=True,
+                    is_anonymized=False,
+                ).order_by("short_basket_name"),
+                "adjustment_offers": OfferItem.objects.filter(
+                    permanence=permanence,
+                ).select_related("product").order_by("long_name_v2"),
+                "adjustment_products": Product.objects.filter(
+                    producer__in=permanence.producers.all(),
+                    is_active=True,
+                    is_box=False,
+                    order_unit__lt=OrderUnit.DEPOSIT,
+                ).exclude(
+                    offeritem__permanence=permanence,
+                ).select_related("producer").order_by("producer__short_profile_name", "long_name_v2"),
+            },
+        )
+
     @check_permanence(SaleStatus.INVOICED)
     def accounting_report(self, request, permanence_id, permanence=None):
         wb = export_bank(permanence=permanence, wb=None, sheet_name=permanence)
@@ -225,10 +414,104 @@ class PermanenceDoneAdmin(SaleAdmin):
         self.message_user(request, user_message, user_message_level)
         return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
+    def _apply_invoice(
+        self, request, permanence, payment_date, producer_invoiced_formset
+    ):
+        """Run the whole closing sequence in one transaction: producer
+        invoices, promotion of the preparation and the invoicing itself.
+        Any refusal rolls everything back and returns ("rejected", errors)."""
+        from repanier.preparation_closure import promote_preparation_to_accounting
+
+        with transaction.atomic():
+            at_least_one_selected = False
+            for producer_invoiced_form in producer_invoiced_formset:
+                if not producer_invoiced_form.is_valid():
+                    continue
+                producer_id = producer_invoiced_form.cleaned_data.get("id")
+                selected = producer_invoiced_form.cleaned_data.get("selected")
+                producer_invoice = ProducerInvoice.objects.filter(
+                    permanence_id=permanence.id,
+                    invoice_sort_order__isnull=True,
+                    producer_id=producer_id,
+                ).first()
+                if producer_invoice is None:
+                    continue
+                if selected:
+                    at_least_one_selected = True
+                    producer_invoice.to_be_invoiced_balance = (
+                        producer_invoiced_form.cleaned_data.get(
+                            "to_be_invoiced_balance"
+                        )
+                    )
+                    producer_invoice.invoice_reference = (
+                        producer_invoiced_form.cleaned_data.get(
+                            "invoice_reference", EMPTY_STRING
+                        )
+                    )
+                    producer_invoice.to_be_paid = True
+                else:
+                    producer_invoice.to_be_invoiced_balance = DECIMAL_ZERO
+                    producer_invoice.invoice_reference = EMPTY_STRING
+                    producer_invoice.to_be_paid = False
+                producer_invoice.delta_vat = DECIMAL_ZERO
+                producer_invoice.delta_price_with_tax = DECIMAL_ZERO
+                producer_invoice.save(
+                    update_fields=[
+                        "to_be_invoiced_balance",
+                        "invoice_reference",
+                        "delta_vat",
+                        "delta_price_with_tax",
+                        "to_be_paid",
+                    ]
+                )
+            if not at_least_one_selected:
+                transaction.set_rollback(True)
+                return "none_selected", []
+
+            promotion = promote_preparation_to_accounting(
+                permanence,
+                user=request.user,
+                parcel_dispositions=request.POST.get("parcel_dispositions"),
+            )
+            if promotion["status"] != "applied":
+                transaction.set_rollback(True)
+                return "rejected", [
+                    "{}: {}".format(key, value)
+                    for key, value in promotion.items()
+                    if key != "status"
+                ]
+
+            promotion_closing = ClosingBalance(permanence).check()
+            if not promotion_closing.is_valid:
+                transaction.set_rollback(True)
+                return "rejected", [
+                    "{}: {}".format(finding["code"], finding["message"])
+                    for finding in promotion_closing.blocking
+                ]
+
+            permanence.invoice(payment_date=payment_date)
+            invoiced = Permanence.objects.filter(
+                id=permanence.id, status=SaleStatus.WAIT_FOR_INVOICED
+            ).exists()
+            if not invoiced:
+                # Permanence.invoice() returns silently when it cannot invoice
+                transaction.set_rollback(True)
+                return "rejected", [
+                    "INVOICE: the permanence could not be invoiced, nothing was changed."
+                ]
+        return "applied", []
+
     @check_done_in_post
     @check_cancel_in_post
     @check_permanence(SaleStatus.SEND)
     def invoice(self, request, permanence_id, permanence=None):
+        if (
+            permanence.is_demo
+            or not AccountingPolicy.manage_permanence_accounting()
+            or not self.has_change_permission(request, permanence)
+        ):
+            raise PermissionDenied
+        closing_balance = ClosingBalance(permanence).check()
         max_payment_date = timezone.now().date()
         bank_account = (
             BankAccount.objects.filter(operation_status=BankMovement.LATEST_TOTAL)
@@ -248,6 +531,16 @@ class PermanenceDoneAdmin(SaleAdmin):
         if max_payment_date < min_payment_date:
             max_payment_date = min_payment_date
         if "apply" in request.POST and ACTION_CHECKBOX_NAME in request.POST:
+            if not closing_balance.is_valid:
+                for finding in closing_balance.blocking:
+                    permanence_form_errors = finding["message"]
+                    messages.error(
+                        request,
+                        "{}: {}".format(finding["code"], permanence_form_errors),
+                    )
+                return HttpResponseRedirect(
+                    self.get_redirect_to_change_list_url()
+                )
             permanence_form = PermanenceInvoicedForm(request.POST)
             producer_invoiced_formset = ProducerInvoicedFormSet(request.POST)
             if permanence_form.is_valid() and producer_invoiced_formset.is_valid():
@@ -268,62 +561,13 @@ class PermanenceDoneAdmin(SaleAdmin):
                         },
                     )
                 else:
-                    at_least_one_selected = False
-                    for producer_invoiced_form in producer_invoiced_formset:
-                        if producer_invoiced_form.is_valid():
-                            producer_id = producer_invoiced_form.cleaned_data.get("id")
-                            selected = producer_invoiced_form.cleaned_data.get(
-                                "selected"
-                            )
-                            producer_invoice = ProducerInvoice.objects.filter(
-                                permanence_id=permanence_id,
-                                invoice_sort_order__isnull=True,
-                                producer_id=producer_id,
-                            ).first()
-                            if selected:
-                                at_least_one_selected = True
-                                producer_invoice.to_be_invoiced_balance = (
-                                    producer_invoiced_form.cleaned_data.get(
-                                        "to_be_invoiced_balance"
-                                    )
-                                )
-                                producer_invoice.invoice_reference = (
-                                    producer_invoiced_form.cleaned_data.get(
-                                        "invoice_reference", EMPTY_STRING
-                                    )
-                                )
-                                producer_invoice.to_be_paid = True
-                            else:
-                                producer_invoice.to_be_invoiced_balance = DECIMAL_ZERO
-                                producer_invoice.invoice_reference = EMPTY_STRING
-                                producer_invoice.to_be_paid = False
-                            producer_invoice.delta_vat = DECIMAL_ZERO
-                            producer_invoice.delta_price_with_tax = DECIMAL_ZERO
-                            producer_invoice.save(
-                                update_fields=[
-                                    "to_be_invoiced_balance",
-                                    "invoice_reference",
-                                    "delta_vat",
-                                    "delta_price_with_tax",
-                                    "to_be_paid",
-                                ]
-                            )
-                    if at_least_one_selected:
-                        permanence.invoice(payment_date=payment_date)
-                        # previous_latest_total = (
-                        #     BankAccount.objects.filter(
-                        #         operation_status=BankMovement.LATEST_TOTAL,
-                        #         producer__isnull=True,
-                        #         customer__isnull=True,
-                        #     )
-                        #     .order_by("-id")
-                        #     .first()
-                        # )
-                        # previous_latest_total_id = (
-                        #     previous_latest_total.id
-                        #     if previous_latest_total is not None
-                        #     else 0
-                        # )
+                    outcome, errors = self._apply_invoice(
+                        request,
+                        permanence,
+                        payment_date,
+                        producer_invoiced_formset,
+                    )
+                    if outcome == "applied":
                         template_name = get_repanier_template_name(
                             "admin/confirm_bank_movement.html"
                         )
@@ -344,9 +588,14 @@ class PermanenceDoneAdmin(SaleAdmin):
                             },
                         )
                     else:
-                        user_message = _("You must select at least one producer.")
-                        user_message_level = messages.WARNING
-                        self.message_user(request, user_message, user_message_level)
+                        if outcome == "none_selected":
+                            self.message_user(
+                                request,
+                                _("You must select at least one producer."),
+                                messages.WARNING,
+                            )
+                        for error in errors:
+                            messages.error(request, error)
                         return HttpResponseRedirect(
                             self.get_redirect_to_change_list_url()
                         )
@@ -418,6 +667,8 @@ class PermanenceDoneAdmin(SaleAdmin):
                 "action_checkbox_name": ACTION_CHECKBOX_NAME,
                 "min_payment_date": min_payment_date,
                 "max_payment_date": max_payment_date,
+                "closing_blocking": closing_balance.blocking,
+                "closing_warnings": closing_balance.warnings,
             },
         )
 
@@ -552,14 +803,44 @@ class PermanenceDoneAdmin(SaleAdmin):
     def get_row_actions(self, permanence):
 
         if permanence.status == SaleStatus.SEND:
-            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            if AccountingPolicy.manage_permanence_accounting():
+                preparation_action = ""
+                closing_action = format_html(
+                    '<a class="btn btn-outline-primary btn-sm" style="min-height:44px" '
+                    'href="{}">{}</a> ',
+                    add_filter(
+                        reverse(
+                            "admin:permanence-closing-balance",
+                            args=[permanence.pk],
+                        )
+                    ),
+                    _("Closing checklist"),
+                )
+                if permanence.is_demo:
+                    closing_action = ""
+                if AccountingPolicy.use_mobile_preparation() and not permanence.is_demo:
+                    preparation_action = format_html(
+                        '<a class="btn btn-outline-success btn-sm" style="min-height:44px" '
+                        'href="{}">{}</a> ',
+                        add_filter(
+                            reverse(
+                                "admin:permanence-preparation-link",
+                                args=[permanence.pk],
+                            )
+                        ),
+                        _("GSM preparation"),
+                    )
                 return format_html(
                     '<div class="repanier-button-row">'
+                    "{}"
+                    "{}"
                     '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a> '
                     '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-upload"></i></a> '
                     '<a class="repanier-a-tooltip repanier-a-cancel" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a>'
                     '<a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a>'
                     "</div>",
+                    preparation_action,
+                    closing_action,
                     add_filter(
                         reverse("admin:permanence-export-invoice", args=[permanence.pk])
                     ),

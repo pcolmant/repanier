@@ -13,6 +13,7 @@ from decimal import Decimal
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from repanier.const import BankMovement, SaleStatus
 from repanier.management.commands.audit_accounting import (
@@ -82,6 +83,7 @@ class AuditAccountingTestCaseMixin(AccountingJourneyMixin):
         return sorted(finding.code for finding in findings)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class AuditCleanJournalTest(AuditAccountingTestCaseMixin, TestCase):
     """The whole journey replays square: no finding allowed."""
 
@@ -98,11 +100,24 @@ class AuditCleanJournalTest(AuditAccountingTestCaseMixin, TestCase):
         self.assertEqual(self.run_audit(audit_bank), [])
 
     def test_the_command_succeeds_on_a_clean_journal(self):
+        from repanier.models.distribution import DistributionEvent, PickupSlot
+
+        distribution = DistributionEvent.objects.create(
+            permanence=self.permanence, distribution_date=self.permanence.permanence_date,
+        )
+        PickupSlot.objects.create(
+            distribution_event=distribution, location="Audit",
+            starts_at=timezone.now(), ends_at=timezone.now(),
+        )
+        self.assertTrue(PurchaseWoReceiver.objects.filter(permanence=self.permanence).exists())
+        self.assertTrue(distribution.pickup_slots.exists())
         stdout = io.StringIO()
         call_command("audit_accounting", stdout=stdout)
         self.assertIn("replays square", stdout.getvalue())
+        self.assertEqual(stdout.getvalue().count("0 finding(s)"), 6)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class AuditScratchedJournalTest(AuditAccountingTestCaseMixin, TestCase):
     """One scratch per class of invariant: the finding is expected."""
 
@@ -263,6 +278,7 @@ class AuditScratchedJournalTest(AuditAccountingTestCaseMixin, TestCase):
         self.assertIn("A1", stdout.getvalue())
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class AuditEraAndDrillDownTest(AuditAccountingTestCaseMixin, TestCase):
     """--since scopes the era, --invoice drills down one book."""
 
@@ -394,6 +410,7 @@ class AuditEraAndDrillDownTest(AuditAccountingTestCaseMixin, TestCase):
             call_command("audit_accounting", invoice="c:not-an-id")
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class AuditMarginTest(AuditAccountingTestCaseMixin, TestCase):
     """The sites which resell above the purchase price keep the
     difference: the audit must recognize the resale margin, not ring
@@ -558,6 +575,7 @@ class AuditMarginTest(AuditAccountingTestCaseMixin, TestCase):
         self.assertIn("never", b2.suggestion)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class AuditMembershipFeeRowTest(AuditAccountingTestCaseMixin, TestCase):
     """The old invoicing flows left MEMBERSHIP_FEE bank rows behind.
 

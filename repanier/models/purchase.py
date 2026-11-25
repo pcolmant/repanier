@@ -7,7 +7,14 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from repanier.const import (
-    DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING, OrderUnit, RoundUpTo, SaleStatus
+    DECIMAL_ONE,
+    DECIMAL_ZERO,
+    EMPTY_STRING,
+    OrderUnit,
+    PreparationOrigin,
+    PreparationStatus,
+    RoundUpTo,
+    SaleStatus,
 )
 from repanier.fields.RepanierMoneyField import ModelRepanierMoneyField
 from repanier.models.invoice import (
@@ -61,19 +68,27 @@ class Purchase(models.Model):
         "Customer", verbose_name=_("Customer"), on_delete=models.PROTECT, db_index=True
     )
     customer_producer_invoice = models.ForeignKey(
-        "CustomerProducerInvoice", on_delete=models.PROTECT, db_index=True
+        "CustomerProducerInvoice",
+        on_delete=models.PROTECT,
+        db_index=True,
+        null=True,
+        blank=True,
     )
     producer_invoice = models.ForeignKey(
         "ProducerInvoice",
         verbose_name=_("Accounting entry"),
         on_delete=models.PROTECT,
         db_index=True,
+        null=True,
+        blank=True,
     )
     customer_invoice = models.ForeignKey(
         "CustomerInvoice",
         verbose_name=_("Accounting entry"),
         on_delete=models.PROTECT,
         db_index=True,
+        null=True,
+        blank=True,
     )
 
     is_box = models.BooleanField(default=False)
@@ -98,6 +113,34 @@ class Purchase(models.Model):
     # via permanence.send_to_producer()
     quantity_invoiced = models.DecimalField(
         _("Quantity accounted for"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+    )
+    quantity_prepared = models.DecimalField(
+        _("Quantity prepared"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+    )
+    quantity_received = models.DecimalField(
+        _("Quantity received"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+    )
+    preparation_status = models.CharField(
+        _("Preparation status"),
+        max_length=16,
+        choices=PreparationStatus.choices,
+        default=PreparationStatus.ORDERED,
+        db_index=True,
+    )
+    origin = models.CharField(
+        _("Origin"),
+        max_length=32,
+        choices=PreparationOrigin.choices,
+        default=PreparationOrigin.NORMAL,
+        db_index=True,
+    )
+    substitution_source = models.ForeignKey(
+        "self",
+        verbose_name=_("Substitution source"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="substitution_targets",
     )
     purchase_price = ModelRepanierMoneyField(
         _("Producer row price"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
@@ -248,25 +291,30 @@ class Purchase(models.Model):
     def save(self, *args, **kwargs):
         # logger.info("purchase save : {}".format(self.pk))
         if not self.pk:
-            # This code only happens if the objects is not in the database yet.
-            # Otherwise it would have pk
-            self.customer_invoice = CustomerInvoice.get_or_create_invoice(
-                permanence_id=self.permanence_id,
-                customer_id=self.customer_id,
-                status=self.status,
-            )
-            self.producer_invoice = ProducerInvoice.get_or_create_invoice(
-                permanence_id=self.permanence_id,
-                producer_id=self.producer_id,
-                status=self.status,
-            )
-            self.customer_producer_invoice = (
-                CustomerProducerInvoice.get_or_create_invoice(
+            if getattr(self.permanence, "is_demo", False):
+                self.customer_invoice = None
+                self.producer_invoice = None
+                self.customer_producer_invoice = None
+            else:
+                # This code only happens if the objects is not in the database yet.
+                # Otherwise it would have pk
+                self.customer_invoice = CustomerInvoice.get_or_create_invoice(
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_id,
-                    producer_id=self.producer_id,
+                    status=self.status,
                 )
-            )
+                self.producer_invoice = ProducerInvoice.get_or_create_invoice(
+                    permanence_id=self.permanence_id,
+                    producer_id=self.producer_id,
+                    status=self.status,
+                )
+                self.customer_producer_invoice = (
+                    CustomerProducerInvoice.get_or_create_invoice(
+                        permanence_id=self.permanence_id,
+                        customer_id=self.customer_id,
+                        producer_id=self.producer_id,
+                    )
+                )
         super().save(*args, **kwargs)
 
     def __str__(self):

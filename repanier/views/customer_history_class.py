@@ -6,6 +6,7 @@ from repanier.models import Customer
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import CustomerInvoice
 from repanier.tools import get_repanier_template_name
+from repanier.accounting_policy import AccountingPolicy
 
 
 class CustomerHistoryView(DetailView):
@@ -23,6 +24,7 @@ class CustomerHistoryView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["REPANIER_MANAGE_MEMBER_BALANCES"] = AccountingPolicy.manage_member_balances()
         context["my_invoices"] = self.my_invoices
         customer = context["object"]
         if customer is not None:
@@ -62,6 +64,8 @@ class CustomerHistoryView(DetailView):
         return context
 
     def get_queryset(self):
+        if not AccountingPolicy.manage_member_balances():
+            raise Http404
         user = self.request.user
         if user.is_repanier_staff:
             customer_id = self.kwargs.get("customer_id", user.customer_id)

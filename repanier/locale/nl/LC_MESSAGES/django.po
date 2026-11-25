@@ -4706,3 +4706,27 @@ msgstr "Voorraadcontrole"
 #~ "href=\"/repanier/go_repanier/\" class=\"btn btn-success btn-sm text-white "
 #~ "my-1\">aanmelden</a> of naar de <a href=\"/\" class=\"btn btn-success btn-"
 #~ "sm text-white my-1\">startpagina</a> gaan."
+
+msgid "Accounting adjustment"
+msgstr "Boekhoudkundige aanpassing"
+
+msgid "Closing checklist"
+msgstr "Checklist voor afsluiting"
+
+msgid "Review before closing"
+msgstr "Controleren voor afsluiting"
+
+msgid "GSM preparation link"
+msgstr "GSM-preparatiekoppeling"
+
+msgid "A preparation access is active."
+msgstr "Er is een actieve voorbereidingstoegang."
+
+msgid "No active preparation access."
+msgstr "Geen actieve voorbereidingstoegang."
+
+msgid "Generate or renew the link"
+msgstr "Koppeling genereren of vernieuwen"
+
+msgid "Revoke access"
+msgstr "Toegang intrekken"

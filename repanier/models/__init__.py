@@ -30,4 +30,12 @@ from .purchase import PurchaseWoReceiver
 
 from .emaillog import EmailLog
 from .permanence_reminder import PermanenceReminder
+from .preparation import (
+    DepositContainerType,
+    DepositReceipt,
+    PermanencePreparationAccess,
+    PreparationSyncEvent,
+)
+from .distribution import Offer, DistributionEvent, PickupSlot
+from .product_alias import ProductAlias
 from .poll import Poll, PollChoice, PollResponse  # noqa: F401

@@ -16,7 +16,7 @@ import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from repanier.const import BankMovement, SaleStatus, Vat
 from repanier.models.bankaccount import BankAccount
@@ -143,6 +143,7 @@ class InvoicingFixtureMixin:
         cls.permanence.refresh_from_db()
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class IndividualInvoicingTest(InvoicingFixtureMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -234,6 +235,7 @@ class IndividualInvoicingTest(InvoicingFixtureMixin, TestCase):
         self.assertEqual(payment.permanence_id, self.permanence.id)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class GroupInvoicingTest(InvoicingFixtureMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -275,6 +277,7 @@ class GroupInvoicingTest(InvoicingFixtureMixin, TestCase):
         self.assertEqual(self.producer.balance.amount, D("8.10"))
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class PartialDeliveryPointClosureTest(InvoicingFixtureMixin, TestCase):
     """A permanence with delivery points can be closed point by point."""
 
@@ -415,6 +418,7 @@ class PartialDeliveryPointClosureTest(InvoicingFixtureMixin, TestCase):
         self.assertEqual(board2.status, SaleStatus.SEND)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class NothingBilledGroupIsRemovedTest(TestCase):
     """A group whose members ordered nothing is charged nothing: invoicing
     the permanence then removes the group and its ordering-but-empty

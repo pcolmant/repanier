@@ -77,8 +77,13 @@ class RepanierAuthBackend(ModelBackend):
                 .only("login_attempt_counter", "login_locked_on")
                 .first()
             )
-            login_attempt_counter = configuration.login_attempt_counter
-            login_locked_on = configuration.login_locked_on
+            if configuration is None:
+                configuration = Configuration.objects.only(
+                    "login_attempt_counter", "login_locked_on"
+                ).first()
+            if configuration is not None:
+                login_attempt_counter = configuration.login_attempt_counter
+                login_locked_on = configuration.login_locked_on
         else:
             login_attempt_counter = customer.login_attempt_counter
             login_locked_on = customer.login_locked_on
@@ -126,14 +131,20 @@ class RepanierAuthBackend(ModelBackend):
                     ),
                 )
             elif is_superuser:
-                Configuration.objects.filter(id=DECIMAL_ONE).update(
-                    login_attempt_counter=min(counter, 20),
-                    **(
-                        {"login_locked_on": timezone.now()}
-                        if counter >= LOGIN_LOCK_ATTEMPTS and login_locked_on is None
-                        else {}
-                    ),
+                configuration = (
+                    Configuration.objects.filter(id=DECIMAL_ONE).first()
+                    or Configuration.objects.first()
                 )
+                if configuration is not None:
+                    Configuration.objects.filter(id=configuration.id).update(
+                        login_attempt_counter=min(counter, 20),
+                        **(
+                            {"login_locked_on": timezone.now()}
+                            if counter >= LOGIN_LOCK_ATTEMPTS
+                            and login_locked_on is None
+                            else {}
+                        ),
+                    )
             if counter >= LOGIN_LOCK_ATTEMPTS:
                 if login_locked_on is None:
                     self._warn_account_owner(user_username)
@@ -170,12 +181,14 @@ class RepanierAuthBackend(ModelBackend):
         elif is_superuser:
             configuration = Configuration.objects.filter(id=DECIMAL_ONE).only(
                 "login_attempt_counter", "login_locked_on"
+            ).first() or Configuration.objects.only(
+                "login_attempt_counter", "login_locked_on"
             ).first()
             if configuration is not None and (
                 configuration.login_attempt_counter > DECIMAL_ZERO
                 or configuration.login_locked_on is not None
             ):
-                Configuration.objects.filter(id=DECIMAL_ONE).update(
+                Configuration.objects.filter(id=configuration.id).update(
                     login_attempt_counter=DECIMAL_ZERO, login_locked_on=None
                 )
 

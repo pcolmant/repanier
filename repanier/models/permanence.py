@@ -89,6 +89,15 @@ class Permanence(models.Model):
         default=SaleStatus.PLANNED,
     )
     permanence_date = models.DateField(_("Date"), db_index=True)
+    is_demo = models.BooleanField(
+        _("Demonstration / trial permanence"),
+        default=False,
+        db_index=True,
+    )
+    preparation_enabled = models.BooleanField(
+        _("Enable GSM preparation"),
+        default=False,
+    )
     payment_date = models.DateField(
         _("Payment date"), blank=True, null=True, db_index=True
     )
@@ -1259,16 +1268,7 @@ class Permanence(models.Model):
             bank_account.save()
         # Delete also all payments recorded to producers, bank profit, bank tax
         # Delete also all compensation recorded to producers
-        BankAccount.objects.filter(
-            permanence_id=self.id,
-            operation_status__in=[
-                BankMovement.CALCULATED_INVOICE,
-                BankMovement.PROFIT,
-                BankMovement.TAX,
-                BankMovement.MEMBERSHIP_FEE,
-                BankMovement.COMPENSATION,  # BANK_COMPENSATION may occurs in previous release of Repanier
-            ],
-        ).delete()
+        BankAccount.invoice_cancel_movements(self.id).delete()
         Permanence.objects.filter(id=self.id).update(
             canceled_invoice_sort_order=F("invoice_sort_order"), invoice_sort_order=None
         )

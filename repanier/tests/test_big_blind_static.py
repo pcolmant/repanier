@@ -56,3 +56,25 @@ class BigBlindStorageFallbackTest(SimpleTestCase):
         joined = " ".join(regexes)
         self.assertIn("url\(", joined)
         self.assertIn("@import", joined)
+
+    def test_pwa_static_assets_are_covered_by_big_blind_fallback(self):
+        for name in (
+            "repanier/manifest.webmanifest",
+            "repanier/sw.js",
+            "repanier/css/preparation.css",
+            "repanier/js/preparation-offline.js",
+        ):
+            url = self.storage.url(name)
+            self.assertTrue(url.endswith("/static/" + name))
+            self.assertEqual(
+                self.storage.hashed_name(name),
+                name,
+            )
+
+    def test_service_worker_never_caches_sync_mutations(self):
+        from pathlib import Path
+
+        source = Path(__file__).resolve().parents[1] / "static" / "repanier" / "sw.js"
+        text = source.read_text(encoding="utf-8")
+        self.assertIn('request.method !== "GET"', text)
+        self.assertIn('url.pathname.includes("/sync/")', text)

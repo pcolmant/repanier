@@ -1,0 +1,13 @@
+{% load i18n %}
+<p>{% translate "Delivery adjustments affect this delivery. Catalogue changes are permanent and use a separate product form." %}</p>
+<ul>
+    {% for offer in offers %}
+    <li>
+        {{ offer.producer }} — {{ offer.long_name_v2 }}
+        <a href="{% url 'admin:repanier_offeritemsend_change' offer.pk %}">{% translate "Adjust delivery quantities and prices" %}</a>
+        <a href="{% url 'admin:repanier_product_change' offer.product_id %}">{% translate "Edit catalogue product" %}</a>
+    </li>
+    {% empty %}
+    <li>{% translate "No products in this delivery." %}</li>
+    {% endfor %}
+</ul>

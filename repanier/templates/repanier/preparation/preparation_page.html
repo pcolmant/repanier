@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block base_content %}
+<main class="container py-3 preparation-page"
+      data-permanence-id="{{ permanence.id }}"
+      data-preparation-snapshot="{{ snapshot_url }}"
+      data-preparation-sync="{{ sync_url }}"
+      data-demo-reset-url="{% url 'repanier:demo_mobile_preparation_reset' permanence.id %}"
+      data-demo-replay-url="{% url 'repanier:demo_mobile_preparation_replay' permanence.id %}">
+    {% if is_demo %}
+    <section class="alert alert-warning" data-demo-tour>
+        <strong>TEST DATA - données de démonstration</strong>
+        <ol class="mb-2">
+            <li>Choisir une ligne et utiliser « 1 tap = conforme ».</li>
+            <li>Tester une substitution ou une demande express.</li>
+            <li>Simuler une coupure réseau, puis synchroniser à nouveau.</li>
+        </ol>
+        <div class="d-grid gap-2 d-sm-flex">
+            <button type="button" class="btn btn-outline-dark" data-demo-network-simulate>
+                Rejouer hors ligne
+            </button>
+            <button type="button" class="btn btn-outline-danger" data-demo-reset>
+                Réinitialiser l'essai
+            </button>
+            <a class="btn btn-outline-primary" data-demo-export
+               href="{% url 'repanier:demo_mobile_preparation_export' permanence.id %}">
+                Exporter uniquement l'état fictif
+            </a>
+        </div>
+    </section>
+    {% endif %}
+    <header class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="h4 mb-1">{{ permanence }}</h1>
+            <div class="text-muted small">{% translate "Mobile preparation" %}</div>
+        </div>
+        <div class="preparation-network-state"
+             data-preparation-network-state
+             data-preparation-pending-count>
+            À jour
+        </div>
+    </header>
+    <div class="alert alert-warning" role="status" data-uncertain-arrival{% if not uncertain_arrival %} hidden{% endif %}>
+        {% translate "This offer has an uncertain arrival. Check delivery before validating preparation or closing." %}
+    </div>
+
+    <button type="button"
+            class="btn btn-primary mb-3 w-100"
+            style="min-height:44px"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#preparationActionsOffcanvas"
+            aria-controls="preparationActionsOffcanvas">
+        {% translate "Actions terrain" %}
+    </button>
+
+    <div class="mb-3">
+        <label class="form-label" for="preparation-arrivage">
+            {% translate "Producer / arrival" %}
+        </label>
+        <select class="form-select form-select-lg" id="preparation-arrivage"
+                data-preparation-producer-filter>
+            <option value="">{% translate "All producers" %}</option>
+        </select>
+    </div>
+
+    <div data-preparation-conflicts class="mb-3"></div>
+    <div data-preparation-lines>
+        <div class="text-muted">{% translate "Loading local snapshot…" %}</div>
+    </div>
+
+    <div class="offcanvas offcanvas-bottom h-auto" tabindex="-1" id="preparationActionsOffcanvas"
+         aria-labelledby="preparationActionsTitle">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title h5" id="preparationActionsTitle">
+                {% translate "Terrain actions" %}
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                    aria-label="{% translate 'Close' %}"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-outline-primary" data-open-preparation-modal="substitution">
+                    {% translate "Substitution A → B" %}
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-open-preparation-modal="express">
+                    {% translate "Demande express" %}
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-open-preparation-modal="deposit">
+                    {% translate "Retour / manque de consigne" %}
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-open-preparation-modal="parcel">
+                    {% translate "Litige colis" %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="substitutionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5">{% translate "Substitution" %}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" for="substitution-source">{% translate "Line A" %}</label>
+                    <select id="substitution-source" class="form-select" data-substitution-source></select>
+                    <label class="form-label mt-3" for="substitution-target">{% translate "Replacement B" %}</label>
+                    <select id="substitution-target" class="form-select" data-substitution-target></select>
+                    <label class="form-label mt-3" for="substitution-quantity">{% translate "Quantity" %}</label>
+                    <input id="substitution-quantity" class="form-control" type="number" min="0" step="0.0001"
+                           value="1" data-substitution-quantity>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-submit-substitution>
+                        {% translate "Apply substitution" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="expressModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5">{% translate "Express request" %}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" for="express-customer">{% translate "Member" %}</label>
+                    <select id="express-customer" class="form-select" data-express-customer></select>
+                    <label class="form-label mt-3" for="express-offer">{% translate "Article" %}</label>
+                    <select id="express-offer" class="form-select" data-express-offer></select>
+                    <label class="form-label mt-3" for="express-quantity">{% translate "Quantity" %}</label>
+                    <input id="express-quantity" class="form-control" type="number" min="0" step="0.0001"
+                           value="1" data-express-quantity>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-submit-express>
+                        {% translate "Add express request" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="depositModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5">{% translate "Container return" %}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" for="deposit-customer">{% translate "Member" %}</label>
+                    <select id="deposit-customer" class="form-select" data-deposit-customer></select>
+                    <label class="form-label mt-3" for="deposit-type">{% translate "Container type" %}</label>
+                    <select id="deposit-type" class="form-select" data-deposit-type></select>
+                    <label class="form-label mt-3" for="deposit-returned">{% translate "Returned" %}</label>
+                    <input id="deposit-returned" class="form-control" type="number" min="0" value="0" data-deposit-returned>
+                    <label class="form-label mt-3" for="deposit-missing">{% translate "Missing" %}</label>
+                    <input id="deposit-missing" class="form-control" type="number" min="0" value="0" data-deposit-missing>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-submit-deposit>
+                        {% translate "Record return" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="parcelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5">{% translate "Parcel dispute" %}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" for="parcel-purchase">{% translate "Line" %}</label>
+                    <select id="parcel-purchase" class="form-select" data-parcel-purchase></select>
+                    <label class="form-label mt-3" for="parcel-disposition">{% translate "Disposition" %}</label>
+                    <select id="parcel-disposition" class="form-select" data-parcel-disposition>
+                        <option value="not_in_bl">{% translate "Non livré / absent du BL" %}</option>
+                        <option value="lost_in_transit">{% translate "Perdu en chemin" %}</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-submit-parcel>
+                        {% translate "Record dispute" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -39,7 +39,7 @@
                     {% if my_invoices %}{% else %}
                         <h4>{{ customer.long_basket_name }}, <i class="bi bi-telephone"></i> {{ customer.phone1 }}, <i
                                 class="bi bi-envelope"></i> {{ customer.user.email }}</h4>{% endif %}
-                    {% for bank_account in not_invoiced_bank_account_set %}
+                    {% if REPANIER_MANAGE_MEMBER_BALANCES %}{% for bank_account in not_invoiced_bank_account_set %}
                         <div class="row">
                             <div class="col-12">
                                 {% if bank_account.bank_amount_in != 0 %}
@@ -66,7 +66,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                    {% endfor %}
+                    {% endfor %}{% endif %}
                 </div>
             </div>
             {% if object %}
@@ -97,7 +97,7 @@
                     </div>
                 </div>
             {% endif %}
-            {% for bank_account in bank_account_set %}
+            {% if REPANIER_MANAGE_MEMBER_BALANCES %}{% for bank_account in bank_account_set %}
                 <div class="row">
                     <div class="col-12">
                         {% if bank_account.bank_amount_in != 0 %}
@@ -124,7 +124,7 @@
                         {% endif %}
                     </div>
                 </div>
-            {% endfor %}
+            {% endfor %}{% endif %}
             {% if purchase_set or purchase_by_other_set %}
                 <div class="row">
                     <div class="col-12">
@@ -156,7 +156,7 @@
                         </div>
                     </div>
                 {% else %}
-                    {% if object.total_deposit != 0 %}
+                    {% if REPANIER_USE_DEPOSITS and object.total_deposit != 0 %}
                         <div class="row">
                             <div class="col-12">
                                 {% translate "Deposit" %} : {{ object.total_deposit }}.
@@ -254,7 +254,7 @@
                                                 </td>
                                                 <td class="text-end">
                                                     {{ purchase.get_customer_unit_price }}
-                                                    {% if purchase.offer_item.unit_deposit != 0 %}
+                                                    {% if REPANIER_USE_DEPOSITS and purchase.offer_item.unit_deposit != 0 %}
                                                         + ♻ {{ purchase.offer_item.unit_deposit }}
                                                     {% endif %}
                                                 </td>
@@ -335,7 +335,7 @@
                                                 </td>
                                                 <td class="text-end">
                                                     {{ purchase.get_customer_unit_price }}
-                                                    {% if purchase.offer_item.unit_deposit != 0 %}, ♻
+                                                    {% if REPANIER_USE_DEPOSITS and purchase.offer_item.unit_deposit != 0 %}, ♻
                                                         {{ purchase.offer_item.unit_deposit }}
                                                     {% endif %}
                                                 </td>

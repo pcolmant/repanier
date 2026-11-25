@@ -17,7 +17,7 @@ import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from repanier.const import BankMovement, SaleStatus, Vat
 from repanier.models.bankaccount import BankAccount
@@ -196,6 +196,7 @@ class AccountingJourneyMixin:
         assert cls.permanence.status == SaleStatus.INVOICED
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class SquareBalancesTest(AccountingJourneyMixin, TestCase):
     """Identity: balance = previous + payments - purchases charged."""
 
@@ -285,6 +286,7 @@ class SquareBalancesTest(AccountingJourneyMixin, TestCase):
         self.assertEqual(profit.customer_invoice_id, site_invoice.id)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class SquareBankTest(AccountingJourneyMixin, TestCase):
     """Identity: the bank anchor chains from invoicing to invoicing."""
 
@@ -339,6 +341,7 @@ class SquareBankTest(AccountingJourneyMixin, TestCase):
         self.assertEqual(self.permanence.invoice_sort_order, latest_total.id)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class ArchiveStampTest(TestCase):
     """A round archived without accounting still stamps its books.
 
@@ -389,6 +392,7 @@ class ArchiveStampTest(TestCase):
             self.assertEqual(book.invoice_sort_order, self.anchor.id)
 
 
+@override_settings(REPANIER_SETTINGS_MANAGE_ACCOUNTING=True)
 class SiteAccountsTest(TestCase):
     """The site consumer / producer accounts and the membership fee."""
 

@@ -1,0 +1,7 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block content %}
+<h1>{% translate "Products for this delivery" %} — {{ permanence }}</h1>
+{% include "repanier/admin/closing_products_partial.html" %}
+<a href="{% url 'admin:permanence-closing-balance' permanence.id %}">{% translate "Return to closing" %}</a>
+{% endblock %}

@@ -4319,3 +4319,27 @@ msgstr "Betriebsmodus & schrittweise Funktionen"
 #~ "Sie erhalten keine unaufgeforderten E-Mails von dieser Website mehr. Sie können sich <a href=\"/repanier/"
 #~ "go_repanier/\" class=\"btn btn-success btn-sm text-white my-1\">anmelden</a> oder auf die <a href=\"/\" "
 #~ "class=\"btn btn-success btn-sm text-white my-1\">Startseite</a> gehen."
+
+msgid "Accounting adjustment"
+msgstr "Buchhalterische Anpassung"
+
+msgid "Closing checklist"
+msgstr "Abschlusscheckliste"
+
+msgid "Review before closing"
+msgstr "Vor dem Abschluss prüfen"
+
+msgid "GSM preparation link"
+msgstr "GSM-Vorbereitungslink"
+
+msgid "A preparation access is active."
+msgstr "Ein Vorbereitungszugriff ist aktiv."
+
+msgid "No active preparation access."
+msgstr "Kein aktiver Vorbereitungszugriff."
+
+msgid "Generate or renew the link"
+msgstr "Link erzeugen oder erneuern"
+
+msgid "Revoke access"
+msgstr "Zugriff widerrufen"

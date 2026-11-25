@@ -24,6 +24,7 @@ from repanier.tests.test_accounting_chain import AccountingJourneyMixin
     SESSION_COOKIE_SECURE=False,
     CSRF_COOKIE_SECURE=False,
     REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER=False,
+    REPANIER_SETTINGS_MANAGE_ACCOUNTING=True,
 )
 class LateBookStampTest(AccountingJourneyMixin, TestCase):
     @classmethod

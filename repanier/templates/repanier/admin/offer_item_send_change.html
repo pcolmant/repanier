@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block object-tools %}
+    {{ block.super }}
+    {% if PRODUCT_CHANGE_URL %}
+        <li>
+            <a href="{{ PRODUCT_CHANGE_URL }}" class="viewsitelink">
+                {% translate "Open the catalogue product" %}
+            </a>
+        </li>
+    {% endif %}
+{% endblock %}

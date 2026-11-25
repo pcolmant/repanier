@@ -106,6 +106,7 @@ def configuration_post_save(sender, **kwargs):
         apps.REPANIER_SETTINGS_USE_GROUPS = config.use_groups
         apps.REPANIER_SETTINGS_USE_INVOICE_BY_BASKET = config.use_invoice_by_basket
         apps.REPANIER_SETTINGS_USE_DEPOSITS = config.use_deposits
+        apps.REPANIER_SETTINGS_USE_MOBILE_PREPARATION = config.use_mobile_preparation
 
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)
